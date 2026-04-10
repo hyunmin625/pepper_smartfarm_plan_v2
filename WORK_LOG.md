@@ -101,6 +101,12 @@
 - `evals/README.md`를 추가해 평가 목적, 카테고리, 확장 방향을 정리했다.
 - JSONL은 줄 단위 JSON 검증 대상으로 관리한다.
 
+### 파인튜닝 후보 seed 샘플 작성
+- `data/examples/state_judgement_samples.jsonl`을 추가해 상태판단 샘플 5개를 작성했다.
+- `data/examples/forbidden_action_samples.jsonl`을 추가해 금지행동/승인필요 샘플 5개를 작성했다.
+- `data/examples/README.md`를 추가해 샘플 작성 원칙과 확장 방향을 정리했다.
+- 자주 바뀌는 기준값은 샘플에 암기시키지 않고 RAG citation으로 연결하는 원칙을 유지했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
