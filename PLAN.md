@@ -4,11 +4,13 @@
 
 ## 1. 프로젝트 목표
 
-본 프로젝트의 목표는 **고추 재배 도메인으로 파인튜닝된 농업용 LLM**을 기반으로, 온실의 실시간 환경 데이터를 센서로부터 수집하고, 이를 해석하여 **안전한 자동 의사결정**을 수행하며, 필요시 **온실 장치 제어**와 **로봇암 작업 지시**까지 연결되는 운영 시스템을 구축하는 것이다.
+본 프로젝트의 목표는 **적고추(건고추) 온실 운영 지식을 RAG로 검색하고, 고추 재배 운영 태스크에 맞게 파인튜닝된 LLM**을 기반으로, 온실의 실시간 환경 데이터를 센서로부터 수집하고, 이를 해석하여 **안전한 자동 의사결정**을 수행하며, 필요시 **온실 장치 제어**와 **로봇암 작업 지시**까지 연결되는 운영 시스템을 구축하는 것이다.
 
 이 시스템은 다음 원칙을 따른다.
 
 - LLM은 **상위 판단 및 계획 엔진**으로 사용한다.
+- RAG는 최신 재배 매뉴얼, 현장 SOP, 품종/지역별 기준, 정책 문서를 검색하는 **외부 지식 계층**으로 사용한다.
+- 파인튜닝은 JSON 출력, 행동 추천 형식, 안전 거절 패턴, follow_up 생성 등 **운영 행동 양식**을 학습시키는 데 사용한다.
 - 실시간 연속 제어는 **PLC / 규칙 엔진 / PID / 상태기계**가 담당한다.
 - 모든 실행은 **정책 엔진과 안전 게이트**를 통과해야 한다.
 - 로봇암은 LLM이 직접 제어하지 않고, **비전 + 작업계획 + 로봇 제어기**가 실제 동작을 담당한다.
@@ -21,7 +23,7 @@
 ## 2.1 주요 기능
 
 ### A. 도메인 판단
-- 고추 재배 지식에 기반한 환경 상태 해석
+- RAG로 검색한 적고추/건고추 재배 지식에 기반한 환경 상태 해석
 - 생육 단계별 환경 적정성 판단
 - 이상 상황 탐지 및 원인 추정
 - 관수/환기/차광/CO2/양액 관련 상위 전략 수립
@@ -74,10 +76,12 @@
 - PostgreSQL
 - Redis
 - Object Storage
+- Vector Store 또는 Vector DB
 
 ### 4) AI/오케스트레이션 계층
 - state-estimator
 - policy-engine
+- rag-retriever
 - llm-orchestrator
 - execution-gateway
 - vision-inference
@@ -250,11 +254,13 @@ LLM은 다음을 직접 수행하지 않는다.
 - TimescaleDB/InfluxDB: 센서 시계열
 - Redis: 최신 zone state 캐시
 - Object Storage: 이미지, 캡처, 추론 결과
+- Vector Store/Vector DB: 재배 매뉴얼, 현장 SOP, 품종별 기준, 정책 문서 임베딩 인덱스
 
 ## 6.2 서비스 계층
 - sensor-ingestor
 - state-estimator
 - policy-engine
+- rag-retriever
 - llm-orchestrator
 - execution-gateway
 - plc-adapter
@@ -263,7 +269,8 @@ LLM은 다음을 직접 수행하지 않는다.
 - audit-monitor
 
 ## 6.3 AI 계층
-- 파인튜닝된 농업용 LLM
+- RAG + 파인튜닝 하이브리드 농업용 LLM
+- 임베딩 기반 검색 모델
 - 시계열 예측/이상 탐지 모델
 - 비전 모델
 - 로봇 작업 우선순위 판단 모델(LLM 포함)
@@ -317,11 +324,35 @@ LLM은 다음을 직접 수행하지 않는다.
 - validated_value
 - execution_result
 
+## 7.5 RAG 지식 문서
+저장해야 할 최소 메타데이터:
+- document_id
+- source_type
+- crop_type
+- growth_stage
+- region
+- greenhouse_type
+- version
+- effective_date
+- source_url 또는 file_path
+- chunk_id
+- embedding_model
+- retrieval_score
+
 ---
 
 ## 8. LLM 개발 원칙
 
-## 8.1 파인튜닝 방향
+## 8.1 RAG + 파인튜닝 하이브리드 타당성
+하이브리드 구조는 본 프로젝트에 적합하다. 적고추/건고추 온실 운영은 재배 매뉴얼, 현장 SOP, 품종별 기준, 계절별 환경 목표처럼 자주 바뀌거나 출처 추적이 필요한 지식과, JSON 행동 추천·금지행동 준수·승인 요청 같은 반복 운영 패턴이 함께 필요하기 때문이다.
+
+- RAG 적용 대상: 재배 매뉴얼, 병해 조건, 생육 단계별 목표, 건조/수확 기준, 현장 SOP, 정책 문서, 장치 운전 기준
+- 파인튜닝 적용 대상: 상태 해석 형식, action_type 선택, structured output, 안전한 거절, follow_up, confidence 표현
+- 결론: 지식 자체를 파라미터에 모두 넣지 않고, 업데이트 가능한 지식은 RAG에 두며, 모델은 운영 방식과 출력 안정성을 학습한다.
+- 제한: RAG 검색 실패, 오래된 문서 검색, 출처 충돌, 파인튜닝 데이터 편향은 별도 평가셋과 감사 로그로 관리한다.
+- 적용 방식: `state + constraints + retrieved_context + device_status`를 LLM 입력으로 결합하고, 출력은 policy-engine과 execution-gateway에서 재검증한다.
+
+## 8.2 파인튜닝 방향
 기존 Q&A 데이터만으로는 부족하므로 아래 유형을 반드시 포함한다.
 
 - 상태 해석
@@ -331,17 +362,19 @@ LLM은 다음을 직접 수행하지 않는다.
 - 로봇 작업 우선순위
 - 후속 점검 계획
 
-## 8.2 프롬프트 설계
+## 8.3 프롬프트 설계
 시스템 프롬프트는 반드시 아래를 포함한다.
 
 - 역할 제한
 - 안전 우선 원칙
+- RAG 검색 문맥 우선 사용 규칙
+- 검색 근거가 부족할 때 불확실성 표시 규칙
 - 허용 action_type 목록
 - 불확실성 처리 규칙
 - JSON 출력 강제
 - follow_up 필수
 
-## 8.3 구조화 출력
+## 8.4 구조화 출력
 출력은 자연어가 아니라 다음 구조를 따른다.
 
 - situation_summary
@@ -351,6 +384,17 @@ LLM은 다음을 직접 수행하지 않는다.
 - follow_up
 - confidence
 - requires_human_approval
+- citations[]
+- retrieval_coverage
+
+## 8.5 RAG 검색 설계
+RAG는 단순 Q&A 검색이 아니라 운영 판단 근거를 제공하는 계층으로 설계한다.
+
+- 문서 단위: 재배 매뉴얼, 농가 SOP, 정책 문서, 장치 매뉴얼, 병해 자료
+- chunk 메타데이터: crop_type, growth_stage, region, season, greenhouse_type, source_version
+- 검색 전략: semantic search + keyword/hybrid search + metadata filtering
+- 검색 결과 검증: 최소 score threshold, 최신 문서 우선, 충돌 문서 탐지
+- 출력 요구: 중요한 추천에는 근거 문서 id와 chunk id를 함께 남긴다.
 
 ---
 
@@ -469,7 +513,8 @@ LLM은 다음을 직접 수행하지 않는다.
 - 단일 온실 또는 단일 구역
 - 센서: 온도/습도/CO2/광량/배지 함수율/EC/pH
 - 장치: 순환팬/차광/관수
-- 기능: 상태 요약, 행동 추천, 저위험 자동 실행
+- 기능: RAG 기반 근거 검색, 상태 요약, 행동 추천, 저위험 자동 실행
+- LLM: structured output 안정화를 위한 소규모 파인튜닝 + 재배/SOP 문서 RAG
 - 로봇: 실제 제어 전 단계인 작업 후보 제안까지만
 
 ---
@@ -500,16 +545,21 @@ LLM은 다음을 직접 수행하지 않는다.
 성공하려면 다음 순서를 지켜야 한다.
 
 1. 도메인 지식 정비
-2. state/action schema 확정
-3. 센서 파이프라인 구축
-4. 정책 엔진 구축
-5. LLM 구조화 판단 연결
-6. 실행 게이트 구축
-7. 저위험 자동화 도입
-8. 비전/로봇 연동
-9. 시뮬레이터 검증
-10. 운영 로그 기반 고도화
+2. RAG 지식베이스 설계 및 문서 인덱싱
+3. state/action schema 확정
+4. 파인튜닝 데이터셋 구축
+5. 센서 파이프라인 구축
+6. 정책 엔진 구축
+7. LLM 구조화 판단 연결
+8. 실행 게이트 구축
+9. 저위험 자동화 도입
+10. 비전/로봇 연동
+11. 시뮬레이터 검증
+12. 운영 로그 기반 고도화
 
-# Referencre
--[세부 개발목록](todo.md)
-
+# Reference
+- [세부 개발목록](todo.md)
+- OpenAI Retrieval guide: https://platform.openai.com/docs/guides/retrieval
+- OpenAI File search guide: https://platform.openai.com/docs/guides/tools-file-search/
+- OpenAI Fine-tuning guide: https://platform.openai.com/docs/guides/fine-tuning
+- Lewis et al., Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks: https://arxiv.org/abs/2005.11401

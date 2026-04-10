@@ -11,6 +11,7 @@
 ### 목표
 - 시스템 뼈대 확정
 - state/action schema 완성
+- RAG 지식베이스 범위 확정
 - 파인튜닝 방향 재정의
 
 ### 주요 작업
@@ -18,6 +19,8 @@
 - action schema v1 작성
 - action_type enum 확정
 - zone/device/sensor naming 규칙 확정
+- RAG 문서 범위와 메타데이터 정의
+- 적고추/건고추 재배 매뉴얼, 현장 SOP, 장치 운전 기준 수집 목록 작성
 - 기존 Q&A → 상태/행동 구조로 재분류
 - 행동추천 JSON 샘플 100개 생성
 - 금지행동 샘플 100개 생성
@@ -29,6 +32,7 @@
 - state schema JSON 문서 완료
 - action schema JSON 문서 완료
 - action_type 목록 확정
+- RAG 문서 메타데이터 초안 완료
 - 학습 샘플 200개 이상 확보
 - 정책 JSON 20개 이상 작성
 
@@ -38,9 +42,14 @@
 
 ### 목표
 - LLM이 JSON으로 안정적으로 행동 추천 가능하도록 만들기
+- RAG vector store PoC로 재배 지식 검색 가능성 확인
 
 ### 주요 작업
 - train/val JSONL 생성
+- RAG chunking 전략 정의
+- vector store 또는 vector DB PoC 구축
+- 검색 품질 평가셋 작성
+- retrieval score와 citation 저장 형식 정의
 - 포맷 검증 스크립트 작성
 - SFT 1차 실행
 - 결과 로그 분석
@@ -53,6 +62,7 @@
 ### 완료 기준
 - JSON 출력 성공률 95% 이상
 - action_type 오류율 5% 이하
+- 주요 재배 질의에 대한 검색 hit rate 기준 통과
 - 기본 케이스 행동추천 가능
 
 ---
@@ -107,11 +117,14 @@
 
 ### 목표
 - LLM이 실제 센서 상태를 보고 판단하도록 만들기
+- RAG 검색 근거를 LLM 판단 입력에 결합하기
 
 ### 주요 작업
 - OpenAI API 연결
 - prompt renderer 구현
 - tool 구조 정의
+- rag-retriever client 구현
+- retrieved_context + citations 입력 조합
 - state + constraints + device 상태 결합
 - structured output parser 구현
 - fallback 처리 구현
@@ -119,6 +132,7 @@
 
 ### 완료 기준
 - 실제 센서 기반 판단 가능
+- RAG 근거가 decision log에 citation으로 저장
 - decision log 저장
 - JSON 안정 출력 유지
 
@@ -193,6 +207,7 @@
 ## 최종 체크포인트
 
 - Week 2: JSON 출력 안정화 전에는 다음 단계 진행 금지
+- Week 2: RAG 검색 품질 기준 없이 하이브리드 판단 운영 금지
 - Week 4: 정책 엔진 없이 자동화 금지
 - Week 6: execution-gateway 없이 PLC 연결 금지
 - Week 7: shadow → approval → auto 순서 준수
@@ -203,5 +218,7 @@
 
 - 처음부터 완전자동 목표로 가지 않기
 - 반드시 승인 단계를 거치기
+- RAG 문서는 출처, 버전, 적용 기간을 기록하기
+- 파인튜닝에는 자주 바뀌는 재배 기준을 직접 암기시키지 않기
 - 최소 1~2주 shadow mode 운영
 - 로그 기반으로 파인튜닝 지속 반복

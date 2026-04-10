@@ -176,17 +176,33 @@
 - [ ] 계절별 평가셋 구축
 - [ ] 센서 이상 포함 평가셋 구축
 
+## 2.6 RAG 지식베이스 구축
+- [ ] RAG 적용 문서 범위 정의
+- [ ] 적고추/건고추 재배 매뉴얼 수집
+- [ ] 현장 SOP 문서 수집
+- [ ] 품종별/생육 단계별 기준 문서 수집
+- [ ] 장치 운전 기준 문서 수집
+- [ ] 문서 출처와 버전 메타데이터 정의
+- [ ] chunking 전략 정의
+- [ ] embedding 모델 결정
+- [ ] vector store 또는 vector DB 결정
+- [ ] metadata filtering 필드 정의
+- [ ] 검색 품질 평가셋 작성
+- [ ] 문서 충돌/구버전 감지 규칙 정의
+
 ---
 
 # 3. 파인튜닝 준비 및 수행
 
 ## 3.1 학습 목표 재정의
 - [ ] 지식형 모델 vs 운영형 모델 역할 구분
+- [ ] RAG 담당 지식과 파인튜닝 담당 행동 양식 분리
 - [ ] 파인튜닝 목표 문서화
 - [ ] 구조화 출력 목표 정의
 - [ ] 허용 action_type 목록 확정
 - [ ] confidence 출력 요구 정의
 - [ ] follow_up 출력 요구 정의
+- [ ] citations/retrieval_coverage 출력 요구 정의
 
 ## 3.2 데이터 파일 생성
 - [ ] 학습용 JSONL 생성 스크립트 작성
@@ -211,6 +227,8 @@
 - [ ] 추천 행동 유효성 평가
 - [ ] 금지 행동 준수 평가
 - [ ] JSON 일관성 평가
+- [ ] RAG 문맥이 주어졌을 때 근거 반영률 평가
+- [ ] 검색 근거 부족 시 불확실성 표현 평가
 - [ ] hallucination 사례 정리
 - [ ] confidence calibration 검토
 - [ ] 사람 검토 결과 수집
@@ -437,15 +455,19 @@
 - [ ] on-demand 호출 흐름 정의
 - [ ] robot prioritization 호출 흐름 정의
 - [ ] alert summary 호출 흐름 정의
+- [ ] RAG retrieval 호출 흐름 정의
 
 ## 9.2 프롬프트 설계
 - [ ] 시스템 프롬프트 초안 작성
 - [ ] 역할 제한 문구 작성
 - [ ] 안전 원칙 문구 작성
+- [ ] RAG 검색 근거 우선 사용 문구 작성
+- [ ] 검색 근거 부족 시 보수적 판단 문구 작성
 - [ ] JSON only 출력 규칙 작성
 - [ ] confidence 규칙 작성
 - [ ] 불확실성 처리 규칙 작성
 - [ ] follow_up 규칙 작성
+- [ ] citations 출력 규칙 작성
 - [ ] 장치 enum 삽입 방식 설계
 - [ ] constraints 삽입 방식 설계
 
@@ -455,6 +477,9 @@
 - [ ] get_active_constraints 정의
 - [ ] get_device_status 정의
 - [ ] get_weather_context 정의
+- [ ] search_cultivation_knowledge 정의
+- [ ] search_site_sop 정의
+- [ ] get_retrieval_citations 정의
 - [ ] get_vision_candidates 정의
 - [ ] request_device_action 정의
 - [ ] request_robot_task 정의
@@ -465,11 +490,14 @@
 - [ ] API client 구성
 - [ ] model config 구조 작성
 - [ ] prompt renderer 구현
+- [ ] rag-retriever client 구현
+- [ ] retrieved_context 조합 로직 작성
 - [ ] tool registry 구현
 - [ ] structured output parser 구현
 - [ ] retry 전략 구현
 - [ ] timeout 전략 구현
 - [ ] malformed JSON 복구 전략 구현
+- [ ] citations 저장 로직 구현
 - [ ] decision logger 구현
 - [ ] evaluation endpoint 작성
 
@@ -478,6 +506,8 @@
 - [ ] parameter schema 검증
 - [ ] confidence 범위 검증
 - [ ] follow_up 필드 검증
+- [ ] citations 필드 검증
+- [ ] retrieval_coverage 필드 검증
 - [ ] robot task schema 검증
 - [ ] natural language leakage 검토
 - [ ] policy precheck 연결
@@ -787,6 +817,7 @@
 ## 18.2 통합 테스트
 - [ ] sensor → state-estimator 통합 테스트
 - [ ] state-estimator → policy-engine 통합 테스트
+- [ ] RAG retrieval → llm-orchestrator 통합 테스트
 - [ ] policy-engine → llm-orchestrator 통합 테스트
 - [ ] llm-orchestrator → execution-gateway 통합 테스트
 - [ ] execution-gateway → plc-adapter 통합 테스트
@@ -794,6 +825,7 @@
 
 ## 18.3 E2E 테스트
 - [ ] 5분 주기 zone 평가 E2E
+- [ ] RAG 근거 검색 포함 zone 평가 E2E
 - [ ] 고온 이벤트 E2E
 - [ ] 센서 고장 E2E
 - [ ] 장치 무응답 E2E
@@ -945,6 +977,8 @@
 ## 이번 주 바로 시작할 일
 - [ ] state schema 초안 작성
 - [ ] action schema 초안 작성
+- [ ] RAG 문서 범위와 메타데이터 초안 작성
+- [ ] 적고추/건고추 재배 문서 수집 목록 작성
 - [ ] 기존 파인튜닝 데이터 재분류
 - [ ] 행동추천 JSON 샘플 100개 작성
 - [ ] 금지행동 샘플 100개 작성
@@ -953,6 +987,8 @@
 - [ ] llm-orchestrator 인터페이스 초안 작성
 
 ## 그 다음 주
+- [ ] RAG vector store PoC 작성
+- [ ] 검색 품질 평가셋 작성
 - [ ] sensor-ingestor MVP 작성
 - [ ] state-estimator MVP 작성
 - [ ] policy-engine MVP 작성
@@ -973,6 +1009,8 @@
 출시 전 아래 항목을 모두 만족해야 한다.
 
 - [ ] LLM이 허용되지 않은 action_type을 출력하지 않는다
+- [ ] RAG 검색 결과가 decision log에 citation으로 남는다
+- [ ] 검색 근거가 부족할 때 LLM이 보수적으로 응답한다
 - [ ] malformed JSON이 운영을 중단시키지 않는다
 - [ ] 센서 이상 시 자동화가 안전하게 축소된다
 - [ ] 장치 무응답 시 safe mode가 동작한다
