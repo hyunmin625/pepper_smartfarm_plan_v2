@@ -57,6 +57,7 @@
 - 전문가 판단 초기 평가셋 작성: 정상, 고온, 근권, 양액, 센서불량, 병해, 수확/건조, 안전정책 케이스
 - 파인튜닝 후보 seed 샘플 작성: 상태판단 5개, 금지행동 5개
 - RAG 인덱싱 설계와 로컬 JSON 인덱스 빌드 스크립트 작성
+- RAG 검색 smoke test 스크립트 작성 및 6개 쿼리 통과
 
 ## 다음 우선순위
 
@@ -64,7 +65,7 @@
 2. offline agent runner spec 작성
 3. schema validation test 계획 작성
 4. `data/rag/pepper_expert_seed_chunks.jsonl` 확장
-5. 검색 smoke test 스크립트 작성
+5. 한국어 검색 alias 추가
 6. eval category별 케이스 확장
 7. state/action sample을 생육 단계별로 확장
 8. approval_required 샘플과 hard_block 샘플 분리

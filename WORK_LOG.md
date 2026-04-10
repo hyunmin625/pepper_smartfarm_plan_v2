@@ -114,6 +114,12 @@
 - 스크립트 실행 결과 6개 seed chunk가 인덱싱되었다.
 - 생성된 인덱스 JSON은 `python3 -m json.tool`로 문법 검증했다.
 
+### RAG 검색 smoke test 작성
+- `scripts/search_rag_index.py`를 추가해 로컬 JSON 인덱스를 keyword + metadata 방식으로 검색하도록 했다.
+- `docs/rag_search_smoke_tests.md`를 추가해 고온, 과습, 양액 EC, 병해충, 육묘/정식, 안전/정책 query와 기대 chunk를 정의했다.
+- `scripts/rag_smoke_test.py`를 추가해 6개 smoke query가 기대 chunk를 상위 3개 결과 안에 반환하는지 자동 검증한다.
+- `python3 scripts/rag_smoke_test.py` 실행 결과 6개 query가 모두 통과했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
