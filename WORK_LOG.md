@@ -107,6 +107,13 @@
 - `data/examples/README.md`를 추가해 샘플 작성 원칙과 확장 방향을 정리했다.
 - 자주 바뀌는 기준값은 샘플에 암기시키지 않고 RAG citation으로 연결하는 원칙을 유지했다.
 
+### RAG 인덱싱 준비
+- `docs/rag_indexing_plan.md`를 추가해 RAG 입력 필드, 인덱싱 문서 구조, 검색 전략, 재인덱싱 규칙, 품질 검증 기준을 정리했다.
+- `scripts/build_rag_index.py`를 추가해 `data/rag/pepper_expert_seed_chunks.jsonl`을 로컬 JSON 인덱스로 변환하도록 했다.
+- `artifacts/rag_index/pepper_expert_index.json`을 생성했다.
+- 스크립트 실행 결과 6개 seed chunk가 인덱싱되었다.
+- 생성된 인덱스 JSON은 `python3 -m json.tool`로 문법 검증했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
