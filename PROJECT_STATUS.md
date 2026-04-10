@@ -52,16 +52,17 @@
 - 주요 계획 문서와 `AGENTS.md`에 문서 링크 반영
 - 온실 공사중 전제를 반영해 AI 준비 구축을 최우선 단계로 재정렬
 - 적고추 재배 전주기 전문가 AI Agent 구축 계획 수립
+- RAG 구축 시작: source inventory, seed chunks, expert knowledge map, sensor judgement matrix 작성
 
 ## 다음 우선순위
 
-1. `docs/expert_knowledge_map.md` 작성
-2. `docs/sensor_judgement_matrix.md` 작성
-3. `schemas/state_schema.json` 초안 작성
-4. `schemas/feature_schema.json` 초안 작성
-5. `schemas/action_schema.json` 초안 작성
-6. RAG 문서 출처 목록과 메타데이터 스키마 작성
-7. `evals/expert_judgement_eval_set.jsonl` 초안 작성
+1. `schemas/state_schema.json` 초안 작성
+2. `schemas/feature_schema.json` 초안 작성
+3. `schemas/action_schema.json` 초안 작성
+4. `schemas/sensor_quality_schema.json` 작성
+5. `evals/expert_judgement_eval_set.jsonl` 초안 작성
+6. `data/rag/pepper_expert_seed_chunks.jsonl` 확장
+7. RAG vector store 인덱싱 스크립트 설계
 8. 행동추천/금지행동 샘플 작성
 9. hard block 정책 10개와 approval 정책 10개 작성
 

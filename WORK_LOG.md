@@ -75,6 +75,19 @@
   - OpenAI Retrieval guide: https://platform.openai.com/docs/guides/retrieval
   - OpenAI Evals API: https://platform.openai.com/docs/api-reference/evals
 
+### 인터넷 조사 5회 반복 및 RAG 구축 시작
+- 인터넷 조사를 5회 반복해 전주기 전문가 AI용 초기 지식을 수집했다.
+  1. 육묘/정식/초기 생육
+  2. 온실 환경/고온/환기/차광
+  3. 근권/양액/배지/EC/pH
+  4. 병해충/생리장해
+  5. 수확/건조/저장
+- `docs/rag_source_inventory.md`를 추가해 RAG 출처, 메타데이터, ingestion 상태를 정리했다.
+- `data/rag/pepper_expert_seed_chunks.jsonl`을 추가해 초기 seed chunk 6개를 작성했다.
+- `docs/expert_knowledge_map.md`를 추가해 전주기 생육/운영 지식 지도를 작성했다.
+- `docs/sensor_judgement_matrix.md`를 추가해 센서 데이터와 AI 판단 항목을 매핑했다.
+- 다음 단계는 schema 작성, expert eval set 작성, vector store 인덱싱 스크립트 설계다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
