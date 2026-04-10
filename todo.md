@@ -2,7 +2,11 @@
 
 
 ## 관련 문서
+- [저장소 README](README.md)
+- [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [일정 계획 보기](schedule.md)
+- [전체 개발 계획 보기](PLAN.md)
+- [작업 로그 보기](WORK_LOG.md)
 
 # 온실 스마트팜 고추 재배 자동화를 위한 농업용 LLM 개발 세부 Todo
 

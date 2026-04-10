@@ -4,6 +4,13 @@
 
 이 문서는 `todo.md`의 세부 작업을 실제 일정 단위로 실행하기 위한 주차별 계획서이다.
 
+## 관련 문서
+- [저장소 README](README.md)
+- [프로젝트 현황 요약](PROJECT_STATUS.md)
+- [전체 개발 계획 보기](PLAN.md)
+- [세부 Todo 보기](todo.md)
+- [작업 로그 보기](WORK_LOG.md)
+
 ---
 
 ## Week 1 — 기초 설계 + 데이터 구조 확정

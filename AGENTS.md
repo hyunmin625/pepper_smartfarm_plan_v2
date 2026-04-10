@@ -5,9 +5,14 @@
 이 저장소는 온실 스마트팜 고추 재배 자동화를 위한 농업용 LLM/제어 시스템의 기획 문서 저장소입니다.
 
 - `PLAN.md`: 프로젝트 목표, 시스템 아키텍처, 안전 원칙, 단계별 개발 계획
+- `README.md`: 저장소 목적과 문서 탐색 순서
 - `todo.md`: 실제 개발 착수를 위한 세부 작업 목록
 - `schedule.md`: 8주 실행 일정과 주차별 완료 기준
+- `PROJECT_STATUS.md`: 현재 진행 상태, 핵심 결정, 다음 우선순위
+- `WORK_LOG.md`: 주요 변경 작업과 조사 근거 기록
 - `AGENTS.md`: 저장소 기여 및 작업 기준
+
+새 AI/에이전트는 먼저 `README.md`와 `PROJECT_STATUS.md`를 읽고, 세부 근거가 필요할 때 `PLAN.md`, `todo.md`, `schedule.md`, `WORK_LOG.md` 순서로 확인합니다.
 
 현재는 구현 코드가 없으므로 루트의 Markdown 문서가 핵심 산출물입니다. 구현이 시작되면 `todo.md`의 계획에 맞춰 `docs/`, `data/`, `experiments/`, `infra/`와 서비스 디렉터리(`sensor-ingestor/`, `state-estimator/`, `policy-engine/`, `llm-orchestrator/`, `execution-gateway/`)를 추가합니다.
 
