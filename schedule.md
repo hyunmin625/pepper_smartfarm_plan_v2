@@ -8,6 +8,7 @@
 - [저장소 README](README.md)
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
+- [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [세부 Todo 보기](todo.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -38,7 +39,10 @@
 - eval/MLOps 기본 구조 정의
 
 ### 주요 작업
+- 전문가 지식 지도 작성
+- 센서 판단 매트릭스 작성
 - state schema v1 작성
+- feature schema v1 작성
 - action schema v1 작성
 - action_type enum 확정
 - RAG 문서 범위와 메타데이터 정의
@@ -54,7 +58,10 @@
 - 서비스 구조, API 구조, 이벤트 이름 초안 작성
 
 ### 완료 기준
+- expert knowledge map 초안 완료
+- sensor judgement matrix 초안 완료
 - state schema JSON 문서 완료
+- feature schema JSON 문서 완료
 - action schema JSON 문서 완료
 - action_type 목록 확정
 - RAG 문서 메타데이터 초안 완료
@@ -73,6 +80,9 @@
 
 ### 주요 작업
 - train/val JSONL 생성
+- expert judgement eval set 초안 작성
+- state judgement 샘플 작성
+- forbidden action 샘플 작성
 - RAG chunking 전략 정의
 - vector store 또는 vector DB PoC 구축
 - 검색 품질 평가셋 작성

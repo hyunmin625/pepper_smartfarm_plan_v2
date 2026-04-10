@@ -6,6 +6,7 @@
 - [저장소 README](README.md)
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
+- [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
 - [세부 개발 Todo](todo.md)
 - [8주 일정 계획](schedule.md)
 - [작업 로그](WORK_LOG.md)
@@ -156,11 +157,15 @@ LLM은 다음을 직접 수행하지 않는다.
 ## Phase -1. AI 준비 구축 및 MLOps 기반 설계
 목표:
 - 실측 데이터가 없는 상태에서 AI 판단 체계를 먼저 준비
+- 적고추 재배 전주기 전문가 지식과 센서 판단 체계를 구조화
 - RAG 지식베이스, 파인튜닝 데이터셋, 평가셋, 모델 버전 관리 체계 구축
 - 센서 데이터가 들어오면 학습과 평가에 반영되는 MLOps 루프 설계
 
 성과물:
 - AI_MLOPS_PLAN.md
+- EXPERT_AI_AGENT_PLAN.md
+- expert knowledge map
+- sensor judgement matrix
 - RAG 문서 메타데이터 schema
 - 적고추/건고추 도메인 지식셋
 - offline decision runner

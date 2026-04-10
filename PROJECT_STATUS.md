@@ -34,6 +34,7 @@
 - `README.md`: 저장소 목적과 문서 탐색 순서
 - `PROJECT_STATUS.md`: 현재 진행 상태, 핵심 결정, 다음 우선순위
 - `AI_MLOPS_PLAN.md`: 온실 공사 중 먼저 진행할 AI 모델 준비, 센서 수집 계획, MLOps 루프
+- `EXPERT_AI_AGENT_PLAN.md`: 적고추 재배 전주기 전문가 AI Agent 구축 단계
 - `PLAN.md`: 전체 목표, 아키텍처, 안전 원칙, RAG+파인튜닝 구조, MVP 범위
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준
@@ -50,17 +51,18 @@
 - `README.md`, `PROJECT_STATUS.md`, `WORK_LOG.md` 작성
 - 주요 계획 문서와 `AGENTS.md`에 문서 링크 반영
 - 온실 공사중 전제를 반영해 AI 준비 구축을 최우선 단계로 재정렬
+- 적고추 재배 전주기 전문가 AI Agent 구축 계획 수립
 
 ## 다음 우선순위
 
-1. AI 준비 구축: RAG 지식베이스, 평가셋, offline decision runner, registry 설계
-2. 센서 수집 계획 보강: 센서 종류, 수집 주기, quality_flag, 학습 반영 기준 확정
-3. `state_schema.json` 초안 작성
-4. `action_schema.json` 초안 작성
-5. `action_type` enum 정의
-6. 적고추/건고추 재배 매뉴얼과 현장 SOP 수집 목록 작성
-7. 행동추천 JSON 샘플 100개 작성
-8. 금지행동 JSON 샘플 100개 작성
+1. `docs/expert_knowledge_map.md` 작성
+2. `docs/sensor_judgement_matrix.md` 작성
+3. `schemas/state_schema.json` 초안 작성
+4. `schemas/feature_schema.json` 초안 작성
+5. `schemas/action_schema.json` 초안 작성
+6. RAG 문서 출처 목록과 메타데이터 스키마 작성
+7. `evals/expert_judgement_eval_set.jsonl` 초안 작성
+8. 행동추천/금지행동 샘플 작성
 9. hard block 정책 10개와 approval 정책 10개 작성
 
 ## 주의할 점

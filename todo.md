@@ -5,6 +5,7 @@
 - [저장소 README](README.md)
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
+- [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -213,6 +214,26 @@
 - [ ] champion/challenger 모델 승격 규칙 정의
 - [ ] shadow mode 평가 리포트 포맷 정의
 - [ ] 운영 로그 → 학습 후보 변환 규칙 정의
+
+## 2.8 적고추 전문가 AI Agent 구축
+- [ ] 적고추 재배 전주기 단계 정의
+- [ ] 생육 단계별 전문가 판단 질문 목록 작성
+- [ ] 센서 지표와 판단 항목 매핑
+- [ ] `docs/expert_knowledge_map.md` 작성
+- [ ] `docs/sensor_judgement_matrix.md` 작성
+- [ ] `schemas/feature_schema.json` 작성
+- [ ] `schemas/sensor_quality_schema.json` 작성
+- [ ] `evals/expert_judgement_eval_set.jsonl` 작성
+- [ ] `docs/agent_tool_design.md` 작성
+- [ ] `docs/offline_agent_runner_spec.md` 작성
+- [ ] growth-stage-agent 역할 정의
+- [ ] climate-agent 역할 정의
+- [ ] irrigation-agent 역할 정의
+- [ ] nutrient-agent 역할 정의
+- [ ] pest-disease-agent 역할 정의
+- [ ] harvest-drying-agent 역할 정의
+- [ ] safety-agent 역할 정의
+- [ ] report-agent 역할 정의
 
 ---
 
