@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hyunmin625/pepper_smartfarm_plan_v2/schemas/state_schema.json",
+  "title": "Pepper Smartfarm Zone State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "timestamp",
+    "farm_id",
+    "zone_id",
+    "crop",
+    "growth_stage",
+    "current_state",
+    "derived_features",
+    "sensor_quality",
+    "device_status",
+    "recent_events",
+    "active_constraints",
+    "retrieved_context"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "state.v1"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "farm_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "zone_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "crop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["crop_type", "cultivar", "cultivation_type"],
+      "properties": {
+        "crop_type": {
+          "type": "string",
+          "enum": ["red_pepper", "dried_red_pepper"]
+        },
+        "cultivar": {
+          "type": "string"
+        },
+        "cultivation_type": {
+          "type": "string",
+          "enum": ["greenhouse_soil", "greenhouse_hydroponic", "greenhouse_substrate", "unknown"]
+        }
+      }
+    },
+    "growth_stage": {
+      "type": "string",
+      "enum": [
+        "pre_planting",
+        "nursery",
+        "transplanting",
+        "establishment",
+        "vegetative_growth",
+        "flowering",
+        "fruit_set",
+        "fruit_expansion",
+        "coloring",
+        "harvest",
+        "drying",
+        "storage",
+        "season_end",
+        "unknown"
+      ]
+    },
+    "current_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "rootzone", "outside_weather"],
+      "properties": {
+        "environment": {
+          "$ref": "#/$defs/environment"
+        },
+        "rootzone": {
+          "$ref": "#/$defs/rootzone"
+        },
+        "outside_weather": {
+          "$ref": "#/$defs/outside_weather"
+        }
+      }
+    },
+    "derived_features": {
+      "$ref": "feature_schema.json"
+    },
+    "sensor_quality": {
+      "$ref": "sensor_quality_schema.json"
+    },
+    "device_status": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/device_status"
+      }
+    },
+    "recent_events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "active_constraints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/constraint"
+      }
+    },
+    "retrieved_context": {
+      "type": "array",
+      "description": "RAG chunks used as supporting context.",
+      "items": {
+        "$ref": "#/$defs/retrieved_chunk"
+      }
+    }
+  },
+  "$defs": {
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "sensor_id", "quality_flag"],
+      "properties": {
+        "value": {
+          "type": ["number", "null"]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "sensor_id": {
+          "type": "string"
+        },
+        "quality_flag": {
+          "type": "string",
+          "enum": ["good", "suspect", "bad", "missing", "stale", "unknown"]
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "air_temperature_c": {
+          "$ref": "#/$defs/measurement"
+        },
+        "relative_humidity_pct": {
+          "$ref": "#/$defs/measurement"
+        },
+        "co2_ppm": {
+          "$ref": "#/$defs/measurement"
+        },
+        "par_umol_m2_s": {
+          "$ref": "#/$defs/measurement"
+        },
+        "solar_radiation_w_m2": {
+          "$ref": "#/$defs/measurement"
+        }
+      }
+    },
+    "rootzone": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "substrate_moisture_pct": {
+          "$ref": "#/$defs/measurement"
+        },
+        "substrate_temperature_c": {
+          "$ref": "#/$defs/measurement"
+        },
+        "feed_ec_ds_m": {
+          "$ref": "#/$defs/measurement"
+        },
+        "feed_ph": {
+          "$ref": "#/$defs/measurement"
+        },
+        "drain_ec_ds_m": {
+          "$ref": "#/$defs/measurement"
+        },
+        "drain_ph": {
+          "$ref": "#/$defs/measurement"
+        },
+        "drain_rate_pct": {
+          "$ref": "#/$defs/measurement"
+        }
+      }
+    },
+    "outside_weather": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outside_temperature_c": {
+          "$ref": "#/$defs/measurement"
+        },
+        "outside_relative_humidity_pct": {
+          "$ref": "#/$defs/measurement"
+        },
+        "wind_speed_m_s": {
+          "$ref": "#/$defs/measurement"
+        },
+        "rain_detected": {
+          "$ref": "#/$defs/measurement"
+        }
+      }
+    },
+    "device_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["device_id", "device_type", "mode", "state", "last_readback_at"],
+      "properties": {
+        "device_id": {
+          "type": "string"
+        },
+        "device_type": {
+          "type": "string",
+          "enum": ["fan", "shade", "vent", "irrigation_valve", "fertigation_unit", "heater", "co2_unit", "dehumidifier", "robot", "other"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["manual", "auto", "approval", "disabled", "unknown"]
+        },
+        "state": {
+          "type": "string"
+        },
+        "last_command_id": {
+          "type": ["string", "null"]
+        },
+        "last_readback_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "health": {
+          "type": "string",
+          "enum": ["ok", "degraded", "fault", "unknown"]
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "event_type", "timestamp", "summary"],
+      "properties": {
+        "event_id": {
+          "type": "string"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": ["irrigation", "fertigation", "shade_change", "vent_change", "manual_override", "alarm", "spray", "worker_entry", "robot_event", "note"]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constraint_id", "severity", "summary"],
+      "properties": {
+        "constraint_id": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "approval_required", "hard_block"]
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "retrieved_chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunk_id", "document_id", "retrieval_score", "summary"],
+      "properties": {
+        "chunk_id": {
+          "type": "string"
+        },
+        "document_id": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": ["string", "null"]
+        },
+        "retrieval_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hyunmin625/pepper_smartfarm_plan_v2/schemas/sensor_quality_schema.json",
+  "title": "Pepper Smartfarm Sensor Quality",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evaluated_at",
+    "overall_quality",
+    "sensor_flags",
+    "automation_allowed"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "sensor_quality.v1"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "overall_quality": {
+      "type": "string",
+      "enum": ["good", "degraded", "unsafe", "unknown"]
+    },
+    "automation_allowed": {
+      "type": "boolean",
+      "description": "False when sensor quality is too poor for automatic execution."
+    },
+    "sensor_flags": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sensor_flag"
+      }
+    },
+    "quality_summary": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "sensor_flag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sensor_id",
+        "sensor_type",
+        "quality_flag",
+        "severity",
+        "checked_at"
+      ],
+      "properties": {
+        "sensor_id": {
+          "type": "string"
+        },
+        "sensor_type": {
+          "type": "string",
+          "enum": [
+            "air_temperature",
+            "relative_humidity",
+            "co2",
+            "par",
+            "solar_radiation",
+            "substrate_moisture",
+            "substrate_temperature",
+            "feed_ec",
+            "feed_ph",
+            "drain_ec",
+            "drain_ph",
+            "drain_rate",
+            "outside_temperature",
+            "outside_humidity",
+            "wind_speed",
+            "rain",
+            "vision",
+            "device_readback",
+            "other"
+          ]
+        },
+        "quality_flag": {
+          "type": "string",
+          "enum": [
+            "good",
+            "missing",
+            "stale",
+            "outlier",
+            "jump_detected",
+            "calibration_due",
+            "calibration_error",
+            "device_fault",
+            "manual_review_required",
+            "unknown"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "danger", "critical"]
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_good_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "observed_value": {
+          "type": ["number", "string", "boolean", "null"]
+        },
+        "expected_range": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": ["number", "null"]
+            },
+            "max": {
+              "type": ["number", "null"]
+            },
+            "unit": {
+              "type": ["string", "null"]
+            }
+          }
+        },
+        "reason": {
+          "type": "string"
+        },
+        "recommended_follow_up": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hyunmin625/pepper_smartfarm_plan_v2/schemas/feature_schema.json",
+  "title": "Pepper Smartfarm Derived Features",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "calculated_at",
+    "climate",
+    "rootzone",
+    "crop_signals",
+    "risk_scores"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "features.v1"
+    },
+    "calculated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "climate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vpd_kpa": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "dli_mol_m2_d": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "air_temperature_5m_avg_c": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "air_temperature_30m_delta_c": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "relative_humidity_30m_delta_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "condensation_risk": {
+          "$ref": "#/$defs/risk_value"
+        },
+        "heat_stress_risk": {
+          "$ref": "#/$defs/risk_value"
+        }
+      }
+    },
+    "rootzone": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "substrate_moisture_5m_avg_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "substrate_moisture_30m_delta_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "post_irrigation_recovery_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "drain_rate_1h_avg_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "feed_drain_ec_gap_ds_m": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "feed_drain_ph_gap": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "rootzone_stress_risk": {
+          "$ref": "#/$defs/risk_value"
+        },
+        "nutrient_imbalance_risk": {
+          "$ref": "#/$defs/risk_value"
+        }
+      }
+    },
+    "crop_signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "growth_vigor_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "flower_fruit_risk": {
+          "$ref": "#/$defs/risk_value"
+        },
+        "ripeness_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "disease_suspicion_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "harvest_priority_score": {
+          "$ref": "#/$defs/score_value"
+        }
+      }
+    },
+    "risk_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "overall_stress_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "automation_safety_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "sensor_reliability_score": {
+          "$ref": "#/$defs/score_value"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "feature_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "quality"],
+      "properties": {
+        "value": {
+          "type": ["number", "null"]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "quality": {
+          "type": "string",
+          "enum": ["good", "suspect", "bad", "missing"]
+        },
+        "source_window": {
+          "type": ["string", "null"],
+          "description": "Aggregation window such as 5m, 30m, 1h, or daily."
+        }
+      }
+    },
+    "score_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "quality"],
+      "properties": {
+        "score": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "quality": {
+          "type": "string",
+          "enum": ["good", "suspect", "bad", "missing"]
+        },
+        "reason": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "risk_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "confidence"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical", "unknown"]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

@@ -88,6 +88,13 @@
 - `docs/sensor_judgement_matrix.md`를 추가해 센서 데이터와 AI 판단 항목을 매핑했다.
 - 다음 단계는 schema 작성, expert eval set 작성, vector store 인덱싱 스크립트 설계다.
 
+### 전문가 AI Agent 스키마 4종 작성
+- `schemas/state_schema.json`을 추가해 AI Agent 입력 상태 계약을 정의했다.
+- `schemas/feature_schema.json`을 추가해 VPD, DLI, trend, 근권 스트레스, 숙도/병징 score 등 파생 특징량 구조를 정의했다.
+- `schemas/sensor_quality_schema.json`을 추가해 missing, stale, outlier, jump, calibration error 등 품질 플래그 구조를 정의했다.
+- `schemas/action_schema.json`을 추가해 AI 추천 행동, 승인 필요 여부, follow_up, citation, policy precheck 구조를 정의했다.
+- 모든 JSON 스키마는 `python3 -m json.tool`로 문법 검증했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
