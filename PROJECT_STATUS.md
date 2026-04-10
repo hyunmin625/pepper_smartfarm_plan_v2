@@ -54,17 +54,18 @@
 - 적고추 재배 전주기 전문가 AI Agent 구축 계획 수립
 - RAG 구축 시작: source inventory, seed chunks, expert knowledge map, sensor judgement matrix 작성
 - 전문가 AI Agent 입력/출력 계약 초안 작성: state, feature, sensor quality, action schema
+- 전문가 판단 초기 평가셋 작성: 정상, 고온, 근권, 양액, 센서불량, 병해, 수확/건조, 안전정책 케이스
 
 ## 다음 우선순위
 
-1. `evals/expert_judgement_eval_set.jsonl` 초안 작성
-2. `data/examples/state_judgement_samples.jsonl` 작성
-3. `data/examples/forbidden_action_samples.jsonl` 작성
-4. `data/rag/pepper_expert_seed_chunks.jsonl` 확장
-5. RAG vector store 인덱싱 스크립트 설계
-6. hard block 정책 10개와 approval 정책 10개 작성
-7. offline agent runner spec 작성
-8. schema validation test 계획 작성
+1. `data/examples/state_judgement_samples.jsonl` 작성
+2. `data/examples/forbidden_action_samples.jsonl` 작성
+3. `data/rag/pepper_expert_seed_chunks.jsonl` 확장
+4. RAG vector store 인덱싱 스크립트 설계
+5. hard block 정책 10개와 approval 정책 10개 작성
+6. offline agent runner spec 작성
+7. schema validation test 계획 작성
+8. eval category별 케이스 확장
 
 ## 주의할 점
 

@@ -95,6 +95,12 @@
 - `schemas/action_schema.json`을 추가해 AI 추천 행동, 승인 필요 여부, follow_up, citation, policy precheck 구조를 정의했다.
 - 모든 JSON 스키마는 `python3 -m json.tool`로 문법 검증했다.
 
+### 전문가 판단 평가셋 초안 작성
+- `evals/expert_judgement_eval_set.jsonl`을 추가했다.
+- 초기 케이스 8개를 작성했다: 정상 영양생장, 고온 스트레스, 과습/뿌리 갈변 위험, 배액 EC 상승, 온도 센서 stale, 병해충 의심, 수확/건조 계획, 작업자 존재 시 로봇 차단.
+- `evals/README.md`를 추가해 평가 목적, 카테고리, 확장 방향을 정리했다.
+- JSONL은 줄 단위 JSON 검증 대상으로 관리한다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
