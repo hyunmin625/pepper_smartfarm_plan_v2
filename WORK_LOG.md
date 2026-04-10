@@ -47,6 +47,20 @@
 - `PLAN.md`, `todo.md`, `schedule.md`, `AGENTS.md`에 `README.md`, `PROJECT_STATUS.md`, `WORK_LOG.md` 링크를 반영했다.
 - 문서 탐색 순서를 `README.md` → `PROJECT_STATUS.md` → `PLAN.md` → `schedule.md` → `todo.md` → `WORK_LOG.md` → `AGENTS.md`로 정리했다.
 
+### 온실 공사중 전제 및 AI/MLOps 선행 계획 반영
+- 온실이 아직 공사 중이며 실측 센서 데이터가 없다는 전제를 계획에 반영했다.
+- 개발 순서를 `AI 준비 구축 → 센서 수집 계획 보강 → 센서 수집 구현 → 통합 제어 시스템 개발 계획 → 통합 제어 시스템 구현 → 사용자 UI 대시보드 개발 → AI 모델과 통합 제어 시스템 연결`로 개정했다.
+- `AI_MLOPS_PLAN.md`를 추가해 AI 모델 준비, 센서 수집 계획, 센서 데이터 분석, 학습 반영, MLOps 루프, 모델 진화 전략을 정리했다.
+- `PLAN.md`에 Phase -1 AI 준비 구축 및 MLOps 기반 설계를 추가했다.
+- `schedule.md`를 AI 준비 선행 일정으로 재구성했다.
+- `todo.md`에 온실 공사중 전제, AI 준비/MLOps 기반 구축, 센서 수집 계획 보강, 모델 승격/롤백 항목을 추가했다.
+- 참고 근거:
+  - OpenAI Evals API: https://platform.openai.com/docs/api-reference/evals
+  - OpenAI Retrieval guide: https://platform.openai.com/docs/guides/retrieval
+  - OpenAI Fine-tuning guide: https://platform.openai.com/docs/guides/fine-tuning
+  - MLflow Model Registry: https://mlflow.org/docs/latest/ml/model-registry/
+  - Kubeflow Pipelines: https://www.kubeflow.org/docs/components/pipelines/overview/
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.

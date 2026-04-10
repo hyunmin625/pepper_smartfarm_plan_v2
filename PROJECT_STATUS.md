@@ -6,6 +6,7 @@
 
 - 저장소 유형: 구현 코드가 없는 계획/문서 저장소
 - 대상 시스템: 적고추(건고추) 온실 스마트팜 운영을 위한 농업용 LLM/제어 시스템
+- 현장 상태: 온실 공사 중이며 아직 실측 센서 데이터 수집 전
 - 현재 브랜치: `master`
 - 원격 저장소: `https://github.com/hyunmin625/pepper_smartfarm_plan_v2.git`
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
@@ -32,6 +33,7 @@
 
 - `README.md`: 저장소 목적과 문서 탐색 순서
 - `PROJECT_STATUS.md`: 현재 진행 상태, 핵심 결정, 다음 우선순위
+- `AI_MLOPS_PLAN.md`: 온실 공사 중 먼저 진행할 AI 모델 준비, 센서 수집 계획, MLOps 루프
 - `PLAN.md`: 전체 목표, 아키텍처, 안전 원칙, RAG+파인튜닝 구조, MVP 범위
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준
@@ -47,20 +49,24 @@
 - `PLAN.md`, `todo.md`, `schedule.md`에 하이브리드 구조 반영
 - `README.md`, `PROJECT_STATUS.md`, `WORK_LOG.md` 작성
 - 주요 계획 문서와 `AGENTS.md`에 문서 링크 반영
+- 온실 공사중 전제를 반영해 AI 준비 구축을 최우선 단계로 재정렬
 
 ## 다음 우선순위
 
-1. `state_schema.json` 초안 작성
-2. `action_schema.json` 초안 작성
-3. `action_type` enum 정의
-4. RAG 문서 범위와 메타데이터 스키마 작성
-5. 적고추/건고추 재배 매뉴얼과 현장 SOP 수집 목록 작성
-6. 행동추천 JSON 샘플 100개 작성
-7. 금지행동 JSON 샘플 100개 작성
-8. hard block 정책 10개와 approval 정책 10개 작성
+1. AI 준비 구축: RAG 지식베이스, 평가셋, offline decision runner, registry 설계
+2. 센서 수집 계획 보강: 센서 종류, 수집 주기, quality_flag, 학습 반영 기준 확정
+3. `state_schema.json` 초안 작성
+4. `action_schema.json` 초안 작성
+5. `action_type` enum 정의
+6. 적고추/건고추 재배 매뉴얼과 현장 SOP 수집 목록 작성
+7. 행동추천 JSON 샘플 100개 작성
+8. 금지행동 JSON 샘플 100개 작성
+9. hard block 정책 10개와 approval 정책 10개 작성
 
 ## 주의할 점
 
+- 온실 공사 완료 전에는 장치 제어 구현보다 AI 준비와 센서 수집 계획을 우선한다.
+- 센서 품질 플래그 없이 데이터를 학습에 반영하지 않는다.
 - 정책 엔진 없이 자동화를 진행하지 않는다.
 - execution-gateway 없이 PLC 연결을 진행하지 않는다.
 - RAG 검색 품질 기준 없이 하이브리드 판단을 운영에 사용하지 않는다.
