@@ -32,9 +32,11 @@
 3. `device_id`가 참조하는 `model_profile`의 `supported_action_types`에 해당 `action_type`이 포함돼야 한다.
 4. `approval_required=true`이면 `approval_context.approval_status`가 `approved` 또는 `pending`이어야 한다.
 5. 실제 write 직전에는 `execution-gateway`가 `policy_snapshot`, `operator_context`, `cooldown_context`를 다시 검토한다.
+6. `parameters`는 `data/examples/sensor_catalog_seed.json`의 해당 장치 `setpoint_bounds` 안에 있어야 한다.
 
 ## 4. 연결 파일
 
 - `schemas/device_command_request_schema.json`
 - `data/examples/device_command_request_samples.jsonl`
+- `data/examples/sensor_catalog_seed.json`
 - `scripts/validate_device_command_requests.py`

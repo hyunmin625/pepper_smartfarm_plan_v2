@@ -9,6 +9,10 @@
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
 - [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
+- [현장 baseline](docs/site_scope_baseline.md)
+- [계절별 운영 범위](docs/seasonal_operation_ranges.md)
+- [센서 모델 shortlist](docs/sensor_model_shortlist.md)
+- [장치 setpoint 범위](docs/device_setpoint_ranges.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [세부 Todo 보기](todo.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -82,6 +86,7 @@
 - LLM이 JSON으로 안정적으로 행동 추천 가능하도록 만들기
 - RAG vector store PoC로 재배 지식 검색 가능성 확인
 - 수집 센서 종류, 수집 주기, 품질 기준 확정
+- 핵심 센서 1차 상용 모델 shortlist 확정
 - 계절별 운영 범위와 계절 slice 기준 정리
 
 ### 주요 작업
@@ -94,6 +99,7 @@
 - 검색 품질 평가셋 작성
 - retrieval score와 citation 저장 형식 정의
 - 환경/배지/외기/장치/비전/운영 이벤트 센서 목록 확정
+- 확정된 `Grodan Delta 6.5` / `Grodan GT Master` 배지 조건을 수집·판단 기준에 반영
 - sensor_id, device_id, zone_id naming 규칙 확정
 - 수집 주기와 quality_flag 규칙 정의
 - 포맷 검증 스크립트 작성
@@ -111,6 +117,7 @@
 - action_type 오류율 5% 이하
 - 주요 재배 질의에 대한 검색 hit rate 기준 통과
 - 센서 수집 계획 문서 완료
+- 핵심 센서 shortlist 문서 완료
 - 계절별 운영 범위 문서 완료
 - 기본 케이스 행동추천 가능
 

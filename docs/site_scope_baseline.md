@@ -49,7 +49,17 @@
 - `가장 많이 사용되는 품종`에 대한 공인 점유율 통계는 확인하지 못했다.
 - 따라서 위 추천은 `2025-01-06`, `2025-01-16`, `2025-12-23` 기준 종자업계 추천 기사와 공식 재배 기준을 바탕으로 한 운영용 shortlist다.
 
-## 3. 낮/밤 운영 기준
+## 3. 재배 환경/배지 기준
+
+- 육묘용 block: `Grodan Delta 6.5`
+- 본재배용 slab: `Grodan GT Master`
+- 재배 방식: rockwool block/slab 기반 soilless 재배를 기본으로 둔다.
+- 운전 전제:
+  - 육묘 단계의 수분·온도·묘 소질 판단은 `Grodan Delta 6.5` block 기준으로 본다.
+  - 정식 이후의 관수, 배액률, 급배액 EC 차이, 근권 회복 속도 판단은 `Grodan GT Master` slab 기준으로 본다.
+  - 근권 센서 설치와 배액 수집 위치는 대표 slab 라인을 기준으로 설계한다.
+
+## 4. 낮/밤 운영 기준
 
 공식 재배 자료 기준 운영 기본값은 아래처럼 둔다.
 
@@ -66,13 +76,13 @@
 - 육묘 순화 기준:
   - 정식 `7~10일 전` 낮 `22~23℃`, 밤 `14~15℃`
 
-## 4. 계절 운영 메모
+## 5. 계절 운영 메모
 
 - 겨울: 보온커튼 + 난방기로 밤 온도 유지
 - 늦은 봄 이후: 환기량을 점진적으로 확대하고 개화/착과기 고온을 우선 억제
-- 계절별 세부 setpoint 표는 아직 미확정이며 `1.1 계절별 운영 범위 정의`에서 별도로 작성한다.
+- 계절별 세부 운전 범위는 `docs/seasonal_operation_ranges.md`를 기준으로 사용한다.
 
-## 5. 참고 출처
+## 6. 참고 출처
 
 - 농사로 고추 작목 정보: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=101628&menuId=PS03172
 - 농사로 시설고추 계절 관리 Q&A: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=205477&menuId=PS00078

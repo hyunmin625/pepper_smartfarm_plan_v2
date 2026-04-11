@@ -12,13 +12,13 @@
 
 | task_type | 목적 | 현재 seed 파일 | 현재 eval 파일 |
 |---|---|---|---|
-| `qa_reference` | 질의응답형 설명과 citation 학습 | `data/examples/qa_reference_samples.jsonl` | 없음 |
-| `state_judgement` | 상태 요약, 위험도, follow-up 생성 | `data/examples/state_judgement_samples.jsonl` | `evals/expert_judgement_eval_set.jsonl` |
-| `action_recommendation` | 추천 행동과 승인 필요 여부 생성 | `data/examples/action_recommendation_samples.jsonl` | `evals/action_recommendation_eval_set.jsonl` |
-| `forbidden_action` | 위험 행동 차단 또는 승인 필요 판정 | `data/examples/forbidden_action_samples.jsonl` | `evals/forbidden_action_eval_set.jsonl` |
-| `failure_response` | 센서/장치/통신 장애 시 안전한 fallback 생성 | `data/examples/failure_response_samples.jsonl` | `evals/failure_response_eval_set.jsonl` |
-| `robot_task_prioritization` | 수확/점검 후보의 우선순위와 skip reason 생성 | `data/examples/robot_task_samples.jsonl` | `evals/robot_task_eval_set.jsonl` |
-| `alert_report` | 운영자용 알람/보고서 문구 생성 | `data/examples/reporting_samples.jsonl` | 없음 |
+| `qa_reference` | 질의응답형 설명과 citation 학습 | `data/examples/qa_reference_samples*.jsonl` (20건) | 없음 |
+| `state_judgement` | 상태 요약, 위험도, follow-up 생성 | `data/examples/state_judgement_samples*.jsonl` (20건) | `evals/expert_judgement_eval_set.jsonl` |
+| `action_recommendation` | 추천 행동과 승인 필요 여부 생성 | `data/examples/action_recommendation_samples*.jsonl` (20건) | `evals/action_recommendation_eval_set.jsonl` |
+| `forbidden_action` | 위험 행동 차단 또는 승인 필요 판정 | `data/examples/forbidden_action_samples*.jsonl` (20건) | `evals/forbidden_action_eval_set.jsonl` |
+| `failure_response` | 센서/장치/통신 장애 시 안전한 fallback 생성 | `data/examples/failure_response_samples*.jsonl` (20건) | `evals/failure_response_eval_set.jsonl` |
+| `robot_task_prioritization` | 수확/점검 후보의 우선순위와 skip reason 생성 | `data/examples/robot_task_samples*.jsonl` (20건) | `evals/robot_task_eval_set.jsonl` |
+| `alert_report` | 운영자용 알람/보고서 문구 생성 | `data/examples/reporting_samples*.jsonl` (20건) | 없음 |
 
 ## 3. 학습 목적별 묶음
 

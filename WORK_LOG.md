@@ -2,6 +2,89 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
+## 2026-04-12
+
+### ds_v3 / prompt_v3 완료와 champion 갱신
+- `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v3 --model ...:DTXjV3Hg --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3`로 eval `24건`을 재실행했다.
+- 결과는 `pass_rate 0.6667`, `strict_json_rate 1.0`, `top_failed_checks = risk_level_match 5건 / required_action_types_present 5건`이다.
+- `action_recommendation 2건`, `forbidden_action 2건`, `harvest_drying 1건`은 모두 통과로 회복됐다.
+- 새 실패 집합은 `pepper-eval-005`, `pepper-eval-006`, `pepper-eval-008`, `failure-eval-002`, `edge-eval-004`, `seasonal-eval-001`, `seasonal-eval-002`, `seasonal-eval-003` 8건이다.
+- ds_v3/prompt_v3는 v1 legacy baseline `0.5417` 대비 `+0.1250`, 직전 champion ds_v2/prompt_v2 `0.625` 대비 `+0.0417` 개선됐다.
+- `artifacts/reports/fine_tuned_model_eval_latest.*`는 ds_v3/prompt_v3 champion 결과로 갱신한다.
+
+### ds_v3 / prompt_v3 재학습 제출
+- `python3 scripts/build_training_jsonl.py --include-source-file`로 combined training `156건`을 다시 생성했다.
+- `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v3 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v3.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v3.jsonl`로 ds_v3/prompt_v3 전용 학습 파일을 생성했다.
+- `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v3.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v3.jsonl` 기준 `rows 156`, `errors 0`을 확인했다.
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.2.0 --dataset-version ds_v3 --prompt-version prompt_v3 --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v3.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v3.jsonl`로 새 fine-tuning job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`를 제출했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v3-prompt_v3-eval_v1-20260412-033726.json`에 저장했다.
+- 현재 상태는 `validating_files`이며, train file id는 `file-6HTHUEuf1jJTUkrAet1H4z`, validation file id는 `file-FV3Nx3duw8eSCVLmoMqadh`다.
+- `python3 scripts/render_fine_tuning_comparison_table.py`를 다시 실행해 비교표에 ds_v3 candidate run을 반영했다.
+
+### batch4 실패 보강과 prompt_v3 초안 정리
+- ds_v2/prompt_v2 eval에서 남은 9개 실패 케이스를 그대로 대응하는 `batch4` seed를 추가했다.
+- 추가 파일은 `data/examples/state_judgement_samples_batch4.jsonl`, `action_recommendation_samples_batch4.jsonl`, `forbidden_action_samples_batch4.jsonl`이다.
+- 반영한 패턴은 `sensor_fault -> risk_level unknown`, `pest_disease_risk -> medium`, `harvest_drying -> request_human_check 필수`, `worker_present/manual_override/safe_mode -> block_action + create_alert`, `spring transplant cold+overwet -> medium`, `fertigation evidence incomplete -> approval_required`다.
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V3_SYSTEM_PROMPT`와 `--system-prompt-version`을 추가해 v2 기본값을 유지하면서 v3 draft를 별도로 선택할 수 있게 했다.
+- `scripts/evaluate_fine_tuned_model.py`도 `sft_v3` 선택을 지원하게 맞췄다.
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 20`, `sample_rows 156`, `sample_errors 0`
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 156`
+  - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v3 ...` 기준 `train_rows 142`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v3.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v3.jsonl` 기준 `rows 156`, `errors 0`
+
+### Grodan 재배 환경 조건 확정 반영
+- 현장 재배 환경 조건을 육묘용 `Grodan Delta 6.5` block, 본재배용 `Grodan GT Master` slab 기준으로 고정했다.
+- `docs/site_scope_baseline.md`, `docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`, `PLAN.md`, `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`에 이 전제를 반영했다.
+- `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`에도 `cultivation_context`를 추가해 seed catalog가 실제 재배 환경 가정을 함께 기록하도록 보강했다.
+- 근권 센서, 배액률, 관수 펄스, 양액 drift 판단은 앞으로 `Grodan GT Master` slab 기준의 rockwool soilless 운영을 기본값으로 사용한다.
+
+### ds_v2 / prompt_v2 재학습 job 완료와 재평가
+- `scripts/build_training_jsonl.py --include-source-file`, `scripts/build_openai_sft_datasets.py`, `scripts/validate_openai_sft_dataset.py`를 다시 실행해 제출 직전 학습 파일을 고정했다.
+- 제출 기준은 `model_version=pepper-ops-sft-v1.1.0`, `dataset_version=ds_v2`, `prompt_version=prompt_v2`, `eval_version=eval_v1`로 정했다.
+- `scripts/run_openai_fine_tuning_job.py --submit`로 새 fine-tuning job `ftjob-ULBuPHoPBbAMah5rPdd2i334`를 생성했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v2-prompt_v2-eval_v1-20260412-021539.json`에 저장했다.
+- 제출 시 사용된 file id는 train `file-Goxm4KiEmxgXjUkjk19oPy`, validation `file-T4jF5Dea4aa2SXQ7vQmh6L`이다.
+- 이후 `scripts/sync_openai_fine_tuning_job.py`로 상태를 동기화한 결과 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`는 `succeeded`로 완료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v2-prompt-v2-eval-v1-20260412-021539:DTWRpIbI`다.
+- `scripts/render_fine_tuning_comparison_table.py`를 다시 실행해 비교표에 ds_v2 run을 반영했다.
+- 완료 직후 `python3 scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v2 --model ...:DTWRpIbI --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2`로 eval `24건`을 재실행했다.
+- 최신 결과는 `pass_rate 0.625`, `strict_json_rate 1.0`, `top_failed_checks = risk_level_match 5건 / required_action_types_present 3건 / decision_match 1건`이다.
+- `artifacts/reports/fine_tuned_model_eval_latest.*`는 현재 champion(ds_v2/prompt_v2) 결과로 갱신했고, v1 legacy baseline은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 분리 보관했다.
+- 동일 eval `24건` 기준으로 ds_v2/prompt_v2는 legacy baseline `0.5417` 대비 `+0.0833` 개선됐다.
+- 검증 결과:
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 147`
+  - `python3 scripts/build_openai_sft_datasets.py` 기준 `train_rows 133`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train.jsonl artifacts/fine_tuning/openai_sft_validation.jsonl` 기준 `rows 147`, `errors 0`
+
+### 다음 라운드용 SFT 보강 데이터와 prompt 분리
+- `data/examples/state_judgement_samples_batch3.jsonl`, `failure_response_samples_batch3.jsonl`, `forbidden_action_samples_batch3.jsonl`를 추가해 총 training seed를 `147건`으로 늘렸다.
+- batch3에는 `observe_only` 정상 상태, 봄 정식 직후 저온·과습, `manual override + safe_mode` 동시 active, dry-room 통신 손실, `adjust_fertigation -> approval_required` 같은 1차 eval 실패 패턴을 직접 반영했다.
+- `scripts/training_data_config.py`를 추가해 학습용 sample 파일을 family pattern 기준으로 탐색하게 바꿨고, `build_training_jsonl.py`, `validate_training_examples.py`, `report_training_sample_stats.py`, `audit_training_data_consistency.py`가 `batch3`까지 자동 포함되도록 정리했다.
+- `scripts/build_openai_sft_datasets.py`를 보강해 action/failure/robot 계열 SFT 출력에 `retrieval_coverage`, `confidence`, `citations`, 정규화된 `recommended_actions`/`robot_tasks` 기본 필드가 빠지지 않도록 했다.
+- 같은 스크립트에 `LEGACY_SYSTEM_PROMPT`와 `SFT_V2_SYSTEM_PROMPT`를 분리했다. `SFT_V2`는 다음 라운드 재학습용 prompt이고, 현재 fine-tuned model 평가 기준 prompt는 legacy로 유지한다.
+- `scripts/evaluate_fine_tuned_model.py`를 보강해 OpenAI API 오류 재시도, `request_error` 기록, partial save, `--system-prompt-version` 선택을 지원하게 했다.
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 17`, `sample_rows 147`, `sample_errors 0`
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 147`
+  - `python3 scripts/build_openai_sft_datasets.py` 기준 `train_rows 133`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train.jsonl artifacts/fine_tuning/openai_sft_validation.jsonl` 기준 `rows 147`, `errors 0`
+  - 정규화된 OpenAI SFT train set 기준 action/failure/robot 계열에서 `follow_up`, `confidence`, `citations`, `retrieval_coverage` 누락 `0건` 확인
+- prompt-only 영향도도 분리 기록했다.
+  - legacy prompt로 현재 fine-tuned model 재평가 시 `pass_rate 0.5417` 유지: `artifacts/reports/fine_tuned_model_eval_legacy_prompt.{json,jsonl,md}`
+  - `SFT_V2` prompt를 현재 모델에 바로 적용하면 `pass_rate 0.1667`로 크게 악화: `artifacts/reports/fine_tuned_model_eval_prompt_v2.{json,jsonl,md}`
+- 결론적으로 `SFT_V2` prompt는 현재 모델 추론용 기본 prompt가 아니라, 다음 재학습 라운드에 dataset/prompt를 같이 올려야 하는 변경으로 판단했다.
+
+### OpenAI fine-tuning 완료 상태 반영과 결과 검증 스크립트 추가
+- `scripts/sync_openai_fine_tuning_job.py`로 2차 fine-tuning job `ftjob-45KiYE5G2J125jSNg2QqakYm` 상태를 다시 동기화해 `succeeded`를 확인했다.
+- fine-tuned model id는 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v1-prompt-v1-eval-v1-20260412-004953:DTV5z1FR`로 기록했다.
+- `scripts/evaluate_fine_tuned_model.py`를 추가해 eval JSONL 7종에 대해 실제 모델 호출, JSON parse, risk/action/task/citation/follow_up 기준 grading, confidence 요약 리포트를 생성하도록 했다.
+- `python3 scripts/evaluate_fine_tuned_model.py`로 eval `24건`을 실행해 v1 baseline 리포트 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.{json,jsonl,md}`를 생성했다.
+- 1차 결과는 `pass_rate 0.5417`, `strict_json_rate 1.0`이며 주요 실패는 `risk_level_match 7건`, `required_action_types_present 4건`, `retrieval_coverage` 누락 `20건`이었다.
+- 실제 실패 패턴으로는 정상 상태에서 `observe_only` 대신 비허용 `action_type`인 `maintain`/`hold`를 반환하거나, dry-room 통신 장애에서 `enter_safe_mode` 대신 `create_alert` 중심으로 응답하는 사례가 확인됐다.
+- 관련 문서를 함께 갱신했다: `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`, `docs/openai_fine_tuning_execution.md`, `evals/README.md`
+- 이 단계부터 다음 우선순위는 fine-tuning submit 자체가 아니라 `3.4 파인튜닝 결과 검증` 실행과 결과 해석이다.
+
 ## 2026-04-11
 
 ### 현장 범위와 품종 shortlist, 낮/밤 운영 기준 고정
@@ -18,6 +101,125 @@
   - 농사로 고추 양액재배 현장 기술지원: https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=259682&menuId=PS00077
   - NH농우바이오 2026년 1월 추천품종 기사: https://www.newsam.co.kr/news/article.html?no=41799
   - 아시아종묘 2025년 건고추 추천품종 기사: https://www.newsfm.kr/mobile/article.html?no=9677
+
+### 계절별 운영 범위 정의
+- `docs/seasonal_operation_ranges.md`를 추가해 `gh-01` 기준 겨울/봄/여름/가을의 운영 단계, 목표 온도 범위, 리스크 우선순위를 정리했다.
+- 겨울은 육묘/보온, 봄은 정식/활착, 여름은 고온 억제와 과건조·낙화 관리, 가을은 후기 수확과 철거 판단 중심으로 정리했다.
+- 달력만으로 계절을 고정하지 않고 생육 단계, 최근 7일 외기 패턴, 정식 후 경과일, 수확/철거 여부를 함께 보도록 정책 연결 원칙을 정리했다.
+- 관련 문서도 함께 갱신했다: `docs/site_scope_baseline.md`, `PLAN.md`, `schedule.md`, `AI_MLOPS_PLAN.md`, `README.md`, `PROJECT_STATUS.md`, `todo.md`
+- 조사 근거:
+  - 농사로 고추 작목 정보: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=101628&menuId=PS03172
+  - 농사로 고추 양액재배 현장 기술지원: https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=259682&menuId=PS00077
+  - 농사로 고추 육묘 환경 자료: https://www.nongsaro.go.kr/portal/ps/psx/psxa/mlrdCurationDtl.mo?curationNo=188
+
+### 핵심 센서 1차 상용 모델 shortlist 정리
+- `docs/sensor_model_shortlist.md`를 추가해 `gh-01` 300평 연동형 비닐온실 기준 핵심 센서 8종의 1차 상용 모델 shortlist를 정리했다.
+- 온습도는 `Vaisala HMP110`, CO2는 `Vaisala GMP252`, PAR은 `Apogee SQ-522-SS`, 배지 함수율은 `METER TEROS 12`, 양액 pH/EC는 `Bluelab Guardian Inline Wi-Fi`, 외기 통합은 `Vaisala WXT536`를 기본 후보로 두었다.
+- shortlist 목적은 최종 발주가 아니라 `sensor-ingestor`와 PLC/별도 모니터링 계층 연결 현실성을 기준으로 한 1차 기술 기준 고정이다.
+- `todo.md`의 `1.2 센서 인벤토리 작성` 중 온도/습도/CO2/PAR/배지 함수율/EC/pH/외기 센서 모델 조사 항목을 완료 처리했다.
+- 관련 문서도 함께 갱신했다: `PLAN.md`, `schedule.md`, `AI_MLOPS_PLAN.md`, `README.md`, `PROJECT_STATUS.md`, `docs/sensor_installation_inventory.md`
+- 조사 근거:
+  - Vaisala HMP110: https://www.vaisala.com/en/products/instruments-sensors-and-other-measurement-devices/instruments-industrial-measurements/hmp110
+  - Vaisala GMP252: https://www.vaisala.com/en/products/instruments-sensors-and-other-measurement-devices/instruments-industrial-measurements/gmp252
+  - Apogee SQ-522-SS: https://www.apogeeinstruments.com/sq-522-ss-modbus-digital-output-full-spectrum-quantum-sensor/
+  - METER TEROS 12: https://metergroup.com/products/teros-12/
+  - Bluelab Guardian Inline Wi-Fi: https://bluelab.com/products/bluelab-guardian-monitor-inline-wi-fi
+  - Bluelab OnePen: https://bluelab.com/products/bluelab-onepen
+  - Vaisala WXT536 설명: https://www.vaisala.com/en/expert-article/integrated-weather-data-efficient-building-operation
+
+### 장치별 최소/최대 setpoint 범위 고정
+- `docs/device_setpoint_ranges.md`를 추가해 fan, vent, shade, irrigation valve, heater, CO2 doser, nutrient mixer, source water valve, dehumidifier, dry fan의 기본 운전 범위를 정리했다.
+- `schemas/sensor_catalog_schema.json`의 `devices[*]`에 `setpoint_bounds`를 필수 필드로 추가했다.
+- `data/examples/sensor_catalog_seed.json`의 모든 장치 인스턴스에 `setpoint_bounds`를 넣어 실제 장치 명령 파라미터 기준을 seed 데이터에 반영했다.
+- `scripts/validate_device_setpoint_ranges.py`를 추가해 각 장치 타입별 필수 파라미터와 min/max, allowed_values 정합성을 검증하도록 했다.
+- `scripts/validate_device_command_requests.py`를 보강해 command sample의 `parameters`가 catalog `setpoint_bounds` 안에 있는지 함께 검사하도록 했다.
+- `todo.md`의 `1.3 액추에이터 인벤토리 작성` 중 `각 장치의 최소/최대 setpoint 정리` 항목을 완료 처리했다.
+- 검증 결과:
+  - `python3 scripts/validate_device_setpoint_ranges.py` 기준 `devices 20`, `errors 0`
+  - `python3 scripts/validate_device_command_requests.py` 기준 `rows 3`, `errors 0`
+  - `python3 -m py_compile scripts/validate_device_setpoint_ranges.py scripts/validate_device_command_requests.py` 통과
+
+### 장치 운전 경험 규칙 정리
+- `docs/device_operation_rules.md`를 추가해 환기창-순환팬-차광의 우선순위, 관수 펄스 원칙, 양액기 drift 점검, 난방/CO2/건조실 운전 SOP를 한 문서로 정리했다.
+- 이 문서는 공식 재배 지식, 현장 사례, 안전 요구사항을 묶어 `policy-engine`과 action recommendation seed의 상위 규칙 문서로 쓰도록 설계했다.
+- `todo.md`의 `2.1 고추 재배 지식셋 정리` 중 `장치 운전 경험 규칙 정리` 항목을 완료 처리했다.
+- 관련 문서도 함께 갱신했다: `PLAN.md`, `AI_MLOPS_PLAN.md`, `README.md`, `PROJECT_STATUS.md`
+
+### 학습 seed 중복/모순 감사 자동화
+- `scripts/audit_training_data_consistency.py`를 추가해 주요 학습 seed JSONL 7종을 대상으로 exact duplicate와 잠재 모순을 자동 감지하도록 했다.
+- 입력 비교는 `task_type + input`, exact duplicate 비교는 `task_type + input + preferred_output` 기준으로 정규화 해시를 사용한다.
+- `todo.md`의 `2.4 데이터 정제` 중 `중복 샘플 제거`, `모순 샘플 검토` 항목을 완료 처리했다.
+- 검증 결과:
+  - `python3 scripts/audit_training_data_consistency.py` 기준 `files 7`, `rows 22`, `duplicate_rows 0`, `potential_contradictions 0`, `errors 0`
+  - `python3 -m py_compile scripts/audit_training_data_consistency.py` 통과
+
+### edge case / 계절별 평가셋 추가
+- `evals/edge_case_eval_set.jsonl`를 추가해 장치 readback stuck, CO2 lock, manual override + safe mode, 최근 관수 직후 과습 같은 edge case 4건을 분리했다.
+- `evals/seasonal_eval_set.jsonl`를 추가해 겨울 육묘, 봄 정식, 여름 개화기 고온, 가을 첫서리 대응 케이스 4건을 분리했다.
+- `scripts/validate_training_examples.py`의 기본 eval 목록에 두 파일을 추가했다.
+- `todo.md`의 `2.5 평가셋 구축` 중 `edge case 평가셋 구축`, `계절별 평가셋 구축` 항목을 완료 처리했다.
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `eval_files 7`, `eval_rows 24`, `eval_errors 0`
+  - `python3 -m py_compile scripts/validate_training_examples.py` 통과
+
+### task family별 학습 seed 20건 확장
+- `data/examples/action_recommendation_samples_batch2.jsonl`, `failure_response_samples_batch2.jsonl`, `forbidden_action_samples_batch2.jsonl`, `qa_reference_samples_batch2.jsonl`, `reporting_samples_batch2.jsonl`, `robot_task_samples_batch2.jsonl`, `state_judgement_samples_batch2.jsonl`를 추가했다.
+- 기존 7개 task family seed를 각 20건 이상으로 맞춰 총 140건의 기본 학습 seed를 확보했다.
+- `scripts/validate_training_examples.py`와 `scripts/audit_training_data_consistency.py`의 기본 입력 목록에 batch2 파일을 포함시켰다.
+- `todo.md`의 `task family별 학습 seed 20건 이상 확보` 항목을 완료 처리했다.
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 14`, `sample_rows 140`, `sample_duplicate_ids 0`, `sample_errors 0`
+  - `python3 scripts/audit_training_data_consistency.py` 기준 `files 14`, `rows 140`, `duplicate_rows 0`, `potential_contradictions 0`, `errors 0`
+  - 파일군별 row 수: `action_recommendation 20`, `failure_response 20`, `forbidden_action 20`, `qa_reference 20`, `reporting 20`, `robot_task 20`, `state_judgement 20`
+
+### 파인튜닝 목표 재정의와 출력 계약 고정
+- `docs/fine_tuning_objectives.md`를 추가해 RAG와 파인튜닝 역할 경계를 문서로 고정했다.
+- 운영형 모델의 목표를 `JSON 출력 안정화`, `허용 action_type 제한`, `보수적 불확실성 표현`, `follow_up 강제`, `citation/retrieval_coverage 유지`로 정리했다.
+- `schemas/action_schema.json`의 필수 필드에 `retrieval_coverage`를 추가해 출력 계약을 문서와 맞췄다.
+- `docs/training_data_format.md`, `docs/dataset_taxonomy.md`, `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`, `todo.md`를 함께 갱신했다.
+
+### 학습/eval 합본 생성과 통계 리포트 추가
+- `scripts/build_training_jsonl.py`를 추가해 14개 sample 파일을 `artifacts/training/combined_training_samples.jsonl`로 합쳤다.
+- `scripts/build_eval_jsonl.py`를 추가해 7개 eval 파일을 `artifacts/training/combined_eval_cases.jsonl`로 합쳤다.
+- `scripts/report_training_sample_stats.py`를 추가해 task 분포, action_type 분포, 길이 분포, longest sample 상위 5건을 `artifacts/reports/training_sample_stats.json`에 기록하도록 했다.
+- `docs/training_dataset_build.md`에 생성 절차를 문서화했고, `docs/training_sample_manual_review.md`에 longest sample과 세부 task 불균형 수동 검토 결과를 남겼다.
+- `todo.md`의 `3.2 데이터 파일 생성` 항목을 모두 완료 처리했다.
+- 검증 결과:
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 140`
+  - `python3 scripts/build_eval_jsonl.py --include-source-file` 기준 `rows 24`
+  - `python3 scripts/report_training_sample_stats.py` 기준 `class_imbalance_ratio 10.00`
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 14`, `sample_rows 140`, `eval_files 7`, `eval_rows 24`
+
+### base model과 실험명 규칙 고정
+- `docs/fine_tuning_runbook.md`를 추가해 현재 파인튜닝 기본 방식을 `SFT`로 고정했다.
+- 주력 base model은 `gpt-4.1-mini-2025-04-14`, challenger는 `gpt-4.1-2025-04-14`, exploratory는 `gpt-4.1-nano-2025-04-14`로 정리했다.
+- 내부 모델 버전 규칙 `pepper-ops-sft-v{major}.{minor}.{patch}`와 실험명 규칙 `ft-sft-{base_model_short}-{dataset_version}-{prompt_version}-{eval_version}-{yyyymmdd}`를 정의했다.
+- `todo.md`의 `3.3 학습 실행` 중 `모델 버전 결정`, `실험명 규칙 정의`를 완료 처리했다.
+- 조사 근거:
+  - OpenAI fine-tuning API reference: https://platform.openai.com/docs/api-reference/fine-tuning/retrieve
+  - OpenAI model optimization guide: https://platform.openai.com/docs/guides/legacy-fine-tuning
+
+### OpenAI SFT 실행 경로와 비교표 추가
+- `scripts/build_openai_sft_datasets.py`를 추가해 내부 학습 seed 140건을 OpenAI SFT용 chat-format train 126건, validation 14건으로 분리 생성하도록 했다.
+- `scripts/validate_openai_sft_dataset.py`를 추가해 생성된 chat JSONL이 OpenAI 제출 형식인 `messages` only 구조를 만족하는지 검증하도록 했다.
+- `scripts/run_openai_fine_tuning_job.py`를 추가해 기본 실행은 dry-run manifest 생성, `--submit`일 때만 OpenAI file upload와 fine-tuning job create를 수행하도록 했다.
+- `scripts/sync_openai_fine_tuning_job.py`를 추가해 job status, events, failure case 누적 경로를 만들었다.
+- `scripts/render_fine_tuning_comparison_table.py`를 추가해 run manifest 기준 비교표를 `artifacts/fine_tuning/fine_tuning_comparison_table.md`로 생성하도록 했다.
+- `docs/openai_fine_tuning_execution.md`에 실제 실행 순서와 산출물 경로를 문서화했다.
+- 검증 결과:
+  - `python3 scripts/build_openai_sft_datasets.py` 기준 `train_rows 126`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train.jsonl artifacts/fine_tuning/openai_sft_validation.jsonl` 기준 `rows 140`, `errors 0`
+  - `python3 scripts/run_openai_fine_tuning_job.py` 기준 dry-run manifest `ft-sft-gpt41mini-ds_v1-prompt_v1-eval_v1-20260412.json` 생성
+  - `python3 scripts/render_fine_tuning_comparison_table.py` 기준 `runs 1`
+
+### OpenAI SFT 실제 submit과 재제출
+- `python3 scripts/run_openai_fine_tuning_job.py --submit`로 실제 fine-tuning job `ftjob-2UERXn8JN2B0SDUXL1tukptl`을 생성했다.
+- `python3 scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v1-prompt_v1-eval_v1-20260412.json` 결과, OpenAI가 training file top-level `metadata`를 거부해 `invalid_file_format`로 실패한 것을 확인했다.
+- 이후 `scripts/build_openai_sft_datasets.py`에서 OpenAI 제출 JSONL을 `messages` only 구조로 수정했고, `scripts/validate_openai_sft_dataset.py`도 unexpected top-level key를 차단하도록 강화했다.
+- `scripts/run_openai_fine_tuning_job.py`는 같은 날짜 재실행 시 manifest가 덮어써지지 않도록 기본 실험명에 시각 태그를 붙이도록 보강했다.
+- 수정 뒤 `python3 scripts/build_openai_sft_datasets.py`와 `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train.jsonl artifacts/fine_tuning/openai_sft_validation.jsonl`를 다시 실행해 `rows 140`, `errors 0`을 확인했다.
+- 재제출한 2차 job은 `ftjob-45KiYE5G2J125jSNg2QqakYm`이며, 이후 sync 결과 `succeeded`로 완료됐다.
+- 실패 케이스는 `artifacts/fine_tuning/failure_cases.jsonl`에 누적 기록되며, 비교표는 `artifacts/fine_tuning/fine_tuning_comparison_table.md`에 run 단위로 반영한다.
 
 ### optional Modbus TCP transport 검증과 safe mode 연동 추가
 - `docs/plc_modbus_governance.md`를 추가해 Modbus TCP를 현재 기본 PLC transport로 고정하고, write 허용 table, readback success condition, 공통 장애 코드, rollback 후보, safe mode 전환 조건을 정리했다.

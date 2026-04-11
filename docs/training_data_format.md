@@ -45,6 +45,7 @@
 - `requires_human_approval`
 - `follow_up`
 - `confidence`
+- `retrieval_coverage`
 - `citations`
 
 ### 3.2 금지행동
@@ -63,6 +64,8 @@
 - `recommended_actions`
 - `fallback_mode`
 - `follow_up`
+- `confidence`
+- `retrieval_coverage`
 - `citations`
 
 ### 3.4 로봇 우선순위
@@ -73,6 +76,8 @@
 - `skipped_candidates`
 - `requires_human_approval`
 - `follow_up`
+- `confidence`
+- `retrieval_coverage`
 - `citations`
 
 ### 3.5 알람/보고서
@@ -96,6 +101,7 @@
 
 - 상태 입력은 `schemas/state_schema.json`을 기준으로 요약하거나 축약 필드를 넣는다.
 - 행동 출력은 가능한 한 `schemas/action_schema.json` 필드명을 재사용한다.
+- 운영형 모델 목표와 허용 action 목록은 `docs/fine_tuning_objectives.md`를 기준으로 고정한다.
 - 평가셋은 전체 스키마를 반복 복사하지 않고 `expected`에 핵심 제약만 넣는다.
 - 스키마가 아직 없는 task는 먼저 field contract를 문서화하고, 실제 구현 시 JSON schema로 승격한다.
 

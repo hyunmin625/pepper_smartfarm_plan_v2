@@ -105,6 +105,38 @@ def main() -> None:
         if action_type not in set(profile.get("supported_action_types", [])):
             errors.append(f"{prefix}: action_type {action_type} is not supported by profile {profile_id}")
 
+        parameter_bounds = {
+            item.get("parameter"): item
+            for item in device.get("setpoint_bounds", [])
+            if isinstance(item, dict) and isinstance(item.get("parameter"), str)
+        }
+        parameters = row.get("parameters")
+        if not isinstance(parameters, dict):
+            errors.append(f"{prefix}: parameters must be an object")
+        else:
+            for parameter_name, parameter_value in parameters.items():
+                bound = parameter_bounds.get(parameter_name)
+                if bound is None:
+                    errors.append(f"{prefix}: parameter {parameter_name} is not defined in catalog setpoint_bounds")
+                    continue
+                value_type = bound.get("value_type")
+                if value_type in {"binary", "enum"}:
+                    allowed_values = set(bound.get("allowed_values", []))
+                    if parameter_value not in allowed_values:
+                        errors.append(
+                            f"{prefix}: parameter {parameter_name} value {parameter_value} is outside allowed_values {sorted(allowed_values)}"
+                        )
+                elif value_type in {"integer", "number"}:
+                    if not isinstance(parameter_value, (int, float)):
+                        errors.append(f"{prefix}: parameter {parameter_name} must be numeric")
+                        continue
+                    minimum = bound.get("min")
+                    maximum = bound.get("max")
+                    if isinstance(minimum, (int, float)) and parameter_value < minimum:
+                        errors.append(f"{prefix}: parameter {parameter_name} value {parameter_value} is below min {minimum}")
+                    if isinstance(maximum, (int, float)) and parameter_value > maximum:
+                        errors.append(f"{prefix}: parameter {parameter_name} value {parameter_value} exceeds max {maximum}")
+
         approval_required = row.get("approval_required")
         approval_context = row.get("approval_context", {})
         approval_status = approval_context.get("approval_status")

@@ -2,7 +2,7 @@
 
 적고추(건고추) 온실 스마트팜 운영을 위한 농업용 LLM/제어 시스템 개발 계획 저장소입니다.
 
-현재 이 저장소는 구현 코드가 아니라 계획, 일정, 작업 로그를 관리하는 문서 저장소입니다.
+현재 이 저장소는 계획/문서 중심 저장소이며, 일부 서비스 skeleton과 검증 스크립트가 함께 포함되어 있습니다.
 
 ## 빠른 시작
 
@@ -33,7 +33,22 @@
 - Phase -1 AI 준비 구축 및 MLOps 기반 설계: `설계 기준 완료`
 - 대상 현장 범위 고정: `300평 연동형 비닐온실 1동`, `gh-01`
 - 품종 운영 범위 고정: 건고추/고춧가루용 적고추, 1차 shortlist `왕조`, `칼탄열풍`, `조생강탄`
+- 재배 환경 조건 확정: 육묘용 `Grodan Delta 6.5`, 본재배용 `Grodan GT Master`
 - 낮/밤 운영 기본값 고정: 낮 `25~28℃`, 밤 `18℃ 전후`, 허용 밴드 낮 `25~30℃`/밤 `18~20℃`
+- 계절별 운영 범위 정의 완료: 겨울 육묘/보온, 봄 활착, 여름 고온 억제, 가을 후기 수확 기준 반영
+- 핵심 센서 1차 상용 모델 shortlist 완료: `HMP110`, `GMP252`, `SQ-522-SS`, `TEROS 12`, `Guardian Inline Wi-Fi`, `WXT536`
+- 장치별 최소/최대 setpoint 범위 고정 완료: fan/vent/shade/irrigation/heater/CO2/fertigation/dehumidifier/dry-fan
+- 장치 운전 경험 규칙 정리 완료: 환기-팬-차광 우선순위, 관수 펄스 원칙, CO2/난방/건조실 운전 SOP 반영
+- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `156건`
+- 학습 seed 중복/모순 감사 자동화 완료: `156개` sample 기준 duplicate `0`, contradiction `0`
+- 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
+- 학습/eval 합본 생성과 통계 리포트 완료: training `147건`, eval `24건`, class imbalance/action_type/길이 분포 확인, longest sample 수동 검토 완료
+- 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
+- OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
+- 최신 fine-tuned model 확보 완료: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`
+- 최신 fine-tuned model eval 완료: `24건` 기준 pass rate `0.6667`, strict JSON rate `1.0`, top failure는 `risk_level_match 5건`, `required_action_types_present 5건`
+- baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v3/prompt_v3 결과가 `+0.1250`, 직전 ds_v2/prompt_v2 champion `0.625` 대비 `+0.0417` 개선됐다.
+- edge case/계절별 평가셋 추가 완료: eval 파일 `7종`, eval row `24건`
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
@@ -93,6 +108,10 @@
 - `docs/naming_conventions.md`: zone/sensor/device/robot/event naming 규칙
 - `docs/rag_contextual_retrieval_strategy.md`: 최근 3~5일 상태를 반영한 contextual retrieval 전략
 - `docs/site_scope_baseline.md`: 대상 온실, 품종 shortlist, 낮/밤 운영 기준
+- `docs/seasonal_operation_ranges.md`: 계절별 운전 목표와 위험 우선순위
+- `docs/sensor_model_shortlist.md`: 핵심 센서 8종 1차 상용 모델 shortlist
+- `docs/device_setpoint_ranges.md`: 장치 명령 파라미터의 최소/최대 범위와 권장 구간
+- `docs/device_operation_rules.md`: 장치 운전 SOP와 공통 금지 패턴
 - `docs/rag_next_steps.md`: 남은 보강 과제
 - `docs/sensor_collection_plan.md`: zone, sensor, device, sample_rate, quality_flag 기준
 - `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
@@ -137,6 +156,11 @@
 - `scripts/validate_plc_modbus_transport.py`: optional Modbus TCP transport write/readback/timeout 검증
 - `docs/dataset_taxonomy.md`: 학습/eval 데이터 분류 체계
 - `docs/training_data_format.md`: seed JSONL 포맷과 템플릿 기준
+- `docs/fine_tuning_objectives.md`: RAG/파인튜닝 역할 분리와 운영형 출력 목표
+- `docs/fine_tuning_runbook.md`: base model, 내부 버전, 실험명 규칙
+- `docs/openai_fine_tuning_execution.md`: OpenAI SFT 실행, sync, 비교표 경로
+- `docs/training_dataset_build.md`: training/eval 합본 생성 절차
+- `docs/training_sample_manual_review.md`: class imbalance와 longest sample 수동 검토 기록
 - `docs/data_curation_rules.md`: 데이터 정제와 정규화 규칙
 - `docs/offline_agent_runner_spec.md`: offline runner 요구사항
 - `docs/mlops_registry_design.md`: dataset/prompt/model/eval registry 규칙
@@ -149,6 +173,25 @@
 - `scripts/build_chroma_index.py`: ChromaDB 기반 vector index 생성
 - `scripts/evaluate_rag_retrieval.py`, `scripts/rag_smoke_test.py`: 검색 회귀 검증
 - `scripts/validate_training_examples.py`: 학습/eval JSONL 구조 검증
+- `scripts/audit_training_data_consistency.py`: 학습 seed 중복/잠재 모순 감사
+- `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`: 학습/eval 합본 JSONL 생성
+- `scripts/report_training_sample_stats.py`: task/action/길이 분포 리포트 생성
+- `scripts/build_openai_sft_datasets.py`: OpenAI SFT용 train/validation chat JSONL 생성
+- `scripts/validate_openai_sft_dataset.py`: OpenAI SFT용 chat JSONL 검증
+- `scripts/run_openai_fine_tuning_job.py`: dry-run 또는 실제 fine-tuning job 생성
+- `scripts/sync_openai_fine_tuning_job.py`: fine-tuning job status/events sync
+- `scripts/render_fine_tuning_comparison_table.py`: run manifest 기반 비교표 생성
+- `scripts/evaluate_fine_tuned_model.py`: fine-tuned model 기준 eval JSONL 실행과 요약 리포트 생성
+- `artifacts/training/combined_training_samples.jsonl`: 학습 seed 147건 합본
+- `artifacts/training/combined_eval_cases.jsonl`: eval 24건 합본
+- `artifacts/reports/training_sample_stats.json`: sample 분포/길이 통계 리포트
+- `artifacts/fine_tuning/openai_sft_train.jsonl`: OpenAI SFT용 train set 133건
+- `artifacts/fine_tuning/openai_sft_validation.jsonl`: OpenAI SFT용 validation set 14건
+- `artifacts/fine_tuning/runs/*.json`: fine-tuning run manifest
+- `artifacts/fine_tuning/fine_tuning_comparison_table.md`: fine-tuning 비교표
+- `artifacts/reports/fine_tuned_model_eval_latest.md`: 최신 ds_v3/prompt_v3 fine-tuned model eval 요약
+- `artifacts/reports/fine_tuned_model_eval_latest.json`: 최신 ds_v3/prompt_v3 fine-tuned model eval 상세 리포트
+- `artifacts/reports/fine_tuned_model_eval_legacy_prompt.md`: v1 legacy baseline eval 요약
 - `scripts/validate_farm_case_candidates.py`: `farm_case` 후보 JSONL 구조 검증
 - `scripts/validate_sensor_ingestor_config.py`: `sensor-ingestor` 설정과 catalog coverage 검증
 - `scripts/validate_device_profile_registry.py`: device catalog와 action schema를 기준으로 profile registry 정합성 검증
@@ -165,10 +208,9 @@
 
 ## 다음 우선순위
 
-1. `plc_tag_modbus_tcp`를 실제 TCP/Modbus client와 실IP/실주소 테이블에 연결
-2. override contract를 execution-gateway state machine과 approval store로 고도화
-3. task별 학습 seed를 20건 이상으로 확장
-4. retrieval 고정 리포트와 case regression 관리 방식 정리
-5. hard block 정책 10개와 approval 정책 10개 작성
+1. ds_v3/prompt_v3 eval에서 남은 `risk_level_match 5건`, `required_action_types_present 5건` 실패를 기준으로 seasonal/failure/safety 데이터셋을 보강
+2. 검색 근거 부족 시 불확실성 표현과 hallucination 사례를 사람 검토로 정리
+3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+4. offline runner/state-estimator MVP 착수 범위를 확정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

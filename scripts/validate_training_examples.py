@@ -10,6 +10,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from training_data_config import training_sample_files
 
 ALLOWED_SAMPLE_TASK_TYPES = {
     "qa_reference",
@@ -48,15 +49,7 @@ ALLOWED_CHECK_TYPES = {
     "other",
 }
 
-DEFAULT_SAMPLE_FILES = [
-    Path("data/examples/state_judgement_samples.jsonl"),
-    Path("data/examples/forbidden_action_samples.jsonl"),
-    Path("data/examples/qa_reference_samples.jsonl"),
-    Path("data/examples/action_recommendation_samples.jsonl"),
-    Path("data/examples/failure_response_samples.jsonl"),
-    Path("data/examples/robot_task_samples.jsonl"),
-    Path("data/examples/reporting_samples.jsonl"),
-]
+DEFAULT_SAMPLE_FILES = training_sample_files()
 
 DEFAULT_EVAL_FILES = [
     Path("evals/expert_judgement_eval_set.jsonl"),
@@ -64,6 +57,8 @@ DEFAULT_EVAL_FILES = [
     Path("evals/forbidden_action_eval_set.jsonl"),
     Path("evals/failure_response_eval_set.jsonl"),
     Path("evals/robot_task_eval_set.jsonl"),
+    Path("evals/edge_case_eval_set.jsonl"),
+    Path("evals/seasonal_eval_set.jsonl"),
 ]
 
 

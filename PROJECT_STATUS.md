@@ -4,7 +4,7 @@
 
 ## 현재 저장소 상태
 
-- 저장소 유형: 구현 코드가 없는 계획/문서 저장소
+- 저장소 유형: 계획/문서 중심 저장소이며 서비스 skeleton과 검증 스크립트를 포함
 - 대상 시스템: 적고추(건고추) 온실 스마트팜 운영을 위한 농업용 LLM/제어 시스템
 - 현장 상태: 온실 공사 중이며 아직 실측 센서 데이터 수집 전
 - 현재 브랜치: `master`
@@ -42,6 +42,10 @@
 - `docs/naming_conventions.md`: ID와 이벤트 이름 규칙
 - `AI_MLOPS_PLAN.md`: 온실 공사 중 먼저 진행할 AI 모델 준비, 센서 수집 계획, MLOps 루프
 - `docs/site_scope_baseline.md`: 대상 온실, 품종 shortlist, 낮/밤 운영 기준
+- `docs/seasonal_operation_ranges.md`: 계절별 운전 목표와 계절 리스크 우선순위
+- `docs/sensor_model_shortlist.md`: 핵심 센서 8종 1차 상용 모델 shortlist
+- `docs/device_setpoint_ranges.md`: 장치 명령 파라미터의 최소/최대 범위와 권장 구간
+- `docs/device_operation_rules.md`: 장치 운전 SOP와 공통 금지 패턴
 - `EXPERT_AI_AGENT_PLAN.md`: 적고추 재배 전주기 전문가 AI Agent 구축 단계
 - `PLAN.md`: 전체 목표, 아키텍처, 안전 원칙, RAG+파인튜닝 구조, MVP 범위
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
@@ -70,6 +74,11 @@
 - `docs/safety_requirements.md`: 인터록, estop, 수동/자동 전환, 승인/금지 액션 기준
 - `docs/dataset_taxonomy.md`: 학습/eval 데이터의 task family 분류 기준
 - `docs/training_data_format.md`: seed JSONL 입력/출력 포맷과 템플릿 기준
+- `docs/fine_tuning_objectives.md`: RAG/파인튜닝 역할 분리와 운영형 출력 목표
+- `docs/fine_tuning_runbook.md`: base model, 내부 버전, 실험명 규칙
+- `docs/openai_fine_tuning_execution.md`: OpenAI SFT 실행, sync, 비교표 경로
+- `docs/training_dataset_build.md`: training/eval 합본 생성 절차
+- `docs/training_sample_manual_review.md`: class imbalance와 longest sample 수동 검토 기록
 - `docs/data_curation_rules.md`: 샘플/eval 정제와 정규화 규칙
 - `docs/offline_agent_runner_spec.md`: 실측 데이터 없이 Agent 판단을 검증하는 offline runner 요구사항
 - `docs/mlops_registry_design.md`: dataset/prompt/model/eval/retrieval profile 버전 관리 규칙
@@ -119,7 +128,30 @@
 - Phase -1 설계 산출물 보강 완료: offline runner spec, MLOps registry 설계, shadow mode report format, 합성 센서 시나리오 추가
 - 현장 범위 1차 고정 완료: `300평 연동형 비닐온실 1동`, `gh-01`, 논리 zone 5개 기준
 - 품종 운영 범위 1차 고정 완료: 건고추/고춧가루용 적고추, shortlist `왕조`, `칼탄열풍`, `조생강탄`
+- 재배 환경 조건 확정 완료: 육묘용 `Grodan Delta 6.5` block, 본재배용 `Grodan GT Master` slab
 - 공식 재배 자료 기준 낮/밤 운영 기본값 반영 완료: 낮 `25~28℃`, 밤 `18℃ 전후`, 허용 밴드 낮 `25~30℃`/밤 `18~20℃`
+- 계절별 운영 범위 정의 완료: 겨울 육묘/보온, 봄 정식/활착, 여름 고온 억제, 가을 후기 수확/철거 기준
+- 핵심 센서 1차 상용 모델 조사 완료: `Vaisala HMP110`, `Vaisala GMP252`, `Apogee SQ-522-SS`, `METER TEROS 12`, `Bluelab Guardian Inline Wi-Fi`, `Vaisala WXT536`
+- 장치별 최소/최대 setpoint 범위 정리 완료: `setpoint_bounds`를 sensor catalog와 command validation에 반영
+- 장치 운전 경험 규칙 정리 완료: 환기-팬-차광, 관수 펄스, 양액기 drift 점검, CO2/난방/건조실 SOP를 문서화
+- 학습 seed 7개 task family를 `batch4`까지 확장 완료: 총 156건 (`data/examples/*_samples*.jsonl`)
+- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 156개 sample에서 duplicate 0, contradiction 0 확인
+- 파인튜닝 목표 재정의 완료: `docs/fine_tuning_objectives.md`, `schemas/action_schema.json`
+- 학습/eval 합본 생성과 통계 리포트 완료: `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`, `scripts/report_training_sample_stats.py`, `docs/training_sample_manual_review.md`
+- 파인튜닝 runbook 1차 완료: `docs/fine_tuning_runbook.md`
+- OpenAI SFT 실행 경로와 실제 submit 검증 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정 후 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`, `batch3 + prompt_v2` 기준 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3` 기준 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`까지 모두 `succeeded`
+- 최신 fine-tuned model 확보 완료: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`
+- 최신 fine-tuned model eval 완료: eval `24건` 기준 pass rate `0.6667`, strict JSON rate `1.0`, top failure는 `risk_level_match 5건`, `required_action_types_present 5건`
+- baseline 보관 완료: v1 legacy baseline `0.5417`은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관했고, ds_v3/prompt_v3 결과는 baseline 대비 `+0.1250`, 직전 champion 대비 `+0.0417` 개선됐다.
+- 다음 라운드용 SFT 보강 완료: `scripts/build_openai_sft_datasets.py`가 action/failure/robot 계열 출력에 `retrieval_coverage`, `confidence`, `citations`, 정규 action object를 강제하도록 정규화되었고, eval 실패 패턴을 반영한 `batch3` seed 7건이 추가됐다.
+- prompt 버전 분리 완료: 현재 모델 검증용 `legacy` prompt와 다음 재학습용 `sft_v2` prompt를 분리했다. 현재 모델에 `sft_v2` prompt를 바로 적용하면 eval `24건` pass rate가 `0.1667`로 떨어져, prompt 교체는 재학습과 함께 진행해야 한다.
+- 2차 개선 run 완료: `ftjob-ULBuPHoPBbAMah5rPdd2i334` (`ft-sft-gpt41mini-ds_v2-prompt_v2-eval_v1-20260412-021539`)는 `succeeded`로 종료됐고 결과 모델은 `DTWRpIbI`다.
+- 3차 개선 run 완료: `ftjob-MiiLGncQBHRXL2NZoBYWxMcc` (`ft-sft-gpt41mini-ds_v3-prompt_v3-eval_v1-20260412-033726`)는 `succeeded`로 종료됐고 결과 모델은 `DTXjV3Hg`다.
+- 새 run 기준 학습 파일 규모는 train `142`, validation `14`이며, 비교표와 최신 eval 결과는 `artifacts/fine_tuning/fine_tuning_comparison_table.md`, `artifacts/reports/fine_tuned_model_eval_latest.*`에 반영됐다.
+- `batch4` 실패 보강 9건과 `prompt_v3` draft를 추가했다. 대상은 `sensor_fault`, `pest_disease_risk`, `harvest_drying`, `safety_policy`, `action_recommendation`, `forbidden_action`의 남은 실패 패턴이다.
+- `batch4` 반영 후 내부 검증 기준 sample `156건`, OpenAI SFT draft 파일은 train `142`, validation `14`, format error `0`이다.
+- ds_v3/prompt_v3 run 완료: `ftjob-MiiLGncQBHRXL2NZoBYWxMcc` (`ft-sft-gpt41mini-ds_v3-prompt_v3-eval_v1-20260412-033726`)는 `succeeded`로 종료됐고 새 champion candidate가 아니라 champion으로 승격됐다.
+- edge case/계절별 평가셋 추가 완료: `evals/edge_case_eval_set.jsonl`, `evals/seasonal_eval_set.jsonl`, 전체 eval row 24건 검증 완료
 - 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
 - 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
 - `sensor-ingestor` 설정 포맷과 poller profile 초안 완료: `docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`
@@ -178,11 +210,10 @@
 
 ## 다음 우선순위
 
-1. `plc_tag_modbus_tcp`를 실제 TCP/Modbus client와 실IP/실주소 테이블에 연결
-2. override contract를 execution-gateway state machine과 approval store로 고도화
-3. `data/examples` seed를 task별 20건 이상으로 확장
-4. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
-5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+1. ds_v3/prompt_v3 eval에서 남은 `risk_level_match 5건`, `required_action_types_present 5건` 실패를 기준으로 seasonal/failure/safety 보강 데이터와 prompt_v4 초안을 정리
+2. 검색 근거 부족 시 불확실성 표현과 hallucination 사례를 사람 검토로 정리
+3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+4. offline runner/state-estimator MVP 착수 범위를 확정
 
 ## 주의할 점
 

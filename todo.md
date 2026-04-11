@@ -24,6 +24,10 @@
 - [Execution Gateway Override Contract](docs/execution_gateway_override_contract.md)
 - [Execution Gateway Flow](docs/execution_gateway_flow.md)
 - [Site Scope Baseline](docs/site_scope_baseline.md)
+- [Seasonal Operation Ranges](docs/seasonal_operation_ranges.md)
+- [Sensor Model Shortlist](docs/sensor_model_shortlist.md)
+- [Device Setpoint Ranges](docs/device_setpoint_ranges.md)
+- [Device Operation Rules](docs/device_operation_rules.md)
 - [Project Bootstrap](docs/project_bootstrap.md)
 - [Git Workflow](docs/git_workflow.md)
 - [Development Toolchain](docs/development_toolchain.md)
@@ -100,19 +104,20 @@
 - [x] 초기 적용 zone 확정 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 작물 범위 확정 (`README.md`, `PROJECT_STATUS.md`, `PLAN.md`)
 - [x] 품종 범위 확정 (`docs/site_scope_baseline.md`)
+- [x] 재배 환경/배지 확정 (`docs/site_scope_baseline.md`, `docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 생육 단계 운영 범위 정의 (`docs/expert_knowledge_map.md`, `EXPERT_AI_AGENT_PLAN.md`)
 - [x] 낮/밤 운영 정책 정의 (`docs/site_scope_baseline.md`)
-- [ ] 계절별 운영 범위 정의
+- [x] 계절별 운영 범위 정의 (`docs/seasonal_operation_ranges.md`)
 
 ## 1.2 센서 인벤토리 작성
-- [ ] 온도 센서 모델 조사
-- [ ] 습도 센서 모델 조사
-- [ ] CO2 센서 모델 조사
-- [ ] 광량 센서 모델 조사
-- [ ] 배지 함수율 센서 모델 조사
-- [ ] EC 센서 모델 조사
-- [ ] pH 센서 모델 조사
-- [ ] 외기 센서 모델 조사
+- [x] 온도 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] 습도 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] CO2 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] 광량 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] 배지 함수율 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] EC 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] pH 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
+- [x] 외기 센서 모델 조사 (`docs/sensor_model_shortlist.md`)
 - [x] 카메라 사양 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 각 센서의 통신 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 각 센서의 샘플링 주기 정리 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
@@ -130,7 +135,7 @@
 - [x] 양액기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] CO2 주입기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 제습기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
-- [ ] 각 장치의 최소/최대 setpoint 정리
+- [x] 각 장치의 최소/최대 setpoint 정리 (`docs/device_setpoint_ranges.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 각 장치의 응답 지연 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 장치별 안전 제한값 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] device `model_profile` 기준 정의 (`docs/sensor_installation_inventory.md`, `schemas/sensor_catalog_schema.json`)
@@ -173,7 +178,7 @@
 - [x] 수확 적기 기준 정리 (`docs/expert_knowledge_map.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
 - [x] 품종별 차이 정리 (`docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
 - [x] 온실 외기 영향 정리 (`docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
-- [ ] 장치 운전 경험 규칙 정리
+- [x] 장치 운전 경험 규칙 정리 (`docs/device_operation_rules.md`)
 
 ## 2.2 데이터셋 분류 체계 정의
 - [x] Q&A 데이터 분류 (`docs/dataset_taxonomy.md`, `data/examples/qa_reference_samples.jsonl`)
@@ -193,10 +198,11 @@
 - [x] 로봇 우선순위 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/robot_task_samples.jsonl`)
 - [x] 실패대응 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/failure_response_samples.jsonl`)
 - [x] JSON schema 포함 방식 정의 (`docs/training_data_format.md`)
+- [x] task family별 학습 seed 20건 이상 확보 (`data/examples/*_samples.jsonl`, `data/examples/*_samples_batch2.jsonl`)
 
 ## 2.4 데이터 정제
-- [ ] 중복 샘플 제거
-- [ ] 모순 샘플 검토
+- [x] 중복 샘플 제거 (`scripts/audit_training_data_consistency.py`)
+- [x] 모순 샘플 검토 (`scripts/audit_training_data_consistency.py`)
 - [x] 표현 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
 - [x] 장치명 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
 - [x] 단위 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
@@ -212,8 +218,8 @@
 - [x] 금지행동 평가셋 구축 (`evals/forbidden_action_eval_set.jsonl`)
 - [x] 장애대응 평가셋 구축 (`evals/failure_response_eval_set.jsonl`)
 - [x] 로봇 작업 우선순위 평가셋 구축 (`evals/robot_task_eval_set.jsonl`)
-- [ ] edge case 평가셋 구축
-- [ ] 계절별 평가셋 구축
+- [x] edge case 평가셋 구축 (`evals/edge_case_eval_set.jsonl`)
+- [x] 계절별 평가셋 구축 (`evals/seasonal_eval_set.jsonl`)
 - [x] 센서 이상 포함 평가셋 구축 (`evals/expert_judgement_eval_set.jsonl`)
 
 ## 2.6 RAG 지식베이스 구축 [완료]
@@ -325,42 +331,44 @@
 # 3. 파인튜닝 준비 및 수행
 
 ## 3.1 학습 목표 재정의
-- [ ] 지식형 모델 vs 운영형 모델 역할 구분
-- [ ] RAG 담당 지식과 파인튜닝 담당 행동 양식 분리
-- [ ] 파인튜닝 목표 문서화
-- [ ] 구조화 출력 목표 정의
-- [ ] 허용 action_type 목록 확정
-- [ ] confidence 출력 요구 정의
-- [ ] follow_up 출력 요구 정의
-- [ ] citations/retrieval_coverage 출력 요구 정의
+- [x] 지식형 모델 vs 운영형 모델 역할 구분 (`docs/fine_tuning_objectives.md`)
+- [x] RAG 담당 지식과 파인튜닝 담당 행동 양식 분리 (`docs/fine_tuning_objectives.md`)
+- [x] 파인튜닝 목표 문서화 (`docs/fine_tuning_objectives.md`)
+- [x] 구조화 출력 목표 정의 (`docs/fine_tuning_objectives.md`, `schemas/action_schema.json`)
+- [x] 허용 action_type 목록 확정 (`docs/fine_tuning_objectives.md`, `schemas/action_schema.json`)
+- [x] confidence 출력 요구 정의 (`docs/fine_tuning_objectives.md`)
+- [x] follow_up 출력 요구 정의 (`docs/fine_tuning_objectives.md`, `schemas/action_schema.json`)
+- [x] citations/retrieval_coverage 출력 요구 정의 (`docs/fine_tuning_objectives.md`, `schemas/action_schema.json`)
 
 ## 3.2 데이터 파일 생성
-- [ ] 학습용 JSONL 생성 스크립트 작성
-- [ ] 검증용 JSONL 생성 스크립트 작성
-- [ ] 포맷 검증 스크립트 작성
-- [ ] 샘플 통계 리포트 생성
-- [ ] class imbalance 확인
-- [ ] action_type 분포 확인
-- [ ] 길이 분포 확인
-- [ ] 이상 샘플 수동 검토
+- [x] 학습용 JSONL 생성 스크립트 작성 (`scripts/build_training_jsonl.py`, `artifacts/training/combined_training_samples.jsonl`)
+- [x] 검증용 JSONL 생성 스크립트 작성 (`scripts/build_eval_jsonl.py`, `artifacts/training/combined_eval_cases.jsonl`)
+- [x] 포맷 검증 스크립트 작성 (`scripts/validate_training_examples.py`)
+- [x] 샘플 통계 리포트 생성 (`scripts/report_training_sample_stats.py`, `artifacts/reports/training_sample_stats.json`)
+- [x] class imbalance 확인 (`artifacts/reports/training_sample_stats.json`, `docs/training_sample_manual_review.md`)
+- [x] action_type 분포 확인 (`artifacts/reports/training_sample_stats.json`, `docs/training_sample_manual_review.md`)
+- [x] 길이 분포 확인 (`artifacts/reports/training_sample_stats.json`, `docs/training_sample_manual_review.md`)
+- [x] 이상 샘플 수동 검토 (`docs/training_sample_manual_review.md`)
 
 ## 3.3 학습 실행
-- [ ] 모델 버전 결정
-- [ ] 실험명 규칙 정의
-- [ ] 파인튜닝 작업 실행
-- [ ] 로그 보관
-- [ ] 학습 실패 케이스 기록
-- [ ] 결과 비교표 작성
+- [x] 모델 버전 결정 (`docs/fine_tuning_runbook.md`)
+- [x] 실험명 규칙 정의 (`docs/fine_tuning_runbook.md`)
+- [x] 파인튜닝 작업 실행 (`scripts/run_openai_fine_tuning_job.py --submit`, `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v1-prompt_v1-eval_v1-20260412-004953.json`)
+- [x] 로그 보관 (`scripts/run_openai_fine_tuning_job.py`, `scripts/sync_openai_fine_tuning_job.py`, `artifacts/fine_tuning/runs/`)
+- [x] 학습 실패 케이스 기록 (`artifacts/fine_tuning/failure_cases.jsonl`, `ftjob-2UERXn8JN2B0SDUXL1tukptl`)
+- [x] 결과 비교표 작성 (`scripts/render_fine_tuning_comparison_table.py`, `artifacts/fine_tuning/fine_tuning_comparison_table.md`)
 
 ## 3.4 파인튜닝 결과 검증
-- [ ] 상태 요약 품질 평가
-- [ ] 추천 행동 유효성 평가
-- [ ] 금지 행동 준수 평가
-- [ ] JSON 일관성 평가
-- [ ] RAG 문맥이 주어졌을 때 근거 반영률 평가
+- [x] 상태 요약 품질 평가 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
+- [x] 추천 행동 유효성 평가 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
+- [x] 금지 행동 준수 평가 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
+- [x] JSON 일관성 평가 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
+- [x] RAG 문맥이 주어졌을 때 근거 반영률 평가 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
+- [x] 다음 라운드용 prompt/data remediation 적용 (`data/examples/*_samples_batch3.jsonl`, `scripts/build_openai_sft_datasets.py`, `artifacts/reports/fine_tuned_model_eval_prompt_v2.md`)
+- [x] 남은 9개 실패 케이스 기준 batch4/prompt_v3 초안 반영 (`data/examples/*_samples_batch4.jsonl`, `scripts/build_openai_sft_datasets.py`, `docs/fine_tuning_objectives.md`)
 - [ ] 검색 근거 부족 시 불확실성 표현 평가
 - [ ] hallucination 사례 정리
-- [ ] confidence calibration 검토
+- [x] confidence calibration 검토 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
 - [ ] 사람 검토 결과 수집
 - [ ] 개선 포인트 정리
 
@@ -1082,7 +1090,7 @@
 - [ ] eval regression set 자동 갱신
 
 ## 21.3 모델/정책 개선
-- [ ] 파인튜닝 재실행
+- [x] 파인튜닝 재실행
 - [ ] 시스템 프롬프트 개선
 - [ ] 정책 엔진 규칙 추가
 - [ ] approval threshold 튜닝
@@ -1158,7 +1166,7 @@
 - [x] sensor-ingestor MVP 작성 (`sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/backends.py`, `sensor-ingestor/sensor_ingestor/quality.py`)
 - [ ] state-estimator MVP 작성
 - [ ] policy-engine MVP 작성
-- [ ] 파인튜닝 재실행
+- [x] 파인튜닝 재실행
 - [ ] evaluate-zone API 작성
 - [ ] decision log 저장 구조 구현
 

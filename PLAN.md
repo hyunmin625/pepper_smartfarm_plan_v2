@@ -7,6 +7,11 @@
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
 - [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
+- [현장 baseline](docs/site_scope_baseline.md)
+- [계절별 운영 범위](docs/seasonal_operation_ranges.md)
+- [센서 모델 shortlist](docs/sensor_model_shortlist.md)
+- [장치 setpoint 범위](docs/device_setpoint_ranges.md)
+- [장치 운전 경험 규칙](docs/device_operation_rules.md)
 - [세부 개발 Todo](todo.md)
 - [8주 일정 계획](schedule.md)
 - [작업 로그](WORK_LOG.md)
@@ -23,11 +28,21 @@
 - 품종 운영 범위: `건고추/고춧가루용 적고추`
 - 1차 품종 shortlist: `왕조`, `칼탄열풍`, `조생강탄`
 - 기본 기준 품종: `왕조`
+- 재배 환경 기준: 육묘용 `Grodan Delta 6.5` block, 본재배용 `Grodan GT Master` slab
+- 핵심 센서 1차 shortlist:
+  - 온습도: `Vaisala HMP110`
+  - CO2: `Vaisala GMP252`
+  - PAR: `Apogee SQ-522-SS`
+  - 배지 함수율: `METER TEROS 12`
+  - 양액 pH/EC: `Bluelab Guardian Inline Wi-Fi`
+  - 외기 통합: `Vaisala WXT536`
 - 공식 재배 자료 기준 환경 기본값:
   - 낮 `25~28℃`
   - 밤 `18℃ 전후`
   - 허용 운전 밴드: 낮 `25~30℃`, 밤 `18~20℃`
   - 정식기 보수 기준: 밤 `16℃ 이상`
+
+근권·양액·배액 판단은 위 Grodan block/slab 기반의 soilless 재배 환경을 기본 전제로 설계한다.
 
 이 시스템은 다음 원칙을 따른다.
 
@@ -424,6 +439,9 @@ LLM은 다음을 직접 수행하지 않는다.
 - 로봇 작업 우선순위
 - 후속 점검 계획
 
+운영형 모델의 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구는 `docs/fine_tuning_objectives.md`를 기준으로 고정한다.
+base model과 실험명 규칙은 `docs/fine_tuning_runbook.md`를 기준으로 고정한다.
+
 ## 8.3 프롬프트 설계
 시스템 프롬프트는 반드시 아래를 포함한다.
 
@@ -440,10 +458,10 @@ LLM은 다음을 직접 수행하지 않는다.
 출력은 자연어가 아니라 다음 구조를 따른다.
 
 - situation_summary
-- priority
+- risk_level
 - recommended_actions[]
 - robot_tasks[]
-- follow_up
+- follow_up[]
 - confidence
 - requires_human_approval
 - citations[]

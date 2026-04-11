@@ -16,6 +16,7 @@
     "requires_human_approval",
     "follow_up",
     "confidence",
+    "retrieval_coverage",
     "citations"
   ],
   "properties": {

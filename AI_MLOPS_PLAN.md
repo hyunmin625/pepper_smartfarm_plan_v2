@@ -9,6 +9,7 @@
 - 실제 센서 데이터가 들어오기 전까지는 재배 매뉴얼, 현장 SOP 초안, 시뮬레이션 데이터, 합성 시나리오, 공개 자료 기반 평가셋으로 모델을 준비한다.
 - 현재 기준 사이트는 `gh-01`, `300평 연동형 비닐온실 1동`이며 주 설비는 대형 온실 1개다.
 - 현재 품종 운영 범위는 `건고추/고춧가루용 적고추`이며 1차 shortlist는 `왕조`, `칼탄열풍`, `조생강탄`이다.
+- 재배 환경 조건은 육묘용 `Grodan Delta 6.5` block, 본재배용 `Grodan GT Master` slab를 기준으로 고정한다.
 
 ## Phase -1 진행 현황
 
@@ -19,7 +20,8 @@
 | AI 판단 체계 선행 준비 | 완료 | `schemas/state_schema.json`, `schemas/feature_schema.json`, `schemas/action_schema.json`, `schemas/sensor_quality_schema.json` |
 | 적고추 전주기 전문가 지식 구조화 | 완료 | `docs/expert_knowledge_map.md`, `docs/sensor_judgement_matrix.md`, `EXPERT_AI_AGENT_PLAN.md` |
 | RAG 지식베이스 설계와 품질 기준 수립 | 완료 | `docs/rag_indexing_plan.md`, `docs/rag_source_inventory.md`, `schemas/rag_chunk_schema.json`, `data/rag/pepper_expert_seed_chunks.jsonl` |
-| 파인튜닝 seed와 평가셋 준비 | 완료 | `data/examples/state_judgement_samples.jsonl`, `data/examples/forbidden_action_samples.jsonl`, `evals/expert_judgement_eval_set.jsonl`, `evals/rag_retrieval_eval_set.jsonl` |
+| 파인튜닝 seed와 평가셋 준비 | 완료 | `data/examples/*_samples.jsonl`, `data/examples/*_samples_batch2.jsonl`, `data/examples/*_samples_batch3.jsonl`, `evals/expert_judgement_eval_set.jsonl`, `evals/rag_retrieval_eval_set.jsonl` |
+| OpenAI SFT submit 경로 검증 | 완료 | 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl` 실패(`invalid_file_format`) 후 `messages` only 포맷으로 수정, 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm` `succeeded`, 이후 `ds_v2/prompt_v2` 기준 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `ds_v3/prompt_v3` 기준 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`, 최신 fine-tuned model `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg` 확보 |
 | 모델/프롬프트/데이터셋 버전 관리 체계 설계 | 완료 | `docs/mlops_registry_design.md` |
 | offline runner 설계 | 완료 | `docs/offline_agent_runner_spec.md`, `data/examples/synthetic_sensor_scenarios.jsonl` |
 | shadow mode 보고 체계 정의 | 완료 | `docs/shadow_mode_report_format.md` |
@@ -36,7 +38,7 @@
 
 - 설계 문서, 스키마, seed dataset, eval set, registry 규칙, shadow report 포맷이 모두 존재한다.
 - 따라서 **실측 데이터 없는 상태에서 AI 준비 구축과 MLOps 기반 설계는 완료**로 판정한다.
-- 다음 단계의 중심은 문서 설계가 아니라 `센서 수집 계획 보강`, `offline runner 구현`, `policy JSON 작성`, `고정 회귀 리포트와 정책 데이터 확장`이다.
+- 다음 단계의 중심은 문서 설계가 아니라 `ds_v3/prompt_v3` 실패 케이스 보강, `offline runner 구현`, `policy JSON 작성`, `고정 회귀 리포트와 정책 데이터 확장`이다.
 
 ## 개정 개발 순서
 
@@ -62,6 +64,9 @@
 - `docs/offline_agent_runner_spec.md`
 - `docs/agent_tool_design.md`
 - `docs/mlops_registry_design.md`
+- `docs/fine_tuning_objectives.md`
+- `docs/fine_tuning_runbook.md`
+- `docs/openai_fine_tuning_execution.md`
 - `docs/shadow_mode_report_format.md`
 - `data/examples/synthetic_sensor_scenarios.jsonl`
 - `docs/post_construction_sensor_cutover.md`
@@ -73,6 +78,10 @@
 현재 상세 문서:
 
 - `docs/site_scope_baseline.md`
+- `docs/seasonal_operation_ranges.md`
+- `docs/sensor_model_shortlist.md`
+- `docs/device_setpoint_ranges.md`
+- `docs/device_operation_rules.md`
 - `docs/sensor_collection_plan.md`
 - `docs/sensor_installation_inventory.md`
 - `schemas/sensor_catalog_schema.json`
@@ -92,7 +101,7 @@
 
 각 데이터는 `zone_id`, `sensor_id`, `timestamp`, `value`, `unit`, `quality_flag`, `source`, `calibration_version`을 포함한다.
 
-현재 단계에서는 zone 구조, naming 규칙, sample_rate, quality_flag 기준, must_have/should_have 우선순위에 더해 설치 수량 가정, protocol, calibration 주기, model_profile, poller profile, connection, binding group, publish target까지 문서화했다. 아직 vendor별 상용 모델 shortlist와 PLC 주소 체계는 미확정이며, 이는 다음 구현 단계에서 확정한다.
+현재 단계에서는 zone 구조, naming 규칙, sample_rate, quality_flag 기준, must_have/should_have 우선순위에 더해 설치 수량 가정, protocol, calibration 주기, model_profile, poller profile, connection, binding group, publish target까지 문서화했다. 배지 조건은 `Grodan Delta 6.5` 육묘 block과 `Grodan GT Master` 본재배 slab를 기본 전제로 두고, 근권 센서/배액 판단/관수 펄스 정책도 이 환경을 기준으로 설계한다. 핵심 센서 8종의 1차 상용 모델 shortlist는 `docs/sensor_model_shortlist.md`에 정리했고, 최종 발주 모델과 PLC 주소 체계는 다음 구현 단계에서 확정한다.
 
 ## 3. 센서 데이터 분석 및 AI 학습 반영
 

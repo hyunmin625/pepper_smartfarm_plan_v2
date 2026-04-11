@@ -1,17 +1,32 @@
 {
-  "catalog_version": "2026-04-11-a",
+  "catalog_version": "2026-04-12-a",
+  "cultivation_context": {
+    "crop_system": "soilless_rockwool",
+    "seedling_media": {
+      "vendor": "Grodan",
+      "product_name": "Delta 6.5",
+      "medium_type": "rockwool_block",
+      "application": "nursery"
+    },
+    "production_media": {
+      "vendor": "Grodan",
+      "product_name": "GT Master",
+      "medium_type": "rockwool_slab",
+      "application": "production"
+    }
+  },
   "zones": [
     {
       "zone_id": "gh-01-zone-a",
       "zone_type": "crop_zone",
       "priority": "must_have",
-      "description": "주 재배 구역 A, 상단/하단 기후와 근권 2지점 감시"
+      "description": "주 재배 구역 A, Grodan GT Master slab 기준 상단/하단 기후와 근권 2지점 감시"
     },
     {
       "zone_id": "gh-01-zone-b",
       "zone_type": "crop_zone",
       "priority": "must_have",
-      "description": "주 재배 구역 B, zone-a와 동일한 대칭 구조"
+      "description": "주 재배 구역 B, Grodan GT Master slab 기준 zone-a와 동일한 대칭 구조"
     },
     {
       "zone_id": "gh-01-outside",
@@ -516,6 +531,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 30,
       "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "순환팬 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "speed_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "순환팬 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 30,
+          "recommended_max": 100
+        }
+      ],
       "install_location": "zone-a east truss"
     },
     {
@@ -529,6 +562,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 30,
       "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "순환팬 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "speed_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "순환팬 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 30,
+          "recommended_max": 100
+        }
+      ],
       "install_location": "zone-a west truss"
     },
     {
@@ -542,6 +593,18 @@
       "control_mode": "percent_position",
       "response_timeout_seconds": 45,
       "safety_interlocks": ["wind_lock", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "position_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "환기창 개방 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 10,
+          "recommended_max": 80
+        }
+      ],
       "install_location": "zone-a roof vent group"
     },
     {
@@ -555,6 +618,19 @@
       "control_mode": "percent_position",
       "response_timeout_seconds": 45,
       "safety_interlocks": ["travel_limit", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "position_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "차광커튼 전개 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 0,
+          "recommended_max": 70,
+          "notes": "100은 강광 또는 비상 차광 시에만 사용"
+        }
+      ],
       "install_location": "zone-a shade rail"
     },
     {
@@ -568,6 +644,24 @@
       "control_mode": "binary",
       "response_timeout_seconds": 15,
       "safety_interlocks": ["manual_override", "line_pressure_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "관수 밸브 개폐 상태",
+          "allowed_values": ["closed", "open"]
+        },
+        {
+          "parameter": "duration_seconds",
+          "value_type": "integer",
+          "unit": "s",
+          "description": "1회 관수 펄스 길이",
+          "min": 30,
+          "max": 900,
+          "recommended_min": 60,
+          "recommended_max": 300
+        }
+      ],
       "install_location": "zone-a front line manifold"
     },
     {
@@ -581,6 +675,24 @@
       "control_mode": "binary",
       "response_timeout_seconds": 15,
       "safety_interlocks": ["manual_override", "line_pressure_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "관수 밸브 개폐 상태",
+          "allowed_values": ["closed", "open"]
+        },
+        {
+          "parameter": "duration_seconds",
+          "value_type": "integer",
+          "unit": "s",
+          "description": "1회 관수 펄스 길이",
+          "min": 30,
+          "max": 900,
+          "recommended_min": 60,
+          "recommended_max": 300
+        }
+      ],
       "install_location": "zone-a rear line manifold"
     },
     {
@@ -594,6 +706,24 @@
       "control_mode": "binary_or_stage",
       "response_timeout_seconds": 60,
       "safety_interlocks": ["overtemp_lock", "fuel_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "난방기 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "stage",
+          "value_type": "integer",
+          "description": "난방기 단계 제어",
+          "min": 0,
+          "max": 2,
+          "recommended_min": 0,
+          "recommended_max": 1,
+          "notes": "2단은 승인 또는 혹한 대응 시에만 사용"
+        }
+      ],
       "install_location": "zone-a heater bay"
     },
     {
@@ -607,6 +737,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 20,
       "safety_interlocks": ["co2_high_lock", "vent_open_lock", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "CO2 주입 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "dose_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "CO2 주입 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 10,
+          "recommended_max": 60
+        }
+      ],
       "install_location": "zone-a co2 header"
     },
     {
@@ -620,6 +768,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 30,
       "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "순환팬 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "speed_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "순환팬 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 30,
+          "recommended_max": 100
+        }
+      ],
       "install_location": "zone-b east truss"
     },
     {
@@ -633,6 +799,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 30,
       "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "순환팬 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "speed_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "순환팬 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 30,
+          "recommended_max": 100
+        }
+      ],
       "install_location": "zone-b west truss"
     },
     {
@@ -646,6 +830,18 @@
       "control_mode": "percent_position",
       "response_timeout_seconds": 45,
       "safety_interlocks": ["wind_lock", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "position_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "환기창 개방 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 10,
+          "recommended_max": 80
+        }
+      ],
       "install_location": "zone-b roof vent group"
     },
     {
@@ -659,6 +855,19 @@
       "control_mode": "percent_position",
       "response_timeout_seconds": 45,
       "safety_interlocks": ["travel_limit", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "position_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "차광커튼 전개 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 0,
+          "recommended_max": 70,
+          "notes": "100은 강광 또는 비상 차광 시에만 사용"
+        }
+      ],
       "install_location": "zone-b shade rail"
     },
     {
@@ -672,6 +881,24 @@
       "control_mode": "binary",
       "response_timeout_seconds": 15,
       "safety_interlocks": ["manual_override", "line_pressure_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "관수 밸브 개폐 상태",
+          "allowed_values": ["closed", "open"]
+        },
+        {
+          "parameter": "duration_seconds",
+          "value_type": "integer",
+          "unit": "s",
+          "description": "1회 관수 펄스 길이",
+          "min": 30,
+          "max": 900,
+          "recommended_min": 60,
+          "recommended_max": 300
+        }
+      ],
       "install_location": "zone-b front line manifold"
     },
     {
@@ -685,6 +912,24 @@
       "control_mode": "binary",
       "response_timeout_seconds": 15,
       "safety_interlocks": ["manual_override", "line_pressure_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "관수 밸브 개폐 상태",
+          "allowed_values": ["closed", "open"]
+        },
+        {
+          "parameter": "duration_seconds",
+          "value_type": "integer",
+          "unit": "s",
+          "description": "1회 관수 펄스 길이",
+          "min": 30,
+          "max": 900,
+          "recommended_min": 60,
+          "recommended_max": 300
+        }
+      ],
       "install_location": "zone-b rear line manifold"
     },
     {
@@ -698,6 +943,24 @@
       "control_mode": "binary_or_stage",
       "response_timeout_seconds": 60,
       "safety_interlocks": ["overtemp_lock", "fuel_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "난방기 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "stage",
+          "value_type": "integer",
+          "description": "난방기 단계 제어",
+          "min": 0,
+          "max": 2,
+          "recommended_min": 0,
+          "recommended_max": 1,
+          "notes": "2단은 승인 또는 혹한 대응 시에만 사용"
+        }
+      ],
       "install_location": "zone-b heater bay"
     },
     {
@@ -711,6 +974,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 20,
       "safety_interlocks": ["co2_high_lock", "vent_open_lock", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "CO2 주입 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "dose_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "CO2 주입 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 10,
+          "recommended_max": 60
+        }
+      ],
       "install_location": "zone-b co2 header"
     },
     {
@@ -724,6 +1005,24 @@
       "control_mode": "recipe_stage",
       "response_timeout_seconds": 60,
       "safety_interlocks": ["ec_ph_fault", "tank_low_level", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "recipe_id",
+          "value_type": "enum",
+          "description": "양액 레시피 식별자",
+          "allowed_values": ["hold", "veg_a", "veg_b", "flush", "sanitize"]
+        },
+        {
+          "parameter": "mix_volume_l",
+          "value_type": "integer",
+          "unit": "L",
+          "description": "1회 혼합 배치 용량",
+          "min": 50,
+          "max": 1000,
+          "recommended_min": 100,
+          "recommended_max": 300
+        }
+      ],
       "install_location": "fertigation controller panel"
     },
     {
@@ -737,6 +1036,14 @@
       "control_mode": "binary",
       "response_timeout_seconds": 15,
       "safety_interlocks": ["low_pressure_lock", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "원수 밸브 개폐 상태",
+          "allowed_values": ["closed", "open"]
+        }
+      ],
       "install_location": "incoming water manifold"
     },
     {
@@ -750,6 +1057,23 @@
       "control_mode": "binary_or_stage",
       "response_timeout_seconds": 60,
       "safety_interlocks": ["high_temp_lock", "condensate_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "제습기 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "stage",
+          "value_type": "integer",
+          "description": "제습기 단계 제어",
+          "min": 0,
+          "max": 2,
+          "recommended_min": 0,
+          "recommended_max": 1
+        }
+      ],
       "install_location": "dry room wall mount"
     },
     {
@@ -763,6 +1087,24 @@
       "control_mode": "binary_or_percent",
       "response_timeout_seconds": 30,
       "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "setpoint_bounds": [
+        {
+          "parameter": "run_state",
+          "value_type": "enum",
+          "description": "건조실 팬 동작 상태",
+          "allowed_values": ["off", "on"]
+        },
+        {
+          "parameter": "speed_pct",
+          "value_type": "integer",
+          "unit": "pct",
+          "description": "건조실 팬 출력 비율",
+          "min": 0,
+          "max": 100,
+          "recommended_min": 30,
+          "recommended_max": 90
+        }
+      ],
       "install_location": "dry room exhaust fan"
     }
   ]

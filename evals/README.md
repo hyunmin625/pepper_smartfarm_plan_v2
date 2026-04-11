@@ -11,6 +11,8 @@
 - `forbidden_action_eval_set.jsonl`: 금지행동/승인 필요 판정 평가셋
 - `failure_response_eval_set.jsonl`: 장애 대응과 fallback 평가셋
 - `robot_task_eval_set.jsonl`: 로봇 작업 우선순위 평가셋
+- `edge_case_eval_set.jsonl`: 장치 readback, 인터록, 수동개입, 센서 조합 edge case 평가셋
+- `seasonal_eval_set.jsonl`: 겨울 육묘, 봄 활착, 여름 고온, 가을 후기 수확 계절별 평가셋
 
 ## 평가 목적
 
@@ -22,6 +24,8 @@
 - 센서 품질이 나쁘면 자동 실행을 보수적으로 제한한다.
 - 금지 행동을 추천하지 않는다.
 - 승인 필요 상황을 명확히 구분한다.
+
+합본 eval JSONL 생성은 `python3 scripts/build_eval_jsonl.py --include-source-file`로 수행한다.
 
 ## 초기 카테고리
 
@@ -81,3 +85,55 @@ OpenAI embedding 기반 평가를 돌릴 때는 저장소 루트 `.env`에 `OPEN
 ```
 
 현재 기준 결과는 110개 케이스에서 keyword-only hit rate 1.0, MRR 0.9909이고, local vector hybrid는 hit rate 1.0, MRR 0.9955, local-backed Chroma hybrid는 hit rate 1.0, MRR 0.9955, OpenAI-backed Chroma hybrid는 hit rate 1.0, MRR 0.9803이다. 확장된 평가셋에는 계절 리스크, 활착 불량, 품종 필터, 곡과·저온, 미숙퇴비 암모니아 피해, 수직배수 불량, 첫서리, 노화묘, 역병 초기 발병률, 탄저병 빗물 전파, 가루이 천적 투입, 진딧물 바이러스 방제 시작 시점, 나방 성페로몬 배치에 더해 균핵병, 시들음병, 잿빛곰팡이병, 흰별무늬병, 흰비단병, 무름병, 잎굴파리, 뿌리혹선충, 농약 잔류·혼용 순서 케이스가 포함된다. `--vector-backend local`은 로컬 TF-IDF + SVD 벡터 검색을 사용하고, `--vector-backend chroma --chroma-embedding-backend local`은 `pepper_expert_chunks_local`, `--vector-backend chroma --chroma-embedding-backend openai`는 `pepper_expert_chunks_openai` 컬렉션을 사용한다.
+
+## Fine-tuned Model 평가 실행
+
+최신 fine-tuned model `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`의 `3.4 파인튜닝 결과 검증`은 아래 명령으로 실행한다.
+
+```bash
+./.venv/bin/python scripts/evaluate_fine_tuned_model.py \
+  --system-prompt-version sft_v3 \
+  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg \
+  --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3
+```
+
+현재 champion 결과는 eval `24건` 기준 `pass_rate 0.6667`, `strict_json_rate 1.0`이다. v1 legacy baseline(`0.5417`)은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관하고, 직전 ds_v2/prompt_v2 champion(`0.625`)보다도 개선됐다.
+
+다음 draft prompt 비교는 아래처럼 실행한다.
+
+```bash
+python3 scripts/evaluate_fine_tuned_model.py \
+  --system-prompt-version sft_v3 \
+  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg \
+  --output-prefix artifacts/reports/fine_tuned_model_eval_prompt_v3
+```
+
+산출물:
+
+- `artifacts/reports/fine_tuned_model_eval_latest.json`
+- `artifacts/reports/fine_tuned_model_eval_latest.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_latest.md`
+- `artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3.json`
+- `artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3.md`
+- `artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2.json`
+- `artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2.md`
+- `artifacts/reports/fine_tuned_model_eval_legacy_prompt.json`
+- `artifacts/reports/fine_tuned_model_eval_legacy_prompt.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_legacy_prompt.md`
+- `artifacts/reports/fine_tuned_model_eval_prompt_v2.json`
+- `artifacts/reports/fine_tuned_model_eval_prompt_v2.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_prompt_v2.md`
+
+`--system-prompt-version sft_v3`는 현재 champion 검증용 기본 prompt다. `--system-prompt-version legacy`는 v1 baseline 비교용으로 유지한다.
+
+이 스크립트는 eval JSONL을 실제 모델에 질의한 뒤 아래 항목을 요약한다.
+
+- JSON strict/recovered parse 성공률
+- risk_level 일치율
+- required/forbidden action type 충족 여부
+- required/forbidden robot task type 충족 여부
+- citation 포함 여부와 retrieved_context 범위 내 인용 여부
+- follow_up 포함 여부
+- confidence 평균과 pass/fail 분리 평균

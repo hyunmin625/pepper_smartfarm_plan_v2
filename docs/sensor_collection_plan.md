@@ -6,6 +6,7 @@
 
 - 현재 기준 site는 `gh-01`이며, 물리 시설은 `300평 연동형 비닐온실 1동`이다.
 - 물리적으로는 대형 온실 1개지만, 수집/제어/평가를 위해 논리 zone으로 분리한다.
+- 재배 환경 기준은 육묘용 `Grodan Delta 6.5` block, 본재배용 `Grodan GT Master` slab다.
 - 원시 수집 주기와 AI 판단 주기를 분리한다.
 - AI 입력에는 항상 `quality_flag`, `source`, `calibration_version`을 포함한다.
 - 센서값만 저장하지 않고 같은 시점의 장치 상태와 운영 이벤트를 함께 저장한다.
@@ -22,6 +23,8 @@
 | `gh-01-outside` | 외기 기준점 | must_have |
 | `gh-01-nutrient-room` | 양액기/원수 관리실 | should_have |
 | `gh-01-dry-room` | 건고추 건조·저장 공간 | should_have |
+
+육묘 전용 zone은 현재 1차 논리 zone에 포함하지 않았지만, 육묘 단계 판단 로직과 데이터셋은 `Grodan Delta 6.5` block 환경을 기준으로 유지한다. 본재배 zone의 `substrate_moisture`, `substrate_temp`, `drain_ec_ph`, `drain_volume`는 `Grodan GT Master` slab 라인 대표 지점을 기준으로 배치한다.
 
 ## 3. Naming 규칙
 
@@ -103,7 +106,7 @@
 - `schemas/sensor_ingestor_config_schema.json`: `sensor-ingestor` 설정 스키마
 - `data/examples/sensor_ingestor_config_seed.json`: `gh-01` 기준 poller/connection/binding seed config
 
-현재 seed catalog는 `gh-01` 기준 센서 29개, 장치 20개를 포함한다. 이 값은 초기 구현 기준치이며, 온실 면적과 베드 수가 확정되면 `air_temp_rh`, `substrate_moisture`, `substrate_temp`, `circulation_fan`, `irrigation_valve`부터 증설한다.
+현재 seed catalog는 `gh-01` 기준 센서 29개, 장치 20개를 포함한다. 이 값은 초기 구현 기준치이며, `Grodan GT Master` slab 라인 수와 온실 베드 배치가 확정되면 `air_temp_rh`, `substrate_moisture`, `substrate_temp`, `circulation_fan`, `irrigation_valve`부터 증설한다.
 
 설정 seed는 위 카탈로그를 기반으로 센서 29개, 장치 20개를 정확히 한 번씩 binding하도록 작성했다. 즉, 수집 목록과 런타임 설정이 분리되면서도 coverage 검증이 가능하다.
 

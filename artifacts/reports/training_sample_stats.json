@@ -1,0 +1,75 @@
+{
+  "input_files": 20,
+  "sample_rows": 156,
+  "task_counts": {
+    "action_recommendation": 22,
+    "alert_report": 20,
+    "climate_risk": 4,
+    "failure_response": 22,
+    "forbidden_action": 22,
+    "harvest_drying": 4,
+    "nutrient_risk": 2,
+    "pest_disease_risk": 3,
+    "qa_reference": 20,
+    "robot_task_prioritization": 20,
+    "rootzone_diagnosis": 3,
+    "safety_policy": 6,
+    "sensor_fault": 3,
+    "state_judgement": 5
+  },
+  "class_imbalance_ratio": 11.0,
+  "action_type_counts": {
+    "adjust_fan": 1,
+    "adjust_fertigation": 2,
+    "adjust_heating": 1,
+    "adjust_shade": 3,
+    "adjust_vent": 2,
+    "block_action": 3,
+    "create_alert": 49,
+    "create_robot_task": 1,
+    "enter_safe_mode": 5,
+    "observe_only": 2,
+    "pause_automation": 9,
+    "request_human_check": 67,
+    "short_irrigation": 1
+  },
+  "input_length_chars": {
+    "min": 137,
+    "median": 226,
+    "p90": 330,
+    "max": 538
+  },
+  "output_length_chars": {
+    "min": 276,
+    "median": 560,
+    "p90": 1150,
+    "max": 1570
+  },
+  "longest_samples": [
+    {
+      "sample_id": "action-rec-021",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch4.jsonl",
+      "combined_chars": 1789
+    },
+    {
+      "sample_id": "state-judgement-029",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch4.jsonl",
+      "combined_chars": 1519
+    },
+    {
+      "sample_id": "action-rec-002",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples.jsonl",
+      "combined_chars": 1506
+    },
+    {
+      "sample_id": "state-judgement-030",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch4.jsonl",
+      "combined_chars": 1494
+    },
+    {
+      "sample_id": "state-judgement-023",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch3.jsonl",
+      "combined_chars": 1493
+    }
+  ]
+}

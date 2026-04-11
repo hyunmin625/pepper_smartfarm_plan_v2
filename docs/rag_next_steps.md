@@ -66,7 +66,7 @@
 필수 filter:
 
 - `growth_stage`: nursery, transplanting, flowering, fruiting, harvest_drying_storage
-- `cultivation_type`: greenhouse, rain_shelter, soil, hydroponic, coir_substrate
+- `cultivation_type`: greenhouse, rain_shelter, soil, hydroponic, rockwool_block, rockwool_slab, grodan_delta_6_5, grodan_gt_master
 - `sensor_tags`: temperature, humidity, soil_moisture, ec, ph, vision_symptom
 - `risk_tags`: heat_stress, flower_drop, calcium_deficiency, anthracnose, phytophthora
 - `source_type`: official_master_guideline, field_case, farm_case, internal_sop
