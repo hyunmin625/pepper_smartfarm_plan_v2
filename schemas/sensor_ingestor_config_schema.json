@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-smartfarm-plan-v2.local/schemas/sensor_ingestor_config_schema.json",
+  "title": "Sensor Ingestor Config",
+  "type": "object",
+  "required": [
+    "config_version",
+    "site_id",
+    "timezone",
+    "catalog_ref",
+    "poller_profiles",
+    "connections",
+    "sensor_binding_groups",
+    "device_binding_groups",
+    "quality_rule_sets",
+    "publish_targets",
+    "snapshot_pipeline",
+    "health_config"
+  ],
+  "properties": {
+    "config_version": { "type": "string", "minLength": 1 },
+    "site_id": { "type": "string", "minLength": 1 },
+    "timezone": { "type": "string", "minLength": 1 },
+    "catalog_ref": { "type": "string", "minLength": 1 },
+    "poller_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "profile_id",
+          "protocol",
+          "poll_interval_seconds",
+          "timeout_seconds",
+          "retry_count",
+          "retry_backoff_seconds",
+          "enabled"
+        ],
+        "properties": {
+          "profile_id": { "type": "string", "minLength": 1 },
+          "protocol": { "type": "string", "minLength": 1 },
+          "poll_interval_seconds": { "type": "integer", "minimum": 1 },
+          "timeout_seconds": { "type": "integer", "minimum": 1 },
+          "retry_count": { "type": "integer", "minimum": 0 },
+          "retry_backoff_seconds": { "type": "integer", "minimum": 0 },
+          "enabled": { "type": "boolean" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "connections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "connection_id",
+          "protocol",
+          "transport",
+          "endpoint_ref",
+          "enabled"
+        ],
+        "properties": {
+          "connection_id": { "type": "string", "minLength": 1 },
+          "protocol": { "type": "string", "minLength": 1 },
+          "transport": { "type": "string", "minLength": 1 },
+          "endpoint_ref": { "type": "string", "minLength": 1 },
+          "credential_ref": { "type": "string", "minLength": 1 },
+          "enabled": { "type": "boolean" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sensor_binding_groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "binding_group_id",
+          "connection_id",
+          "poller_profile_id",
+          "sensor_ids",
+          "parser_id",
+          "normalizer_id",
+          "quality_rule_set_id",
+          "publish_targets",
+          "enabled"
+        ],
+        "properties": {
+          "binding_group_id": { "type": "string", "minLength": 1 },
+          "connection_id": { "type": "string", "minLength": 1 },
+          "poller_profile_id": { "type": "string", "minLength": 1 },
+          "sensor_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "zone_scope": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "parser_id": { "type": "string", "minLength": 1 },
+          "normalizer_id": { "type": "string", "minLength": 1 },
+          "quality_rule_set_id": { "type": "string", "minLength": 1 },
+          "publish_targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "enabled": { "type": "boolean" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "device_binding_groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "binding_group_id",
+          "connection_id",
+          "poller_profile_id",
+          "device_ids",
+          "parser_id",
+          "normalizer_id",
+          "publish_targets",
+          "enabled"
+        ],
+        "properties": {
+          "binding_group_id": { "type": "string", "minLength": 1 },
+          "connection_id": { "type": "string", "minLength": 1 },
+          "poller_profile_id": { "type": "string", "minLength": 1 },
+          "device_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "zone_scope": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "parser_id": { "type": "string", "minLength": 1 },
+          "normalizer_id": { "type": "string", "minLength": 1 },
+          "publish_targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "enabled": { "type": "boolean" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "quality_rule_sets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_set_id",
+          "applies_to",
+          "stale_after_seconds",
+          "bad_after_seconds"
+        ],
+        "properties": {
+          "rule_set_id": { "type": "string", "minLength": 1 },
+          "applies_to": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "stale_after_seconds": { "type": "integer", "minimum": 1 },
+          "bad_after_seconds": { "type": "integer", "minimum": 1 },
+          "flatline_window_seconds": { "type": "integer", "minimum": 1 },
+          "jump_threshold_pct": { "type": "number", "minimum": 0 },
+          "allowed_range": {
+            "type": "object",
+            "required": ["min", "max"],
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" }
+            },
+            "additionalProperties": false
+          },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "publish_targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["target_id", "target_type", "route", "payload_format"],
+        "properties": {
+          "target_id": { "type": "string", "minLength": 1 },
+          "target_type": { "type": "string", "minLength": 1 },
+          "route": { "type": "string", "minLength": 1 },
+          "payload_format": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "snapshot_pipeline": {
+      "type": "object",
+      "required": [
+        "snapshot_interval_seconds",
+        "trend_windows_seconds",
+        "raw_retention_days",
+        "snapshot_retention_days",
+        "exclude_bad_quality_from_ai",
+        "manual_override_topic"
+      ],
+      "properties": {
+        "snapshot_interval_seconds": { "type": "integer", "minimum": 1 },
+        "trend_windows_seconds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "raw_retention_days": { "type": "integer", "minimum": 1 },
+        "snapshot_retention_days": { "type": "integer", "minimum": 1 },
+        "exclude_bad_quality_from_ai": { "type": "boolean" },
+        "manual_override_topic": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "health_config": {
+      "type": "object",
+      "required": [
+        "heartbeat_seconds",
+        "lag_alarm_seconds",
+        "metrics_namespace",
+        "status_topic"
+      ],
+      "properties": {
+        "heartbeat_seconds": { "type": "integer", "minimum": 1 },
+        "lag_alarm_seconds": { "type": "integer", "minimum": 1 },
+        "metrics_namespace": { "type": "string", "minLength": 1 },
+        "status_topic": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -158,6 +158,7 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 - 확장 metadata filter: `source_section` 부분 일치, `trust_level`, `region`, `season`, `cultivar`, `greenhouse_type`, `active`
 - index metadata 반영: `region`, `season`, `cultivar`, `greenhouse_type`, `farm_id`, `zone_id`, `outcome`를 JSON index metadata와 text field에 포함
 - reranking: `trust_level`과 `source_type` 기반 bonus를 적용해 공식/고신뢰 출처를 우선 노출
+- `farm_case`가 포함된 혼합 인덱스에서는 공식 지침과 `farm_case`가 동시에 맞는 경우 공식 지침을 먼저 정렬하는 guardrail을 적용
 - local vector search: TF-IDF + SVD 기반 로컬 latent vector를 index에 포함하고 keyword score와 결합
 - optional OpenAI vector search: `OPENAI_API_KEY`가 있고 embedding이 있으면 OpenAI embedding 검색을 keyword score와 결합
 - ChromaDB vector store: `scripts/build_chroma_index.py`로 persistent collection을 만들고 `--vector-backend chroma`로 hybrid retrieval 실행

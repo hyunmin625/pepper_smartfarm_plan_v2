@@ -1,0 +1,4 @@
+{"case_id":"rag-priority-001","category":"farm_case_climate_priority","query":"개화기 온실 습도 80 95 낙화 결로 환기","expected_chunk_ids":["pepper-humidity-fruitset-001"],"filters":{},"top_k":1,"notes":"farm_case 기후 사례가 섞여 있어도 공식 습도 지침이 우선"}
+{"case_id":"rag-priority-002","category":"farm_case_phytophthora_priority","query":"장마 배수로 역병 선수확","expected_chunk_ids":["pepper-monsoon-prevention-001"],"filters":{},"top_k":1,"notes":"farm_case 역병 사례가 섞여 있어도 공식 장마 대응 지침이 우선"}
+{"case_id":"rag-priority-003","category":"farm_case_export_residue_priority","query":"수출 대상국 기준 MRL 고농도 살포 통관 부적합","expected_chunk_ids":["pepper-pesticide-export-mrl-selection-001"],"filters":{},"top_k":1,"notes":"farm_case 수출 반려 사례보다 공식 수출 MRL 지침이 우선"}
+{"case_id":"rag-priority-004","category":"farm_case_southern_blight_priority","query":"흰비단병 초기 등록 약제 지제부 흰 균사","expected_chunk_ids":["pepper-southern-blight-early-fungicide-001"],"filters":{},"top_k":1,"notes":"farm_case 흰비단병 사례가 섞여 있어도 공식 초기 방제 지침이 우선"}

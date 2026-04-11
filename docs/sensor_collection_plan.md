@@ -97,12 +97,17 @@
 - `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile
 - `schemas/sensor_catalog_schema.json`: 장비 목록 검증 스키마
 - `data/examples/sensor_catalog_seed.json`: 인스턴스 단위 sensor/device seed catalog
+- `docs/sensor_ingestor_config_spec.md`: poller profile, connection, binding group, publish target 계약
+- `schemas/sensor_ingestor_config_schema.json`: `sensor-ingestor` 설정 스키마
+- `data/examples/sensor_ingestor_config_seed.json`: `gh-01` 기준 poller/connection/binding seed config
 
 현재 seed catalog는 `gh-01` 기준 센서 29개, 장치 20개를 포함한다. 이 값은 초기 구현 기준치이며, 온실 면적과 베드 수가 확정되면 `air_temp_rh`, `substrate_moisture`, `substrate_temp`, `circulation_fan`, `irrigation_valve`부터 증설한다.
 
+설정 seed는 위 카탈로그를 기반으로 센서 29개, 장치 20개를 정확히 한 번씩 binding하도록 작성했다. 즉, 수집 목록과 런타임 설정이 분리되면서도 coverage 검증이 가능하다.
+
 ## 8. 즉시 후속 작업
 
-1. 품질 플래그 계산 규칙을 pseudocode 수준으로 문서화
-2. `sensor-ingestor` 설정 파일 포맷 초안 작성
-3. PLC tag naming 규칙과 주소 체계 확정
+1. PLC tag naming 규칙과 주소 체계 확정
+2. protocol adapter별 register/tag mapping 표 작성
+3. redundancy group merge와 `pending_batch` 예외 규칙 확정
 4. 상용 장비 shortlist 조사

@@ -122,26 +122,26 @@
 ## 1.4 운영 시나리오 정리
 - [x] 정상 운영 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
 - [x] 고온 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
-- [ ] 고습 시나리오 작성
-- [ ] 급격한 일사 증가 시나리오 작성
-- [ ] 과건조 시나리오 작성
+- [x] 고습 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
+- [x] 급격한 일사 증가 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
+- [x] 과건조 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
 - [x] 과습 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
 - [x] 센서 고장 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
-- [ ] 장치 stuck 시나리오 작성
-- [ ] 통신 장애 시나리오 작성
-- [ ] 정전/재기동 시나리오 작성
-- [ ] 사람 개입 시나리오 작성
-- [ ] 로봇 작업 중단 시나리오 작성
+- [x] 장치 stuck 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
+- [x] 통신 장애 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
+- [x] 정전/재기동 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
+- [x] 사람 개입 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
+- [x] 로봇 작업 중단 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`)
 
 ## 1.5 안전 요구사항 정리
-- [ ] 인터록 요구사항 목록화
-- [ ] 비상정지 요구사항 목록화
-- [ ] 수동모드 전환 조건 정의
-- [ ] 자동모드 전환 조건 정의
-- [ ] 승인 필수 액션 정의
-- [ ] 절대 금지 액션 정의
-- [ ] 사람 감지 시 동작 규칙 정의
-- [ ] 로봇 작업 영역 접근 규칙 정의
+- [x] 인터록 요구사항 목록화 (`docs/safety_requirements.md`, `docs/sensor_installation_inventory.md`)
+- [x] 비상정지 요구사항 목록화 (`docs/safety_requirements.md`)
+- [x] 수동모드 전환 조건 정의 (`docs/safety_requirements.md`)
+- [x] 자동모드 전환 조건 정의 (`docs/safety_requirements.md`)
+- [x] 승인 필수 액션 정의 (`docs/safety_requirements.md`, `schemas/action_schema.json`)
+- [x] 절대 금지 액션 정의 (`docs/safety_requirements.md`, `data/examples/forbidden_action_samples.jsonl`)
+- [x] 사람 감지 시 동작 규칙 정의 (`docs/safety_requirements.md`, `data/examples/robot_task_samples.jsonl`)
+- [x] 로봇 작업 영역 접근 규칙 정의 (`docs/safety_requirements.md`, `data/examples/robot_task_samples.jsonl`)
 
 ---
 
@@ -245,12 +245,14 @@
     - [x] **Metadata Hard Filtering** 로직 1차 구현 (growth/source/sensor/risk filter)
     - [x] `region`, `season`, `cultivar`, `greenhouse_type`, `active` 필터 추가
     - [x] `source_section` 부분 일치 필터와 `trust_level` 기반 reranking 구현
+    - [x] `farm_case` 혼합 인덱스에서 official guideline 우선 정렬 guardrail 구현
     - [x] OpenAI-backed Chroma의 낮은 MRR 케이스 분석 및 `local blend 4.0` 기본값 반영
     - [x] backend별 Chroma collection/manifest 분리로 차원 충돌 방지
     - [x] retrieval weight 튜닝 스크립트 추가 (`scripts/tune_rag_weights.py`)
     - [x] Semantic + Keyword 하이브리드 검색 가중치 재검증용 eval set 40개 확장
     - [x] smoke test 81건, retrieval eval 96건으로 공식 PDF 추가 추출분 재검증
     - [x] smoke test 98건, retrieval eval 110건으로 219청크 재검증
+    - [x] official + `farm_case` 혼합 인덱스 priority eval 4건 추가
 - [x] **RAG 품질 평가 체계 구축**
     - [x] 시나리오별 검색 적중률(Hit Rate) 측정 1차 구현 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
     - [x] 출처 누락 방지를 위한 citation metadata 검증 로직 추가 (`scripts/validate_rag_chunks.py`)
@@ -277,9 +279,10 @@
 - [x] 운영 로그 → RAG `farm_case` 후보 변환 규칙 정의 (`docs/farm_case_rag_pipeline.md`)
 - [x] `farm_id`, `zone_id`, `cultivar`, `season`, `outcome` metadata 정의 (`schemas/farm_case_candidate_schema.json`)
 - [x] 성공/실패 사례를 공식 지식과 충돌 검토 후 RAG에 반영하는 승인 절차 정의 (`docs/farm_case_rag_pipeline.md`)
-- [ ] `farm_case_candidate` JSONL 샘플 10건 작성
-- [ ] event window builder 규칙을 세부 스펙으로 구체화
-- [ ] 승인된 `farm_case` 후보를 RAG chunk JSONL로 변환하는 스크립트 초안 작성
+- [x] `farm_case_candidate` JSONL 샘플 10건 작성 (`data/examples/farm_case_candidate_samples.jsonl`)
+- [x] event window builder 규칙을 세부 스펙으로 구체화 (`docs/farm_case_event_window_builder.md`)
+- [x] `farm_case_candidate` JSONL 검증 스크립트 추가 (`scripts/validate_farm_case_candidates.py`)
+- [x] 승인된 `farm_case` 후보를 RAG chunk JSONL로 변환하는 스크립트 초안 작성 (`scripts/build_farm_case_rag_chunks.py`, `data/rag/farm_case_seed_chunks.jsonl`)
 
 ## 2.8 적고추 전문가 AI Agent 구축
 - [x] 적고추 재배 전주기 단계 정의 (`docs/expert_knowledge_map.md`, `EXPERT_AI_AGENT_PLAN.md`)
@@ -476,22 +479,22 @@
 - [ ] 품질 플래그 생성 로직 작성
 
 ## 6.3 sensor-ingestor 서비스
-- [ ] 프로젝트 초기화
-- [ ] 설정 파일 구조 작성
-- [ ] sensor poller 구현
-- [ ] parser 구현
-- [ ] validator 구현
-- [ ] normalizer 구현
+- [x] 프로젝트 초기화 (`sensor-ingestor/README.md`, `sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/`)
+- [x] 설정 파일 구조 작성
+- [x] sensor poller 구현 (`sensor-ingestor/sensor_ingestor/runtime.py`)
+- [x] parser 구현 (`sensor-ingestor/sensor_ingestor/runtime.py`)
+- [x] validator 구현 (`scripts/validate_sensor_ingestor_config.py`, `sensor-ingestor/sensor_ingestor/config.py`)
+- [x] normalizer 구현 (`sensor-ingestor/sensor_ingestor/runtime.py`)
 - [ ] MQTT publisher 구현
 - [ ] timeseries writer 구현
-- [ ] health check endpoint 작성
-- [ ] metrics endpoint 작성
+- [x] health check endpoint 작성 (`sensor-ingestor/sensor_ingestor/runtime.py`, `/healthz`)
+- [x] metrics endpoint 작성 (`sensor-ingestor/sensor_ingestor/runtime.py`, `/metrics`)
 
 ## 6.4 센서 품질 관리
-- [ ] outlier rule 정의
-- [ ] stale sensor rule 정의
-- [ ] jump detection rule 정의
-- [ ] missing data rule 정의
+- [x] outlier rule 정의
+- [x] stale sensor rule 정의
+- [x] jump detection rule 정의
+- [x] missing data rule 정의
 - [ ] quality_flag 계산기 구현
 - [ ] sensor anomaly alert 연결
 
@@ -1116,6 +1119,8 @@
 - [ ] 행동추천 JSON 샘플 100개 작성
 - [ ] 금지행동 샘플 100개 작성
 - [x] sensor/device inventory 문서 작성 (`docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] sensor-ingestor config/poller profile 초안 작성 (`docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`)
+- [x] sensor 품질 규칙과 ingestor runtime flow 문서 작성 (`docs/sensor_quality_rules_pseudocode.md`, `docs/sensor_ingestor_runtime_flow.md`)
 - [ ] policy 초안 20개 작성
 - [ ] llm-orchestrator 인터페이스 초안 작성
 

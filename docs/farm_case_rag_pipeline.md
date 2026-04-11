@@ -27,7 +27,7 @@
 5. RAG 청크 승격  
    승인된 후보만 `source_type: farm_case`로 JSONL 청크를 만든다.
 6. 검색 정책 반영  
-   기본 검색에서는 `official_master_guideline`을 우선하고, `farm_case`는 동일 품종·동일 작형·동일 계절 조건에서만 가중치를 높인다.
+   기본 검색에서는 `official_master_guideline`을 우선하고, `farm_case`는 동일 품종·동일 작형·동일 계절 조건에서만 가중치를 높인다. 현재 `scripts/search_rag_index.py`는 공식 지침과 `farm_case`가 동시에 맞는 경우 공식 지침을 먼저 정렬하는 guardrail을 적용한다.
 
 ## 필수 메타데이터
 
@@ -40,6 +40,14 @@
 
 스키마 초안은 [schemas/farm_case_candidate_schema.json](/home/user/pepper-smartfarm-plan-v2/schemas/farm_case_candidate_schema.json)에 둔다.
 
+샘플과 세부 규칙:
+
+- [farm_case_candidate_samples.jsonl](/home/user/pepper-smartfarm-plan-v2/data/examples/farm_case_candidate_samples.jsonl)
+- [farm_case_event_window_builder.md](/home/user/pepper-smartfarm-plan-v2/docs/farm_case_event_window_builder.md)
+- [validate_farm_case_candidates.py](/home/user/pepper-smartfarm-plan-v2/scripts/validate_farm_case_candidates.py)
+- [build_farm_case_rag_chunks.py](/home/user/pepper-smartfarm-plan-v2/scripts/build_farm_case_rag_chunks.py)
+- [farm_case_seed_chunks.jsonl](/home/user/pepper-smartfarm-plan-v2/data/rag/farm_case_seed_chunks.jsonl)
+
 ## 승격 규칙
 
 - `review_status=approved` 전에는 운영 RAG 인덱스에 넣지 않는다.
@@ -47,9 +55,12 @@
 - 공식 지식과 충돌하면 `trust_level=medium` 이하로 두고 자동 제어 판단에는 직접 쓰지 않는다.
 - 같은 원인과 조치가 반복되면 개별 case를 계속 쌓지 말고 `internal_sop`로 승격 후보를 만든다.
 
+- 기본 변환 초안은 `python3 scripts/build_farm_case_rag_chunks.py`로 실행하며, 승인된 후보만 `data/rag/farm_case_seed_chunks.jsonl`로 내보낸다.
+- 변환 결과는 `python3 scripts/validate_rag_chunks.py --input data/rag/farm_case_seed_chunks.jsonl`로 다시 검증한다.
+
 ## 초기 구현 백로그
 
-1. `farm_case_candidate` JSONL 샘플 10건 작성
-2. event window builder 규칙 문서화
-3. 승인된 후보를 RAG chunk로 변환하는 스크립트 초안 작성
-4. `farm_case` 검색 시 official guideline 우선 reranking 규칙 추가
+1. [x] `farm_case_candidate` JSONL 샘플 10건 작성
+2. [x] event window builder 규칙 문서화
+3. [x] 승인된 후보를 RAG chunk로 변환하는 스크립트 초안 작성
+4. [x] `farm_case` 검색 시 official guideline 우선 reranking 규칙 추가

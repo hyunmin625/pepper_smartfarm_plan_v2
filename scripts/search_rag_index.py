@@ -49,7 +49,26 @@ SOURCE_TYPE_BONUS = {
     "research_paper": 0.25,
     "field_case": 0.2,
     "local_extension_news": 0.1,
+    "farm_case": -0.15,
 }
+OFFICIAL_SOURCE_TYPES = {
+    "official_master_guideline",
+    "official_guideline",
+    "official_research_report",
+    "research_paper",
+}
+FARM_CASE_CONTEXT_KEYS = (
+    "crop_type",
+    "growth_stage",
+    "sensor_tags",
+    "risk_tags",
+    "region",
+    "season",
+    "cultivar",
+    "greenhouse_type",
+    "farm_id",
+    "zone_id",
+)
 DEFAULT_SCORE_CONFIG = {
     "text_match_weight": 2.0,
     "metadata_match_weight": 3.0,
@@ -58,6 +77,7 @@ DEFAULT_SCORE_CONFIG = {
     "chroma_vector_weight": 10.0,
     "chroma_local_blend_weight": 4.0,
 }
+OFFICIAL_PRIORITY_THRESHOLD = 4.0
 
 
 def load_index(path: Path) -> dict[str, Any]:
@@ -95,7 +115,18 @@ def matches_filter(metadata: dict[str, Any], key: str, value: str) -> bool:
     return str(meta_value).lower() == value.lower()
 
 
-def rerank_bonus(metadata: dict[str, Any]) -> tuple[float, list[str]]:
+def context_match_count(metadata: dict[str, Any], filters: dict[str, str] | None) -> int:
+    if not filters:
+        return 0
+    count = 0
+    for key in FARM_CASE_CONTEXT_KEYS:
+        value = filters.get(key)
+        if value and matches_filter(metadata, key, value):
+            count += 1
+    return count
+
+
+def rerank_bonus(metadata: dict[str, Any], filters: dict[str, str] | None = None) -> tuple[float, list[str], int]:
     bonus = 0.0
     reasons: list[str] = []
 
@@ -111,7 +142,18 @@ def rerank_bonus(metadata: dict[str, Any]) -> tuple[float, list[str]]:
         bonus += source_bonus
         reasons.append(f"source_type:{source_type}:{source_bonus:+.2f}")
 
-    return bonus, reasons
+    overlap_count = context_match_count(metadata, filters)
+    if overlap_count:
+        if source_type == "farm_case":
+            overlap_bonus = min(0.12 * overlap_count, 0.36)
+            bonus += overlap_bonus
+            reasons.append(f"farm_case_context_overlap:{overlap_count}:{overlap_bonus:+.2f}")
+        elif source_type in OFFICIAL_SOURCE_TYPES:
+            overlap_bonus = min(0.08 * overlap_count, 0.24)
+            bonus += overlap_bonus
+            reasons.append(f"official_context_overlap:{overlap_count}:{overlap_bonus:+.2f}")
+
+    return bonus, reasons, overlap_count
 
 
 def get_query_embedding(query: str, client: OpenAI) -> list[float]:
@@ -269,7 +311,7 @@ def search(
         if score <= 0:
             continue
 
-        bonus, rerank_reasons = rerank_bonus(metadata)
+        bonus, rerank_reasons, overlap_count = rerank_bonus(metadata, filters)
         final_score = score + bonus
         matches.extend(rerank_reasons)
             
@@ -279,14 +321,49 @@ def search(
                 "score": round(final_score, 4),
                 "base_score": round(score, 4),
                 "rerank_bonus": round(bonus, 4),
+                "context_match_count": overlap_count,
                 "matches": matches,
                 "summary": document["text"].splitlines()[0],
                 "metadata": metadata,
             }
         )
-    
-    # Sort by score (desc) and then id
-    results.sort(key=lambda item: (-item["score"], item["id"]))
+
+    official_results_present = any(
+        item["base_score"] >= OFFICIAL_PRIORITY_THRESHOLD
+        and str(item["metadata"].get("source_type", "")).lower() in OFFICIAL_SOURCE_TYPES
+        for item in results
+    )
+    farm_case_results_present = any(
+        item["base_score"] > 0 and str(item["metadata"].get("source_type", "")).lower() == "farm_case"
+        for item in results
+    )
+    if official_results_present:
+        for item in results:
+            source_type = str(item["metadata"].get("source_type", "")).lower()
+            if source_type != "farm_case":
+                continue
+            penalty = 0.35
+            if item["context_match_count"] == 0:
+                penalty += 0.25
+            item["score"] = round(item["score"] - penalty, 4)
+            item["rerank_bonus"] = round(item["rerank_bonus"] - penalty, 4)
+            item["matches"].append(f"farm_case_guardrail_penalty:{penalty:+.2f}")
+
+    # Sort by score (desc), then source priority, then id
+    def source_priority(item: dict[str, Any]) -> int:
+        source_type = str(item["metadata"].get("source_type", "")).lower()
+        if source_type in OFFICIAL_SOURCE_TYPES:
+            return 0
+        if source_type in {"field_case", "internal_sop"}:
+            return 1
+        if source_type == "farm_case":
+            return 2
+        return 3
+
+    if official_results_present and farm_case_results_present:
+        results.sort(key=lambda item: (source_priority(item), -item["score"], item["id"]))
+    else:
+        results.sort(key=lambda item: (-item["score"], source_priority(item), item["id"]))
     return results[:limit]
 
 
@@ -306,6 +383,8 @@ def main() -> None:
     parser.add_argument("--season", help="Filter by season")
     parser.add_argument("--cultivar", help="Filter by cultivar")
     parser.add_argument("--greenhouse-type", help="Filter by greenhouse type")
+    parser.add_argument("--farm-id", help="Filter by farm id")
+    parser.add_argument("--zone-id", help="Filter by zone id")
     parser.add_argument("--active", help="Filter active chunks: true or false")
     parser.add_argument("--no-vector", action="store_true", help="Disable vector search")
     parser.add_argument(
@@ -372,6 +451,8 @@ def main() -> None:
         "season": args.season,
         "cultivar": args.cultivar,
         "greenhouse_type": args.greenhouse_type,
+        "farm_id": args.farm_id,
+        "zone_id": args.zone_id,
         "active": args.active,
     }
     score_config = {

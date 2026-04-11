@@ -61,12 +61,13 @@
 
 1. `data/examples/sensor_catalog_seed.json`은 인스턴스 단위 장비 목록을 가진다.
 2. `schemas/sensor_catalog_schema.json`은 `sensor-ingestor` 설정 검증 스키마로 사용한다.
-3. vendor 확정 전까지는 `model_profile`만 관리하고, 실제 구매 단계에서 `vendor_model`, `serial_prefix`, `calibration_certificate_id`를 추가한다.
-4. `product_moisture`처럼 자동 수집이 아닌 항목은 `manual_batch_import` 프로토콜로 분리 저장한다.
+3. `docs/sensor_ingestor_config_spec.md`와 `data/examples/sensor_ingestor_config_seed.json`은 위 카탈로그를 poller profile, connection, binding group으로 구체화한다.
+4. vendor 확정 전까지는 `model_profile`만 관리하고, 실제 구매 단계에서 `vendor_model`, `serial_prefix`, `calibration_certificate_id`를 추가한다.
+5. `product_moisture`처럼 자동 수집이 아닌 항목은 `manual_batch_import` 프로토콜로 분리 저장한다.
 
 ## 6. 남은 작업
 
 1. 상용 장비 shortlist 2~3종 조사
-2. `sensor-ingestor` 설정 파일 포맷 초안 작성
-3. PLC tag naming 규칙과 주소 체계 확정
+2. PLC tag naming 규칙과 주소 체계 확정
+3. protocol adapter별 register/tag mapping 표 작성
 4. zone 면적과 베드 수가 확정되면 probe 수량 재산정

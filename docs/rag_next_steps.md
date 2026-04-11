@@ -86,7 +86,9 @@
 기준 문서:
 
 - [farm_case RAG 환류 파이프라인](./farm_case_rag_pipeline.md)
+- [farm_case event window 규칙](./farm_case_event_window_builder.md)
 - [farm_case 후보 스키마](../schemas/farm_case_candidate_schema.json)
+- [farm_case 후보 -> RAG chunk 변환 스크립트](../scripts/build_farm_case_rag_chunks.py)
 
 수집 대상:
 

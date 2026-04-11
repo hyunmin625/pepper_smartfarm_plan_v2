@@ -1,0 +1,863 @@
+{
+  "config_version": "2026-04-11-a",
+  "site_id": "gh-01",
+  "timezone": "Asia/Seoul",
+  "catalog_ref": "sensor_catalog_seed.json",
+  "poller_profiles": [
+    {
+      "profile_id": "modbus_rtu_fast_10s",
+      "protocol": "rs485_modbus_rtu",
+      "poll_interval_seconds": 10,
+      "timeout_seconds": 2,
+      "retry_count": 2,
+      "retry_backoff_seconds": 3,
+      "enabled": true
+    },
+    {
+      "profile_id": "modbus_rtu_standard_30s",
+      "protocol": "rs485_modbus_rtu",
+      "poll_interval_seconds": 30,
+      "timeout_seconds": 3,
+      "retry_count": 2,
+      "retry_backoff_seconds": 5,
+      "enabled": true
+    },
+    {
+      "profile_id": "modbus_rtu_slow_60s",
+      "protocol": "rs485_modbus_rtu",
+      "poll_interval_seconds": 60,
+      "timeout_seconds": 5,
+      "retry_count": 2,
+      "retry_backoff_seconds": 10,
+      "enabled": true
+    },
+    {
+      "profile_id": "pulse_counter_60s",
+      "protocol": "pulse_counter",
+      "poll_interval_seconds": 60,
+      "timeout_seconds": 2,
+      "retry_count": 1,
+      "retry_backoff_seconds": 5,
+      "enabled": true
+    },
+    {
+      "profile_id": "rtsp_capture_300s",
+      "protocol": "rtsp_onvif",
+      "poll_interval_seconds": 300,
+      "timeout_seconds": 15,
+      "retry_count": 1,
+      "retry_backoff_seconds": 30,
+      "enabled": true
+    },
+    {
+      "profile_id": "plc_feedback_10s",
+      "protocol": "plc_tag_modbus_tcp",
+      "poll_interval_seconds": 10,
+      "timeout_seconds": 2,
+      "retry_count": 2,
+      "retry_backoff_seconds": 3,
+      "enabled": true
+    },
+    {
+      "profile_id": "manual_batch_daily",
+      "protocol": "manual_batch_import",
+      "poll_interval_seconds": 86400,
+      "timeout_seconds": 30,
+      "retry_count": 0,
+      "retry_backoff_seconds": 0,
+      "enabled": true
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn-gh01-rs485-zone-a",
+      "protocol": "rs485_modbus_rtu",
+      "transport": "serial_gateway",
+      "endpoint_ref": "env:SENSOR_BUS_ZONE_A",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-rs485-zone-b",
+      "protocol": "rs485_modbus_rtu",
+      "transport": "serial_gateway",
+      "endpoint_ref": "env:SENSOR_BUS_ZONE_B",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-rs485-weather",
+      "protocol": "rs485_modbus_rtu",
+      "transport": "serial_gateway",
+      "endpoint_ref": "env:SENSOR_BUS_WEATHER",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-rs485-nutrient-room",
+      "protocol": "rs485_modbus_rtu",
+      "transport": "serial_gateway",
+      "endpoint_ref": "env:SENSOR_BUS_NUTRIENT_ROOM",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-rs485-dry-room",
+      "protocol": "rs485_modbus_rtu",
+      "transport": "serial_gateway",
+      "endpoint_ref": "env:SENSOR_BUS_DRY_ROOM",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-pulse-zone-a",
+      "protocol": "pulse_counter",
+      "transport": "plc_counter",
+      "endpoint_ref": "env:PULSE_COUNTER_ZONE_A",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-pulse-zone-b",
+      "protocol": "pulse_counter",
+      "transport": "plc_counter",
+      "endpoint_ref": "env:PULSE_COUNTER_ZONE_B",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-rtsp-zone-a",
+      "protocol": "rtsp_onvif",
+      "transport": "rtsp",
+      "endpoint_ref": "env:RTSP_ZONE_A",
+      "credential_ref": "env:RTSP_ZONE_A_CREDENTIAL",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-rtsp-zone-b",
+      "protocol": "rtsp_onvif",
+      "transport": "rtsp",
+      "endpoint_ref": "env:RTSP_ZONE_B",
+      "credential_ref": "env:RTSP_ZONE_B_CREDENTIAL",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-manual-dry-room",
+      "protocol": "manual_batch_import",
+      "transport": "file_drop",
+      "endpoint_ref": "ops/manual/product_moisture",
+      "enabled": true
+    },
+    {
+      "connection_id": "conn-gh01-plc-main",
+      "protocol": "plc_tag_modbus_tcp",
+      "transport": "modbus_tcp_gateway",
+      "endpoint_ref": "env:PLC_MAIN",
+      "enabled": true
+    }
+  ],
+  "sensor_binding_groups": [
+    {
+      "binding_group_id": "sensor-zone-a-climate",
+      "connection_id": "conn-gh01-rs485-zone-a",
+      "poller_profile_id": "modbus_rtu_fast_10s",
+      "sensor_ids": [
+        "gh-01-zone-a--air-temp-rh--01",
+        "gh-01-zone-a--air-temp-rh--02"
+      ],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "modbus_climate_combo",
+      "normalizer_id": "climate_sensor_normalizer",
+      "quality_rule_set_id": "quality-climate-combo",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-a-co2-par",
+      "connection_id": "conn-gh01-rs485-zone-a",
+      "poller_profile_id": "modbus_rtu_standard_30s",
+      "sensor_ids": [
+        "gh-01-zone-a--co2--01",
+        "gh-01-zone-a--par--01"
+      ],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "modbus_scalar_environment",
+      "normalizer_id": "environment_scalar_normalizer",
+      "quality_rule_set_id": "quality-climate-combo",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-a-rootzone-moisture",
+      "connection_id": "conn-gh01-rs485-zone-a",
+      "poller_profile_id": "modbus_rtu_standard_30s",
+      "sensor_ids": [
+        "gh-01-zone-a--substrate-moisture--01",
+        "gh-01-zone-a--substrate-moisture--02"
+      ],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "modbus_substrate_probe",
+      "normalizer_id": "rootzone_probe_normalizer",
+      "quality_rule_set_id": "quality-rootzone-probe",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-a-rootzone-temp",
+      "connection_id": "conn-gh01-rs485-zone-a",
+      "poller_profile_id": "modbus_rtu_slow_60s",
+      "sensor_ids": [
+        "gh-01-zone-a--substrate-temp--01",
+        "gh-01-zone-a--substrate-temp--02"
+      ],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "modbus_substrate_temperature",
+      "normalizer_id": "rootzone_temperature_normalizer",
+      "quality_rule_set_id": "quality-rootzone-probe",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-a-drain-ec-ph",
+      "connection_id": "conn-gh01-rs485-zone-a",
+      "poller_profile_id": "modbus_rtu_slow_60s",
+      "sensor_ids": ["gh-01-zone-a--drain-ec-ph--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "modbus_ec_ph_station",
+      "normalizer_id": "solution_ec_ph_normalizer",
+      "quality_rule_set_id": "quality-liquid-chemistry",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-a-drain-volume",
+      "connection_id": "conn-gh01-pulse-zone-a",
+      "poller_profile_id": "pulse_counter_60s",
+      "sensor_ids": ["gh-01-zone-a--drain-volume--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "pulse_counter_volume",
+      "normalizer_id": "flow_counter_normalizer",
+      "quality_rule_set_id": "quality-pulse-counter",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-a-vision",
+      "connection_id": "conn-gh01-rtsp-zone-a",
+      "poller_profile_id": "rtsp_capture_300s",
+      "sensor_ids": ["gh-01-zone-a--crop-image-frame--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "rtsp_frame_capture",
+      "normalizer_id": "vision_frame_metadata_normalizer",
+      "quality_rule_set_id": "quality-vision-frame",
+      "publish_targets": [
+        "mqtt-vision-metadata",
+        "object-store-vision"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-climate",
+      "connection_id": "conn-gh01-rs485-zone-b",
+      "poller_profile_id": "modbus_rtu_fast_10s",
+      "sensor_ids": [
+        "gh-01-zone-b--air-temp-rh--01",
+        "gh-01-zone-b--air-temp-rh--02"
+      ],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "modbus_climate_combo",
+      "normalizer_id": "climate_sensor_normalizer",
+      "quality_rule_set_id": "quality-climate-combo",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-co2-par",
+      "connection_id": "conn-gh01-rs485-zone-b",
+      "poller_profile_id": "modbus_rtu_standard_30s",
+      "sensor_ids": [
+        "gh-01-zone-b--co2--01",
+        "gh-01-zone-b--par--01"
+      ],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "modbus_scalar_environment",
+      "normalizer_id": "environment_scalar_normalizer",
+      "quality_rule_set_id": "quality-climate-combo",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-rootzone-moisture",
+      "connection_id": "conn-gh01-rs485-zone-b",
+      "poller_profile_id": "modbus_rtu_standard_30s",
+      "sensor_ids": [
+        "gh-01-zone-b--substrate-moisture--01",
+        "gh-01-zone-b--substrate-moisture--02"
+      ],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "modbus_substrate_probe",
+      "normalizer_id": "rootzone_probe_normalizer",
+      "quality_rule_set_id": "quality-rootzone-probe",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-rootzone-temp",
+      "connection_id": "conn-gh01-rs485-zone-b",
+      "poller_profile_id": "modbus_rtu_slow_60s",
+      "sensor_ids": [
+        "gh-01-zone-b--substrate-temp--01",
+        "gh-01-zone-b--substrate-temp--02"
+      ],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "modbus_substrate_temperature",
+      "normalizer_id": "rootzone_temperature_normalizer",
+      "quality_rule_set_id": "quality-rootzone-probe",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-drain-ec-ph",
+      "connection_id": "conn-gh01-rs485-zone-b",
+      "poller_profile_id": "modbus_rtu_slow_60s",
+      "sensor_ids": ["gh-01-zone-b--drain-ec-ph--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "modbus_ec_ph_station",
+      "normalizer_id": "solution_ec_ph_normalizer",
+      "quality_rule_set_id": "quality-liquid-chemistry",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-drain-volume",
+      "connection_id": "conn-gh01-pulse-zone-b",
+      "poller_profile_id": "pulse_counter_60s",
+      "sensor_ids": ["gh-01-zone-b--drain-volume--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "pulse_counter_volume",
+      "normalizer_id": "flow_counter_normalizer",
+      "quality_rule_set_id": "quality-pulse-counter",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-zone-b-vision",
+      "connection_id": "conn-gh01-rtsp-zone-b",
+      "poller_profile_id": "rtsp_capture_300s",
+      "sensor_ids": ["gh-01-zone-b--crop-image-frame--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "rtsp_frame_capture",
+      "normalizer_id": "vision_frame_metadata_normalizer",
+      "quality_rule_set_id": "quality-vision-frame",
+      "publish_targets": [
+        "mqtt-vision-metadata",
+        "object-store-vision"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-outside-weather",
+      "connection_id": "conn-gh01-rs485-weather",
+      "poller_profile_id": "modbus_rtu_standard_30s",
+      "sensor_ids": ["gh-01-outside--outside-weather--01"],
+      "zone_scope": ["gh-01-outside"],
+      "parser_id": "modbus_weather_station",
+      "normalizer_id": "outside_weather_normalizer",
+      "quality_rule_set_id": "quality-climate-combo",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-nutrient-ec-ph",
+      "connection_id": "conn-gh01-rs485-nutrient-room",
+      "poller_profile_id": "modbus_rtu_slow_60s",
+      "sensor_ids": ["gh-01-nutrient-room--feed-ec-ph--01"],
+      "zone_scope": ["gh-01-nutrient-room"],
+      "parser_id": "modbus_ec_ph_station",
+      "normalizer_id": "solution_ec_ph_normalizer",
+      "quality_rule_set_id": "quality-liquid-chemistry",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-nutrient-temperature",
+      "connection_id": "conn-gh01-rs485-nutrient-room",
+      "poller_profile_id": "modbus_rtu_slow_60s",
+      "sensor_ids": [
+        "gh-01-nutrient-room--nutrient-solution-temp--01",
+        "gh-01-nutrient-room--source-water-temp--01"
+      ],
+      "zone_scope": ["gh-01-nutrient-room"],
+      "parser_id": "modbus_temperature_scalar",
+      "normalizer_id": "liquid_temperature_normalizer",
+      "quality_rule_set_id": "quality-liquid-temperature",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-dry-room-climate",
+      "connection_id": "conn-gh01-rs485-dry-room",
+      "poller_profile_id": "modbus_rtu_standard_30s",
+      "sensor_ids": [
+        "gh-01-dry-room--dry-room-temp-rh--01",
+        "gh-01-dry-room--dry-room-temp-rh--02"
+      ],
+      "zone_scope": ["gh-01-dry-room"],
+      "parser_id": "modbus_climate_combo",
+      "normalizer_id": "dry_room_climate_normalizer",
+      "quality_rule_set_id": "quality-climate-combo",
+      "publish_targets": [
+        "mqtt-sensor-raw",
+        "tsdb-sensor-raw",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "sensor-dry-room-product-moisture",
+      "connection_id": "conn-gh01-manual-dry-room",
+      "poller_profile_id": "manual_batch_daily",
+      "sensor_ids": ["gh-01-dry-room--product-moisture--01"],
+      "zone_scope": ["gh-01-dry-room"],
+      "parser_id": "manual_batch_csv",
+      "normalizer_id": "product_moisture_normalizer",
+      "quality_rule_set_id": "quality-manual-product-moisture",
+      "publish_targets": [
+        "mqtt-manual-batch",
+        "tsdb-sensor-snapshot"
+      ],
+      "enabled": true
+    }
+  ],
+  "device_binding_groups": [
+    {
+      "binding_group_id": "device-zone-a-circulation-fan",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": [
+        "gh-01-zone-a--circulation-fan--01",
+        "gh-01-zone-a--circulation-fan--02"
+      ],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "plc_binary_percent_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-a-vent-window",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-a--vent-window--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "plc_position_feedback",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-a-shade-curtain",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-a--shade-curtain--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "plc_position_feedback",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-a-irrigation-valve",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": [
+        "gh-01-zone-a--irrigation-valve--01",
+        "gh-01-zone-a--irrigation-valve--02"
+      ],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "plc_binary_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-a-heater",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-a--heater--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "plc_binary_stage_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-a-co2-doser",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-a--co2-doser--01"],
+      "zone_scope": ["gh-01-zone-a"],
+      "parser_id": "plc_binary_percent_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-b-circulation-fan",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": [
+        "gh-01-zone-b--circulation-fan--01",
+        "gh-01-zone-b--circulation-fan--02"
+      ],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "plc_binary_percent_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-b-vent-window",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-b--vent-window--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "plc_position_feedback",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-b-shade-curtain",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-b--shade-curtain--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "plc_position_feedback",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-b-irrigation-valve",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": [
+        "gh-01-zone-b--irrigation-valve--01",
+        "gh-01-zone-b--irrigation-valve--02"
+      ],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "plc_binary_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-b-heater",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-b--heater--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "plc_binary_stage_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-zone-b-co2-doser",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-zone-b--co2-doser--01"],
+      "zone_scope": ["gh-01-zone-b"],
+      "parser_id": "plc_binary_percent_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-nutrient-mixer",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-nutrient-room--nutrient-mixer--01"],
+      "zone_scope": ["gh-01-nutrient-room"],
+      "parser_id": "plc_recipe_stage_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-source-water-valve",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-nutrient-room--source-water-valve--01"],
+      "zone_scope": ["gh-01-nutrient-room"],
+      "parser_id": "plc_binary_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-dry-room-dehumidifier",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-dry-room--dehumidifier--01"],
+      "zone_scope": ["gh-01-dry-room"],
+      "parser_id": "plc_binary_stage_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    },
+    {
+      "binding_group_id": "device-dry-room-dry-fan",
+      "connection_id": "conn-gh01-plc-main",
+      "poller_profile_id": "plc_feedback_10s",
+      "device_ids": ["gh-01-dry-room--dry-fan--01"],
+      "zone_scope": ["gh-01-dry-room"],
+      "parser_id": "plc_binary_percent_status",
+      "normalizer_id": "device_state_normalizer",
+      "publish_targets": [
+        "mqtt-device-state",
+        "tsdb-device-state"
+      ],
+      "enabled": true
+    }
+  ],
+  "quality_rule_sets": [
+    {
+      "rule_set_id": "quality-climate-combo",
+      "applies_to": [
+        "air_temp_rh",
+        "co2",
+        "par",
+        "outside_weather",
+        "dry_room_temp_rh"
+      ],
+      "stale_after_seconds": 90,
+      "bad_after_seconds": 300,
+      "flatline_window_seconds": 1800,
+      "jump_threshold_pct": 25
+    },
+    {
+      "rule_set_id": "quality-rootzone-probe",
+      "applies_to": [
+        "substrate_moisture",
+        "substrate_temp"
+      ],
+      "stale_after_seconds": 180,
+      "bad_after_seconds": 600,
+      "flatline_window_seconds": 1800,
+      "jump_threshold_pct": 20,
+      "allowed_range": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "rule_set_id": "quality-liquid-chemistry",
+      "applies_to": [
+        "feed_ec_ph",
+        "drain_ec_ph"
+      ],
+      "stale_after_seconds": 300,
+      "bad_after_seconds": 900,
+      "jump_threshold_pct": 30
+    },
+    {
+      "rule_set_id": "quality-liquid-temperature",
+      "applies_to": [
+        "nutrient_solution_temp",
+        "source_water_temp"
+      ],
+      "stale_after_seconds": 300,
+      "bad_after_seconds": 900,
+      "jump_threshold_pct": 20
+    },
+    {
+      "rule_set_id": "quality-pulse-counter",
+      "applies_to": [
+        "drain_volume"
+      ],
+      "stale_after_seconds": 300,
+      "bad_after_seconds": 900,
+      "jump_threshold_pct": 100
+    },
+    {
+      "rule_set_id": "quality-vision-frame",
+      "applies_to": [
+        "crop_image_frame"
+      ],
+      "stale_after_seconds": 900,
+      "bad_after_seconds": 1800
+    },
+    {
+      "rule_set_id": "quality-manual-product-moisture",
+      "applies_to": [
+        "product_moisture"
+      ],
+      "stale_after_seconds": 172800,
+      "bad_after_seconds": 259200
+    }
+  ],
+  "publish_targets": [
+    {
+      "target_id": "mqtt-sensor-raw",
+      "target_type": "mqtt",
+      "route": "smartfarm/gh-01/sensor/raw",
+      "payload_format": "json"
+    },
+    {
+      "target_id": "mqtt-device-state",
+      "target_type": "mqtt",
+      "route": "smartfarm/gh-01/device/state",
+      "payload_format": "json"
+    },
+    {
+      "target_id": "mqtt-vision-metadata",
+      "target_type": "mqtt",
+      "route": "smartfarm/gh-01/vision/meta",
+      "payload_format": "json"
+    },
+    {
+      "target_id": "mqtt-manual-batch",
+      "target_type": "mqtt",
+      "route": "smartfarm/gh-01/manual/batch",
+      "payload_format": "json"
+    },
+    {
+      "target_id": "tsdb-sensor-raw",
+      "target_type": "timeseries",
+      "route": "sensor_raw",
+      "payload_format": "line_protocol"
+    },
+    {
+      "target_id": "tsdb-sensor-snapshot",
+      "target_type": "timeseries",
+      "route": "sensor_snapshot_1m",
+      "payload_format": "line_protocol"
+    },
+    {
+      "target_id": "tsdb-device-state",
+      "target_type": "timeseries",
+      "route": "device_state",
+      "payload_format": "line_protocol"
+    },
+    {
+      "target_id": "object-store-vision",
+      "target_type": "object_store",
+      "route": "vision_frames/gh-01",
+      "payload_format": "jpeg_with_json_sidecar"
+    }
+  ],
+  "snapshot_pipeline": {
+    "snapshot_interval_seconds": 60,
+    "trend_windows_seconds": [300, 1800],
+    "raw_retention_days": 90,
+    "snapshot_retention_days": 365,
+    "exclude_bad_quality_from_ai": true,
+    "manual_override_topic": "smartfarm/gh-01/events/manual_override"
+  },
+  "health_config": {
+    "heartbeat_seconds": 30,
+    "lag_alarm_seconds": 120,
+    "metrics_namespace": "pepper_smartfarm.sensor_ingestor",
+    "status_topic": "smartfarm/gh-01/system/sensor_ingestor"
+  }
+}

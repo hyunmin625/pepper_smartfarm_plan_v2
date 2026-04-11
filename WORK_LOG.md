@@ -2,6 +2,54 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
+## 2026-04-11
+
+### sensor-ingestor MVP skeleton 추가
+- `sensor-ingestor/` 디렉터리를 추가하고 `sensor-ingestor/main.py` 진입점을 작성했다.
+- `sensor-ingestor/sensor_ingestor/config.py`에 config/catalog 로더를 추가했다.
+- `sensor-ingestor/sensor_ingestor/runtime.py`에 sensor/device binding group 기준 dry-run poller, parser, normalizer, in-memory publish sink를 구현했다.
+- 동일 모듈에 `/healthz`, `/metrics` endpoint를 여는 stdlib HTTP server를 추가했다.
+- 검증 결과:
+  - `python3 -m py_compile sensor-ingestor/main.py sensor-ingestor/sensor_ingestor/config.py sensor-ingestor/sensor_ingestor/runtime.py` 통과
+  - `python3 sensor-ingestor/main.py --once --limit-sensor-groups 2 --limit-device-groups 2` 통과
+  - `python3 sensor-ingestor/main.py --serve-port 18080 ...` 실행 후 `curl -L http://127.0.0.1:18080/healthz`, `curl -L http://127.0.0.1:18080/metrics` 응답 확인
+- 현재 publish 경로는 in-memory sink 기준이며, 실제 MQTT broker와 timeseries DB 연결은 다음 단계로 남겨두었다.
+
+### 운영 시나리오와 안전 요구사항 정리
+- `data/examples/synthetic_sensor_scenarios.jsonl`에 고습, 급격한 일사 증가, 과건조, 장치 stuck, 통신 장애, 정전/재기동, 사람 개입, 로봇 작업 중단 시나리오 8건을 추가해 총 14건으로 확장했다.
+- `docs/operational_scenarios.md`를 추가해 정상/환경 스트레스/센서 장애/장치 장애/안전 이벤트 시나리오를 목록화했다.
+- `scripts/validate_synthetic_scenarios.py`를 추가해 합성 시나리오 JSONL의 필수 필드와 중복 `scenario_id`를 검증하도록 했다.
+- 검증 결과: `python3 scripts/validate_synthetic_scenarios.py` 기준 `rows 14`, `duplicate_scenario_ids 0`, `errors 0`.
+- `docs/safety_requirements.md`를 추가해 인터록, 비상정지, 수동/자동모드 전환, 승인 필수 액션, 절대 금지 액션, 사람 감지, 로봇 작업구역 접근 규칙을 정리했다.
+- `todo.md`의 `1.4 운영 시나리오 정리`와 `1.5 안전 요구사항 정리`를 모두 완료 처리했다.
+
+### sensor-ingestor 설정 포맷과 poller profile 초안 작성
+- `docs/sensor_ingestor_config_spec.md`를 추가해 `poller_profiles`, `connections`, `sensor_binding_groups`, `device_binding_groups`, `quality_rule_sets`, `publish_targets`, `snapshot_pipeline`, `health_config` 계약을 정의했다.
+- `schemas/sensor_ingestor_config_schema.json`을 추가해 설정 파일 구조를 JSON Schema로 고정했다.
+- `data/examples/sensor_ingestor_config_seed.json`을 추가해 `gh-01` 기준 poller profile 7개, connection 11개, sensor binding group 19개, device binding group 16개 예시를 작성했다.
+- seed config는 기존 `data/examples/sensor_catalog_seed.json`의 센서 29개와 장치 20개를 각각 정확히 한 번씩 binding하도록 구성했다.
+- `scripts/validate_sensor_ingestor_config.py`를 추가해 catalog 참조 경로, protocol 일치, quality rule coverage, sensor/device coverage를 검증하도록 했다.
+- 검증 결과: `python3 scripts/validate_sensor_ingestor_config.py` 기준 `covered_sensors 29`, `covered_devices 20`, `errors 0`.
+- `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`, `todo.md`, `data/examples/README.md`, `docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`에 상태와 링크를 반영했다.
+
+### 센서 품질 규칙과 ingestor runtime flow 문서화
+- `docs/sensor_quality_rules_pseudocode.md`를 추가해 `missing`, `stale`, `outlier`, `jump`, `flatline`, `readback_mismatch` 우선순위와 automation gate 규칙을 pseudocode 수준으로 고정했다.
+- `docs/sensor_ingestor_runtime_flow.md`를 추가해 startup, polling cycle, parser, normalizer, quality evaluator, publisher, snapshot/trend, health 흐름을 문서화했다.
+- `todo.md`의 `6.4 센서 품질 관리`에서 규칙 정의 항목 4개를 완료 처리했다.
+- `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`의 다음 우선순위를 `sensor-ingestor` MVP skeleton 작성으로 갱신했다.
+
+### farm_case 환류 샘플과 event window 규칙 구체화
+- `data/examples/farm_case_candidate_samples.jsonl`에 `farm_case_candidate` 샘플 10건을 추가했다.
+- 성공, 부분 회복, 실패, 미확정, 센서 fault, 병해, postharvest, 수출 residue 사례를 섞어 review 상태별 샘플을 구성했다.
+- `docs/farm_case_event_window_builder.md`를 추가해 `event_window` anchor, pre/post window, 병합/분리, 품질 게이트, 출력 계약을 문서화했다.
+- `scripts/validate_farm_case_candidates.py`를 추가해 `farm_case` 샘플 JSONL의 필수 필드, enum, 시간 순서, 승인 조건을 검증하도록 했다.
+- `scripts/build_farm_case_rag_chunks.py`를 추가해 승인된 후보만 `data/rag/farm_case_seed_chunks.jsonl`로 변환하는 초안을 작성했다.
+- 변환 결과는 샘플 10건 중 7건이 승격 조건을 통과했고, `scripts/validate_rag_chunks.py --input data/rag/farm_case_seed_chunks.jsonl` 검증을 통과했다.
+- `scripts/build_rag_index.py`가 다중 입력 JSONL을 받아 official + farm_case 혼합 인덱스를 만들 수 있도록 확장했다.
+- `scripts/search_rag_index.py`에 `farm_case` 혼합 인덱스용 공식 지침 우선 정렬 guardrail과 `farm_id`, `zone_id` 필터를 추가했다.
+- `evals/rag_official_priority_eval_set.jsonl`을 추가해 혼합 인덱스에서 공식 청크가 top1로 유지되는 회귀셋 4건을 작성했다.
+- `docs/farm_case_rag_pipeline.md`, `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`, `todo.md`, `data/examples/README.md`에 진행 상태와 링크를 반영했다.
+
 ## 2026-04-10
 
 ### 저장소 이력관리 초기화

@@ -22,12 +22,19 @@
 | offline runner 설계 | 완료 | `docs/offline_agent_runner_spec.md`, `data/examples/synthetic_sensor_scenarios.jsonl` |
 | shadow mode 보고 체계 정의 | 완료 | `docs/shadow_mode_report_format.md` |
 | 운영 로그 환류 설계 | 완료 | `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json` |
+| `farm_case` 샘플과 event window 규칙 | 완료 | `data/examples/farm_case_candidate_samples.jsonl`, `docs/farm_case_event_window_builder.md`, `scripts/validate_farm_case_candidates.py` |
+| 승인된 `farm_case` 후보의 RAG chunk 변환 초안 | 완료 | `scripts/build_farm_case_rag_chunks.py`, `data/rag/farm_case_seed_chunks.jsonl` |
+| `farm_case` 혼합 인덱스에서 공식 지침 우선 정렬 규칙 | 완료 | `scripts/search_rag_index.py`, `evals/rag_official_priority_eval_set.jsonl` |
+| `sensor-ingestor` 설정 계약과 poller profile 초안 | 완료 | `docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py` |
+| 센서 품질 규칙과 runtime flow 초안 | 완료 | `docs/sensor_quality_rules_pseudocode.md`, `docs/sensor_ingestor_runtime_flow.md` |
+| 운영 시나리오와 안전 요구사항 정리 | 완료 | `data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`, `docs/safety_requirements.md`, `scripts/validate_synthetic_scenarios.py` |
+| `sensor-ingestor` MVP skeleton | 완료 | `sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/config.py` |
 
 ## Phase -1 완료 판정
 
 - 설계 문서, 스키마, seed dataset, eval set, registry 규칙, shadow report 포맷이 모두 존재한다.
 - 따라서 **실측 데이터 없는 상태에서 AI 준비 구축과 MLOps 기반 설계는 완료**로 판정한다.
-- 다음 단계의 중심은 문서 설계가 아니라 `센서 수집 계획 보강`, `offline runner 구현`, `policy JSON 작성`, `farm_case 샘플 생성`이다.
+- 다음 단계의 중심은 문서 설계가 아니라 `센서 수집 계획 보강`, `offline runner 구현`, `policy JSON 작성`, `고정 회귀 리포트와 정책 데이터 확장`이다.
 
 ## 개정 개발 순서
 
@@ -66,6 +73,11 @@
 - `docs/sensor_installation_inventory.md`
 - `schemas/sensor_catalog_schema.json`
 - `data/examples/sensor_catalog_seed.json`
+- `docs/sensor_ingestor_config_spec.md`
+- `schemas/sensor_ingestor_config_schema.json`
+- `data/examples/sensor_ingestor_config_seed.json`
+- `docs/sensor_quality_rules_pseudocode.md`
+- `docs/sensor_ingestor_runtime_flow.md`
 
 - 환경 센서: 온도, 상대습도, CO2, 광량/PAR, 일사량
 - 배지/양액 센서: 배지 함수율, EC, pH, 배액량, 배액 EC/pH, 양액 온도
@@ -76,7 +88,7 @@
 
 각 데이터는 `zone_id`, `sensor_id`, `timestamp`, `value`, `unit`, `quality_flag`, `source`, `calibration_version`을 포함한다.
 
-현재 단계에서는 zone 구조, naming 규칙, sample_rate, quality_flag 기준, must_have/should_have 우선순위에 더해 설치 수량 가정, protocol, calibration 주기, model_profile까지 문서화했다. 아직 vendor별 상용 모델 shortlist와 PLC 주소 체계는 미확정이며, 이는 다음 구현 단계에서 확정한다.
+현재 단계에서는 zone 구조, naming 규칙, sample_rate, quality_flag 기준, must_have/should_have 우선순위에 더해 설치 수량 가정, protocol, calibration 주기, model_profile, poller profile, connection, binding group, publish target까지 문서화했다. 아직 vendor별 상용 모델 shortlist와 PLC 주소 체계는 미확정이며, 이는 다음 구현 단계에서 확정한다.
 
 ## 3. 센서 데이터 분석 및 AI 학습 반영
 

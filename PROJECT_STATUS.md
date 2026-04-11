@@ -39,8 +39,14 @@
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
 - `docs/rag_next_steps.md`: RAG 데이터 확충, 벡터 검색, 메타데이터 필터, 현장 데이터 환류 과제
 - `docs/farm_case_rag_pipeline.md`: 운영 로그와 센서 구간을 `farm_case` RAG로 승격하는 기준과 리뷰 절차
+- `docs/farm_case_event_window_builder.md`: 운영 로그를 사건 단위 `event_window`로 묶는 세부 규칙
 - `docs/sensor_collection_plan.md`: zone/device/sample_rate 수준의 센서 수집 계획
 - `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
+- `docs/sensor_ingestor_config_spec.md`: poller profile, connection, binding group 기준
+- `docs/sensor_quality_rules_pseudocode.md`: `quality_flag`와 automation gate 규칙
+- `docs/sensor_ingestor_runtime_flow.md`: parser -> normalizer -> publish 실행 흐름
+- `docs/operational_scenarios.md`: 정상/이상/안전 이벤트 시나리오 목록
+- `docs/safety_requirements.md`: 인터록, estop, 수동/자동 전환, 승인/금지 액션 기준
 - `docs/dataset_taxonomy.md`: 학습/eval 데이터의 task family 분류 기준
 - `docs/training_data_format.md`: seed JSONL 입력/출력 포맷과 템플릿 기준
 - `docs/data_curation_rules.md`: 샘플/eval 정제와 정규화 규칙
@@ -79,9 +85,19 @@
 - `region`, `season`, `cultivar`, `greenhouse_type` 메타데이터가 JSON index와 검색 필드에 실제 반영되도록 `scripts/build_rag_index.py`, `scripts/search_rag_index.py` 보정 완료
 - multi-turn contextual retrieval 전략 문서화 완료: `docs/rag_contextual_retrieval_strategy.md`
 - `farm_case` RAG 환류 파이프라인 초안과 후보 스키마 작성: `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json`
+- `farm_case_candidate` 샘플 10건 작성: `data/examples/farm_case_candidate_samples.jsonl`
+- `farm_case` 후보 검증 스크립트와 event window 세부 규칙 추가: `scripts/validate_farm_case_candidates.py`, `docs/farm_case_event_window_builder.md`
+- 승인된 `farm_case` 후보를 RAG 청크로 변환하는 초안 추가: `scripts/build_farm_case_rag_chunks.py`, `data/rag/farm_case_seed_chunks.jsonl`
+- `farm_case` 혼합 인덱스에서 official guideline 우선 정렬 guardrail 구현: `scripts/search_rag_index.py`, `evals/rag_official_priority_eval_set.jsonl`
 - Phase -1 설계 산출물 보강 완료: offline runner spec, MLOps registry 설계, shadow mode report format, 합성 센서 시나리오 추가
 - 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
 - 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
+- `sensor-ingestor` 설정 포맷과 poller profile 초안 완료: `docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`
+- 센서 품질 규칙과 `sensor-ingestor` runtime flow 초안 완료: `docs/sensor_quality_rules_pseudocode.md`, `docs/sensor_ingestor_runtime_flow.md`
+- 운영 시나리오 14건 정리 완료: `data/examples/synthetic_sensor_scenarios.jsonl`, `docs/operational_scenarios.md`, `scripts/validate_synthetic_scenarios.py`
+- 안전 요구사항 정리 완료: `docs/safety_requirements.md`
+- `sensor-ingestor` MVP skeleton 추가: `sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/config.py`
+- dry-run 실행과 `/healthz`, `/metrics` endpoint 응답 검증 완료
 - 도메인 데이터 분류/포맷/정제 규칙 정리 완료: `docs/dataset_taxonomy.md`, `docs/training_data_format.md`, `docs/data_curation_rules.md`
 - 행동추천/장애대응/로봇우선순위/알람 seed와 eval seed 추가: `data/examples/*`, `evals/*_eval_set.jsonl`
 - 학습/eval JSONL 검증 스크립트 추가: `scripts/validate_training_examples.py`
@@ -92,12 +108,10 @@
 
 ## 다음 우선순위
 
-1. `sensor-ingestor` 설정 파일 포맷과 poller profile 초안 작성
-2. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
-3. `data/examples` seed를 task별 20건 이상으로 확장
-4. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
-5. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
-6. hard block 정책 10개와 approval 정책 10개 작성
+1. `sensor-ingestor` MQTT publisher와 timeseries writer 실제 backend 연결
+2. `data/examples` seed를 task별 20건 이상으로 확장
+3. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
+4. hard block 정책 10개와 approval 정책 10개 작성
 
 ## 주의할 점
 

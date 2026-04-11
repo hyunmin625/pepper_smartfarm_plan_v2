@@ -6,6 +6,7 @@
 
 - `expert_judgement_eval_set.jsonl`: 전문가 판단 초기 평가셋
 - `rag_retrieval_eval_set.jsonl`: RAG 검색 hit rate 평가셋
+- `rag_official_priority_eval_set.jsonl`: `farm_case`가 섞인 혼합 인덱스에서 공식 지침 우선 정렬을 확인하는 평가셋
 - `action_recommendation_eval_set.jsonl`: 추천 행동과 승인 필요 여부 평가셋
 - `forbidden_action_eval_set.jsonl`: 금지행동/승인 필요 판정 평가셋
 - `failure_response_eval_set.jsonl`: 장애 대응과 fallback 평가셋
@@ -54,6 +55,20 @@ python3 -m venv .venv
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0
 ./.venv/bin/python scripts/compare_rag_retrieval_modes.py --candidate-backend local
 ./.venv/bin/python scripts/compare_rag_retrieval_modes.py --candidate-backend chroma --chroma-embedding-backend local
+```
+
+`farm_case` 혼합 인덱스에서 공식 지침 우선 가드레일은 아래 명령으로 별도 검증한다.
+
+```bash
+python3 scripts/build_rag_index.py \
+  --input data/rag/pepper_expert_seed_chunks.jsonl data/rag/farm_case_seed_chunks.jsonl \
+  --output artifacts/rag_index/pepper_expert_with_farm_case_index.json \
+  --skip-embeddings
+python3 scripts/evaluate_rag_retrieval.py \
+  --index artifacts/rag_index/pepper_expert_with_farm_case_index.json \
+  --eval-set evals/rag_official_priority_eval_set.jsonl \
+  --vector-backend local \
+  --fail-under 1.0
 ```
 
 OpenAI embedding 기반 평가를 돌릴 때는 저장소 루트 `.env`에 `OPENAI_API_KEY`를 넣은 뒤 아래 명령을 실행한다.

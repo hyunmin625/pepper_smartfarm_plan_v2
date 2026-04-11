@@ -13,6 +13,8 @@
 - `reporting_samples.jsonl`: 운영자 알람과 보고서 문구를 생성하는 예시
 - `synthetic_sensor_scenarios.jsonl`: 실측 데이터가 없을 때 offline runner와 eval에 넣을 합성 센서 상태 시나리오
 - `sensor_catalog_seed.json`: zone별 설치 위치, protocol, calibration, model_profile까지 포함한 현장형 수집 카탈로그 seed
+- `sensor_ingestor_config_seed.json`: poller profile, connection, binding group, publish target을 포함한 `sensor-ingestor` 설정 seed
+- `farm_case_candidate_samples.jsonl`: 운영 로그를 `farm_case` RAG 후보로 승격하기 전 검토하는 성공/실패 사례 샘플
 
 ## 작성 원칙
 
@@ -21,8 +23,13 @@
 - 위험 상황에서는 자동 실행보다 보수적 판단, 승인 요청, follow_up을 우선한다.
 - 센서 품질이 나쁘면 장치 제어 추천을 제한한다.
 - 합성 시나리오는 실제 운영 이벤트와 유사한 추세/센서 품질 문제를 재현해야 한다.
+- `synthetic_sensor_scenarios.jsonl`은 정상, 환경 스트레스, 센서 장애, 장치 stuck, 정전/재기동, 사람 개입, 로봇 중단까지 포함해야 한다.
 - 카탈로그 seed는 실제 장비 선정 전까지 수집 계약과 `sensor-ingestor` 설정 초안의 기준점 역할을 한다.
+- `sensor_ingestor_config_seed.json`은 catalog의 센서/장치를 빠짐없이 한 번씩 binding하는 것을 기본 원칙으로 둔다.
 - seed 검증은 `python3 scripts/validate_training_examples.py`로 수행한다.
+- `farm_case` 샘플 검증은 `python3 scripts/validate_farm_case_candidates.py`로 수행한다.
+- `sensor-ingestor` 설정 검증은 `python3 scripts/validate_sensor_ingestor_config.py`로 수행한다.
+- 합성 시나리오 검증은 `python3 scripts/validate_synthetic_scenarios.py`로 수행한다.
 
 ## 다음 확장
 

@@ -74,6 +74,13 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def load_inputs(paths: list[Path]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in paths:
+        rows.extend(load_jsonl(path))
+    return rows
+
+
 def ensure_unique_chunk_ids(rows: list[dict[str, Any]]) -> None:
     counts = Counter(row["chunk_id"] for row in rows)
     duplicates = sorted(chunk_id for chunk_id, count in counts.items() if count > 1)
@@ -186,12 +193,12 @@ def build_index(rows: list[dict[str, Any]], client: OpenAI | None = None) -> dic
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="data/rag/pepper_expert_seed_chunks.jsonl")
+    parser.add_argument("--input", nargs="+", default=["data/rag/pepper_expert_seed_chunks.jsonl"])
     parser.add_argument("--output", default="artifacts/rag_index/pepper_expert_index.json")
     parser.add_argument("--skip-embeddings", action="store_true", help="Skip embedding generation")
     args = parser.parse_args()
 
-    input_path = Path(args.input)
+    input_paths = [Path(path) for path in args.input]
     output_path = Path(args.output)
     
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -202,7 +209,7 @@ def main() -> None:
         else:
             client = OpenAI(api_key=api_key)
 
-    rows = load_jsonl(input_path)
+    rows = load_inputs(input_paths)
     ensure_unique_chunk_ids(rows)
     index = build_index(rows, client)
 
