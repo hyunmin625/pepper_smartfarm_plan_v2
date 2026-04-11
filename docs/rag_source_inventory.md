@@ -14,15 +14,17 @@
 
 ## 초기 Source 목록
 
-### RAG-SRC-001. 농사로 고추 육묘/재배 환경 자료
+### RAG-SRC-001. 농업기술길잡이 115 - 고추 (농촌진흥청 개정판)
 
 - URL: https://www.nongsaro.go.kr/portal/ps/psx/psxa/mlrdCurationDtl.mo?curationNo=188
-- source_type: official_guideline
+- local_pdf: `/mnt/d/DOWNLOAD/GPT_고추재배_훈련세트/original-know-how/고추_재배기술_최종파일-농촌진흥청.pdf`
+- source_type: official_master_guideline
 - crop_type: red_pepper
-- lifecycle_scope: nursery, transplanting, vegetative_growth
-- expected_use: 발아, 육묘, 초기 생육 환경 기준 검색
-- metadata_tags: `growth_stage:nursery`, `sensor:temperature`, `sensor:light`, `operation:transplanting`
-- ingestion_status: planned
+- lifecycle_scope: full_lifecycle (nursery to harvest/drying)
+- expected_use: 모든 생육 단계별 환경 제어 기준, 시비 처방, 병해충 진단 및 방제, 건조 표준 공정의 마스터 데이터로 사용
+- metadata_tags: `growth_stage:all`, `sensor:all`, `operation:all`, `trust_level:high`
+- ingestion_status: ingested (initial chunks and PDF-derived precision chunks added)
+- ingestion_note: 2026-04-11 local PDF에서 중복 제외 후 화분/착과, 비가림 온습도, 자동관수, 차광, 육묘 소질, 플러그 상토, 가뭄, 저온해, 고온해, 영양장애, 생리장해, 병해충/IPM, 총채벌레·진딧물 생물적 방제, 바이러스 전염 생태, 양액 급액 제어, 풋고추 저장·결로 억제, 홍고추 저장, 건고추 장기 저장·산소흡수제 포장, 하우스·열풍건조 운전 규칙 청크를 추가 추출
 
 ### RAG-SRC-002. 농사로 고추 시설 이상증상 현장 기술지원
 
@@ -74,6 +76,36 @@
 - metadata_tags: `risk:pest`, `risk:anthracnose`, `risk:phytophthora`, `risk:virus_vector`
 - ingestion_status: review_required
 
+### RAG-SRC-007. 농촌진흥청 고추 품종별 온도 임계점 및 생육 지표 연구
+
+- URL: https://www.korea.kr/briefing/pressReleaseView.do?newsId=156631165
+- source_type: official_research_report
+- crop_type: red_pepper
+- lifecycle_scope: vegetative_growth, fruiting, flowering
+- expected_use: 품종별 고온/저온 임계점(13~15℃, 30~35℃), 광합성 효율, 증산율, 화분 활력 등 생육 지표 기준 검색
+- metadata_tags: `sensor:temperature`, `growth_indicator:photosynthesis`, `growth_indicator:transpiration`, `risk:heat_stress`, `risk:cold_stress`
+- ingestion_status: planned
+
+### RAG-SRC-008. 건고추 품질 최적화 열풍 건조 3단계 표준 곡선 (경북농업기술원)
+
+- URL: https://gba.go.kr/main/sub04/sub01_03_02.do
+- source_type: official_guideline
+- crop_type: red_pepper
+- lifecycle_scope: harvest_drying_storage
+- expected_use: 건고추 색택 보존을 위한 3단계(65℃ 찌기 -> 60℃ 배습 -> 55℃ 마무리) 건조 프로토콜 검색
+- metadata_tags: `operation:drying`, `sensor:temperature`, `sensor:humidity`, `quality:color`, `quality:capsanthin`
+- ingestion_status: planned
+
+### RAG-SRC-009. AI 비전 기반 고추 병해충(탄저병, 총채벌레) 조기 진단 특징점 연구
+
+- URL: https://www.mdpi.com/2077-0472/13/2/433
+- source_type: research_paper
+- crop_type: red_pepper
+- lifecycle_scope: pest_disease_management
+- expected_use: 탄저병(수침상 반점, 겹무늬), 총채벌레(은백색 반점, 잎 뒤틀림) AI 모델 학습용 특징점 정의 검색
+- metadata_tags: `ai:vision`, `risk:anthracnose`, `risk:thrips`, `feature_point:concentric_ring`, `feature_point:silvering`
+- ingestion_status: planned
+
 ## RAG 메타데이터 규칙
 
 각 chunk는 최소한 다음 필드를 가진다.
@@ -95,10 +127,19 @@
 - `chunk_summary`
 - `citation_required`
 
+권장 확장 필드:
+
+- `source_pages`
+- `source_section`
+- `causality_tags`
+- `visual_tags`
+- `trust_level`
+- `active`
+
 ## 다음 작업
 
-1. source별 원문 저장 가능 여부 확인
-2. 공식 자료와 보조 자료 구분
-3. chunk 단위 분할
-4. `data/rag/pepper_expert_seed_chunks.jsonl` 확장
-5. vector store 인덱싱 스크립트 설계
+1. `RAG-SRC-001` PDF에서 병해충/IPM 장의 정밀 청크 추가 추출
+2. `RAG-SRC-001` PDF에서 양액재배/시설재배 장의 EC·pH·배양액 청크 추가 추출
+3. 공식 자료와 보조 자료 간 중복/상충 기준 정리
+4. `data/rag/pepper_expert_seed_chunks.jsonl`을 200개 이상으로 확장
+5. vector store 기반 citation 검색 품질 평가

@@ -434,9 +434,14 @@ LLM은 다음을 직접 수행하지 않는다.
 ## 8.5 RAG 검색 설계
 RAG는 단순 Q&A 검색이 아니라 운영 판단 근거를 제공하는 계층으로 설계한다.
 
+- 검색 엔진 진화: 초기 Keyword 검색 → Embedding 기반 Semantic Search + Metadata Hard Filter 하이브리드 구조
+- 지식 밀도 목표: 도메인별(육묘, 환경, 근권, 병해, 수확/건조) 최소 50~100개 이상의 정밀 청크 확보 (총 200+ 목표)
 - 문서 단위: 재배 매뉴얼, 농가 SOP, 정책 문서, 장치 매뉴얼, 병해 자료
-- chunk 메타데이터: crop_type, growth_stage, region, season, greenhouse_type, source_version
-- 검색 전략: semantic search + keyword/hybrid search + metadata filtering
+- chunk 메타데이터: crop_type, growth_stage, region, season, greenhouse_type, source_version, agent_use
+- 검색 전략: 
+    1. 상황 필터링 (Metadata Hard Filter: growth_stage, sensor_tags 등)
+    2. 의미적 유사도 검색 (Semantic Search via Embedding)
+    3. 키워드 보정 (Keyword Fallback for specific terms)
 - 검색 결과 검증: 최소 score threshold, 최신 문서 우선, 충돌 문서 탐지
 - 출력 요구: 중요한 추천에는 근거 문서 id와 chunk id를 함께 남긴다.
 

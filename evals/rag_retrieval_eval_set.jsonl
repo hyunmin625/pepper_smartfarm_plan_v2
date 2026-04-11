@@ -1,0 +1,24 @@
+{"case_id":"rag-eval-001","category":"climate_heat","query":"heat_stress temperature flowering","expected_chunk_ids":["pepper-climate-001"],"filters":{},"top_k":3,"notes":"고온·개화기 온도 스트레스 검색"}
+{"case_id":"rag-eval-002","category":"rootzone_overwet","query":"overwet root_damage soil_moisture","expected_chunk_ids":["pepper-rootzone-001"],"filters":{},"top_k":3,"notes":"과습·뿌리 갈변 검색"}
+{"case_id":"rag-eval-003","category":"fertigation_ec","query":"feed_ec drain_ec drain_rate","expected_chunk_ids":["pepper-hydroponic-001"],"filters":{},"top_k":3,"notes":"양액 EC·배액률 검색"}
+{"case_id":"rag-eval-004","category":"pest_disease_vision","query":"thrips anthracnose vision_symptom","expected_chunk_ids":["pepper-pest-001"],"filters":{},"top_k":3,"notes":"병해충·영상 증상 검색"}
+{"case_id":"rag-eval-005","category":"nursery_transplant","query":"nursery transplanting temperature","expected_chunk_ids":["pepper-lifecycle-001"],"filters":{},"top_k":3,"notes":"육묘·정식 단계 검색"}
+{"case_id":"rag-eval-006","category":"policy_safety","query":"decision_support approval audit","expected_chunk_ids":["pepper-agent-001"],"filters":{},"top_k":3,"notes":"정책·감사 로그 검색"}
+{"case_id":"rag-eval-007","category":"flowering_pollination","query":"화분 착과 야간 13도 18도","expected_chunk_ids":["pepper-flowering-pollen-001"],"filters":{},"top_k":3,"notes":"화분 발아·착과 임계온도 검색"}
+{"case_id":"rag-eval-008","category":"irrigation_tensiometer","query":"-20kPa 자동관수 석회결핍 일소 열과","expected_chunk_ids":["pepper-irrigation-tensiometer-001"],"filters":{},"top_k":3,"notes":"비가림 자동관수·수분 장해 검색"}
+{"case_id":"rag-eval-009","category":"postharvest_storage","query":"건고추 저장 함수율 18% 곰팡이 갈변","expected_chunk_ids":["pepper-dry-storage-001"],"filters":{},"top_k":3,"notes":"건고추 저장 재흡습 위험 검색"}
+{"case_id":"rag-eval-010","category":"rain_shelter_calendar","query":"비가림 하우스 늦서리 첫서리 작부체계","expected_chunk_ids":["pepper-rain-shelter-calendar-001"],"filters":{},"top_k":3,"notes":"비가림 재배력과 서리 회피 검색"}
+{"case_id":"rag-eval-011","category":"lowtemp_recovery","query":"정식기 저온 13도 18도 재정식 동해","expected_chunk_ids":["pepper-lowtemp-regional-recovery-001"],"filters":{},"top_k":3,"notes":"정식기 저온과 재정식 기준 검색"}
+{"case_id":"rag-eval-012","category":"monsoon_prevention","query":"장마 역병 탄저병 선수확 배수","expected_chunk_ids":["pepper-monsoon-prevention-001"],"filters":{},"top_k":3,"notes":"장마 전후 병해·배수 대응 검색"}
+{"case_id":"rag-eval-013","category":"typhoon_response","query":"태풍 도복 낙과 지주 보강 배수","expected_chunk_ids":["pepper-typhoon-response-001"],"filters":{},"top_k":3,"notes":"태풍 도복·낙과 대응 검색"}
+{"case_id":"rag-eval-014","category":"hail_recovery","query":"우박 측지 유인 재정식 경제성","expected_chunk_ids":["pepper-hail-recovery-001"],"filters":{},"top_k":3,"notes":"우박 피해 회복과 재정식 비교 검색"}
+{"case_id":"rag-eval-015","category":"metadata_filter_stage_trust","query":"정식 야간 온도","expected_chunk_ids":["pepper-transplant-001"],"filters":{"growth_stage":"transplanting","trust_level":"high"},"top_k":3,"notes":"생육단계와 신뢰도 필터 검색"}
+{"case_id":"rag-eval-016","category":"metadata_filter_section","query":"건고추 65℃ 건조","expected_chunk_ids":["pepper-drying-001"],"filters":{"source_section":"열풍 건조"},"top_k":3,"notes":"출처 섹션 부분 일치 검색"}
+{"case_id":"rag-eval-017","category":"green_storage_temperature","query":"풋고추 저장 7도 95 종자갈변","expected_chunk_ids":["pepper-green-storage-temperature-001"],"filters":{},"top_k":3,"notes":"풋고추 저온저장 조건과 종자 갈변 검색"}
+{"case_id":"rag-eval-018","category":"green_packaging_condensation","query":"풋고추 결로 천공필름 팬 30분 꼭지 무름","expected_chunk_ids":["pepper-green-packaging-condensation-001"],"filters":{},"top_k":3,"notes":"풋고추 결로 억제와 소포장 검색"}
+{"case_id":"rag-eval-019","category":"red_storage_ethylene","query":"홍고추 저장 5도 10도 에틸렌 사과 토마토","expected_chunk_ids":["pepper-red-storage-ethylene-001"],"filters":{},"top_k":3,"notes":"홍고추 저장과 에틸렌 분리 검색"}
+{"case_id":"rag-eval-020","category":"dry_storage_maintenance","query":"건고추 7월 8월 함수율 18 훈증 UV 포장","expected_chunk_ids":["pepper-dry-storage-maintenance-001"],"filters":{},"top_k":3,"notes":"건고추 장기 저장 유지관리 검색"}
+{"case_id":"rag-eval-021","category":"powder_packaging_oxygen","query":"고춧가루 나일론 PE 산소흡수제 색도 매운맛","expected_chunk_ids":["pepper-powder-packaging-oxygen-001"],"filters":{},"top_k":3,"notes":"고춧가루 산소흡수제 포장 검색"}
+{"case_id":"rag-eval-022","category":"house_drying_hygiene","query":"하우스 건조 35 40도 결로 제습 환기","expected_chunk_ids":["pepper-house-drying-hygiene-001"],"filters":{},"top_k":3,"notes":"하우스 건조 환경 제어 검색"}
+{"case_id":"rag-eval-023","category":"hotair_split_drying","query":"반절 열풍건조 60도 건조시간 절반 캡산틴","expected_chunk_ids":["pepper-hotair-drying-split-001"],"filters":{},"top_k":3,"notes":"반절 열풍건조 품질·효율 검색"}
+{"case_id":"rag-eval-024","category":"postharvest_wash_hygiene","query":"수확 후 큐어링 세척기 세척솔 곰팡이 오염","expected_chunk_ids":["pepper-postharvest-wash-hygiene-001"],"filters":{},"top_k":3,"notes":"수확 후 세척 위생 검색"}

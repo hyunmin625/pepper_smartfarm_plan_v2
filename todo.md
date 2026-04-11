@@ -6,6 +6,7 @@
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
 - [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
+- [RAG 보완 핵심 과제](docs/rag_next_steps.md)
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -189,19 +190,58 @@
 - [ ] 계절별 평가셋 구축
 - [ ] 센서 이상 포함 평가셋 구축
 
-## 2.6 RAG 지식베이스 구축
-- [ ] RAG 적용 문서 범위 정의
-- [ ] 적고추/건고추 재배 매뉴얼 수집
-- [ ] 현장 SOP 문서 수집
-- [ ] 품종별/생육 단계별 기준 문서 수집
-- [ ] 장치 운전 기준 문서 수집
-- [ ] 문서 출처와 버전 메타데이터 정의
-- [ ] chunking 전략 정의
-- [ ] embedding 모델 결정
-- [ ] vector store 또는 vector DB 결정
-- [ ] metadata filtering 필드 정의
-- [ ] 검색 품질 평가셋 작성
-- [ ] 문서 충돌/구버전 감지 규칙 정의
+## 2.6 RAG 지식베이스 구축 [진행 중]
+- [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)
+- [x] RAG 메타데이터 스키마 및 인덱싱 계획 수립 (`docs/rag_indexing_plan.md`)
+- [x] RAG 보완 핵심 과제 정리 (`docs/rag_next_steps.md`)
+- [x] RAG 청크 검증 스키마와 JSONL 검증 스크립트 추가 (`schemas/rag_chunk_schema.json`, `scripts/validate_rag_chunks.py`)
+- [x] 초기 시드 청크(6종) 인덱싱 및 테스트 (`scripts/build_rag_index.py`, `scripts/rag_smoke_test.py`)
+- [x] 농촌진흥청 PDF 원문 기반 중복 제외 지식 보강 누적 22개 반영 (`data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] PDF page/section citation 추적용 RAG 메타데이터 반영 (`source_pages`, `source_section`)
+- [x] 농촌진흥청 PDF 추가 정밀 추출 후 중복 chunk_id 3건 병합, 전체 seed chunk 72개로 확장
+    - [x] 화분/착과 임계값, 비가림 온습도, 자동관수, 차광, 육묘 소질, 플러그 상토 반영
+    - [x] 가뭄, 저온해, 고온해, 영양장애, 생리장해, 건고추 저장 판단 기준 반영
+    - [x] 병해충/IPM, 총채벌레·진딧물 생물적 방제, 바이러스 전염 생태, 양액 급액 제어 반영
+    - [x] 품종 선택 기준, 풋고추 과형 분류, 재배 형태별 재배 시기, 노지 재배력 반영
+    - [x] 비가림 재배력, 장마·태풍·우박·저온·서리창 대응 기준 반영
+- [x] 육묘/접목/식물공장/비가림 재배 보강으로 전체 seed chunk 100개 확장
+    - [x] 육묘 계절 관리, 입고병 예방, 바이러스 매개충 차단, 소질 진단 반영
+    - [x] 접목 목적, 대목 분류, 파종 시차, 접목법, 활착 관리, 접목묘 정식 기준 반영
+    - [x] 식물공장 육묘·활착 관리, 비가림 구조·밀도·염류·저일조 대응 반영
+- [x] 초기 시드 청크의 `source_pages`, `source_section` 누락 경고 해소
+    - [x] `python3 scripts/validate_rag_chunks.py` 기준 rows 100, duplicate 0, warnings 0, errors 0 확인
+- [ ] **지식 데이터 확충 (Phase 1: 전주기 커버리지)**
+    - [x] 농사로(RAG-SRC-001~004) 및 현장 사례에서 정밀 청크 100개 이상 추출
+    - [ ] 농사로(RAG-SRC-001~004) 및 현장 사례에서 정밀 청크 200개 이상 추출
+    - [ ] RAG-SRC-001 PDF 병해충/IPM, 양액재배/시설재배 장 추가 추출 지속
+    - [ ] 적고추 품종별 온도, 착과, 착색, 병저항성 기준 청크화 지속
+    - [ ] 지역별 재배력, 월별 작업, 지역 기상 리스크 청크화 지속
+    - [x] 신규 PDF 청크별 **인과관계(Causality) 태그** 및 **시각적 특징(Visual) 태그** 라벨링
+    - [x] 수확 후 큐어링·세척 위생, 풋고추 저장·결로, 홍고추 저장, 건고추 장기 저장·산소흡수제 포장, 하우스·열풍건조 운전 규칙 보강
+    - [ ] 적고추 건조/저장 특화 지식 및 에너지 세이빙 노하우 추가 확장
+- [ ] **전문가 수준 검색 및 중재 로직 구현**
+    - [x] 지식 충돌 시 해결을 위한 **Trust Level 기반 Reranking** 로직 1차 구현
+    - [x] 기상 재해·작형 대응 query 5종을 추가해 smoke/eval coverage 16건으로 확장
+    - [x] 수확 후·건조·저장 대응 query 8종을 추가해 smoke/eval coverage 24건으로 확장
+    - [ ] **Multi-turn Contextual Retrieval**: 과거 3~5일간의 상태를 고려한 지식 검색 전략 수립
+    - [x] 로컬 **TF-IDF + SVD vector search PoC** 구현
+    - [x] **ChromaDB persistent vector store** 구현 및 local-backed collection 검증
+    - [x] OpenAI embedding 모델 연동 및 OpenAI-backed Chroma collection 검증
+    - [x] **Metadata Hard Filtering** 로직 1차 구현 (growth/source/sensor/risk filter)
+    - [x] `region`, `season`, `cultivar`, `greenhouse_type`, `active` 필터 추가
+    - [x] `source_section` 부분 일치 필터와 `trust_level` 기반 reranking 구현
+    - [x] OpenAI-backed Chroma의 낮은 MRR 케이스 분석 및 `local blend 4.0` 기본값 반영
+    - [x] backend별 Chroma collection/manifest 분리로 차원 충돌 방지
+    - [x] retrieval weight 튜닝 스크립트 추가 (`scripts/tune_rag_weights.py`)
+    - [ ] Semantic + Keyword 하이브리드 검색 가중치 재검증용 eval set 확장
+- [ ] **RAG 품질 평가 체계 구축**
+    - [x] 시나리오별 검색 적중률(Hit Rate) 측정 1차 구현 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
+    - [x] 출처 누락 방지를 위한 citation metadata 검증 로직 추가 (`scripts/validate_rag_chunks.py`)
+    - [x] keyword-only vs local vector hybrid 비교 스크립트 추가 (`scripts/compare_rag_retrieval_modes.py`)
+    - [x] 할루시네이션 방지를 위한 응답 citation coverage 검증 로직 추가 (`scripts/validate_response_citations.py`)
+    - [x] keyword-only, local vector, local-backed Chroma 검색 hit rate 비교
+    - [x] OpenAI vector를 포함한 4모드 검색 hit rate 비교
+    - [ ] 4모드 비교를 더 긴 평가셋(40+ case)으로 재검증
 
 ## 2.7 AI 준비/MLOps 기반 구축
 - [ ] AI_MLOPS_PLAN.md 유지관리
@@ -214,6 +254,9 @@
 - [ ] champion/challenger 모델 승격 규칙 정의
 - [ ] shadow mode 평가 리포트 포맷 정의
 - [ ] 운영 로그 → 학습 후보 변환 규칙 정의
+- [ ] 운영 로그 → RAG `farm_case` 후보 변환 규칙 정의
+- [ ] `farm_id`, `zone_id`, `cultivar`, `season`, `outcome` metadata 정의
+- [ ] 성공/실패 사례를 공식 지식과 충돌 검토 후 RAG에 반영하는 승인 절차 정의
 
 ## 2.8 적고추 전문가 AI Agent 구축
 - [ ] 적고추 재배 전주기 단계 정의
