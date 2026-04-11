@@ -14,7 +14,7 @@
 
 OpenAI SFT dataset 한 줄은 top-level에 `messages`만 가져야 한다. 내부 추적용 `metadata` 같은 필드는 학습 JSONL에 넣지 않고 run manifest와 failure log에 남긴다.
 
-현재 `scripts/build_openai_sft_datasets.py`는 `--system-prompt-version`을 지원한다. 기본값은 `sft_v2`이고, 다음 라운드 draft는 `sft_v3`로 분리 관리한다.
+현재 `scripts/build_openai_sft_datasets.py`는 `--system-prompt-version`을 지원한다. 기본값은 `sft_v2`이고, 다음 라운드 draft는 `sft_v3`, `sft_v4`로 분리 관리한다.
 
 ## 2. 실행 명령
 
@@ -40,6 +40,15 @@ python3 scripts/run_openai_fine_tuning_job.py --submit
 python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v3
 ```
 
+`prompt_v4` challenger draft를 반영한 학습 파일을 만들 때는 아래처럼 실행한다.
+
+```bash
+python3 scripts/build_openai_sft_datasets.py \
+  --system-prompt-version sft_v4 \
+  --train-output artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl \
+  --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl
+```
+
 status sync는 다음 명령으로 수행한다.
 
 ```bash
@@ -61,6 +70,13 @@ baseline 보관본:
 
 - job_id: `ftjob-ULBuPHoPBbAMah5rPdd2i334`
 - fine_tuned_model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v2-prompt-v2-eval-v1-20260412-021539:DTWRpIbI`
+
+현재 challenger candidate:
+
+- job_id: `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k`
+- status: `validating_files`
+- manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v4-prompt_v4-eval_v1-20260412-070051.json`
+- dataset/prompt: `ds_v4 / prompt_v4`
 
 `3.4 파인튜닝 결과 검증`은 아래 명령으로 실행한다.
 
@@ -103,6 +119,8 @@ python3 scripts/evaluate_fine_tuned_model.py \
 - `artifacts/reports/fine_tuned_model_eval_legacy_prompt.{json,jsonl,md}`
 - `artifacts/reports/fine_tuned_model_eval_prompt_v2.{json,jsonl,md}`
 - `artifacts/reports/fine_tuned_model_eval_prompt_v3.{json,jsonl,md}`
+- `artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl`
+- `artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl`
 
 ## 4. 운영 원칙
 

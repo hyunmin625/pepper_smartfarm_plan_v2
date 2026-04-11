@@ -4,6 +4,12 @@
 
 ## 2026-04-12
 
+### ds_v4 / prompt_v4 challenger 제출
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.3.0 --dataset-version ds_v4 --prompt-version prompt_v4 --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl`로 새 fine-tuning job `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k`를 제출했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v4-prompt_v4-eval_v1-20260412-070051.json`에 저장했다.
+- 제출 직후 sync 기준 현재 상태는 `validating_files`이며, train file id는 `file-ENQ2rSrgmS1cqkKpVcauEx`, validation file id는 `file-3rp2CaC6btL7qe1eg4e2wC`다.
+- `python3 scripts/render_fine_tuning_comparison_table.py`를 다시 실행해 비교표에 ds_v4 challenger run을 반영했다.
+
 ### batch5 / prompt_v4 초안 준비
 - ds_v3/prompt_v3 eval에서 남은 실패 8건(`pepper-eval-005`, `pepper-eval-006`, `pepper-eval-008`, `failure-eval-002`, `edge-eval-004`, `seasonal-eval-001`, `seasonal-eval-002`, `seasonal-eval-003`)을 직접 겨냥한 `batch5` seed를 추가했다.
 - 추가 파일은 `data/examples/state_judgement_samples_batch5.jsonl`, `data/examples/failure_response_samples_batch5.jsonl`이다.

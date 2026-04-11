@@ -49,6 +49,7 @@
 - 최신 fine-tuned model eval 완료: `24건` 기준 pass rate `0.6667`, strict JSON rate `1.0`, top failure는 `risk_level_match 5건`, `required_action_types_present 5건`
 - baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v3/prompt_v3 결과가 `+0.1250`, 직전 ds_v2/prompt_v2 champion `0.625` 대비 `+0.0417` 개선됐다.
 - 다음 라운드용 `batch5/prompt_v4` draft 준비 완료: 남은 8개 실패 케이스를 반영해 seed를 `164건`으로 확장했고, OpenAI SFT draft 파일은 train `150`, validation `14`로 생성·검증을 마쳤다.
+- 새 challenger submit 완료: `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` (`ds_v4/prompt_v4`, `pepper-ops-sft-v1.3.0`)는 현재 `validating_files` 상태다.
 - edge case/계절별 평가셋 추가 완료: eval 파일 `7종`, eval row `24건`
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
@@ -209,7 +210,7 @@
 
 ## 다음 우선순위
 
-1. `ds_v4/prompt_v4` 후보를 submit해 남은 `risk_level_match 5건`, `required_action_types_present 5건` 실패가 실제로 줄어드는지 비교 평가
+1. `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` 상태를 sync해 `succeeded` 여부를 확인하고, 완료 즉시 eval `24건`을 다시 실행해 champion(`0.6667`) 대비 개선 여부를 비교
 2. 검색 근거 부족 시 불확실성 표현과 hallucination 사례를 사람 검토로 정리
 3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
 4. offline runner/state-estimator MVP 착수 범위를 확정

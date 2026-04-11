@@ -145,6 +145,7 @@
 - baseline 보관 완료: v1 legacy baseline `0.5417`은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관했고, ds_v3/prompt_v3 결과는 baseline 대비 `+0.1250`, 직전 champion 대비 `+0.0417` 개선됐다.
 - 다음 라운드 초안 준비 완료: `batch5`로 남은 8개 실패 케이스를 직접 보강했고 `prompt_v4` draft를 추가했다.
 - `prompt_v4` 전용 OpenAI SFT draft 파일 생성 완료: train `150`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl`)
+- 4차 개선 challenger submit 완료: `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` (`ft-sft-gpt41mini-ds_v4-prompt_v4-eval_v1-20260412-070051`)는 현재 `validating_files` 상태다.
 - 다음 라운드용 SFT 보강 완료: `scripts/build_openai_sft_datasets.py`가 action/failure/robot 계열 출력에 `retrieval_coverage`, `confidence`, `citations`, 정규 action object를 강제하도록 정규화되었고, eval 실패 패턴을 반영한 `batch3` seed 7건이 추가됐다.
 - prompt 버전 분리 완료: 현재 모델 검증용 `legacy` prompt와 다음 재학습용 `sft_v2` prompt를 분리했다. 현재 모델에 `sft_v2` prompt를 바로 적용하면 eval `24건` pass rate가 `0.1667`로 떨어져, prompt 교체는 재학습과 함께 진행해야 한다.
 - 2차 개선 run 완료: `ftjob-ULBuPHoPBbAMah5rPdd2i334` (`ft-sft-gpt41mini-ds_v2-prompt_v2-eval_v1-20260412-021539`)는 `succeeded`로 종료됐고 결과 모델은 `DTWRpIbI`다.
@@ -213,7 +214,7 @@
 
 ## 다음 우선순위
 
-1. `ds_v4/prompt_v4` 후보를 submit하고 eval `24건`을 다시 실행해 champion(`0.6667`) 대비 개선 여부를 확인
+1. `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` 상태를 sync해 `succeeded` 여부를 확인하고, 완료 즉시 eval `24건`을 다시 실행해 champion(`0.6667`) 대비 개선 여부를 확인
 2. 검색 근거 부족 시 불확실성 표현과 hallucination 사례를 사람 검토로 정리
 3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
 4. offline runner/state-estimator MVP 착수 범위를 확정
