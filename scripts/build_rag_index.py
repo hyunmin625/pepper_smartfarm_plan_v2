@@ -44,6 +44,13 @@ OPTIONAL_METADATA_KEYS = [
     "version",
     "effective_date",
     "active",
+    "region",
+    "season",
+    "cultivar",
+    "greenhouse_type",
+    "farm_id",
+    "zone_id",
+    "outcome",
 ]
 
 EMBEDDING_MODEL = "text-embedding-3-small"
@@ -94,6 +101,9 @@ def build_document(row: dict[str, Any]) -> dict[str, Any]:
     ]
     if row.get("source_section"):
         text_parts.append("source_section: " + str(row["source_section"]))
+    for key in ("region", "season", "cultivar", "greenhouse_type"):
+        if row.get(key):
+            text_parts.append(f"{key}: " + ", ".join(as_list(row[key])))
     metadata_keys = [
         "document_id",
         "source_url",

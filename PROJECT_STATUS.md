@@ -41,6 +41,9 @@
 - `docs/farm_case_rag_pipeline.md`: 운영 로그와 센서 구간을 `farm_case` RAG로 승격하는 기준과 리뷰 절차
 - `docs/sensor_collection_plan.md`: zone/device/sample_rate 수준의 센서 수집 계획
 - `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
+- `docs/dataset_taxonomy.md`: 학습/eval 데이터의 task family 분류 기준
+- `docs/training_data_format.md`: seed JSONL 입력/출력 포맷과 템플릿 기준
+- `docs/data_curation_rules.md`: 샘플/eval 정제와 정규화 규칙
 - `docs/offline_agent_runner_spec.md`: 실측 데이터 없이 Agent 판단을 검증하는 offline runner 요구사항
 - `docs/mlops_registry_design.md`: dataset/prompt/model/eval/retrieval profile 버전 관리 규칙
 - `docs/shadow_mode_report_format.md`: shadow mode 승격 판단 리포트 형식
@@ -65,17 +68,23 @@
 - 파인튜닝 후보 seed 샘플 작성: 상태판단 5개, 금지행동 5개
 - RAG 인덱싱 설계와 로컬 JSON 인덱스 빌드 스크립트 작성
 - RAG 검색 smoke test 스크립트 작성 및 6개 쿼리 통과
-- 농촌진흥청 PDF 기반 RAG 정밀 보강 완료: 육묘·재해·영양장애·비가림 구조까지 포함한 40개 smoke test 통과
-- 농촌진흥청 PDF, 육묘/접목/식물공장, 비가림 재배 지식 추가로 RAG seed chunk 100개 확장 완료
-- RAG 검색 품질 평가 1차 구현: retrieval eval 40건, keyword-only hit rate 1.0, MRR 0.975
-- 로컬 TF-IDF + SVD vector search PoC 구현: local hybrid retrieval eval 40건 hit rate 1.0, MRR 1.0
-- ChromaDB persistent vector store 도입: local-backed Chroma collection build/eval 완료, retrieval eval 40건 hit rate 1.0, MRR 1.0
-- OpenAI embedding 기반 Chroma collection build/eval 완료, local blend 4.0 적용 후 retrieval eval 40건 hit rate 1.0, MRR 1.0
-- 40개 retrieval eval 재검증 완료: local vector, local-backed Chroma, OpenAI-backed Chroma 모두 hit rate 1.0, MRR 1.0 유지
+- 농촌진흥청 PDF 기반 RAG 정밀 보강 완료: 육묘·재해·영양장애·비가림 구조 기반 지식과 후속 웹 공식 자료 보강까지 반영
+- 농촌진흥청 PDF, 작물기술정보, 작형 일정, 품종 기준, 현장 기술지원, 미숙퇴비·배수불량·과차광·육묘 장해·첫서리·노화묘·품종 민감성 사례 추가로 RAG seed chunk 141개 확장 완료
+- RAG-SRC-001 병해충·토양병·세균병·굴파리·뿌리혹선충·농약 안전사용 장 추가 추출로 균핵병·시들음병·잿빛곰팡이병·흰별무늬병·흰비단병·무름병·세균점무늬병·잎굴파리·뿌리혹선충·잔류농약 규칙을 보강해 RAG seed chunk 219개 확장 완료
+- RAG 검색 품질 평가 확장: smoke test 98건, retrieval eval 110건 검증 완료
+- 로컬 TF-IDF + SVD vector search PoC 유지: local hybrid retrieval eval 110건 hit rate 1.0, MRR 0.9955
+- ChromaDB persistent vector store 재검증 완료: local-backed Chroma retrieval eval 110건 hit rate 1.0, MRR 0.9955
+- OpenAI embedding 기반 Chroma collection 재검증 완료: retrieval eval 110건 hit rate 1.0, MRR 0.9803
+- 110개 retrieval eval 재검증 결과 local vector와 local-backed Chroma가 동일 MRR 0.9955로 가장 높고, keyword-only는 0.9909, OpenAI-backed Chroma는 0.9803을 유지
+- `region`, `season`, `cultivar`, `greenhouse_type` 메타데이터가 JSON index와 검색 필드에 실제 반영되도록 `scripts/build_rag_index.py`, `scripts/search_rag_index.py` 보정 완료
+- multi-turn contextual retrieval 전략 문서화 완료: `docs/rag_contextual_retrieval_strategy.md`
 - `farm_case` RAG 환류 파이프라인 초안과 후보 스키마 작성: `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json`
 - Phase -1 설계 산출물 보강 완료: offline runner spec, MLOps registry 설계, shadow mode report format, 합성 센서 시나리오 추가
 - 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
 - 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
+- 도메인 데이터 분류/포맷/정제 규칙 정리 완료: `docs/dataset_taxonomy.md`, `docs/training_data_format.md`, `docs/data_curation_rules.md`
+- 행동추천/장애대응/로봇우선순위/알람 seed와 eval seed 추가: `data/examples/*`, `evals/*_eval_set.jsonl`
+- 학습/eval JSONL 검증 스크립트 추가: `scripts/validate_training_examples.py`
 - Chroma collection/manifest를 backend별로 분리: `pepper_expert_chunks_local`, `pepper_expert_chunks_openai`
 - 응답 citation coverage 검증 스크립트 추가: `scripts/validate_response_citations.py`
 - retrieval weight 튜닝 스크립트 추가: `scripts/tune_rag_weights.py`
@@ -84,11 +93,11 @@
 ## 다음 우선순위
 
 1. `sensor-ingestor` 설정 파일 포맷과 poller profile 초안 작성
-2. RAG 지식 청크를 100개에서 200개 수준까지 추가 확장
-3. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
-4. Multi-turn contextual retrieval 설계와 최근 3~5일 상태 반영 검색 전략 정의
-5. hard block 정책 10개와 approval 정책 10개 작성
-6. offline agent runner 스펙을 실제 replay runner 구현 계획으로 전환
+2. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
+3. `data/examples` seed를 task별 20건 이상으로 확장
+4. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
+5. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
+6. hard block 정책 10개와 approval 정책 10개 작성
 
 ## 주의할 점
 

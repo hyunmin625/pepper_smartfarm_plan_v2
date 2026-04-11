@@ -209,6 +209,44 @@
 
 ## 2026-04-11
 
+### RAG 2.6 보강: 공식 작목기술/현장기술지원 기반 127청크, 70케이스 재검증
+- `data/rag/pepper_expert_seed_chunks.jsonl`에 작물기술정보, 반촉성/보통/촉성 일정, 품종 기준, 활착 불량, 붕소 과잉, 애꽃노린재, 정식기 저온, 곡과 현장 사례를 반영한 신규 청크 27개를 추가했다.
+- 전체 RAG 청크 수는 100개에서 127개로 증가했다.
+- 신규 주요 청크:
+  - `pepper-crop-env-thresholds-001`
+  - `pepper-semiforcing-schedule-001`
+  - `pepper-forcing-energy-saving-001`
+  - `pepper-cultivar-phytophthora-resistance-001`
+  - `pepper-hydroponic-coir-prewash-001`
+  - `pepper-root-browning-winter-heating-001`
+  - `pepper-boron-excess-diagnosis-001`
+  - `pepper-orius-release-timing-001`
+  - `pepper-transplant-cold-duration-001`
+  - `pepper-curved-fruit-cropping-shift-001`
+- `docs/rag_source_inventory.md`에 신규 출처 `RAG-SRC-010`~`RAG-SRC-017`을 추가했다.
+- `docs/rag_contextual_retrieval_strategy.md`를 추가해 최근 3~5일 상태를 반영하는 retrieval 전략을 문서화했다.
+- `scripts/build_rag_index.py`에서 `region`, `season`, `cultivar`, `greenhouse_type` 메타데이터가 JSON index와 text field에 실제 반영되도록 수정했다.
+- `scripts/search_rag_index.py`에 동일 metadata 필드를 검색 대상 필드로 추가해 문서화된 필터가 실제 검색 경로와 일치하도록 맞췄다.
+- `evals/rag_retrieval_eval_set.jsonl`을 70케이스로 확장하고, `scripts/rag_smoke_test.py`에 대표 query 10건과 metadata filter 2건을 추가했다.
+- 검증 결과:
+  - `python3 scripts/validate_rag_chunks.py`: rows 127, duplicate 0, warnings 0, errors 0
+  - `python3 scripts/build_rag_index.py --skip-embeddings`: 127 documents
+  - `python3 scripts/rag_smoke_test.py`: 기본 48 + filter 4, 총 52건 PASS
+  - `python3 scripts/evaluate_rag_retrieval.py --fail-under 1.0`: hit rate 1.0, MRR 0.9857
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend local --fail-under 1.0`: hit rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0`: hit rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend openai --fail-under 1.0`: hit rate 1.0, MRR 0.9929
+- 조사에 사용한 공식/준공식 출처:
+  - 농사로 작물기술정보 고추: `https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=101628&menuId=PS03172&sSeCode=335001`
+  - 농사로 작목정보 포털 고추 일정/품종: `https://www.nongsaro.go.kr/portal/farmTechMain.ps?menuId=PS65291&stdPrdlstCode=VC011205`
+  - 농사로 고추 양액재배 현장 기술지원: `https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=259682&menuId=PS00077`
+  - 농사로 고추 생육불량/뿌리 갈변 현장 기술지원: `https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=249249&menuId=PS00077`
+  - 농사로 고추 생육이 불량하고 활착되지 않아요: `https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=246474&menuId=PS00077&totalSearchYn=Y`
+  - 농사로 고추 석회결핍 증상이 나타나고 영양제를 주어도 개선이 안돼요: `https://www.nongsaro.go.kr/portal/ps/psz/psza/contentNsSub.ps?cntntsNo=262393&menuId=PS00077`
+  - 농사로 미끌애꽃노린재 이용 기술: `https://www.nongsaro.go.kr/portal/ps/pss/pssa/nnmyInsectSearchDtl.ps?menuId=PS00407&nnmyInsectCode=E00000004`
+  - 농촌진흥청 보도자료 저온 노출 기간 연구: `https://www.korea.kr/briefing/pressReleaseView.do?newsId=156753597&pWise=main&pWiseMain=L4`
+  - 농사로 곡과 현장 기술지원: `https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=262042&menuId=PS00077`
+
 ### RAG 지식 100개 확장 완료
 - `data/rag/pepper_expert_seed_chunks.jsonl`을 100개 청크까지 확장했다.
 - 육묘 계절 관리, 입고병 예방, 매개충 차단, 접목 목적/방법/활착, 식물공장 육묘, 비가림 구조·염류·저일조 대응 지식을 추가했다.
@@ -314,6 +352,124 @@
 - 도메인/데이터 항목에서는 지식셋 정리, 상태판단·금지행동 데이터 분류, 상태판단/센서 이상 평가셋 구축 상태를 반영했다.
 - 아키텍처 항목에서는 수집 주기, raw/feature 분리, calibration_version, Agent tool contract 정의 상태를 반영했다.
 - 즉시 착수 우선순위에서는 state/action schema, RAG source inventory, sensor/device inventory, vector store PoC, retrieval eval 진행 상태를 최신화했다.
+
+### 도메인 지식/데이터 준비 구현 보강
+- `docs/dataset_taxonomy.md`를 추가해 `qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report` task family를 정의했다.
+- `docs/training_data_format.md`를 추가해 input/preferred_output 공통 구조, task별 템플릿, eval row 구조, schema 포함 방식을 정리했다.
+- `docs/data_curation_rules.md`를 추가해 장치명, 단위, zone, growth stage, risk label, follow_up 정규화 규칙을 정의했다.
+- `data/examples/`에 Q&A, 행동추천, 장애대응, 로봇작업, 알람/보고 seed JSONL을 추가했다.
+- `evals/`에 행동추천, 금지행동, 장애대응, 로봇작업 평가셋 seed를 추가했다.
+- `scripts/validate_training_examples.py`를 추가해 `data/examples/*.jsonl`과 `evals/*_eval_set.jsonl`의 구조, 필수 필드, duplicate id를 검증할 수 있게 했다.
+
+### RAG 2.6 추가 확장: 141청크, smoke 62건, eval 80건
+- `data/rag/pepper_expert_seed_chunks.jsonl`에 농사로 현장 기술지원과 지역 품종 자료 기반 신규 청크 14개를 추가했다.
+- 추가된 핵심 청크는 다음과 같다.
+  - `pepper-establishment-ammonia-compost-001`
+  - `pepper-establishment-ammonia-remediation-001`
+  - `pepper-greenhouse-poor-drainage-overwet-001`
+  - `pepper-greenhouse-poor-drainage-remediation-001`
+  - `pepper-flowerdrop-heavy-shading-001`
+  - `pepper-flowerdrop-light-balance-001`
+  - `pepper-nursery-curling-overwet-001`
+  - `pepper-nursery-curling-recovery-001`
+  - `pepper-firstfrost-flowerdrop-001`
+  - `pepper-firstfrost-terminate-crop-001`
+  - `pepper-overaged-seedling-deep-001`
+  - `pepper-overaged-seedling-standard-001`
+  - `pepper-cultivar-haevichi-cold-001`
+  - `pepper-cultivar-rubihong-001`
+- `docs/rag_source_inventory.md`에 `RAG-SRC-018`~`RAG-SRC-025`를 추가해 출처와 ingestion 상태를 연결했다.
+- `scripts/rag_smoke_test.py`에 현장 사례 query 4건과 metadata filter query 6건을 추가해 총 62건을 검증하도록 확장했다.
+- `evals/rag_retrieval_eval_set.jsonl`에 현장 사례와 품종 필터 케이스 10건을 추가해 총 80건을 검증하도록 확장했다.
+- 검증 결과:
+  - `python3 scripts/validate_rag_chunks.py`: rows 141, duplicate 0, warnings 0, errors 0
+  - `./.venv/bin/python scripts/build_rag_index.py --skip-embeddings`: 141 documents
+  - `./.venv/bin/python scripts/rag_smoke_test.py`: 총 62건 PASS
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --fail-under 1.0`: case_count 80, hit_rate 1.0, MRR 0.9875
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend local --fail-under 1.0`: case_count 80, hit_rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/build_chroma_index.py --embedding-backend local`: 141 vectors
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0`: case_count 80, hit_rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/build_chroma_index.py --embedding-backend openai`: 141 vectors
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend openai --fail-under 1.0`: case_count 80, hit_rate 1.0, MRR 0.9792
+- 이번에 반영한 주요 외부 근거:
+  - 농사로 정식 후 생육초기 생육불량: https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=253556&menuId=PS00077&totalSearchYn=Y
+  - 농사로 수직배수 불량 과습 피해: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentNsSub.ps?cntntsNo=208295&menuId=PS00077
+  - 농사로 과차광·낙화 기술지원: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=247587&menuId=PS00077
+  - 농사로 육묘 새순 오그라듦: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=251951&menuId=PS00077
+  - 농사로 첫서리 후 낙화: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=242390&menuId=PS00077&totalSearchYn=Y
+  - 농사로 노화묘·정식 깊이: https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=208731&menuId=PS00077&totalSearchYn=Y
+  - 농사로 해비치 저온 민감성: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=207176&menuId=PS00077
+  - 지방농촌소식 루비홍 품종: https://rda.go.kr/board/board.do?boardId=farmlcltinfo&currPage=51&dataNo=100000802147&mode=updateCnt&prgId=day_farmlcltinfoEntry&searchEDate=&searchKey=&searchSDate=&searchVal=
+
+### RAG 2.6 추가 확장: 169청크, smoke 81건, eval 96건
+- `data/rag/pepper_expert_seed_chunks.jsonl`에 공식 PDF(`RAG-SRC-001`) 기반 신규 청크 28개를 추가했다.
+- 이번 라운드에 추가한 핵심 청크는 다음과 같다.
+  - `pepper-phytophthora-waterlogging-002`
+  - `pepper-phytophthora-early-incidence-002`
+  - `pepper-phytophthora-rye-highridge-002`
+  - `pepper-phytophthora-phosphite-002`
+  - `pepper-anthracnose-rain-spread-002`
+  - `pepper-anthracnose-rainshelter-sanitation-002`
+  - `pepper-anthracnose-preventive-spray-002`
+  - `pepper-whitefly-species-001`
+  - `pepper-whitefly-threshold-control-001`
+  - `pepper-whitefly-biocontrol-001`
+  - `pepper-budworm-damage-lifecycle-001`
+  - `pepper-budworm-spray-window-001`
+  - `pepper-armyworm-early-larva-001`
+  - `pepper-spidermite-ecology-001`
+  - `pepper-broad-mite-symptom-001`
+  - `pepper-mite-predator-001`
+  - `pepper-thrips-taiwan-ecology-001`
+  - `pepper-thrips-monitoring-chemical-001`
+  - `pepper-rainshelter-side-shoot-001`
+  - `pepper-rainshelter-topping-001`
+  - `pepper-rainshelter-fertigation-level-001`
+  - `pepper-rainshelter-fertigation-interval-001`
+  - `pepper-drying-precure-001`
+  - `pepper-sundry-rack-001`
+  - `pepper-whitefly-swirskii-release-001`
+  - `pepper-aphid-virus-spray-window-001`
+  - `pepper-aphid-coverage-resistance-001`
+  - `pepper-budworm-pheromone-layout-001`
+- `scripts/rag_smoke_test.py`에 공식 PDF 추가 추출분 query 15건과 metadata filter 4건을 더해 총 81건을 검증하도록 확장했다.
+- `evals/rag_retrieval_eval_set.jsonl`에 역병·탄저병·가루이·진딧물·나방·비가림·건조 관련 케이스 16건을 더해 총 96건을 검증하도록 확장했다.
+- 검증 결과:
+  - `python3 scripts/validate_rag_chunks.py`: rows 169, duplicate 0, warnings 0, errors 0
+  - `./.venv/bin/python scripts/build_rag_index.py --skip-embeddings`: 169 documents
+  - `./.venv/bin/python scripts/rag_smoke_test.py`: 총 81건 PASS
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --fail-under 1.0`: case_count 96, hit_rate 1.0, MRR 0.9896
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend local --fail-under 1.0`: case_count 96, hit_rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/build_chroma_index.py --embedding-backend local`: 169 vectors
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0`: case_count 96, hit_rate 1.0, MRR 0.9948
+  - `./.venv/bin/python scripts/build_chroma_index.py --embedding-backend openai`: 169 vectors
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend openai --fail-under 1.0`: case_count 96, hit_rate 1.0, MRR 0.9826
+- 이번 라운드의 주요 근거는 로컬 PDF 원문이다.
+  - `/mnt/d/DOWNLOAD/GPT_고추재배_훈련세트/original-know-how/고추_재배기술_최종파일-농촌진흥청.pdf`
+
+### RAG 2.6 완료 기준 달성: 219청크, smoke 98건, eval 110건
+- `data/rag/pepper_expert_seed_chunks.jsonl`에 공식 PDF(`RAG-SRC-001`) 기반 신규 청크 50개를 추가했다.
+- 이번 라운드에 추가한 핵심 범위는 다음과 같다.
+  - 균핵병: `pepper-sclerotinia-pathogen-survival-001`, `pepper-sclerotinia-infection-window-001`, `pepper-sclerotinia-mulch-drip-001`, `pepper-sclerotinia-rotation-flooding-001`
+  - 시들음병: `pepper-fusarium-symptom-diff-001`, `pepper-fusarium-temperature-window-001`, `pepper-fusarium-acidic-sandy-soil-001`, `pepper-fusarium-rotation-liming-001`
+  - 잿빛곰팡이병: `pepper-graymold-wound-flower-entry-001`, `pepper-graymold-infection-window-001`, `pepper-graymold-ventilation-density-001`, `pepper-graymold-alternating-fungicide-001`
+  - 흰별무늬병·흰비단병·무름병·세균점무늬병: `pepper-white-star-spot-sanitation-001`, `pepper-southern-blight-diagnosis-001`, `pepper-soft-rot-wound-insect-prevention-001`, `pepper-bacterial-spot-hotwater-seed-001`
+  - 잎굴파리·뿌리혹선충: `pepper-leafminer-temperature-generation-001`, `pepper-leafminer-three-spray-001`, `pepper-rootknot-fumigation-sealing-001`, `pepper-rootknot-solarization-rice-rotation-001`
+  - 농약 안전사용·잔류: `pepper-pesticide-precheck-001`, `pepper-pesticide-ppe-rest-001`, `pepper-pesticide-mix-order-001`, `pepper-pesticide-residue-concentration-001`, `pepper-pesticide-residue-greenhouse-winter-001`
+- `scripts/rag_smoke_test.py`에 신규 query 13건과 metadata filter 4건을 추가해 총 98건을 검증하도록 확장했다.
+- `evals/rag_retrieval_eval_set.jsonl`에 신규 retrieval case 14건을 추가해 총 110건을 검증하도록 확장했다.
+- 검증 결과:
+  - `python3 scripts/validate_rag_chunks.py`: rows 219, duplicate 0, warnings 0, errors 0
+  - `./.venv/bin/python scripts/build_rag_index.py --skip-embeddings`: 219 documents
+  - `./.venv/bin/python scripts/rag_smoke_test.py`: 총 98건 PASS
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --fail-under 1.0`: case_count 110, hit_rate 1.0, MRR 0.9909
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend local --fail-under 1.0`: case_count 110, hit_rate 1.0, MRR 0.9955
+  - `./.venv/bin/python scripts/build_chroma_index.py --embedding-backend local`: 219 vectors
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0`: case_count 110, hit_rate 1.0, MRR 0.9955
+  - `./.venv/bin/python scripts/build_chroma_index.py --embedding-backend openai`: 219 vectors
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend openai --fail-under 1.0`: case_count 110, hit_rate 1.0, MRR 0.9803
+- 이번 라운드의 주요 근거는 로컬 PDF 원문이다.
+  - `/mnt/d/DOWNLOAD/GPT_고추재배_훈련세트/original-know-how/고추_재배기술_최종파일-농촌진흥청.pdf`
 
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.

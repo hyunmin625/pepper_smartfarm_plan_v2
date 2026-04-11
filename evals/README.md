@@ -6,6 +6,10 @@
 
 - `expert_judgement_eval_set.jsonl`: 전문가 판단 초기 평가셋
 - `rag_retrieval_eval_set.jsonl`: RAG 검색 hit rate 평가셋
+- `action_recommendation_eval_set.jsonl`: 추천 행동과 승인 필요 여부 평가셋
+- `forbidden_action_eval_set.jsonl`: 금지행동/승인 필요 판정 평가셋
+- `failure_response_eval_set.jsonl`: 장애 대응과 fallback 평가셋
+- `robot_task_eval_set.jsonl`: 로봇 작업 우선순위 평가셋
 
 ## 평가 목적
 
@@ -35,7 +39,7 @@
 2. 정상/주의/위험/차단 케이스 균형화
 3. 생육 단계별 케이스 분리
 4. RAG citation 정답 chunk 지정
-5. 평가 실행 스크립트 작성
+5. eval JSONL 구조 검증을 `scripts/validate_training_examples.py`로 자동 확인
 
 ## RAG 검색 평가 실행
 
@@ -61,4 +65,4 @@ OpenAI embedding 기반 평가를 돌릴 때는 저장소 루트 `.env`에 `OPEN
 ./.venv/bin/python scripts/tune_rag_weights.py --vector-backend chroma --chroma-embedding-backend openai --vector-weights 10 --chroma-local-blend-weights 0,2,4,6
 ```
 
-현재 기준 결과는 40개 케이스에서 keyword-only hit rate 1.0, MRR 0.975이고, local vector hybrid는 hit rate 1.0, MRR 1.0, local-backed Chroma hybrid도 hit rate 1.0, MRR 1.0, OpenAI-backed Chroma hybrid도 local blend 4.0 기본값 적용 후 hit rate 1.0, MRR 1.0이다. `--vector-backend local`은 로컬 TF-IDF + SVD 벡터 검색을 사용하고, `--vector-backend chroma --chroma-embedding-backend local`은 `pepper_expert_chunks_local`, `--vector-backend chroma --chroma-embedding-backend openai`는 `pepper_expert_chunks_openai` 컬렉션을 사용한다.
+현재 기준 결과는 110개 케이스에서 keyword-only hit rate 1.0, MRR 0.9909이고, local vector hybrid는 hit rate 1.0, MRR 0.9955, local-backed Chroma hybrid는 hit rate 1.0, MRR 0.9955, OpenAI-backed Chroma hybrid는 hit rate 1.0, MRR 0.9803이다. 확장된 평가셋에는 계절 리스크, 활착 불량, 품종 필터, 곡과·저온, 미숙퇴비 암모니아 피해, 수직배수 불량, 첫서리, 노화묘, 역병 초기 발병률, 탄저병 빗물 전파, 가루이 천적 투입, 진딧물 바이러스 방제 시작 시점, 나방 성페로몬 배치에 더해 균핵병, 시들음병, 잿빛곰팡이병, 흰별무늬병, 흰비단병, 무름병, 잎굴파리, 뿌리혹선충, 농약 잔류·혼용 순서 케이스가 포함된다. `--vector-backend local`은 로컬 TF-IDF + SVD 벡터 검색을 사용하고, `--vector-backend chroma --chroma-embedding-backend local`은 `pepper_expert_chunks_local`, `--vector-backend chroma --chroma-embedding-backend openai`는 `pepper_expert_chunks_openai` 컬렉션을 사용한다.

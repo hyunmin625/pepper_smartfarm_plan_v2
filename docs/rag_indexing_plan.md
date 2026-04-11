@@ -80,7 +80,7 @@
 - OpenAI embedding score: `scripts/build_rag_index.py`와 `scripts/search_rag_index.py`에 1차 구조 있음
 - metadata hard filter: `growth_stage`, `crop_type`, `source_type`, `sensor_tags`, `risk_tags` 1차 구현
 - chunk validation: `schemas/rag_chunk_schema.json`, `scripts/validate_rag_chunks.py` 1차 구현
-- vector DB: 아직 미구현, Chroma 또는 별도 Vector DB PoC 필요
+- vector DB: ChromaDB persistent collection 구현 및 local/openai backend 검증 완료
 
 1. **Metadata Hard Filtering (1순위)**
     - AI Agent의 현재 컨텍스트(예: `growth_stage: nursery`)를 기반으로 검색 범위를 사전에 제한한다.
@@ -141,35 +141,36 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 
 현재 검증 상태:
 
-- rows: 100
+- rows: 219
 - duplicate chunk_id: 0
 - validation errors: 0
 - warnings: 0
-- smoke tests: 기본 query 38개, metadata filter query 2개 PASS
-- retrieval eval(keyword): 40개 case, hit rate 1.0, MRR 0.975
-- retrieval eval(local vector hybrid): 40개 case, hit rate 1.0, MRR 1.0
-- retrieval eval(local-backed Chroma hybrid): 40개 case, hit rate 1.0, MRR 1.0
-- retrieval eval(OpenAI-backed Chroma hybrid): 40개 case, hit rate 1.0, MRR 1.0
+- smoke tests: 기본 query 80개, metadata filter query 18개 PASS
+- retrieval eval(keyword): 110개 case, hit rate 1.0, MRR 0.9909
+- retrieval eval(local vector hybrid): 110개 case, hit rate 1.0, MRR 0.9955
+- retrieval eval(local-backed Chroma hybrid): 110개 case, hit rate 1.0, MRR 0.9955
+- retrieval eval(OpenAI-backed Chroma hybrid): 110개 case, hit rate 1.0, MRR 0.9803
 
 현재 검색 기능:
 
 - keyword search: chunk text와 주요 metadata 필드 검색
 - metadata hard filter: `growth_stage`, `crop_type`, `source_type`, `sensor_tags`, `risk_tags`
 - 확장 metadata filter: `source_section` 부분 일치, `trust_level`, `region`, `season`, `cultivar`, `greenhouse_type`, `active`
+- index metadata 반영: `region`, `season`, `cultivar`, `greenhouse_type`, `farm_id`, `zone_id`, `outcome`를 JSON index metadata와 text field에 포함
 - reranking: `trust_level`과 `source_type` 기반 bonus를 적용해 공식/고신뢰 출처를 우선 노출
 - local vector search: TF-IDF + SVD 기반 로컬 latent vector를 index에 포함하고 keyword score와 결합
 - optional OpenAI vector search: `OPENAI_API_KEY`가 있고 embedding이 있으면 OpenAI embedding 검색을 keyword score와 결합
 - ChromaDB vector store: `scripts/build_chroma_index.py`로 persistent collection을 만들고 `--vector-backend chroma`로 hybrid retrieval 실행
 - Chroma embedding backend: `--embedding-backend local|openai`, `--chroma-embedding-backend local|openai`로 컬렉션/쿼리 임베딩 경로를 맞춤
 - collection 분리: local은 `pepper_expert_chunks_local`, openai는 `pepper_expert_chunks_openai`, manifest도 backend별로 분리 생성
-- OpenAI-backed Chroma는 local latent vector blend 4.0을 기본 적용해 MRR 1.0으로 보정
+- OpenAI-backed Chroma는 local latent vector blend 4.0을 기본 적용해도 현재 평가셋에서는 MRR 0.9803으로 local/local-backed Chroma보다 낮다.
 
 ## 다음 구현
 
-1. `data/rag/pepper_expert_seed_chunks.jsonl`을 200개 수준까지 확장
-2. `RAG-SRC-001` PDF의 병해충/IPM, 양액재배/시설재배 장 추가 추출 지속
-3. 품종별 기준, 지역별 재배력, 월별 작업 캘린더를 metadata와 함께 청크화
-4. 40개 평가셋을 60개 이상으로 확장해 계절/센서 이상 케이스까지 재검증
-5. `text` vs `chunk_summary` 임베딩 입력과 hybrid 가중치 재검토
-6. Semantic + Keyword 하이브리드 검색 가중치 최적화
+1. `data/rag/pepper_expert_seed_chunks.jsonl`을 250개 수준까지 확장하거나 `farm_case` 계층을 별도 증설
+2. `RAG-SRC-001` PDF의 풋마름병, 저장·건조 세부와 양액재배/시설재배 잔여 장 추가 추출
+3. retrieval 결과를 주기별 고정 리포트로 남기는 자동화 보강
+4. `text` vs `chunk_summary` 임베딩 입력과 hybrid 가중치 재검토
+5. Semantic + Keyword 하이브리드 검색 가중치 최적화
+6. `docs/rag_contextual_retrieval_strategy.md` 기준으로 최근 3~5일 컨텍스트를 retrieval query builder에 실제 반영
 7. 운영 로그와 센서 구간을 `farm_case` RAG 후보로 변환하는 파이프라인 설계

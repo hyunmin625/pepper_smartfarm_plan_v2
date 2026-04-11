@@ -6,6 +6,9 @@
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
 - [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
+- [데이터셋 분류 체계](docs/dataset_taxonomy.md)
+- [학습 데이터 포맷](docs/training_data_format.md)
+- [데이터 정제 규칙](docs/data_curation_rules.md)
 - [RAG 보완 핵심 과제](docs/rag_next_steps.md)
 - [farm_case RAG 환류 파이프라인](docs/farm_case_rag_pipeline.md)
 - [Offline Agent Runner 스펙](docs/offline_agent_runner_spec.md)
@@ -152,52 +155,52 @@
 - [x] EC/pH 관리 기준 정리 (`docs/expert_knowledge_map.md`, `docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
 - [x] 병해 위험 조건 정리 (`docs/expert_knowledge_map.md`, `docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
 - [x] 수확 적기 기준 정리 (`docs/expert_knowledge_map.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
-- [ ] 품종별 차이 정리
-- [ ] 온실 외기 영향 정리
+- [x] 품종별 차이 정리 (`docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] 온실 외기 영향 정리 (`docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
 - [ ] 장치 운전 경험 규칙 정리
 
 ## 2.2 데이터셋 분류 체계 정의
-- [ ] Q&A 데이터 분류
+- [x] Q&A 데이터 분류 (`docs/dataset_taxonomy.md`, `data/examples/qa_reference_samples.jsonl`)
 - [x] 상태판단 데이터 분류 (`data/examples/state_judgement_samples.jsonl`, `evals/expert_judgement_eval_set.jsonl`)
-- [ ] 행동추천 데이터 분류
+- [x] 행동추천 데이터 분류 (`docs/dataset_taxonomy.md`, `data/examples/action_recommendation_samples.jsonl`)
 - [x] 금지행동 데이터 분류 (`data/examples/forbidden_action_samples.jsonl`)
-- [ ] 실패대응 데이터 분류
-- [ ] 로봇작업 데이터 분류
-- [ ] 알람/보고서 데이터 분류
+- [x] 실패대응 데이터 분류 (`docs/dataset_taxonomy.md`, `data/examples/failure_response_samples.jsonl`)
+- [x] 로봇작업 데이터 분류 (`docs/dataset_taxonomy.md`, `data/examples/robot_task_samples.jsonl`)
+- [x] 알람/보고서 데이터 분류 (`docs/dataset_taxonomy.md`, `data/examples/reporting_samples.jsonl`)
 
 ## 2.3 학습 데이터 포맷 정의
-- [ ] input message 포맷 정의
-- [ ] preferred_output 포맷 정의
-- [ ] 상태판단 샘플 템플릿 정의
-- [ ] 행동추천 샘플 템플릿 정의
-- [ ] 금지행동 샘플 템플릿 정의
-- [ ] 로봇 우선순위 샘플 템플릿 정의
-- [ ] 실패대응 샘플 템플릿 정의
-- [ ] JSON schema 포함 방식 정의
+- [x] input message 포맷 정의 (`docs/training_data_format.md`)
+- [x] preferred_output 포맷 정의 (`docs/training_data_format.md`)
+- [x] 상태판단 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/state_judgement_samples.jsonl`)
+- [x] 행동추천 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/action_recommendation_samples.jsonl`)
+- [x] 금지행동 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/forbidden_action_samples.jsonl`)
+- [x] 로봇 우선순위 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/robot_task_samples.jsonl`)
+- [x] 실패대응 샘플 템플릿 정의 (`docs/training_data_format.md`, `data/examples/failure_response_samples.jsonl`)
+- [x] JSON schema 포함 방식 정의 (`docs/training_data_format.md`)
 
 ## 2.4 데이터 정제
 - [ ] 중복 샘플 제거
 - [ ] 모순 샘플 검토
-- [ ] 표현 통일
-- [ ] 장치명 통일
-- [ ] 단위 통일
-- [ ] zone 표기 통일
-- [ ] 생육 단계 표기 통일
-- [ ] 위험도 레이블 통일
-- [ ] 근거 서술 스타일 통일
-- [ ] 후속 확인 항목 통일
+- [x] 표현 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
+- [x] 장치명 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
+- [x] 단위 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
+- [x] zone 표기 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
+- [x] 생육 단계 표기 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
+- [x] 위험도 레이블 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
+- [x] 근거 서술 스타일 통일 (`docs/data_curation_rules.md`)
+- [x] 후속 확인 항목 통일 (`docs/data_curation_rules.md`, `scripts/validate_training_examples.py`)
 
 ## 2.5 평가셋 구축
 - [x] 상태판단 평가셋 구축 (`evals/expert_judgement_eval_set.jsonl`)
-- [ ] 행동추천 평가셋 구축
-- [ ] 금지행동 평가셋 구축
-- [ ] 장애대응 평가셋 구축
-- [ ] 로봇 작업 우선순위 평가셋 구축
+- [x] 행동추천 평가셋 구축 (`evals/action_recommendation_eval_set.jsonl`)
+- [x] 금지행동 평가셋 구축 (`evals/forbidden_action_eval_set.jsonl`)
+- [x] 장애대응 평가셋 구축 (`evals/failure_response_eval_set.jsonl`)
+- [x] 로봇 작업 우선순위 평가셋 구축 (`evals/robot_task_eval_set.jsonl`)
 - [ ] edge case 평가셋 구축
 - [ ] 계절별 평가셋 구축
 - [x] 센서 이상 포함 평가셋 구축 (`evals/expert_judgement_eval_set.jsonl`)
 
-## 2.6 RAG 지식베이스 구축 [진행 중]
+## 2.6 RAG 지식베이스 구축 [완료]
 - [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)
 - [x] RAG 메타데이터 스키마 및 인덱싱 계획 수립 (`docs/rag_indexing_plan.md`)
 - [x] RAG 보완 핵심 과제 정리 (`docs/rag_next_steps.md`)
@@ -217,20 +220,25 @@
     - [x] 식물공장 육묘·활착 관리, 비가림 구조·밀도·염류·저일조 대응 반영
 - [x] 초기 시드 청크의 `source_pages`, `source_section` 누락 경고 해소
     - [x] `python3 scripts/validate_rag_chunks.py` 기준 rows 100, duplicate 0, warnings 0, errors 0 확인
-- [ ] **지식 데이터 확충 (Phase 1: 전주기 커버리지)**
+- [x] **지식 데이터 확충 (Phase 1: 전주기 커버리지)**
     - [x] 농사로(RAG-SRC-001~004) 및 현장 사례에서 정밀 청크 100개 이상 추출
-    - [ ] 농사로(RAG-SRC-001~004) 및 현장 사례에서 정밀 청크 200개 이상 추출
-    - [ ] RAG-SRC-001 PDF 병해충/IPM, 양액재배/시설재배 장 추가 추출 지속
-    - [ ] 적고추 품종별 온도, 착과, 착색, 병저항성 기준 청크화 지속
-    - [ ] 지역별 재배력, 월별 작업, 지역 기상 리스크 청크화 지속
+    - [x] 농사로 추가 현장 사례(RAG-SRC-018~025) 반영으로 전체 seed chunk 141개 확장
+    - [x] RAG-SRC-001 병해충/IPM·비가림 관리·건조 장 추가 추출로 전체 seed chunk 169개 확장
+    - [x] 농사로(RAG-SRC-001~004) 및 현장 사례에서 정밀 청크 200개 이상 추출
+    - [x] RAG-SRC-001 PDF 병해충/IPM, 양액재배/시설재배 장 추가 추출 지속
+    - [x] 적고추 품종별 온도, 착과, 착색, 병저항성 기준 1차 청크화 (`pepper-crop-env-thresholds-001`, `pepper-cultivar-phytophthora-resistance-001`, `pepper-cultivar-fruitset-stability-001`, `pepper-cultivar-honggoeun-001`)
+    - [x] 지역별 재배력, 월별 작업, 지역 기상 리스크 1차 청크화 (`pepper-semiforcing-schedule-001`, `pepper-normal-schedule-001`, `pepper-forcing-energy-saving-001`, `pepper-curved-fruit-cropping-shift-001`)
     - [x] 신규 PDF 청크별 **인과관계(Causality) 태그** 및 **시각적 특징(Visual) 태그** 라벨링
     - [x] 수확 후 큐어링·세척 위생, 풋고추 저장·결로, 홍고추 저장, 건고추 장기 저장·산소흡수제 포장, 하우스·열풍건조 운전 규칙 보강
-    - [ ] 적고추 건조/저장 특화 지식 및 에너지 세이빙 노하우 추가 확장
-- [ ] **전문가 수준 검색 및 중재 로직 구현**
+    - [x] 미숙퇴비 암모니아 피해, 수직배수 불량, 과차광 낙화, 육묘 새순 오그라듦, 첫서리 낙화, 노화묘, 해비치·루비홍 품종 사례 반영
+    - [x] 역병 초기 발병률, 호밀 혼화·고휴재배, 아인산 예방, 탄저병 빗물 전파·비가림 위생, 가루이·진딧물·나방·응애 세부 운용 규칙 반영
+    - [x] 적고추 건조/저장 특화 지식 및 에너지 세이빙 노하우 1차 확장
+    - [x] 균핵병·시들음병·잿빛곰팡이병·흰별무늬병·흰비단병·무름병·세균점무늬병·잎굴파리·뿌리혹선충·농약 안전사용 청크 추가로 전체 219개 확장
+- [x] **전문가 수준 검색 및 중재 로직 구현**
     - [x] 지식 충돌 시 해결을 위한 **Trust Level 기반 Reranking** 로직 1차 구현
     - [x] 기상 재해·작형 대응 query 5종을 추가해 smoke/eval coverage 16건으로 확장
     - [x] 수확 후·건조·저장 대응 query 8종을 추가해 smoke/eval coverage 24건으로 확장
-    - [ ] **Multi-turn Contextual Retrieval**: 과거 3~5일간의 상태를 고려한 지식 검색 전략 수립
+    - [x] **Multi-turn Contextual Retrieval**: 과거 3~5일간의 상태를 고려한 지식 검색 전략 수립 (`docs/rag_contextual_retrieval_strategy.md`)
     - [x] 로컬 **TF-IDF + SVD vector search PoC** 구현
     - [x] **ChromaDB persistent vector store** 구현 및 local-backed collection 검증
     - [x] OpenAI embedding 모델 연동 및 OpenAI-backed Chroma collection 검증
@@ -241,15 +249,19 @@
     - [x] backend별 Chroma collection/manifest 분리로 차원 충돌 방지
     - [x] retrieval weight 튜닝 스크립트 추가 (`scripts/tune_rag_weights.py`)
     - [x] Semantic + Keyword 하이브리드 검색 가중치 재검증용 eval set 40개 확장
-- [ ] **RAG 품질 평가 체계 구축**
+    - [x] smoke test 81건, retrieval eval 96건으로 공식 PDF 추가 추출분 재검증
+    - [x] smoke test 98건, retrieval eval 110건으로 219청크 재검증
+- [x] **RAG 품질 평가 체계 구축**
     - [x] 시나리오별 검색 적중률(Hit Rate) 측정 1차 구현 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
     - [x] 출처 누락 방지를 위한 citation metadata 검증 로직 추가 (`scripts/validate_rag_chunks.py`)
     - [x] keyword-only vs local vector hybrid 비교 스크립트 추가 (`scripts/compare_rag_retrieval_modes.py`)
     - [x] 할루시네이션 방지를 위한 응답 citation coverage 검증 로직 추가 (`scripts/validate_response_citations.py`)
     - [x] keyword-only, local vector, local-backed Chroma 검색 hit rate 비교
     - [x] OpenAI vector를 포함한 4모드 검색 hit rate 비교
+    - [x] 96개 평가셋 기준 4모드 재검증 완료 (keyword 0.9896, local 1.0, Chroma local 0.9948, Chroma OpenAI 0.9826)
     - [x] 4모드 비교를 더 긴 평가셋(40 case)으로 재검증
-    - [ ] 4모드 비교를 계절·센서 이상 케이스 포함 60+ case로 재검증
+    - [x] 4모드 비교를 계절·센서 이상·현장 사례 케이스 포함 80 case로 재검증
+    - [x] 110개 평가셋 기준 4모드 재검증 완료 (keyword 0.9909, local 0.9955, Chroma local 0.9955, Chroma OpenAI 0.9803)
 
 ## 2.7 AI 준비/MLOps 기반 구축
 - [x] AI_MLOPS_PLAN.md 유지관리
@@ -1100,7 +1112,7 @@
 - [x] action schema 초안 작성 (`schemas/action_schema.json`)
 - [x] RAG 문서 범위와 메타데이터 초안 작성 (`docs/rag_source_inventory.md`, `docs/rag_indexing_plan.md`)
 - [x] 적고추/건고추 재배 문서 수집 목록 작성 (`docs/rag_source_inventory.md`)
-- [ ] 기존 파인튜닝 데이터 재분류
+- [x] 기존 파인튜닝 데이터 재분류 (`docs/dataset_taxonomy.md`, `data/examples/`)
 - [ ] 행동추천 JSON 샘플 100개 작성
 - [ ] 금지행동 샘플 100개 작성
 - [x] sensor/device inventory 문서 작성 (`docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)

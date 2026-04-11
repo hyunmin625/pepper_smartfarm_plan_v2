@@ -4,21 +4,21 @@
 
 ## 현재 상태
 
-- `data/rag/pepper_expert_seed_chunks.jsonl` 기준 RAG seed chunk는 100개다.
+- `data/rag/pepper_expert_seed_chunks.jsonl` 기준 RAG seed chunk는 219개다.
 - `scripts/build_rag_index.py --skip-embeddings`로 로컬 JSON 인덱스를 재생성할 수 있다.
 - `scripts/validate_rag_chunks.py`로 JSONL 필수 필드, 중복 `chunk_id`, citation 경고를 확인할 수 있다.
 - `scripts/search_rag_index.py`는 keyword 검색, local TF-IDF + SVD vector score, OpenAI embedding 기반 vector score, ChromaDB vector score, metadata hard filter를 지원한다.
-- `scripts/rag_smoke_test.py`는 기본 query 38개와 metadata filter query 2개, 총 40개를 검증한다.
-- `scripts/evaluate_rag_retrieval.py` 기준 keyword-only는 40개 case hit rate 1.0, MRR 0.975이고 local vector hybrid, local-backed Chroma hybrid, OpenAI-backed Chroma hybrid는 모두 hit rate 1.0, MRR 1.0이다.
+- `scripts/rag_smoke_test.py`는 기본 query 80개와 metadata filter query 18개, 총 98개를 검증한다.
+- `scripts/evaluate_rag_retrieval.py` 기준 keyword-only는 110개 case hit rate 1.0, MRR 0.9909이고, local vector hybrid는 hit rate 1.0, MRR 0.9955, local-backed Chroma hybrid는 hit rate 1.0, MRR 0.9955, OpenAI-backed Chroma hybrid는 hit rate 1.0, MRR 0.9803이다.
 - `scripts/build_chroma_index.py`로 persistent Chroma collection을 만들 수 있고, 현재는 local-backed와 OpenAI-backed collection 검증까지 완료했다.
 
 ## 1. Knowledge Expansion
 
-운영용 RAG로 쓰려면 최소 100~200개 이상의 상세 청크가 필요하다.
+운영용 RAG의 최소 기준인 200개 청크는 달성했다. 다음 확장은 250개 이상과 `farm_case` 계층 보강에 초점을 둔다.
 
 우선 확장 대상:
 
-- `RAG-SRC-001` PDF의 병해충/IPM 장: 역병, 탄저병, 바이러스, 총채벌레, 진딧물, 담배나방, 응애
+- `RAG-SRC-001` PDF의 병해충/IPM 장: 풋마름병, 저장·건조 잔여 세부, 약제·안전사용 잔여 항목
 - `RAG-SRC-001` PDF의 양액재배/시설재배 장: EC, pH, 배양액 조성, 배액률, 염류집적
 - `RAG-SRC-002~004` 현장 기술지원 사례: 이상증상, 뿌리 갈변, 배지 함수율, 현장 진단
 - 품종별 온도·착과·착색·병저항성 기준
@@ -43,13 +43,13 @@
 
 - local TF-IDF + SVD vector 모델 유지 및 가중치 조정
 - ChromaDB persistent vector store 연동
-- `artifacts/chroma_db/pepper_expert_manifest.json`에 embedding backend와 generated_at 기록
+- `artifacts/chroma_db/pepper_expert_manifest_local.json`, `artifacts/chroma_db/pepper_expert_manifest_openai.json`에 embedding backend와 generated_at 기록
 - query embedding과 metadata filter를 결합한 hybrid retrieval 구현
 - keyword-only, local vector, local-backed Chroma 결과 비교
 
 남은 구현:
 
-- 40개 eval을 60개 이상으로 확대해 현 기본 score가 유지되는지 재검증
+- 110개 eval을 140개 이상으로 확대해 현 기본 score가 유지되는지 재검증
 - keyword-only, local vector, local-backed Chroma, OpenAI-backed Chroma 4모드 결과를 고정 리포트로 관리
 - Semantic + Keyword 가중치 최적화
 

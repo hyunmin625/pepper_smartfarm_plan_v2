@@ -30,6 +30,10 @@ SEARCH_FIELDS = (
     "visual_tags",
     "agent_use",
     "source_section",
+    "region",
+    "season",
+    "cultivar",
+    "greenhouse_type",
 )
 
 EMBEDDING_MODEL = "text-embedding-3-small"

@@ -32,25 +32,33 @@
 - Phase -1 AI 준비 구축 및 MLOps 기반 설계: `설계 기준 완료`
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
-- RAG seed chunk: `100개` 구축 완료
-- 검색 평가셋: `40개` case로 확장 완료
+- 도메인 데이터 taxonomy/format/curation 기준 추가 완료
+- RAG seed chunk: `219개` 구축 완료
+- 검색 평가셋: `110개` case로 확장 완료
+- smoke test: `98건` 통과
 - 검색 방식 검증 완료:
-  - keyword-only: hit rate `1.0`, MRR `0.975`
-  - local TF-IDF + SVD: hit rate `1.0`, MRR `1.0`
-  - Chroma local: hit rate `1.0`, MRR `1.0`
-  - Chroma OpenAI embedding: hit rate `1.0`, MRR `1.0`
+  - keyword-only: hit rate `1.0`, MRR `0.9909`
+  - local TF-IDF + SVD: hit rate `1.0`, MRR `0.9955`
+  - Chroma local: hit rate `1.0`, MRR `0.9955`
+  - Chroma OpenAI embedding: hit rate `1.0`, MRR `0.9803`
+- multi-turn contextual retrieval 전략 문서화 완료
+- `region / season / cultivar / greenhouse_type` metadata filter가 JSON index와 search path에 실제 반영되도록 수정 완료
 - `farm_case` 운영 로그 환류 초안 작성 완료:
   - `docs/farm_case_rag_pipeline.md`
   - `schemas/farm_case_candidate_schema.json`
 
 ## 현재 핵심 산출물
 
-- `data/rag/pepper_expert_seed_chunks.jsonl`: 적고추 전주기 전문가 지식 100개 청크
+- `data/rag/pepper_expert_seed_chunks.jsonl`: 적고추 전주기 전문가 지식 219개 청크
 - `artifacts/rag_index/pepper_expert_index.json`: 로컬 RAG 인덱스
 - `docs/rag_indexing_plan.md`: 인덱싱, 검색, 평가 방식
+- `docs/rag_contextual_retrieval_strategy.md`: 최근 3~5일 상태를 반영한 contextual retrieval 전략
 - `docs/rag_next_steps.md`: 남은 보강 과제
 - `docs/sensor_collection_plan.md`: zone, sensor, device, sample_rate, quality_flag 기준
 - `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
+- `docs/dataset_taxonomy.md`: 학습/eval 데이터 분류 체계
+- `docs/training_data_format.md`: seed JSONL 포맷과 템플릿 기준
+- `docs/data_curation_rules.md`: 데이터 정제와 정규화 규칙
 - `docs/offline_agent_runner_spec.md`: offline runner 요구사항
 - `docs/mlops_registry_design.md`: dataset/prompt/model/eval registry 규칙
 - `docs/shadow_mode_report_format.md`: shadow mode 평가 리포트 형식
@@ -58,13 +66,14 @@
 - `scripts/build_rag_index.py`, `scripts/search_rag_index.py`: 기본 인덱싱/검색
 - `scripts/build_chroma_index.py`: ChromaDB 기반 vector index 생성
 - `scripts/evaluate_rag_retrieval.py`, `scripts/rag_smoke_test.py`: 검색 회귀 검증
+- `scripts/validate_training_examples.py`: 학습/eval JSONL 구조 검증
 
 ## 다음 우선순위
 
 1. `sensor-ingestor` 설정 파일 포맷과 poller profile 초안 작성
-2. RAG 지식 청크를 `200개` 수준까지 확장
-3. `farm_case_candidate` JSONL 샘플 10건 작성
-4. 최근 3~5일 상태를 반영하는 multi-turn contextual retrieval 설계
-5. hard block 정책과 approval 정책 구체화
+2. `farm_case_candidate` JSONL 샘플 10건 작성
+3. task별 학습 seed를 20건 이상으로 확장
+4. `farm_case_candidate` JSONL 샘플 10건 작성
+5. retrieval 고정 리포트와 case regression 관리 방식 정리
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.
