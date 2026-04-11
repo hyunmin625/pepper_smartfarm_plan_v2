@@ -8,6 +8,9 @@
 - [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
 - [RAG 보완 핵심 과제](docs/rag_next_steps.md)
 - [farm_case RAG 환류 파이프라인](docs/farm_case_rag_pipeline.md)
+- [Offline Agent Runner 스펙](docs/offline_agent_runner_spec.md)
+- [MLOps Registry 설계](docs/mlops_registry_design.md)
+- [Shadow Mode Report 포맷](docs/shadow_mode_report_format.md)
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -62,9 +65,9 @@
 ## 0.4 문서 기반 정리
 - [ ] 용어집 작성
 - [ ] 장치 명명 규칙 정의
-- [ ] zone_id 규칙 정의
-- [ ] sensor_id 규칙 정의
-- [ ] device_id 규칙 정의
+- [x] zone_id 규칙 정의 (`docs/sensor_collection_plan.md`)
+- [x] sensor_id 규칙 정의 (`docs/sensor_collection_plan.md`)
+- [x] device_id 규칙 정의 (`docs/sensor_collection_plan.md`)
 - [ ] robot_id 규칙 정의
 - [ ] action_type enum 초안 작성
 - [ ] 이벤트 이름 규칙 정의
@@ -91,24 +94,27 @@
 - [ ] EC 센서 모델 조사
 - [ ] pH 센서 모델 조사
 - [ ] 외기 센서 모델 조사
-- [ ] 카메라 사양 정리
-- [ ] 각 센서의 통신 방식 정리
-- [ ] 각 센서의 샘플링 주기 정리
-- [ ] 각 센서의 보정 주기 정리
-- [ ] 품질 플래그 조건 정리
+- [x] 카메라 사양 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 각 센서의 통신 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 각 센서의 샘플링 주기 정리 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 각 센서의 보정 주기 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 품질 플래그 조건 정리 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] zone별 설치 수량 가정치 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] sensor `model_profile` 기준 정의 (`docs/sensor_installation_inventory.md`, `schemas/sensor_catalog_schema.json`)
 
 ## 1.3 액추에이터 인벤토리 작성
-- [ ] 환기창 제어 방식 정리
-- [ ] 순환팬 제어 방식 정리
-- [ ] 난방기 제어 방식 정리
-- [ ] 차광커튼 제어 방식 정리
-- [ ] 관수 밸브 제어 방식 정리
-- [ ] 양액기 제어 방식 정리
-- [ ] CO2 주입기 제어 방식 정리
-- [ ] 제습기 제어 방식 정리
+- [x] 환기창 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 순환팬 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 난방기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 차광커튼 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 관수 밸브 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 양액기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] CO2 주입기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 제습기 제어 방식 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [ ] 각 장치의 최소/최대 setpoint 정리
-- [ ] 각 장치의 응답 지연 정리
-- [ ] 장치별 안전 제한값 정리
+- [x] 각 장치의 응답 지연 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 장치별 안전 제한값 정리 (`docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] device `model_profile` 기준 정의 (`docs/sensor_installation_inventory.md`, `schemas/sensor_catalog_schema.json`)
 
 ## 1.4 운영 시나리오 정리
 - [ ] 정상 운영 시나리오 작성
@@ -246,16 +252,16 @@
     - [ ] 4모드 비교를 계절·센서 이상 케이스 포함 60+ case로 재검증
 
 ## 2.7 AI 준비/MLOps 기반 구축
-- [ ] AI_MLOPS_PLAN.md 유지관리
-- [ ] offline decision runner 요구사항 작성
-- [ ] 센서 상태 합성 시나리오 작성
-- [ ] 평가셋 버전 관리 규칙 정의
-- [ ] dataset registry 설계
-- [ ] prompt registry 설계
-- [ ] model registry 설계
-- [ ] champion/challenger 모델 승격 규칙 정의
-- [ ] shadow mode 평가 리포트 포맷 정의
-- [ ] 운영 로그 → 학습 후보 변환 규칙 정의
+- [x] AI_MLOPS_PLAN.md 유지관리
+- [x] offline decision runner 요구사항 작성 (`docs/offline_agent_runner_spec.md`)
+- [x] 센서 상태 합성 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
+- [x] 평가셋 버전 관리 규칙 정의 (`docs/mlops_registry_design.md`)
+- [x] dataset registry 설계 (`docs/mlops_registry_design.md`)
+- [x] prompt registry 설계 (`docs/mlops_registry_design.md`)
+- [x] model registry 설계 (`docs/mlops_registry_design.md`)
+- [x] champion/challenger 모델 승격 규칙 정의 (`docs/mlops_registry_design.md`)
+- [x] shadow mode 평가 리포트 포맷 정의 (`docs/shadow_mode_report_format.md`)
+- [x] 운영 로그 → 학습 후보 변환 규칙 정의 (`docs/mlops_registry_design.md`)
 - [x] 운영 로그 → RAG `farm_case` 후보 변환 규칙 정의 (`docs/farm_case_rag_pipeline.md`)
 - [x] `farm_id`, `zone_id`, `cultivar`, `season`, `outcome` metadata 정의 (`schemas/farm_case_candidate_schema.json`)
 - [x] 성공/실패 사례를 공식 지식과 충돌 검토 후 RAG에 반영하는 승인 절차 정의 (`docs/farm_case_rag_pipeline.md`)
@@ -264,24 +270,24 @@
 - [ ] 승인된 `farm_case` 후보를 RAG chunk JSONL로 변환하는 스크립트 초안 작성
 
 ## 2.8 적고추 전문가 AI Agent 구축
-- [ ] 적고추 재배 전주기 단계 정의
-- [ ] 생육 단계별 전문가 판단 질문 목록 작성
-- [ ] 센서 지표와 판단 항목 매핑
-- [ ] `docs/expert_knowledge_map.md` 작성
-- [ ] `docs/sensor_judgement_matrix.md` 작성
-- [ ] `schemas/feature_schema.json` 작성
-- [ ] `schemas/sensor_quality_schema.json` 작성
-- [ ] `evals/expert_judgement_eval_set.jsonl` 작성
-- [ ] `docs/agent_tool_design.md` 작성
-- [ ] `docs/offline_agent_runner_spec.md` 작성
-- [ ] growth-stage-agent 역할 정의
-- [ ] climate-agent 역할 정의
-- [ ] irrigation-agent 역할 정의
-- [ ] nutrient-agent 역할 정의
-- [ ] pest-disease-agent 역할 정의
-- [ ] harvest-drying-agent 역할 정의
-- [ ] safety-agent 역할 정의
-- [ ] report-agent 역할 정의
+- [x] 적고추 재배 전주기 단계 정의 (`docs/expert_knowledge_map.md`, `EXPERT_AI_AGENT_PLAN.md`)
+- [x] 생육 단계별 전문가 판단 질문 목록 작성 (`docs/expert_knowledge_map.md`)
+- [x] 센서 지표와 판단 항목 매핑 (`docs/sensor_judgement_matrix.md`)
+- [x] `docs/expert_knowledge_map.md` 작성
+- [x] `docs/sensor_judgement_matrix.md` 작성
+- [x] `schemas/feature_schema.json` 작성
+- [x] `schemas/sensor_quality_schema.json` 작성
+- [x] `evals/expert_judgement_eval_set.jsonl` 작성
+- [x] `docs/agent_tool_design.md` 작성
+- [x] `docs/offline_agent_runner_spec.md` 작성
+- [x] growth-stage-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] climate-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] irrigation-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] nutrient-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] pest-disease-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] harvest-drying-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] safety-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
+- [x] report-agent 역할 정의 (`EXPERT_AI_AGENT_PLAN.md`)
 
 ---
 
@@ -434,16 +440,16 @@
 - [ ] calibration_version 저장 방식 정의
 
 ## 6.1.1 센서 수집 계획 보강
-- [ ] 환경 센서 목록 확정: 온도, 습도, CO2, 광량/PAR, 일사량
-- [ ] 배지/양액 센서 목록 확정: 함수율, EC, pH, 배액량, 배액 EC/pH, 양액 온도
-- [ ] 외기 센서 목록 확정: 외기 온도, 외기 습도, 풍속, 강우, 외부 일사
-- [ ] 장치 상태 수집 목록 확정: 팬, 차광, 환기창, 관수 밸브, 난방기, CO2 공급기, 제습기
-- [ ] 비전 데이터 수집 계획 작성: 작물 이미지, 숙도, 병징, 잎 상태, 수확 후보
-- [ ] 운영 이벤트 수집 계획 작성: 관수 실행, 차광 변경, 작업자 개입, 알람, 수동 override
-- [ ] sensor_id/device_id/zone_id naming 규칙 확정
-- [ ] sensor quality flag 기준 확정
-- [ ] 센서별 수집 주기와 단위 확정
-- [ ] AI 학습 반영 가능 여부별 데이터 우선순위 지정
+- [x] 환경 센서 목록 확정: 온도, 습도, CO2, 광량/PAR, 일사량 (`docs/sensor_collection_plan.md`)
+- [x] 배지/양액 센서 목록 확정: 함수율, EC, pH, 배액량, 배액 EC/pH, 양액 온도 (`docs/sensor_collection_plan.md`)
+- [x] 외기 센서 목록 확정: 외기 온도, 외기 습도, 풍속, 강우, 외부 일사 (`docs/sensor_collection_plan.md`)
+- [x] 장치 상태 수집 목록 확정: 팬, 차광, 환기창, 관수 밸브, 난방기, CO2 공급기, 제습기 (`docs/sensor_collection_plan.md`)
+- [x] 비전 데이터 수집 계획 작성: 작물 이미지, 숙도, 병징, 잎 상태, 수확 후보 (`docs/sensor_collection_plan.md`)
+- [x] 운영 이벤트 수집 계획 작성: 관수 실행, 차광 변경, 작업자 개입, 알람, 수동 override (`docs/sensor_collection_plan.md`)
+- [x] sensor_id/device_id/zone_id naming 규칙 확정 (`docs/sensor_collection_plan.md`)
+- [x] sensor quality flag 기준 확정 (`docs/sensor_collection_plan.md`)
+- [x] 센서별 수집 주기와 단위 확정 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] AI 학습 반영 가능 여부별 데이터 우선순위 지정 (`docs/sensor_collection_plan.md`)
 
 ## 6.2 센서 어댑터 구현
 - [ ] 온도/습도 센서 어댑터 작성

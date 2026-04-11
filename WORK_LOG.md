@@ -287,6 +287,27 @@
 - `schemas/farm_case_candidate_schema.json`를 추가해 `case_id`, `farm_id`, `zone_id`, `growth_stage`, `sensor_tags`, `risk_tags`, `action_taken`, `outcome`, `review_status`, `chunk_summary` 등 핵심 필드를 고정했다.
 - `todo.md`, `PROJECT_STATUS.md`, `docs/rag_next_steps.md`에 `farm_case` 후보 변환 규칙, metadata 정의, 리뷰 승인 절차 링크를 반영했다.
 
+### Phase -1 AI 준비 구축 및 MLOps 설계 보강
+- `docs/agent_tool_design.md`를 추가해 Agent가 사용할 조회/검색/승인/로그 도구 계약을 정리했다.
+- `docs/offline_agent_runner_spec.md`를 추가해 실측 데이터 없이 상태 JSON, retrieval, 정책 검사, 평가 결과를 재현 검증하는 offline runner 요구사항을 정의했다.
+- `docs/mlops_registry_design.md`를 추가해 dataset/prompt/model/eval/retrieval profile registry와 champion/challenger 승격 규칙을 정리했다.
+- `docs/shadow_mode_report_format.md`를 추가해 shadow mode에서 승격 판단에 쓸 필수 지표와 리포트 형식을 정의했다.
+- `data/examples/synthetic_sensor_scenarios.jsonl`를 추가해 정상 생육, 개화기 고온, 근권 과습·고EC, 센서 stale, 수확/건조 리스크, 장마기 병해 감시 시나리오 6건을 seed로 작성했다.
+- `AI_MLOPS_PLAN.md`에 목표 대비 진행 현황 표와 설계 기준 완료 판정을 반영했다.
+- `PLAN.md`, `PROJECT_STATUS.md`, `todo.md`에 Phase -1 성과물과 다음 우선순위를 최신 상태로 갱신했다.
+
+### 센서 수집 계획 상세화
+- `docs/sensor_collection_plan.md`를 추가해 zone 정의, `zone_id`/`sensor_id`/`device_id` naming 규칙, sensor/device sample rate, quality_flag 기준, must_have/should_have 우선순위를 정리했다.
+- `schemas/sensor_catalog_schema.json`를 추가해 zone, sensor, device 카탈로그 구조를 고정했다.
+- `data/examples/sensor_catalog_seed.json`를 추가해 초기 온실 1동 기준 zone 5개, sensor 5개, device 4개의 seed 카탈로그를 작성했다.
+- `AI_MLOPS_PLAN.md`, `PROJECT_STATUS.md`, `README.md`, `todo.md`에 센서 수집 계획 상세화 완료 상태와 다음 우선순위를 반영했다.
+
+### 센서 현장형 인벤토리 초안
+- `docs/sensor_installation_inventory.md`를 추가해 zone별 설치 수량, protocol, calibration 주기, model_profile, 장치 interlock 기준을 정리했다.
+- `schemas/sensor_catalog_schema.json`를 확장해 `catalog_version`, `measurement_fields`, `model_profile`, `protocol`, `install_location`, `calibration_interval_days`, `control_mode`, `response_timeout_seconds`, `safety_interlocks`를 검증 대상에 포함했다.
+- `data/examples/sensor_catalog_seed.json`를 인스턴스 단위 현장형 카탈로그로 교체했다. 현재 기준치는 센서 29개, 장치 20개다.
+- `docs/sensor_collection_plan.md`, `AI_MLOPS_PLAN.md`, `PROJECT_STATUS.md`, `README.md`, `todo.md`, `data/examples/README.md`에 현장형 인벤토리 상태를 반영했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.

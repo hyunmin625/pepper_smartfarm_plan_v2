@@ -8,6 +8,27 @@
 - 따라서 초기 단계는 장치 제어 구현이 아니라 AI 판단 체계, 데이터 스키마, RAG 지식베이스, 평가셋, MLOps 루프 구축이 우선이다.
 - 실제 센서 데이터가 들어오기 전까지는 재배 매뉴얼, 현장 SOP 초안, 시뮬레이션 데이터, 합성 시나리오, 공개 자료 기반 평가셋으로 모델을 준비한다.
 
+## Phase -1 진행 현황
+
+현재 Phase -1은 **설계 산출물 기준으로 완료 상태**로 본다. 아직 구현되지 않은 항목은 runner 실행 코드와 실제 센서 연동이며, 이는 다음 단계로 넘긴다.
+
+| 목표 | 상태 | 근거 산출물 |
+|---|---|---|
+| AI 판단 체계 선행 준비 | 완료 | `schemas/state_schema.json`, `schemas/feature_schema.json`, `schemas/action_schema.json`, `schemas/sensor_quality_schema.json` |
+| 적고추 전주기 전문가 지식 구조화 | 완료 | `docs/expert_knowledge_map.md`, `docs/sensor_judgement_matrix.md`, `EXPERT_AI_AGENT_PLAN.md` |
+| RAG 지식베이스 설계와 품질 기준 수립 | 완료 | `docs/rag_indexing_plan.md`, `docs/rag_source_inventory.md`, `schemas/rag_chunk_schema.json`, `data/rag/pepper_expert_seed_chunks.jsonl` |
+| 파인튜닝 seed와 평가셋 준비 | 완료 | `data/examples/state_judgement_samples.jsonl`, `data/examples/forbidden_action_samples.jsonl`, `evals/expert_judgement_eval_set.jsonl`, `evals/rag_retrieval_eval_set.jsonl` |
+| 모델/프롬프트/데이터셋 버전 관리 체계 설계 | 완료 | `docs/mlops_registry_design.md` |
+| offline runner 설계 | 완료 | `docs/offline_agent_runner_spec.md`, `data/examples/synthetic_sensor_scenarios.jsonl` |
+| shadow mode 보고 체계 정의 | 완료 | `docs/shadow_mode_report_format.md` |
+| 운영 로그 환류 설계 | 완료 | `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json` |
+
+## Phase -1 완료 판정
+
+- 설계 문서, 스키마, seed dataset, eval set, registry 규칙, shadow report 포맷이 모두 존재한다.
+- 따라서 **실측 데이터 없는 상태에서 AI 준비 구축과 MLOps 기반 설계는 완료**로 판정한다.
+- 다음 단계의 중심은 문서 설계가 아니라 `센서 수집 계획 보강`, `offline runner 구현`, `policy JSON 작성`, `farm_case 샘플 생성`이다.
+
 ## 개정 개발 순서
 
 1. AI 준비 구축
@@ -27,9 +48,24 @@
 - 모델/프롬프트 버전 관리: prompt version, model version, dataset version, eval version
 - 의사결정 시뮬레이터: 실제 온실 없이도 센서 상태 JSON을 넣고 LLM 판단을 검증하는 offline runner
 
+현재 연결 문서:
+
+- `docs/offline_agent_runner_spec.md`
+- `docs/agent_tool_design.md`
+- `docs/mlops_registry_design.md`
+- `docs/shadow_mode_report_format.md`
+- `data/examples/synthetic_sensor_scenarios.jsonl`
+
 ## 2. 센서 수집 계획 보강
 
 수집 센서는 AI 학습과 제어 판단에 직접 연결되도록 분류한다.
+
+현재 상세 문서:
+
+- `docs/sensor_collection_plan.md`
+- `docs/sensor_installation_inventory.md`
+- `schemas/sensor_catalog_schema.json`
+- `data/examples/sensor_catalog_seed.json`
 
 - 환경 센서: 온도, 상대습도, CO2, 광량/PAR, 일사량
 - 배지/양액 센서: 배지 함수율, EC, pH, 배액량, 배액 EC/pH, 양액 온도
@@ -39,6 +75,8 @@
 - 운영 이벤트: 관수 실행, 차광 변경, 환기 변경, 작업자 개입, 알람, 수동 override
 
 각 데이터는 `zone_id`, `sensor_id`, `timestamp`, `value`, `unit`, `quality_flag`, `source`, `calibration_version`을 포함한다.
+
+현재 단계에서는 zone 구조, naming 규칙, sample_rate, quality_flag 기준, must_have/should_have 우선순위에 더해 설치 수량 가정, protocol, calibration 주기, model_profile까지 문서화했다. 아직 vendor별 상용 모델 shortlist와 PLC 주소 체계는 미확정이며, 이는 다음 구현 단계에서 확정한다.
 
 ## 3. 센서 데이터 분석 및 AI 학습 반영
 

@@ -164,13 +164,15 @@ LLM은 다음을 직접 수행하지 않는다.
 성과물:
 - AI_MLOPS_PLAN.md
 - EXPERT_AI_AGENT_PLAN.md
-- expert knowledge map
-- sensor judgement matrix
-- RAG 문서 메타데이터 schema
-- 적고추/건고추 도메인 지식셋
-- offline decision runner
-- eval set
-- model/prompt/dataset registry 설계
+- docs/expert_knowledge_map.md
+- docs/sensor_judgement_matrix.md
+- schemas/rag_chunk_schema.json
+- data/rag/pepper_expert_seed_chunks.jsonl
+- docs/offline_agent_runner_spec.md
+- evals/expert_judgement_eval_set.jsonl
+- evals/rag_retrieval_eval_set.jsonl
+- docs/mlops_registry_design.md
+- docs/shadow_mode_report_format.md
 
 ## Phase 0. 요구사항 정리 및 범위 확정
 목표:

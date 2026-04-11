@@ -29,6 +29,9 @@
 
 현재는 온실 공사 중인 구현 전 기획 단계이지만, AI 준비와 RAG 기반은 상당 부분 구체화되었습니다.
 
+- Phase -1 AI 준비 구축 및 MLOps 기반 설계: `설계 기준 완료`
+- 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
+- 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - RAG seed chunk: `100개` 구축 완료
 - 검색 평가셋: `40개` case로 확장 완료
 - 검색 방식 검증 완료:
@@ -46,6 +49,11 @@
 - `artifacts/rag_index/pepper_expert_index.json`: 로컬 RAG 인덱스
 - `docs/rag_indexing_plan.md`: 인덱싱, 검색, 평가 방식
 - `docs/rag_next_steps.md`: 남은 보강 과제
+- `docs/sensor_collection_plan.md`: zone, sensor, device, sample_rate, quality_flag 기준
+- `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
+- `docs/offline_agent_runner_spec.md`: offline runner 요구사항
+- `docs/mlops_registry_design.md`: dataset/prompt/model/eval registry 규칙
+- `docs/shadow_mode_report_format.md`: shadow mode 평가 리포트 형식
 - `docs/farm_case_rag_pipeline.md`: 운영 로그를 `farm_case` RAG로 승격하는 절차
 - `scripts/build_rag_index.py`, `scripts/search_rag_index.py`: 기본 인덱싱/검색
 - `scripts/build_chroma_index.py`: ChromaDB 기반 vector index 생성
@@ -53,8 +61,8 @@
 
 ## 다음 우선순위
 
-1. RAG 지식 청크를 `200개` 수준까지 확장
-2. 품종별 기준, 지역별 월별 작업, 기상 재해 대응 지식 추가
+1. `sensor-ingestor` 설정 파일 포맷과 poller profile 초안 작성
+2. RAG 지식 청크를 `200개` 수준까지 확장
 3. `farm_case_candidate` JSONL 샘플 10건 작성
 4. 최근 3~5일 상태를 반영하는 multi-turn contextual retrieval 설계
 5. hard block 정책과 approval 정책 구체화

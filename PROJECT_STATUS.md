@@ -39,6 +39,11 @@
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
 - `docs/rag_next_steps.md`: RAG 데이터 확충, 벡터 검색, 메타데이터 필터, 현장 데이터 환류 과제
 - `docs/farm_case_rag_pipeline.md`: 운영 로그와 센서 구간을 `farm_case` RAG로 승격하는 기준과 리뷰 절차
+- `docs/sensor_collection_plan.md`: zone/device/sample_rate 수준의 센서 수집 계획
+- `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
+- `docs/offline_agent_runner_spec.md`: 실측 데이터 없이 Agent 판단을 검증하는 offline runner 요구사항
+- `docs/mlops_registry_design.md`: dataset/prompt/model/eval/retrieval profile 버전 관리 규칙
+- `docs/shadow_mode_report_format.md`: shadow mode 승격 판단 리포트 형식
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준
 - `WORK_LOG.md`: 진행한 작업, 커밋, 조사 근거 기록
 - `AGENTS.md`: 기여자와 AI 에이전트 작업 규칙
@@ -68,6 +73,9 @@
 - OpenAI embedding 기반 Chroma collection build/eval 완료, local blend 4.0 적용 후 retrieval eval 40건 hit rate 1.0, MRR 1.0
 - 40개 retrieval eval 재검증 완료: local vector, local-backed Chroma, OpenAI-backed Chroma 모두 hit rate 1.0, MRR 1.0 유지
 - `farm_case` RAG 환류 파이프라인 초안과 후보 스키마 작성: `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json`
+- Phase -1 설계 산출물 보강 완료: offline runner spec, MLOps registry 설계, shadow mode report format, 합성 센서 시나리오 추가
+- 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
+- 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
 - Chroma collection/manifest를 backend별로 분리: `pepper_expert_chunks_local`, `pepper_expert_chunks_openai`
 - 응답 citation coverage 검증 스크립트 추가: `scripts/validate_response_citations.py`
 - retrieval weight 튜닝 스크립트 추가: `scripts/tune_rag_weights.py`
@@ -75,12 +83,12 @@
 
 ## 다음 우선순위
 
-1. RAG 지식 청크를 100개에서 200개 수준까지 추가 확장
-2. 적고추 품종별 임계값, 지역별 월별 작업, 기상 재해 대응 청크화 지속
+1. `sensor-ingestor` 설정 파일 포맷과 poller profile 초안 작성
+2. RAG 지식 청크를 100개에서 200개 수준까지 추가 확장
 3. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
 4. Multi-turn contextual retrieval 설계와 최근 3~5일 상태 반영 검색 전략 정의
 5. hard block 정책 10개와 approval 정책 10개 작성
-6. offline agent runner spec 작성
+6. offline agent runner 스펙을 실제 replay runner 구현 계획으로 전환
 
 ## 주의할 점
 
