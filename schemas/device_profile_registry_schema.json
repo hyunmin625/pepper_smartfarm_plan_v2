@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-smartfarm-plan-v2.local/schemas/device_profile_registry_schema.json",
+  "title": "Device Profile Registry",
+  "type": "object",
+  "required": ["registry_version", "device_profiles"],
+  "properties": {
+    "registry_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "device_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "profile_id",
+          "device_type",
+          "protocol",
+          "control_mode",
+          "command_family",
+          "supported_action_types",
+          "supported_modes",
+          "parameter_specs",
+          "readback_fields",
+          "safety_interlocks",
+          "ack_policy",
+          "mapping"
+        ],
+        "properties": {
+          "profile_id": { "type": "string", "minLength": 1 },
+          "device_type": { "type": "string", "minLength": 1 },
+          "protocol": { "type": "string", "minLength": 1 },
+          "control_mode": { "type": "string", "minLength": 1 },
+          "command_family": { "type": "string", "minLength": 1 },
+          "supported_action_types": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "supported_modes": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "parameter_specs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "data_type", "required"],
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "data_type": { "type": "string", "enum": ["number", "integer", "boolean", "string"] },
+                "required": { "type": "boolean" },
+                "unit": { "type": "string" },
+                "minimum": { "type": "number" },
+                "maximum": { "type": "number" },
+                "allowed_values": {
+                  "type": "array",
+                  "items": { "type": ["string", "number", "boolean"] }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "readback_fields": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["field_name", "data_type", "required"],
+              "properties": {
+                "field_name": { "type": "string", "minLength": 1 },
+                "data_type": { "type": "string", "enum": ["number", "integer", "boolean", "string"] },
+                "required": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "safety_interlocks": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "ack_policy": {
+            "type": "object",
+            "required": ["requires_ack", "ack_timeout_seconds", "verify_readback", "success_conditions"],
+            "properties": {
+              "requires_ack": { "type": "boolean" },
+              "ack_timeout_seconds": { "type": "integer", "minimum": 1 },
+              "verify_readback": { "type": "boolean" },
+              "success_conditions": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            },
+            "additionalProperties": false
+          },
+          "mapping": {
+            "type": "object",
+            "required": ["write_channel_type", "write_channel_ref", "read_channel_refs", "command_encoder", "readback_decoder"],
+            "properties": {
+              "write_channel_type": { "type": "string", "enum": ["plc_register", "plc_coil", "opcua_node", "virtual"] },
+              "write_channel_ref": { "type": "string", "minLength": 1 },
+              "read_channel_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "command_encoder": { "type": "string", "minLength": 1 },
+              "readback_decoder": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

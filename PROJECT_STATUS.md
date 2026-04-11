@@ -42,6 +42,14 @@
 - `docs/farm_case_event_window_builder.md`: 운영 로그를 사건 단위 `event_window`로 묶는 세부 규칙
 - `docs/sensor_collection_plan.md`: zone/device/sample_rate 수준의 센서 수집 계획
 - `docs/sensor_installation_inventory.md`: zone별 설치 수량, protocol, calibration, model_profile 기준
+- `docs/device_profile_registry.md`: 장치 `model_profile`를 `plc-adapter` 실행 계약으로 관리하는 기준
+- `docs/plc_adapter_interface_contract.md`: profile 기반 write/readback/ack 인터페이스 계약
+- `docs/plc_site_override_map.md`: 현장 controller/channel binding을 profile과 분리 관리하는 기준
+- `docs/plc_runtime_endpoint_config.md`: controller endpoint를 환경 변수로 주입하는 기준
+- `docs/plc_channel_address_registry.md`: `channel_ref -> Modbus address` registry 기준
+- `docs/device_command_mapping_matrix.md`: 장치별 action/parameter/encoder/ack 매핑 기준
+- `docs/plc_tag_modbus_tcp_adapter.md`: `plc_tag_modbus_tcp` adapter skeleton 범위와 제약
+- `docs/execution_gateway_command_contract.md`: execution-gateway가 넘기는 저수준 device command 계약
 - `docs/sensor_ingestor_config_spec.md`: poller profile, connection, binding group 기준
 - `docs/sensor_quality_rules_pseudocode.md`: `quality_flag`와 automation gate 규칙
 - `docs/sensor_ingestor_runtime_flow.md`: parser -> normalizer -> publish 실행 흐름
@@ -98,6 +106,24 @@
 - 안전 요구사항 정리 완료: `docs/safety_requirements.md`
 - `sensor-ingestor` MVP skeleton 추가: `sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/config.py`
 - dry-run 실행과 `/healthz`, `/metrics` endpoint 응답 검증 완료
+- `Device Profile` registry/schema 초안 추가: `docs/device_profile_registry.md`, `schemas/device_profile_registry_schema.json`, `data/examples/device_profile_registry_seed.json`
+- `model_profile -> profile_id` cross-check 검증기 추가: `scripts/validate_device_profile_registry.py`
+- `plc-adapter` interface contract와 mock skeleton 추가: `docs/plc_adapter_interface_contract.md`, `plc-adapter/plc_adapter/interface.py`, `plc-adapter/plc_adapter/mock_adapter.py`, `plc-adapter/demo.py`
+- zone 관수밸브와 원수 메인 밸브를 서로 다른 `Device Profile`로 분리해 인터록/ack 정책을 독립 관리하도록 보정
+- `site override address map` seed/schema 추가: `docs/plc_site_override_map.md`, `schemas/device_site_override_schema.json`, `data/examples/device_site_override_seed.json`
+- `device_id -> profile -> controller/channel` resolver 추가: `plc-adapter/plc_adapter/device_catalog.py`, `plc-adapter/plc_adapter/site_overrides.py`, `plc-adapter/plc_adapter/resolver.py`
+- `scripts/validate_device_site_overrides.py`로 controller/channel binding 정합성 검증 추가
+- PLC runtime endpoint override 기준 추가: `docs/plc_runtime_endpoint_config.md`, `.env.example`, `plc-adapter/plc_adapter/runtime_config.py`
+- `plc_tag://...` channel ref parser 추가: `plc-adapter/plc_adapter/channel_refs.py`
+- `channel_ref -> Modbus address` registry 추가: `docs/plc_channel_address_registry.md`, `schemas/device_channel_address_registry_schema.json`, `data/examples/device_channel_address_registry_seed.json`
+- site override 기반 placeholder address map generator/validator 추가: `scripts/build_device_channel_address_registry.py`, `scripts/validate_device_channel_address_registry.py`
+- `plc_tag_modbus_tcp` adapter payload에 `write_channel_address`, `read_channel_addresses`, `transport_*` fields 추가
+- adapter가 write/readback 시 logical ref가 아니라 transport ref 기준으로 in-memory transport를 호출하도록 보강
+- `plc_tag_modbus_tcp` adapter skeleton 추가: `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/transports.py`, `plc-adapter/plc_adapter/codecs.py`
+- in-memory transport 기준 connect/reconnect, write/readback, timeout/retry, health check, result mapping 검증 완료
+- `execution-gateway -> plc-adapter` command contract 추가: `schemas/device_command_request_schema.json`, `data/examples/device_command_request_samples.jsonl`, `scripts/validate_device_command_requests.py`
+- 장치별 command mapping sample 8건과 실행 validator 추가: `docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`
+- 대표 장치 8건에 대해 `adapter.write_device_command()` 경로 검증 완료: fan, shade, vent, irrigation valve, heater, co2, fertigation, source water valve
 - 도메인 데이터 분류/포맷/정제 규칙 정리 완료: `docs/dataset_taxonomy.md`, `docs/training_data_format.md`, `docs/data_curation_rules.md`
 - 행동추천/장애대응/로봇우선순위/알람 seed와 eval seed 추가: `data/examples/*`, `evals/*_eval_set.jsonl`
 - 학습/eval JSONL 검증 스크립트 추가: `scripts/validate_training_examples.py`
@@ -109,9 +135,12 @@
 ## 다음 우선순위
 
 1. `sensor-ingestor` MQTT publisher와 timeseries writer 실제 backend 연결
-2. `data/examples` seed를 task별 20건 이상으로 확장
-3. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
-4. hard block 정책 10개와 approval 정책 10개 작성
+2. 긴급 정지 명령과 수동 override 명령을 별도 contract로 분리
+3. `plc_tag_modbus_tcp`를 실제 TCP/Modbus client와 실IP/실주소 테이블에 연결
+4. `execution-gateway` command normalizer와 duplicate/cooldown/policy 재평가 단계를 구현
+4. `data/examples` seed를 task별 20건 이상으로 확장
+5. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
+6. hard block 정책 10개와 approval 정책 10개 작성
 
 ## 주의할 점
 

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-smartfarm-plan-v2.local/schemas/device_channel_address_registry_schema.json",
+  "title": "PLC Channel Address Registry",
+  "type": "object",
+  "required": [
+    "site_id",
+    "site_version",
+    "catalog_version",
+    "registry_version",
+    "channel_map_version",
+    "channels"
+  ],
+  "properties": {
+    "site_id": { "type": "string", "minLength": 1 },
+    "site_version": { "type": "string", "minLength": 1 },
+    "catalog_version": { "type": "string", "minLength": 1 },
+    "registry_version": { "type": "string", "minLength": 1 },
+    "channel_map_version": { "type": "string", "minLength": 1 },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "channel_ref",
+          "controller_id",
+          "protocol",
+          "access",
+          "table",
+          "address",
+          "data_type"
+        ],
+        "properties": {
+          "channel_ref": { "type": "string", "minLength": 1 },
+          "controller_id": { "type": "string", "minLength": 1 },
+          "protocol": { "type": "string", "minLength": 1 },
+          "access": { "type": "string", "enum": ["write", "read"] },
+          "table": {
+            "type": "string",
+            "enum": ["holding_register", "input_register", "discrete_input", "coil"]
+          },
+          "address": { "type": "integer", "minimum": 1 },
+          "data_type": { "type": "string", "minLength": 1 },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "scale": { "type": "number", "exclusiveMinimum": 0 },
+          "bit_index": { "type": "integer", "minimum": 0 },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

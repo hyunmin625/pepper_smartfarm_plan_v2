@@ -51,7 +51,7 @@
 | `heater` | `heater_run_feedback` | `binary_or_stage` | `plc_tag_modbus_tcp` | 60초 | `overtemp_lock`, `fuel_fault`, `estop` |
 | `co2_doser` | `co2_valve_feedback` | `binary_or_percent` | `plc_tag_modbus_tcp` | 20초 | `co2_high_lock`, `vent_open_lock`, `estop` |
 | `nutrient_mixer` | `fertigation_controller_feedback` | `recipe_stage` | `plc_tag_modbus_tcp` | 60초 | `ec_ph_fault`, `tank_low_level`, `estop` |
-| `source_water_valve` | `valve_open_close_feedback` | `binary` | `plc_tag_modbus_tcp` | 15초 | `low_pressure_lock`, `estop` |
+| `source_water_valve` | `source_water_valve_feedback` | `binary` | `plc_tag_modbus_tcp` | 15초 | `low_pressure_lock`, `estop` |
 | `dehumidifier` | `dehumidifier_feedback` | `binary_or_stage` | `plc_tag_modbus_tcp` | 60초 | `high_temp_lock`, `condensate_fault`, `estop` |
 | `dry_fan` | `dry_fan_feedback` | `binary_or_percent` | `plc_tag_modbus_tcp` | 30초 | `manual_override`, `motor_fault`, `estop` |
 
@@ -64,6 +64,8 @@
 3. `docs/sensor_ingestor_config_spec.md`와 `data/examples/sensor_ingestor_config_seed.json`은 위 카탈로그를 poller profile, connection, binding group으로 구체화한다.
 4. vendor 확정 전까지는 `model_profile`만 관리하고, 실제 구매 단계에서 `vendor_model`, `serial_prefix`, `calibration_certificate_id`를 추가한다.
 5. `product_moisture`처럼 자동 수집이 아닌 항목은 `manual_batch_import` 프로토콜로 분리 저장한다.
+6. 장치 `model_profile`은 `docs/device_profile_registry.md`와 `data/examples/device_profile_registry_seed.json`에서 `plc-adapter` 실행 계약으로 관리한다.
+7. 실제 controller/channel binding은 `docs/plc_site_override_map.md`와 `data/examples/device_site_override_seed.json`에서 분리 관리한다.
 
 ## 6. 남은 작업
 

@@ -1,0 +1,317 @@
+{
+  "registry_version": "2026-04-11-a",
+  "device_profiles": [
+    {
+      "profile_id": "fan_inverter_feedback",
+      "device_type": "circulation_fan",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary_or_percent",
+      "command_family": "percent_output",
+      "supported_action_types": ["adjust_fan", "pause_automation"],
+      "supported_modes": ["manual", "auto", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["on", "off"] },
+        { "name": "speed_pct", "data_type": "integer", "required": false, "unit": "pct", "minimum": 0, "maximum": 100 }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "speed_pct", "data_type": "integer", "required": false },
+        { "field_name": "fault_code", "data_type": "string", "required": false }
+      ],
+      "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 30,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches", "speed_pct_within_tolerance"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://fan_speed_command",
+        "read_channel_refs": ["profile://fan_run_state", "profile://fan_speed_feedback", "profile://fan_fault_code"],
+        "command_encoder": "fan_percent_encoder_v1",
+        "readback_decoder": "fan_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "vent_motor_feedback",
+      "device_type": "vent_window",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "percent_position",
+      "command_family": "position_output",
+      "supported_action_types": ["adjust_vent", "pause_automation"],
+      "supported_modes": ["manual", "auto", "disabled"],
+      "parameter_specs": [
+        { "name": "position_pct", "data_type": "integer", "required": true, "unit": "pct", "minimum": 0, "maximum": 100 }
+      ],
+      "readback_fields": [
+        { "field_name": "position_pct", "data_type": "integer", "required": true },
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "fault_code", "data_type": "string", "required": false }
+      ],
+      "safety_interlocks": ["wind_lock", "motor_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 45,
+        "verify_readback": true,
+        "success_conditions": ["position_pct_within_tolerance"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://vent_position_command",
+        "read_channel_refs": ["profile://vent_position_feedback", "profile://vent_run_state", "profile://vent_fault_code"],
+        "command_encoder": "position_encoder_v1",
+        "readback_decoder": "position_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "shade_motor_feedback",
+      "device_type": "shade_curtain",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "percent_position",
+      "command_family": "position_output",
+      "supported_action_types": ["adjust_shade", "pause_automation"],
+      "supported_modes": ["manual", "auto", "disabled"],
+      "parameter_specs": [
+        { "name": "position_pct", "data_type": "integer", "required": true, "unit": "pct", "minimum": 0, "maximum": 100 }
+      ],
+      "readback_fields": [
+        { "field_name": "position_pct", "data_type": "integer", "required": true },
+        { "field_name": "run_state", "data_type": "string", "required": true }
+      ],
+      "safety_interlocks": ["travel_limit", "motor_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 45,
+        "verify_readback": true,
+        "success_conditions": ["position_pct_within_tolerance"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://shade_position_command",
+        "read_channel_refs": ["profile://shade_position_feedback", "profile://shade_run_state"],
+        "command_encoder": "position_encoder_v1",
+        "readback_decoder": "position_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "valve_open_close_feedback",
+      "device_type": "irrigation_valve",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary",
+      "command_family": "binary_output",
+      "supported_action_types": ["short_irrigation", "pause_automation"],
+      "supported_modes": ["manual", "auto", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["open", "closed"] },
+        { "name": "duration_seconds", "data_type": "integer", "required": false, "unit": "seconds", "minimum": 1, "maximum": 900 }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "fault_code", "data_type": "string", "required": false }
+      ],
+      "safety_interlocks": ["manual_override", "line_pressure_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 15,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_coil",
+        "write_channel_ref": "profile://valve_open_close_command",
+        "read_channel_refs": ["profile://valve_run_state", "profile://valve_fault_code"],
+        "command_encoder": "binary_open_close_encoder_v1",
+        "readback_decoder": "binary_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "heater_run_feedback",
+      "device_type": "heater",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary_or_stage",
+      "command_family": "stage_output",
+      "supported_action_types": ["adjust_heating", "pause_automation"],
+      "supported_modes": ["manual", "auto", "approval", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["on", "off"] },
+        { "name": "stage", "data_type": "integer", "required": false, "minimum": 0, "maximum": 3 }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "stage", "data_type": "integer", "required": false },
+        { "field_name": "fault_code", "data_type": "string", "required": false }
+      ],
+      "safety_interlocks": ["overtemp_lock", "fuel_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 60,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches", "stage_matches"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://heater_stage_command",
+        "read_channel_refs": ["profile://heater_run_state", "profile://heater_stage_feedback", "profile://heater_fault_code"],
+        "command_encoder": "stage_encoder_v1",
+        "readback_decoder": "stage_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "co2_valve_feedback",
+      "device_type": "co2_doser",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary_or_percent",
+      "command_family": "percent_output",
+      "supported_action_types": ["adjust_co2", "pause_automation"],
+      "supported_modes": ["manual", "auto", "approval", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["on", "off"] },
+        { "name": "dose_pct", "data_type": "integer", "required": false, "unit": "pct", "minimum": 0, "maximum": 100 }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "dose_pct", "data_type": "integer", "required": false }
+      ],
+      "safety_interlocks": ["co2_high_lock", "vent_open_lock", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 20,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches", "dose_pct_within_tolerance"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://co2_dose_command",
+        "read_channel_refs": ["profile://co2_run_state", "profile://co2_dose_feedback"],
+        "command_encoder": "co2_percent_encoder_v1",
+        "readback_decoder": "co2_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "fertigation_controller_feedback",
+      "device_type": "nutrient_mixer",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "recipe_stage",
+      "command_family": "recipe_selection",
+      "supported_action_types": ["adjust_fertigation", "pause_automation"],
+      "supported_modes": ["manual", "auto", "approval", "disabled"],
+      "parameter_specs": [
+        { "name": "recipe_id", "data_type": "string", "required": true },
+        { "name": "mix_volume_l", "data_type": "number", "required": false, "unit": "L", "minimum": 0, "maximum": 1000 }
+      ],
+      "readback_fields": [
+        { "field_name": "recipe_stage", "data_type": "string", "required": true },
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "fault_code", "data_type": "string", "required": false }
+      ],
+      "safety_interlocks": ["ec_ph_fault", "tank_low_level", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 60,
+        "verify_readback": true,
+        "success_conditions": ["recipe_stage_matches"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://fertigation_recipe_command",
+        "read_channel_refs": ["profile://fertigation_recipe_stage", "profile://fertigation_run_state", "profile://fertigation_fault_code"],
+        "command_encoder": "recipe_encoder_v1",
+        "readback_decoder": "recipe_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "source_water_valve_feedback",
+      "device_type": "source_water_valve",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary",
+      "command_family": "binary_output",
+      "supported_action_types": ["pause_automation"],
+      "supported_modes": ["manual", "auto", "approval", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["open", "closed"] }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "fault_code", "data_type": "string", "required": false }
+      ],
+      "safety_interlocks": ["low_pressure_lock", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 15,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_coil",
+        "write_channel_ref": "profile://source_water_valve_command",
+        "read_channel_refs": ["profile://source_water_valve_state", "profile://source_water_valve_fault_code"],
+        "command_encoder": "binary_open_close_encoder_v1",
+        "readback_decoder": "binary_readback_decoder_v1"
+      },
+      "notes": "원수 메인 밸브는 zone 관수밸브와 분리해 low_pressure_lock 기준을 별도 관리한다."
+    },
+    {
+      "profile_id": "dehumidifier_feedback",
+      "device_type": "dehumidifier",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary_or_stage",
+      "command_family": "stage_output",
+      "supported_action_types": ["pause_automation"],
+      "supported_modes": ["manual", "auto", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["on", "off"] },
+        { "name": "stage", "data_type": "integer", "required": false, "minimum": 0, "maximum": 3 }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "stage", "data_type": "integer", "required": false }
+      ],
+      "safety_interlocks": ["high_temp_lock", "condensate_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 60,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches", "stage_matches"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://dehumidifier_stage_command",
+        "read_channel_refs": ["profile://dehumidifier_run_state", "profile://dehumidifier_stage_feedback"],
+        "command_encoder": "stage_encoder_v1",
+        "readback_decoder": "stage_readback_decoder_v1"
+      }
+    },
+    {
+      "profile_id": "dry_fan_feedback",
+      "device_type": "dry_fan",
+      "protocol": "plc_tag_modbus_tcp",
+      "control_mode": "binary_or_percent",
+      "command_family": "percent_output",
+      "supported_action_types": ["pause_automation"],
+      "supported_modes": ["manual", "auto", "disabled"],
+      "parameter_specs": [
+        { "name": "run_state", "data_type": "string", "required": true, "allowed_values": ["on", "off"] },
+        { "name": "speed_pct", "data_type": "integer", "required": false, "unit": "pct", "minimum": 0, "maximum": 100 }
+      ],
+      "readback_fields": [
+        { "field_name": "run_state", "data_type": "string", "required": true },
+        { "field_name": "speed_pct", "data_type": "integer", "required": false }
+      ],
+      "safety_interlocks": ["manual_override", "motor_fault", "estop"],
+      "ack_policy": {
+        "requires_ack": true,
+        "ack_timeout_seconds": 30,
+        "verify_readback": true,
+        "success_conditions": ["run_state_matches", "speed_pct_within_tolerance"]
+      },
+      "mapping": {
+        "write_channel_type": "plc_register",
+        "write_channel_ref": "profile://dry_fan_speed_command",
+        "read_channel_refs": ["profile://dry_fan_run_state", "profile://dry_fan_speed_feedback"],
+        "command_encoder": "fan_percent_encoder_v1",
+        "readback_decoder": "fan_readback_decoder_v1"
+      }
+    }
+  ]
+}

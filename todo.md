@@ -14,6 +14,13 @@
 - [Offline Agent Runner 스펙](docs/offline_agent_runner_spec.md)
 - [MLOps Registry 설계](docs/mlops_registry_design.md)
 - [Shadow Mode Report 포맷](docs/shadow_mode_report_format.md)
+- [Device Profile Registry](docs/device_profile_registry.md)
+- [PLC Adapter Interface Contract](docs/plc_adapter_interface_contract.md)
+- [PLC Site Override Map](docs/plc_site_override_map.md)
+- [PLC Runtime Endpoint Config](docs/plc_runtime_endpoint_config.md)
+- [PLC Channel Address Registry](docs/plc_channel_address_registry.md)
+- [Device Command Mapping Matrix](docs/device_command_mapping_matrix.md)
+- [Execution Gateway Command Contract](docs/execution_gateway_command_contract.md)
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -646,9 +653,9 @@
 # 10. 실행 게이트(execution-gateway)
 
 ## 10.1 검증 흐름 정의
-- [ ] schema validation 단계 정의
+- [x] schema validation 단계 정의 (`docs/execution_gateway_command_contract.md`, `schemas/device_command_request_schema.json`)
 - [ ] range validation 단계 정의
-- [ ] device availability check 단계 정의
+- [x] device availability check 단계 정의 (`docs/execution_gateway_command_contract.md`, `scripts/validate_device_command_requests.py`)
 - [ ] duplicate action check 단계 정의
 - [ ] cooldown check 단계 정의
 - [ ] policy re-evaluation 단계 정의
@@ -656,7 +663,7 @@
 - [ ] audit logging 단계 정의
 
 ## 10.2 게이트 구현
-- [ ] validator 모듈 작성
+- [x] validator 모듈 작성 (`scripts/validate_device_command_requests.py`)
 - [ ] command normalizer 작성
 - [ ] range clamp 전략 정의
 - [ ] duplicate detector 작성
@@ -679,31 +686,43 @@
 # 11. PLC/장치 연동
 
 ## 11.1 프로토콜 설계
+- [x] Device Profile registry/schema 정의 (`docs/device_profile_registry.md`, `schemas/device_profile_registry_schema.json`, `data/examples/device_profile_registry_seed.json`)
+- [x] `model_profile -> profile_id` cross-check 검증기 작성 (`scripts/validate_device_profile_registry.py`)
+- [x] `source_water_valve`처럼 인터록/ack가 다른 장치를 별도 profile로 분리하는 기준 정의 (`docs/device_profile_registry.md`)
+- [x] site override address map schema/seed 정의 (`docs/plc_site_override_map.md`, `schemas/device_site_override_schema.json`, `data/examples/device_site_override_seed.json`)
+- [x] site override 정합성 검증기 작성 (`scripts/validate_device_site_overrides.py`)
 - [ ] PLC 통신 방식 확인
-- [ ] Modbus address map 확보
+- [x] Modbus address map 확보 (`docs/plc_channel_address_registry.md`, `schemas/device_channel_address_registry_schema.json`, `data/examples/device_channel_address_registry_seed.json`, `scripts/build_device_channel_address_registry.py`, `scripts/validate_device_channel_address_registry.py`)
 - [ ] OPC UA node map 확보
 - [ ] register/write 안전 규칙 정의
 - [ ] readback 검증 방식 정의
 - [ ] 장애 코드 정의
 
 ## 11.2 plc-adapter 구현
-- [ ] 연결 초기화 구현
-- [ ] reconnect 로직 구현
-- [ ] write command 구현
-- [ ] readback 구현
-- [ ] timeout 처리 구현
-- [ ] retry 처리 구현
-- [ ] ack 처리 구현
-- [ ] result mapping 구현
-- [ ] adapter health check 작성
+- [x] `plc-adapter` interface contract 정의 (`docs/plc_adapter_interface_contract.md`, `plc-adapter/plc_adapter/interface.py`)
+- [x] profile 기반 mock adapter skeleton 구현 (`plc-adapter/plc_adapter/mock_adapter.py`, `plc-adapter/demo.py`)
+- [x] profile 기반 parameter validation / ack evaluation 구현 (`plc-adapter/plc_adapter/device_profiles.py`, `plc-adapter/plc_adapter/mock_adapter.py`)
+- [x] `device_id -> profile -> controller/channel` resolver 구현 (`plc-adapter/plc_adapter/device_catalog.py`, `plc-adapter/plc_adapter/site_overrides.py`, `plc-adapter/plc_adapter/resolver.py`)
+- [x] `plc_tag_modbus_tcp` adapter skeleton 구현 (`docs/plc_tag_modbus_tcp_adapter.md`, `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`)
+- [x] controller endpoint runtime override 구현 (`docs/plc_runtime_endpoint_config.md`, `plc-adapter/plc_adapter/runtime_config.py`, `.env.example`)
+- [x] logical channel ref -> transport address resolution 구현 (`docs/plc_channel_address_registry.md`, `plc-adapter/plc_adapter/channel_address_registry.py`, `plc-adapter/plc_adapter/channel_refs.py`)
+- [x] 연결 초기화 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/transports.py`)
+- [x] reconnect 로직 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`)
+- [x] write command 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/codecs.py`)
+- [x] readback 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/codecs.py`)
+- [x] timeout 처리 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/transports.py`)
+- [x] retry 처리 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`)
+- [x] ack 처리 구현 (`plc-adapter/plc_adapter/device_profiles.py`, `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`)
+- [x] result mapping 구현 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/interface.py`)
+- [x] adapter health check 작성 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/transports.py`)
 
 ## 11.3 장치별 명령 구현
-- [ ] 순환팬 명령 매핑
-- [ ] 차광커튼 명령 매핑
-- [ ] 관수 밸브 명령 매핑
-- [ ] 환기창 명령 매핑
-- [ ] 난방기 명령 매핑
-- [ ] CO2 명령 매핑
+- [x] 순환팬 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
+- [x] 차광커튼 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
+- [x] 관수 밸브 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
+- [x] 환기창 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
+- [x] 난방기 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
+- [x] CO2 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
 - [ ] 긴급 정지 명령 분리
 - [ ] 수동 override 명령 분리
 

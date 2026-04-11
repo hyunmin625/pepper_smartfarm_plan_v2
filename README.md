@@ -36,6 +36,14 @@
 - 센서 품질 규칙과 `sensor-ingestor` runtime flow 초안 완료
 - 운영 시나리오 14건과 안전 요구사항 문서화 완료
 - `sensor-ingestor` 코드 skeleton 추가: dry-run poller, parser, normalizer, `/healthz`, `/metrics` 확인 완료
+- `Device Profile` registry와 `plc-adapter` interface contract 추가 완료
+- `plc-adapter` mock skeleton 추가: profile 기반 parameter validation, payload build, readback, ack evaluation 확인 완료
+- `site override address map`과 `device_id -> profile -> controller/channel` resolver 추가 완료
+- `plc-adapter` runtime endpoint override와 channel ref parser 추가 완료
+- `logical channel ref -> Modbus address registry -> transport ref` 해석 경로 추가 완료
+- `plc_tag_modbus_tcp` adapter skeleton 추가: transport, codec, timeout/retry, health check, result mapping 확인 완료
+- 대표 장치 8건 command mapping 검증 완료: fan, shade, vent, irrigation valve, heater, CO2, fertigation, source water valve
+- `execution-gateway -> plc-adapter` 저수준 command contract와 샘플/validator 추가 완료
 - 도메인 데이터 taxonomy/format/curation 기준 추가 완료
 - RAG seed chunk: `219개` 구축 완료
 - 검색 평가셋: `110개` case로 확장 완료
@@ -73,9 +81,29 @@
 - `docs/sensor_ingestor_config_spec.md`: `sensor-ingestor` 설정 계약과 poller profile 기준
 - `docs/sensor_quality_rules_pseudocode.md`: `quality_flag` 우선순위와 automation gate 규칙
 - `docs/sensor_ingestor_runtime_flow.md`: parser -> normalizer -> publish 실행 흐름
+- `docs/device_profile_registry.md`: `model_profile`를 `plc-adapter` 실행 계약으로 쓰는 기준
+- `docs/plc_adapter_interface_contract.md`: profile 기반 write/readback/ack 인터페이스 계약
+- `docs/plc_site_override_map.md`: profile과 실제 현장 PLC 채널을 분리하는 site override 기준
+- `docs/plc_runtime_endpoint_config.md`: controller endpoint를 환경 변수로 주입하는 기준
+- `docs/plc_channel_address_registry.md`: logical channel ref를 Modbus 주소로 해석하는 기준
+- `docs/plc_tag_modbus_tcp_adapter.md`: `plc_tag_modbus_tcp` adapter skeleton과 제약 사항
+- `docs/device_command_mapping_matrix.md`: 장치별 action/parameter/encoder/ack 매핑 기준
+- `docs/execution_gateway_command_contract.md`: execution-gateway가 넘기는 device command request 계약
+- `data/examples/device_profile_registry_seed.json`: 장치 타입별 `Device Profile` seed registry
+- `data/examples/device_site_override_seed.json`: `gh-01` 예시 controller/channel binding seed
+- `data/examples/device_channel_address_registry_seed.json`: `channel_ref -> Modbus address` seed registry
+- `data/examples/device_command_mapping_samples.jsonl`: 장치별 대표 명령 sample 8건
 - `docs/operational_scenarios.md`: 정상/이상/안전 이벤트 운영 시나리오 목록
 - `docs/safety_requirements.md`: 인터록, estop, 수동/자동 전환, 승인/금지 액션 기준
 - `sensor-ingestor/`: `sensor-ingestor` 서비스 skeleton과 dry-run 진입점
+- `plc-adapter/`: device profile registry를 읽는 mock adapter skeleton
+- `plc-adapter/plc_adapter/resolver.py`: `device_id`에서 profile/controller/channel을 resolve하는 경로
+- `plc-adapter/plc_adapter/channel_refs.py`: `plc_tag://...` ref parser
+- `plc-adapter/plc_adapter/runtime_config.py`: PLC endpoint runtime override resolver
+- `plc-adapter/plc_adapter/channel_address_registry.py`: logical ref를 transport address로 해석하는 registry loader
+- `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`: `plc_tag_modbus_tcp` adapter runtime skeleton
+- `plc-adapter/plc_adapter/transports.py`: transport interface와 in-memory transport
+- `plc-adapter/plc_adapter/codecs.py`: encoder/decoder registry
 - `docs/dataset_taxonomy.md`: 학습/eval 데이터 분류 체계
 - `docs/training_data_format.md`: seed JSONL 포맷과 템플릿 기준
 - `docs/data_curation_rules.md`: 데이터 정제와 정규화 규칙
@@ -92,14 +120,21 @@
 - `scripts/validate_training_examples.py`: 학습/eval JSONL 구조 검증
 - `scripts/validate_farm_case_candidates.py`: `farm_case` 후보 JSONL 구조 검증
 - `scripts/validate_sensor_ingestor_config.py`: `sensor-ingestor` 설정과 catalog coverage 검증
+- `scripts/validate_device_profile_registry.py`: device catalog와 action schema를 기준으로 profile registry 정합성 검증
+- `scripts/validate_device_site_overrides.py`: site override가 catalog/profile/controller와 맞는지 검증
+- `scripts/build_device_channel_address_registry.py`: site override 기반 placeholder Modbus address map 생성
+- `scripts/validate_device_channel_address_registry.py`: channel address registry가 site override와 맞는지 검증
+- `scripts/validate_device_command_requests.py`: device command request가 action/catalog/profile 계약과 맞는지 검증
+- `scripts/validate_device_command_mappings.py`: 장치별 명령 sample을 실제 adapter 경로로 실행 검증
 - `scripts/validate_synthetic_scenarios.py`: 합성 운영 시나리오 JSONL 검증
 - `scripts/build_farm_case_rag_chunks.py`: 승인된 `farm_case` 후보를 RAG chunk JSONL로 변환
 
 ## 다음 우선순위
 
 1. `sensor-ingestor` MQTT publisher와 timeseries writer 실제 backend 연결
-2. task별 학습 seed를 20건 이상으로 확장
-3. retrieval 고정 리포트와 case regression 관리 방식 정리
-4. hard block 정책 10개와 approval 정책 10개 작성
+2. `plc_tag_modbus_tcp`를 실제 TCP/Modbus client와 실IP/실주소 테이블에 연결
+3. task별 학습 seed를 20건 이상으로 확장
+4. retrieval 고정 리포트와 case regression 관리 방식 정리
+5. hard block 정책 10개와 approval 정책 10개 작성
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

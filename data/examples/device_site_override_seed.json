@@ -1,0 +1,251 @@
+{
+  "site_id": "gh-01",
+  "site_version": "2026-04-11-a",
+  "registry_version": "2026-04-11-a",
+  "catalog_version": "2026-04-11-a",
+  "controllers": [
+    {
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "endpoint": "placeholder://gh-01-main-plc",
+      "role": "crop_climate_irrigation"
+    },
+    {
+      "controller_id": "gh-01-dry-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "endpoint": "placeholder://gh-01-dry-plc",
+      "role": "dry_room_control"
+    }
+  ],
+  "device_bindings": [
+    {
+      "device_id": "gh-01-zone-a--circulation-fan--01",
+      "profile_id": "fan_inverter_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/circulation_fan_01/speed_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/circulation_fan_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/circulation_fan_01/speed_feedback",
+        "plc_tag://gh-01-main-plc/zone_a/circulation_fan_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--circulation-fan--02",
+      "profile_id": "fan_inverter_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/circulation_fan_02/speed_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/circulation_fan_02/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/circulation_fan_02/speed_feedback",
+        "plc_tag://gh-01-main-plc/zone_a/circulation_fan_02/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--vent-window--01",
+      "profile_id": "vent_motor_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/vent_window_01/position_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/vent_window_01/position_feedback",
+        "plc_tag://gh-01-main-plc/zone_a/vent_window_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/vent_window_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--shade-curtain--01",
+      "profile_id": "shade_motor_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/shade_curtain_01/position_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/shade_curtain_01/position_feedback",
+        "plc_tag://gh-01-main-plc/zone_a/shade_curtain_01/run_state"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--irrigation-valve--01",
+      "profile_id": "valve_open_close_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/irrigation_valve_01/open_close_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/irrigation_valve_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/irrigation_valve_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--irrigation-valve--02",
+      "profile_id": "valve_open_close_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/irrigation_valve_02/open_close_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/irrigation_valve_02/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/irrigation_valve_02/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--heater--01",
+      "profile_id": "heater_run_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/heater_01/stage_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/heater_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/heater_01/stage_feedback",
+        "plc_tag://gh-01-main-plc/zone_a/heater_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-a--co2-doser--01",
+      "profile_id": "co2_valve_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_a/co2_doser_01/dose_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_a/co2_doser_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_a/co2_doser_01/dose_feedback"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--circulation-fan--01",
+      "profile_id": "fan_inverter_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/circulation_fan_01/speed_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/circulation_fan_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/circulation_fan_01/speed_feedback",
+        "plc_tag://gh-01-main-plc/zone_b/circulation_fan_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--circulation-fan--02",
+      "profile_id": "fan_inverter_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/circulation_fan_02/speed_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/circulation_fan_02/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/circulation_fan_02/speed_feedback",
+        "plc_tag://gh-01-main-plc/zone_b/circulation_fan_02/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--vent-window--01",
+      "profile_id": "vent_motor_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/vent_window_01/position_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/vent_window_01/position_feedback",
+        "plc_tag://gh-01-main-plc/zone_b/vent_window_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/vent_window_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--shade-curtain--01",
+      "profile_id": "shade_motor_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/shade_curtain_01/position_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/shade_curtain_01/position_feedback",
+        "plc_tag://gh-01-main-plc/zone_b/shade_curtain_01/run_state"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--irrigation-valve--01",
+      "profile_id": "valve_open_close_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/irrigation_valve_01/open_close_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/irrigation_valve_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/irrigation_valve_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--irrigation-valve--02",
+      "profile_id": "valve_open_close_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/irrigation_valve_02/open_close_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/irrigation_valve_02/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/irrigation_valve_02/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--heater--01",
+      "profile_id": "heater_run_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/heater_01/stage_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/heater_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/heater_01/stage_feedback",
+        "plc_tag://gh-01-main-plc/zone_b/heater_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-zone-b--co2-doser--01",
+      "profile_id": "co2_valve_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/zone_b/co2_doser_01/dose_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/zone_b/co2_doser_01/run_state",
+        "plc_tag://gh-01-main-plc/zone_b/co2_doser_01/dose_feedback"
+      ]
+    },
+    {
+      "device_id": "gh-01-nutrient-room--nutrient-mixer--01",
+      "profile_id": "fertigation_controller_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/nutrient_room/nutrient_mixer_01/recipe_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/nutrient_room/nutrient_mixer_01/recipe_stage",
+        "plc_tag://gh-01-main-plc/nutrient_room/nutrient_mixer_01/run_state",
+        "plc_tag://gh-01-main-plc/nutrient_room/nutrient_mixer_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-nutrient-room--source-water-valve--01",
+      "profile_id": "source_water_valve_feedback",
+      "controller_id": "gh-01-main-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-main-plc/nutrient_room/source_water_valve_01/open_close_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-main-plc/nutrient_room/source_water_valve_01/run_state",
+        "plc_tag://gh-01-main-plc/nutrient_room/source_water_valve_01/fault_code"
+      ]
+    },
+    {
+      "device_id": "gh-01-dry-room--dehumidifier--01",
+      "profile_id": "dehumidifier_feedback",
+      "controller_id": "gh-01-dry-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-dry-plc/dry_room/dehumidifier_01/stage_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-dry-plc/dry_room/dehumidifier_01/run_state",
+        "plc_tag://gh-01-dry-plc/dry_room/dehumidifier_01/stage_feedback"
+      ]
+    },
+    {
+      "device_id": "gh-01-dry-room--dry-fan--01",
+      "profile_id": "dry_fan_feedback",
+      "controller_id": "gh-01-dry-plc",
+      "protocol": "plc_tag_modbus_tcp",
+      "write_channel_ref": "plc_tag://gh-01-dry-plc/dry_room/dry_fan_01/speed_cmd",
+      "read_channel_refs": [
+        "plc_tag://gh-01-dry-plc/dry_room/dry_fan_01/run_state",
+        "plc_tag://gh-01-dry-plc/dry_room/dry_fan_01/speed_feedback"
+      ]
+    }
+  ]
+}

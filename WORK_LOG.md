@@ -4,6 +4,83 @@
 
 ## 2026-04-11
 
+### plc-adapter runtime endpoint와 Modbus address registry 추가
+- `docs/plc_runtime_endpoint_config.md`를 추가해 controller endpoint를 환경 변수로 주입하는 기준을 정리했다.
+- `.env.example`에 `PLC_ENDPOINT_GH_01_MAIN_PLC`, `PLC_ENDPOINT_GH_01_DRY_PLC` 예시 키를 추가했다.
+- `plc-adapter/plc_adapter/runtime_config.py`를 추가해 controller id 기반 env key 생성과 runtime endpoint override resolver를 구현했다.
+- `plc-adapter/plc_adapter/channel_refs.py`를 추가해 `plc_tag://{controller_id}/...` channel ref parser를 작성했다.
+- `docs/plc_channel_address_registry.md`를 추가해 logical channel ref와 실제 Modbus 주소를 분리 관리하는 기준을 정리했다.
+- `schemas/device_channel_address_registry_schema.json`을 추가해 address registry 구조를 JSON Schema로 고정했다.
+- `scripts/build_device_channel_address_registry.py`를 추가해 site override seed에서 placeholder Modbus address map을 생성하도록 했다.
+- `data/examples/device_channel_address_registry_seed.json`을 생성해 총 69개 channel ref에 대한 placeholder address map을 고정했다.
+- `scripts/validate_device_channel_address_registry.py`를 추가해 address registry가 site override와 1:1로 대응하고 controller/table/address가 중복되지 않는지 검증하도록 했다.
+- `plc-adapter/plc_adapter/channel_address_registry.py`를 추가해 adapter가 logical ref를 transport ref로 해석할 수 있게 했다.
+- `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`를 보강해 payload에 `write_channel_address`, `read_channel_addresses`, `transport_write_values`, `transport_mirror_read_values`, `transport_read_refs`를 포함하도록 했다.
+- adapter는 이제 write/readback 시 logical ref가 아니라 `modbus://{controller_id}/{table}/{address}` 형식의 transport ref를 사용한다.
+- 검증 결과:
+  - `python3 scripts/build_device_channel_address_registry.py` 기준 `channels 69`
+  - `python3 scripts/validate_device_channel_address_registry.py` 기준 `expected_channels 69`, `mapped_channels 69`, `errors 0`
+  - `python3 scripts/validate_device_site_overrides.py` 기준 `errors 0`
+  - `python3 scripts/validate_device_command_requests.py` 기준 `rows 3`, `errors 0`
+  - `python3 plc-adapter/demo.py` 출력에 runtime endpoint/env key와 transport ref 기반 payload가 반영되는 것을 확인했다.
+
+### 장치별 command mapping 실행 검증 추가
+- `docs/device_command_mapping_matrix.md`를 추가해 fan, shade, vent, irrigation valve, heater, co2, fertigation, source water valve의 action/parameter/encoder/ack 매핑을 정리했다.
+- `data/examples/device_command_mapping_samples.jsonl`에 대표 장치 8건 command sample을 추가했다.
+- `scripts/validate_device_command_mappings.py`를 추가해 sample을 실제 `adapter.write_device_command()` 경로로 실행하고 `transport_write_values`, `transport_read_refs`, `write_channel_address`, `read_channel_addresses`를 함께 검증하도록 했다.
+- 검증 결과:
+  - `python3 scripts/validate_device_command_requests.py --input data/examples/device_command_mapping_samples.jsonl` 기준 `rows 8`, `errors 0`
+  - `python3 scripts/validate_device_command_mappings.py` 기준 `rows 8`, `errors 0`
+  - 8건 모두 `status acknowledged`
+
+### Device Profile registry와 plc-adapter 인터페이스 강화
+- `docs/device_profile_registry.md`를 추가해 `model_profile`를 `plc-adapter` 실행 계약의 key로 쓰는 기준을 정리했다.
+- `schemas/device_profile_registry_schema.json`과 `data/examples/device_profile_registry_seed.json`을 추가해 장치 프로필 registry seed를 고정했다.
+- zone 관수밸브와 원수 메인 밸브를 서로 다른 profile로 분리했다. zone 관수밸브는 `valve_open_close_feedback`, 원수 메인 밸브는 `source_water_valve_feedback`을 사용한다.
+- `docs/plc_adapter_interface_contract.md`를 추가해 `validate_command`, `write_command`, `readback`, `evaluate_ack`를 포함한 interface contract를 정의했다.
+- `plc-adapter/plc_adapter/device_profiles.py`에 registry version 로드, parameter validation, ack success condition 평가 로직을 추가했다.
+- `plc-adapter/plc_adapter/interface.py`에 `CommandRequest`, `CommandResult` dataclass와 abstract interface를 정의했다.
+- `plc-adapter/plc_adapter/mock_adapter.py`와 `plc-adapter/demo.py`를 추가해 profile 기반 payload 생성, readback, ack 평가가 동작하는 mock skeleton을 만들었다.
+- `scripts/validate_device_profile_registry.py`를 추가해 registry, action schema, device catalog 간의 정합성을 검증하도록 했다.
+- 검증 결과:
+  - `python3 scripts/validate_device_profile_registry.py` 기준 `device_profiles 10`, `catalog_devices 20`, `referenced_profiles 10`, `errors 0`
+  - `python3 -m py_compile scripts/validate_device_profile_registry.py plc-adapter/demo.py plc-adapter/plc_adapter/device_profiles.py plc-adapter/plc_adapter/interface.py plc-adapter/plc_adapter/mock_adapter.py` 통과
+  - `python3 plc-adapter/demo.py` 기준 `fan_status acknowledged`, `source_water_status acknowledged`
+
+### plc-adapter site override address map과 resolver 추가
+- `docs/plc_site_override_map.md`를 추가해 profile과 실제 controller/channel binding을 분리하는 기준을 정리했다.
+- `schemas/device_site_override_schema.json`과 `data/examples/device_site_override_seed.json`을 추가해 `gh-01` 예시 site override seed를 작성했다.
+- seed에는 `gh-01-main-plc`, `gh-01-dry-plc` controller 2개와 PLC 장치 20개의 placeholder channel binding을 포함했다.
+- `plc-adapter/plc_adapter/device_catalog.py`를 추가해 catalog에서 `device_id -> profile_id`를 로드하도록 했다.
+- `plc-adapter/plc_adapter/site_overrides.py`를 추가해 controller/binding registry를 로드하도록 했다.
+- `plc-adapter/plc_adapter/resolver.py`를 추가해 `device_id -> profile -> controller/channel` 해석 경로를 만들었다.
+- `plc-adapter/plc_adapter/mock_adapter.py`에 resolver 연동을 추가해 payload가 profile 기본 `profile://...` 대신 site override의 `plc_tag://...` 채널을 사용하도록 바꿨다.
+- `plc-adapter/demo.py`는 이제 `profile_id`를 직접 넘기지 않고 `device_id`만으로 fan/source water valve 명령을 실행한다.
+- `scripts/validate_device_site_overrides.py`를 추가해 site override, device catalog, profile registry 정합성을 검증하도록 했다.
+- 검증 결과:
+  - `python3 scripts/validate_device_site_overrides.py` 기준 `controllers 2`, `device_bindings 20`, `plc_devices_in_catalog 20`, `errors 0`
+  - `python3 plc-adapter/demo.py` 출력 payload에 `controller_id`, `controller_endpoint`, `write_channel_ref`, `read_channel_refs`가 site override 값으로 반영되는 것을 확인했다.
+
+### plc_tag_modbus_tcp adapter skeleton 추가
+- `plc-adapter/plc_adapter/transports.py`를 추가해 `PlcTagTransport` interface와 `InMemoryPlcTagTransport`를 작성했다.
+- `plc-adapter/plc_adapter/codecs.py`를 추가해 seed profile에서 쓰는 encoder/decoder registry를 정의했다.
+- `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`를 추가해 `device_id -> profile -> controller/channel` resolve 후 transport와 codec을 사용하는 adapter runtime을 작성했다.
+- adapter에는 connect, reconnect, write, readback, timeout, retry, ack, result mapping, health check 흐름을 skeleton 수준으로 넣었다.
+- `plc-adapter/demo.py`는 이제 in-memory transport 기준 `plc_tag_modbus_tcp` adapter를 사용한다.
+- main PLC endpoint에 1회 write timeout을 의도적으로 넣고 `max_retries=1`로 fan 명령이 재시도 후 성공하는 흐름을 확인했다.
+- 검증 결과:
+  - `python3 -m py_compile scripts/validate_device_site_overrides.py plc-adapter/demo.py plc-adapter/plc_adapter/device_catalog.py plc-adapter/plc_adapter/site_overrides.py plc-adapter/plc_adapter/resolver.py plc-adapter/plc_adapter/mock_adapter.py plc-adapter/plc_adapter/transports.py plc-adapter/plc_adapter/codecs.py plc-adapter/plc_adapter/plc_tag_modbus_tcp.py` 통과
+  - `python3 plc-adapter/demo.py` 기준 `before_status ok`, `after_status ok`, `fan_command.status acknowledged`, `source_water_command.status acknowledged`
+  - demo payload에 `write_values`, site override channel, controller endpoint가 함께 반영되고 `connect_count 2`, `write_count 2`, `read_count 2`로 집계되는 것을 확인했다.
+
+### execution-gateway 저수준 command contract 추가
+- `docs/execution_gateway_command_contract.md`를 추가해 execution-gateway가 `plc-adapter`로 넘기는 저수준 장치 명령 형식을 정의했다.
+- `schemas/device_command_request_schema.json`을 추가해 `schema_version`, `device_id`, `action_type`, `parameters`, `approval_context`, `policy_snapshot` 구조를 고정했다.
+- `data/examples/device_command_request_samples.jsonl`에 fan, source water valve, heater 요청 샘플 3건을 추가했다.
+- `scripts/validate_device_command_requests.py`를 추가해 요청 샘플이 action schema, device catalog, device profile registry와 정합한지 검증하도록 했다.
+- 검증 결과:
+  - `python3 scripts/validate_device_command_requests.py` 기준 `rows 3`, `errors 0`
+
 ### sensor-ingestor MVP skeleton 추가
 - `sensor-ingestor/` 디렉터리를 추가하고 `sensor-ingestor/main.py` 진입점을 작성했다.
 - `sensor-ingestor/sensor_ingestor/config.py`에 config/catalog 로더를 추가했다.

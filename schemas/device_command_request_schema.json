@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-smartfarm-plan-v2.local/schemas/device_command_request_schema.json",
+  "title": "Execution Gateway Device Command Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "issued_at",
+    "farm_id",
+    "zone_id",
+    "device_id",
+    "action_id",
+    "action_type",
+    "parameters",
+    "approval_required",
+    "requested_by",
+    "source_decision_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "device_command_request.v1"
+    },
+    "request_id": { "type": "string", "minLength": 1 },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "farm_id": { "type": "string", "minLength": 1 },
+    "zone_id": { "type": "string", "minLength": 1 },
+    "device_id": { "type": "string", "minLength": 1 },
+    "action_id": { "type": "string", "minLength": 1 },
+    "action_type": { "type": "string", "minLength": 1 },
+    "parameters": { "type": "object" },
+    "approval_required": { "type": "boolean" },
+    "requested_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": { "type": "string", "enum": ["llm_orchestrator", "operator", "scheduler", "policy_engine"] },
+        "actor_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "source_decision_id": { "type": "string", "minLength": 1 },
+    "approval_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approval_status": { "type": "string", "enum": ["not_required", "pending", "approved", "rejected"] },
+        "approver_id": { "type": ["string", "null"] },
+        "approved_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "policy_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy_result": { "type": "string", "enum": ["pass", "approval_required", "blocked"] },
+        "policy_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "cooldown_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cooldown_active": { "type": "boolean" },
+        "remaining_seconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "operator_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manual_override": { "type": "boolean" },
+        "operator_present": { "type": "boolean" }
+      }
+    }
+  }
+}

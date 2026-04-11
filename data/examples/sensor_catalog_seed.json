@@ -732,7 +732,7 @@
       "device_type": "source_water_valve",
       "status_sample_seconds": 10,
       "priority": "should_have",
-      "model_profile": "valve_open_close_feedback",
+      "model_profile": "source_water_valve_feedback",
       "protocol": "plc_tag_modbus_tcp",
       "control_mode": "binary",
       "response_timeout_seconds": 15,
