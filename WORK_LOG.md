@@ -4,6 +4,17 @@
 
 ## 2026-04-12
 
+### batch5 / prompt_v4 초안 준비
+- ds_v3/prompt_v3 eval에서 남은 실패 8건(`pepper-eval-005`, `pepper-eval-006`, `pepper-eval-008`, `failure-eval-002`, `edge-eval-004`, `seasonal-eval-001`, `seasonal-eval-002`, `seasonal-eval-003`)을 직접 겨냥한 `batch5` seed를 추가했다.
+- 추가 파일은 `data/examples/state_judgement_samples_batch5.jsonl`, `data/examples/failure_response_samples_batch5.jsonl`이다.
+- 반영한 패턴은 `sensor_fault -> risk_level unknown + pause_automation`, `pest_disease suspicion -> medium + no robot task`, `worker_present/manual_override+safe_mode -> block_action + create_alert`, `dry-room communication_loss -> critical + enter_safe_mode`, `winter nursery -> high`, `spring transplant + Grodan slab overwet -> medium`, `summer flowering heat+radiation -> high + create_alert`다.
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V4_SYSTEM_PROMPT`를 추가했고, `scripts/evaluate_fine_tuned_model.py`도 `sft_v4` 선택을 지원하게 맞췄다.
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 22`, `sample_rows 164`, `sample_errors 0`
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 164`
+  - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v4 ...` 기준 `train_rows 150`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl` 기준 `rows 164`, `errors 0`
+
 ### ds_v3 / prompt_v3 완료와 champion 갱신
 - `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`다.
 - `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v3 --model ...:DTXjV3Hg --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3`로 eval `24건`을 재실행했다.

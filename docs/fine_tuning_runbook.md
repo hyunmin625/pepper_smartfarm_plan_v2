@@ -61,21 +61,22 @@
 - `docs/training_sample_manual_review.md` 검토 완료
 - `schemas/action_schema.json` 필수 필드와 `docs/fine_tuning_objectives.md`가 일치해야 함
 
-## 5. 아직 미완료인 항목
+## 5. 현재까지 완료된 항목
 
-- 실제 fine-tuning job 실행
-- run log 보관
-- 실패 케이스 기록
-- 결과 비교표 작성
+- 실제 fine-tuning job 실행 완료
+- run log 보관 완료
+- 실패 케이스 기록 완료
+- 결과 비교표 작성 완료
 
-위 항목은 데이터셋과 eval version을 한 번 더 고정한 뒤 실행한다.
+현재 champion은 `ds_v3/prompt_v3` 조합이며, 다음 제출 전에는 challenger 데이터셋과 prompt draft만 다시 고정하면 된다.
 
 ## 6. 다음 candidate
 
-- 다음 후보 버전은 `pepper-ops-sft-v1.2.0`로 둔다.
+- 다음 후보 버전은 `pepper-ops-sft-v1.3.0`로 둔다.
 - 기준 조합:
-  - `dataset_version=ds_v3`
-  - `prompt_version=prompt_v3`
+  - `dataset_version=ds_v4`
+  - `prompt_version=prompt_v4`
   - `eval_version=eval_v1`
-- `ds_v3`에는 batch4 실패 보강 9건을 포함한다.
-- `prompt_v3`는 ds_v2/prompt_v2 eval에서 남은 `risk_level_match 5건`, `required_action_types_present 3건`, `decision_match 1건`을 직접 겨냥한 draft다.
+- `ds_v4`에는 batch5 실패 보강 8건을 포함한다.
+- 현재 seed 총량은 `164건`이고, `prompt_v4` 전용 OpenAI SFT draft 파일은 train `150`, validation `14`다.
+- `prompt_v4`는 ds_v3/prompt_v3 eval에서 남은 `risk_level_match 5건`, `required_action_types_present 5건`을 직접 겨냥한 draft다.

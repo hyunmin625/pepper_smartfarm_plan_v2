@@ -112,3 +112,16 @@ confidence는 위험도와 별개다. `high` risk라도 근거가 명확하면 c
 - `drying/storage humidity`: 고습·재흡습 우려는 곰팡이/결로 확정 전까지 `risk_level=medium`으로 둔다.
 - `flowering heat + strong radiation`: 개화기 고온·강광은 `risk_level=high`를 기본으로 둔다.
 - `forbidden_action.adjust_fertigation`: EC/pH·배액 근거가 깨졌지만 hard interlock은 아니면 `decision=approval_required`를 기본으로 둔다.
+
+## 10. prompt_v4 초안
+
+`prompt_v4`는 ds_v3/prompt_v3 eval에서 남은 8개 실패 패턴을 직접 겨냥한다.
+
+- `sensor_fault`: 핵심 제어 센서 stale/missing/inconsistent면 `risk_level=unknown`을 우선하고 `pause_automation + request_human_check`를 필수 조합으로 둔다. `create_alert`는 대체 수단이 아니다.
+- `pest_disease_risk`: 비전 의심과 고온다습만으로는 확진하지 않고 `risk_level=medium`, `create_alert + request_human_check`를 기본으로 둔다. 의심 단계에서는 `create_robot_task`를 금지한다.
+- `worker_present`: 작업자 존재 시 `block_action + create_alert`를 필수로 두고 `request_human_check`는 보조로만 허용한다.
+- `manual_override + safe_mode`: 이미 safe mode가 latch된 상태에서는 `enter_safe_mode` 반복보다 `block_action + create_alert`를 우선한다.
+- `dry-room communication_loss`: 건조실/저장실 장치 통신 손실은 `risk_level=critical`, `enter_safe_mode + request_human_check`를 기본 조합으로 둔다. `pause_automation`만으로 끝내지 않는다.
+- `winter nursery`: 겨울 육묘기의 저온과 저광량은 `risk_level=high`, `create_alert + request_human_check`를 기본으로 두고 `adjust_heating`은 승인 후 보조로만 붙인다.
+- `spring transplant + Grodan slab overwet`: 정식 직후 저온과 암면 슬래브 과습은 `risk_level=medium`, `request_human_check`를 기본으로 두고 `short_irrigation`은 금지한다.
+- `flowering heat + strong radiation`: 개화기 고온·강광은 `risk_level=high`, `create_alert + request_human_check`를 필수로 두고 `adjust_vent/fan/shade`는 보조 대응으로만 붙인다.

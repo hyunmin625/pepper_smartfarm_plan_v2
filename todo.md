@@ -366,6 +366,7 @@
 - [x] RAG 문맥이 주어졌을 때 근거 반영률 평가 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)
 - [x] 다음 라운드용 prompt/data remediation 적용 (`data/examples/*_samples_batch3.jsonl`, `scripts/build_openai_sft_datasets.py`, `artifacts/reports/fine_tuned_model_eval_prompt_v2.md`)
 - [x] 남은 9개 실패 케이스 기준 batch4/prompt_v3 초안 반영 (`data/examples/*_samples_batch4.jsonl`, `scripts/build_openai_sft_datasets.py`, `docs/fine_tuning_objectives.md`)
+- [x] 남은 8개 실패 케이스 기준 batch5/prompt_v4 초안 반영 (`data/examples/*_samples_batch5.jsonl`, `scripts/build_openai_sft_datasets.py`, `docs/fine_tuning_objectives.md`)
 - [ ] 검색 근거 부족 시 불확실성 표현 평가
 - [ ] hallucination 사례 정리
 - [x] confidence calibration 검토 (`scripts/evaluate_fine_tuned_model.py`, `artifacts/reports/fine_tuned_model_eval_latest.md`)

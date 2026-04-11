@@ -28,7 +28,12 @@ except Exception:  # pragma: no cover
     BadRequestError = Exception
     RateLimitError = Exception
 
-from build_openai_sft_datasets import LEGACY_SYSTEM_PROMPT, SFT_V2_SYSTEM_PROMPT, SFT_V3_SYSTEM_PROMPT
+from build_openai_sft_datasets import (
+    LEGACY_SYSTEM_PROMPT,
+    SFT_V2_SYSTEM_PROMPT,
+    SFT_V3_SYSTEM_PROMPT,
+    SFT_V4_SYSTEM_PROMPT,
+)
 
 
 DEFAULT_MODEL = (
@@ -86,6 +91,7 @@ SYSTEM_PROMPT_BY_VERSION = {
     "legacy": LEGACY_SYSTEM_PROMPT,
     "sft_v2": SFT_V2_SYSTEM_PROMPT,
     "sft_v3": SFT_V3_SYSTEM_PROMPT,
+    "sft_v4": SFT_V4_SYSTEM_PROMPT,
 }
 
 

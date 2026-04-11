@@ -39,15 +39,16 @@
 - 핵심 센서 1차 상용 모델 shortlist 완료: `HMP110`, `GMP252`, `SQ-522-SS`, `TEROS 12`, `Guardian Inline Wi-Fi`, `WXT536`
 - 장치별 최소/최대 setpoint 범위 고정 완료: fan/vent/shade/irrigation/heater/CO2/fertigation/dehumidifier/dry-fan
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광 우선순위, 관수 펄스 원칙, CO2/난방/건조실 운전 SOP 반영
-- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `156건`
-- 학습 seed 중복/모순 감사 자동화 완료: `156개` sample 기준 duplicate `0`, contradiction `0`
+- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `164건`
+- 학습 seed 중복/모순 감사 자동화 완료: `164개` sample 기준 duplicate `0`, contradiction `0`
 - 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
-- 학습/eval 합본 생성과 통계 리포트 완료: training `147건`, eval `24건`, class imbalance/action_type/길이 분포 확인, longest sample 수동 검토 완료
+- 학습/eval 합본 생성과 통계 리포트 완료: training `164건`, eval `24건`, class imbalance/action_type/길이 분포 확인, longest sample 수동 검토 완료
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
 - 최신 fine-tuned model 확보 완료: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`
 - 최신 fine-tuned model eval 완료: `24건` 기준 pass rate `0.6667`, strict JSON rate `1.0`, top failure는 `risk_level_match 5건`, `required_action_types_present 5건`
 - baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v3/prompt_v3 결과가 `+0.1250`, 직전 ds_v2/prompt_v2 champion `0.625` 대비 `+0.0417` 개선됐다.
+- 다음 라운드용 `batch5/prompt_v4` draft 준비 완료: 남은 8개 실패 케이스를 반영해 seed를 `164건`으로 확장했고, OpenAI SFT draft 파일은 train `150`, validation `14`로 생성·검증을 마쳤다.
 - edge case/계절별 평가셋 추가 완료: eval 파일 `7종`, eval row `24건`
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
@@ -208,7 +209,7 @@
 
 ## 다음 우선순위
 
-1. ds_v3/prompt_v3 eval에서 남은 `risk_level_match 5건`, `required_action_types_present 5건` 실패를 기준으로 seasonal/failure/safety 데이터셋을 보강
+1. `ds_v4/prompt_v4` 후보를 submit해 남은 `risk_level_match 5건`, `required_action_types_present 5건` 실패가 실제로 줄어드는지 비교 평가
 2. 검색 근거 부족 시 불확실성 표현과 hallucination 사례를 사람 검토로 정리
 3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
 4. offline runner/state-estimator MVP 착수 범위를 확정
