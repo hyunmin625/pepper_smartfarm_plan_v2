@@ -25,26 +25,26 @@
 # 0. 프로젝트 관리 초기화
 
 ## 0.0 온실 공사중 전제 반영
-- [ ] 온실 공사 일정과 AI 준비 일정 분리
-- [ ] 실측 데이터 수집 전 AI 준비 범위 정의
-- [ ] 공사 완료 전 사용 가능한 문서/시뮬레이션/합성 데이터 목록화
+- [x] 온실 공사 일정과 AI 준비 일정 분리 (`AI_MLOPS_PLAN.md`, `schedule.md`)
+- [x] 실측 데이터 수집 전 AI 준비 범위 정의 (`AI_MLOPS_PLAN.md`)
+- [x] 공사 완료 전 사용 가능한 문서/시뮬레이션/합성 데이터 목록화 (`AI_MLOPS_PLAN.md`, `docs/rag_source_inventory.md`, `data/examples/synthetic_sensor_scenarios.jsonl`)
 - [ ] 공사 완료 후 센서 연결 전환 절차 정의
-- [ ] AI 준비 → 센서 계획 → 센서 구현 → 제어 계획 → 제어 구현 → UI → AI 연결 순서 확정
+- [x] AI 준비 → 센서 계획 → 센서 구현 → 제어 계획 → 제어 구현 → UI → AI 연결 순서 확정 (`AI_MLOPS_PLAN.md`, `schedule.md`, `PLAN.md`)
 
 ## 0.1 프로젝트 구조 정의
 - [ ] 프로젝트 코드명 확정
-- [ ] 저장소 구조 정의
+- [x] 저장소 구조 정의 (`AGENTS.md`, `README.md`)
 - [ ] monorepo 여부 결정
-- [ ] 서비스별 디렉터리 구조 설계
+- [x] 서비스별 디렉터리 구조 설계 (`AGENTS.md`)
 - [ ] 공통 라이브러리 디렉터리 정의
-- [ ] infra 디렉터리 구조 정의
-- [ ] docs 디렉터리 구조 정의
-- [ ] data 디렉터리 구조 정의
-- [ ] experiments 디렉터리 구조 정의
+- [x] infra 디렉터리 구조 정의 (`AGENTS.md`)
+- [x] docs 디렉터리 구조 정의 (`AGENTS.md`)
+- [x] data 디렉터리 구조 정의 (`AGENTS.md`)
+- [x] experiments 디렉터리 구조 정의 (`AGENTS.md`)
 
 ## 0.2 형상관리/협업 준비
 - [ ] Git 브랜치 전략 정의
-- [ ] commit convention 정의
+- [x] commit convention 정의 (`AGENTS.md`)
 - [ ] PR 템플릿 작성
 - [ ] issue 템플릿 작성
 - [ ] ADR(Architecture Decision Record) 템플릿 작성
@@ -53,13 +53,13 @@
 
 ## 0.3 개발 환경 공통화
 - [ ] Python 버전 고정
-- [ ] 가상환경 전략 정의
+- [x] 가상환경 전략 정의 (`evals/README.md`, `WORK_LOG.md`)
 - [ ] package manager 선택
 - [ ] 린터 선택
 - [ ] formatter 선택
 - [ ] type checker 선택
 - [ ] pre-commit hook 구성
-- [ ] 환경 변수 템플릿 작성
+- [x] 환경 변수 템플릿 작성 (`.env.example`)
 - [ ] dev/staging/prod 환경 변수 분리
 
 ## 0.4 문서 기반 정리
@@ -69,7 +69,7 @@
 - [x] sensor_id 규칙 정의 (`docs/sensor_collection_plan.md`)
 - [x] device_id 규칙 정의 (`docs/sensor_collection_plan.md`)
 - [ ] robot_id 규칙 정의
-- [ ] action_type enum 초안 작성
+- [x] action_type enum 초안 작성 (`schemas/action_schema.json`)
 - [ ] 이벤트 이름 규칙 정의
 
 ---
@@ -78,10 +78,10 @@
 
 ## 1.1 현장 범위 확정
 - [ ] 대상 온실 수 확정
-- [ ] 초기 적용 zone 확정
-- [ ] 작물 범위 확정
+- [x] 초기 적용 zone 확정 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
+- [x] 작물 범위 확정 (`README.md`, `PROJECT_STATUS.md`, `PLAN.md`)
 - [ ] 품종 범위 확정
-- [ ] 생육 단계 운영 범위 정의
+- [x] 생육 단계 운영 범위 정의 (`docs/expert_knowledge_map.md`, `EXPERT_AI_AGENT_PLAN.md`)
 - [ ] 낮/밤 운영 정책 정의
 - [ ] 계절별 운영 범위 정의
 
@@ -117,13 +117,13 @@
 - [x] device `model_profile` 기준 정의 (`docs/sensor_installation_inventory.md`, `schemas/sensor_catalog_schema.json`)
 
 ## 1.4 운영 시나리오 정리
-- [ ] 정상 운영 시나리오 작성
-- [ ] 고온 시나리오 작성
+- [x] 정상 운영 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
+- [x] 고온 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
 - [ ] 고습 시나리오 작성
 - [ ] 급격한 일사 증가 시나리오 작성
 - [ ] 과건조 시나리오 작성
-- [ ] 과습 시나리오 작성
-- [ ] 센서 고장 시나리오 작성
+- [x] 과습 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
+- [x] 센서 고장 시나리오 작성 (`data/examples/synthetic_sensor_scenarios.jsonl`)
 - [ ] 장치 stuck 시나리오 작성
 - [ ] 통신 장애 시나리오 작성
 - [ ] 정전/재기동 시나리오 작성
@@ -145,22 +145,22 @@
 # 2. 도메인 지식/데이터 준비
 
 ## 2.1 고추 재배 지식셋 정리
-- [ ] 기존 문서 수집
-- [ ] 재배 매뉴얼 정리
-- [ ] 생육 단계별 환경 목표 정리
-- [ ] 관수 기준 정리
-- [ ] EC/pH 관리 기준 정리
-- [ ] 병해 위험 조건 정리
-- [ ] 수확 적기 기준 정리
+- [x] 기존 문서 수집 (`docs/rag_source_inventory.md`)
+- [x] 재배 매뉴얼 정리 (`docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] 생육 단계별 환경 목표 정리 (`docs/expert_knowledge_map.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] 관수 기준 정리 (`docs/expert_knowledge_map.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] EC/pH 관리 기준 정리 (`docs/expert_knowledge_map.md`, `docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] 병해 위험 조건 정리 (`docs/expert_knowledge_map.md`, `docs/rag_source_inventory.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
+- [x] 수확 적기 기준 정리 (`docs/expert_knowledge_map.md`, `data/rag/pepper_expert_seed_chunks.jsonl`)
 - [ ] 품종별 차이 정리
 - [ ] 온실 외기 영향 정리
 - [ ] 장치 운전 경험 규칙 정리
 
 ## 2.2 데이터셋 분류 체계 정의
 - [ ] Q&A 데이터 분류
-- [ ] 상태판단 데이터 분류
+- [x] 상태판단 데이터 분류 (`data/examples/state_judgement_samples.jsonl`, `evals/expert_judgement_eval_set.jsonl`)
 - [ ] 행동추천 데이터 분류
-- [ ] 금지행동 데이터 분류
+- [x] 금지행동 데이터 분류 (`data/examples/forbidden_action_samples.jsonl`)
 - [ ] 실패대응 데이터 분류
 - [ ] 로봇작업 데이터 분류
 - [ ] 알람/보고서 데이터 분류
@@ -188,14 +188,14 @@
 - [ ] 후속 확인 항목 통일
 
 ## 2.5 평가셋 구축
-- [ ] 상태판단 평가셋 구축
+- [x] 상태판단 평가셋 구축 (`evals/expert_judgement_eval_set.jsonl`)
 - [ ] 행동추천 평가셋 구축
 - [ ] 금지행동 평가셋 구축
 - [ ] 장애대응 평가셋 구축
 - [ ] 로봇 작업 우선순위 평가셋 구축
 - [ ] edge case 평가셋 구축
 - [ ] 계절별 평가셋 구축
-- [ ] 센서 이상 포함 평가셋 구축
+- [x] 센서 이상 포함 평가셋 구축 (`evals/expert_judgement_eval_set.jsonl`)
 
 ## 2.6 RAG 지식베이스 구축 [진행 중]
 - [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)
@@ -430,14 +430,14 @@
 
 ## 6.1 수집 아키텍처 정의
 - [ ] polling vs event 방식 결정
-- [ ] 샘플링 주기 결정
+- [x] 샘플링 주기 결정 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
 - [ ] timestamp 기준 정의
 - [ ] 데이터 손실 처리 방식 정의
 - [ ] 재전송 정책 정의
 - [ ] 장애 시 buffer 정책 정의
-- [ ] AI 학습용 raw data와 feature data 분리 저장 방식 정의
-- [ ] 센서 이벤트와 장치 명령 시간축 정렬 방식 정의
-- [ ] calibration_version 저장 방식 정의
+- [x] AI 학습용 raw data와 feature data 분리 저장 방식 정의 (`AI_MLOPS_PLAN.md`, `docs/sensor_collection_plan.md`)
+- [x] 센서 이벤트와 장치 명령 시간축 정렬 방식 정의 (`AI_MLOPS_PLAN.md`)
+- [x] calibration_version 저장 방식 정의 (`docs/sensor_collection_plan.md`)
 
 ## 6.1.1 센서 수집 계획 보강
 - [x] 환경 센서 목록 확정: 온도, 습도, CO2, 광량/PAR, 일사량 (`docs/sensor_collection_plan.md`)
@@ -586,19 +586,19 @@
 - [ ] constraints 삽입 방식 설계
 
 ## 9.3 툴/함수 설계
-- [ ] get_zone_state 정의
-- [ ] get_recent_trend 정의
-- [ ] get_active_constraints 정의
+- [x] get_zone_state 정의 (`docs/agent_tool_design.md`)
+- [x] get_recent_trend 정의 (`docs/agent_tool_design.md`)
+- [x] get_active_constraints 정의 (`docs/agent_tool_design.md`)
 - [ ] get_device_status 정의
 - [ ] get_weather_context 정의
-- [ ] search_cultivation_knowledge 정의
+- [x] search_cultivation_knowledge 정의 (`docs/agent_tool_design.md`)
 - [ ] search_site_sop 정의
 - [ ] get_retrieval_citations 정의
 - [ ] get_vision_candidates 정의
 - [ ] request_device_action 정의
 - [ ] request_robot_task 정의
-- [ ] request_human_approval 정의
-- [ ] log_decision 정의
+- [x] request_human_approval 정의 (`docs/agent_tool_design.md`)
+- [x] log_decision 정의 (`docs/agent_tool_design.md`)
 
 ## 9.4 llm-orchestrator 구현
 - [ ] API client 구성
@@ -1096,20 +1096,20 @@
 # 23. 즉시 착수 우선순위
 
 ## 이번 주 바로 시작할 일
-- [ ] state schema 초안 작성
-- [ ] action schema 초안 작성
-- [ ] RAG 문서 범위와 메타데이터 초안 작성
-- [ ] 적고추/건고추 재배 문서 수집 목록 작성
+- [x] state schema 초안 작성 (`schemas/state_schema.json`)
+- [x] action schema 초안 작성 (`schemas/action_schema.json`)
+- [x] RAG 문서 범위와 메타데이터 초안 작성 (`docs/rag_source_inventory.md`, `docs/rag_indexing_plan.md`)
+- [x] 적고추/건고추 재배 문서 수집 목록 작성 (`docs/rag_source_inventory.md`)
 - [ ] 기존 파인튜닝 데이터 재분류
 - [ ] 행동추천 JSON 샘플 100개 작성
 - [ ] 금지행동 샘플 100개 작성
-- [ ] sensor/device inventory 문서 작성
+- [x] sensor/device inventory 문서 작성 (`docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [ ] policy 초안 20개 작성
 - [ ] llm-orchestrator 인터페이스 초안 작성
 
 ## 그 다음 주
-- [ ] RAG vector store PoC 작성
-- [ ] 검색 품질 평가셋 작성
+- [x] RAG vector store PoC 작성 (`scripts/build_chroma_index.py`, `scripts/rag_chroma_store.py`)
+- [x] 검색 품질 평가셋 작성 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
 - [ ] sensor-ingestor MVP 작성
 - [ ] state-estimator MVP 작성
 - [ ] policy-engine MVP 작성

@@ -308,6 +308,13 @@
 - `data/examples/sensor_catalog_seed.json`를 인스턴스 단위 현장형 카탈로그로 교체했다. 현재 기준치는 센서 29개, 장치 20개다.
 - `docs/sensor_collection_plan.md`, `AI_MLOPS_PLAN.md`, `PROJECT_STATUS.md`, `README.md`, `todo.md`, `data/examples/README.md`에 현장형 인벤토리 상태를 반영했다.
 
+### todo 진행 상태 정합화
+- `todo.md`를 현재 산출물과 대조해 완료됐는데 미체크 상태였던 항목을 반영했다.
+- 상위 관리 항목에서는 온실 공사중 전제, 개정 개발 순서, 저장소 구조, commit convention, 가상환경/.env 템플릿 상태를 반영했다.
+- 도메인/데이터 항목에서는 지식셋 정리, 상태판단·금지행동 데이터 분류, 상태판단/센서 이상 평가셋 구축 상태를 반영했다.
+- 아키텍처 항목에서는 수집 주기, raw/feature 분리, calibration_version, Agent tool contract 정의 상태를 반영했다.
+- 즉시 착수 우선순위에서는 state/action schema, RAG source inventory, sensor/device inventory, vector store PoC, retrieval eval 진행 상태를 최신화했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
