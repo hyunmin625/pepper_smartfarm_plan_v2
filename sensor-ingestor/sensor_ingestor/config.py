@@ -30,6 +30,9 @@ class LoadedConfig:
     catalog_path: Path
     config: dict[str, Any]
     catalog: dict[str, Any]
+    poller_profiles: dict[str, dict[str, Any]]
+    connections: dict[str, dict[str, Any]]
+    quality_rule_sets: dict[str, dict[str, Any]]
     sensors: dict[str, dict[str, Any]]
     devices: dict[str, dict[str, Any]]
     publish_targets: dict[str, dict[str, Any]]
@@ -41,6 +44,21 @@ class LoadedConfig:
         resolved_catalog = Path(catalog_path) if catalog_path else resolve_catalog_path(config_file, config["catalog_ref"])
         catalog = load_json(resolved_catalog)
 
+        poller_profiles = {
+            item["profile_id"]: item
+            for item in config.get("poller_profiles", [])
+            if isinstance(item, dict) and isinstance(item.get("profile_id"), str)
+        }
+        connections = {
+            item["connection_id"]: item
+            for item in config.get("connections", [])
+            if isinstance(item, dict) and isinstance(item.get("connection_id"), str)
+        }
+        quality_rule_sets = {
+            item["rule_set_id"]: item
+            for item in config.get("quality_rule_sets", [])
+            if isinstance(item, dict) and isinstance(item.get("rule_set_id"), str)
+        }
         sensors = {
             item["sensor_id"]: item
             for item in catalog.get("sensors", [])
@@ -62,6 +80,9 @@ class LoadedConfig:
             catalog_path=resolved_catalog,
             config=config,
             catalog=catalog,
+            poller_profiles=poller_profiles,
+            connections=connections,
+            quality_rule_sets=quality_rule_sets,
             sensors=sensors,
             devices=devices,
             publish_targets=publish_targets,

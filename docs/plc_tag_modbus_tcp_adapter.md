@@ -12,14 +12,17 @@
 - timeout 시 reconnect 후 retry
 - ack policy 평가와 result mapping
 
-현재 단계에서는 실제 PLC 네트워크 대신 in-memory transport를 사용한다.
+현재 구현은 두 경로를 가진다.
+
+- 기본 검증: `InMemoryPlcTagTransport`
+- 실제 연결용 optional path: `PymodbusTcpTransport`
 
 ## 2. 구성 요소
 
 - `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`
   - adapter runtime
 - `plc-adapter/plc_adapter/transports.py`
-  - `PlcTagTransport`, `InMemoryPlcTagTransport`
+  - `PlcTagTransport`, `InMemoryPlcTagTransport`, `PymodbusTcpTransport`
 - `plc-adapter/plc_adapter/codecs.py`
   - encoder/decoder registry
 - `plc-adapter/plc_adapter/channel_address_registry.py`
@@ -39,7 +42,16 @@
 
 ## 4. 현재 제한
 
-- 실제 Modbus TCP client는 아직 미연결이다.
+- `PymodbusTcpTransport`는 optional dependency `pymodbus`가 필요하다.
 - 현재 address registry는 placeholder 주소지만 구조는 실주소와 동일하다.
-- codec은 현재 seed profile에 필요한 encoder/decoder만 포함한다.
-- 장애 코드는 transport/PLC vendor별 규격이 확정되면 추가한다.
+- codec은 seed profile 기준 raw register/coil 값만 다루며, site-specific recipe code map은 아직 placeholder다.
+- vendor fault code는 `docs/plc_modbus_governance.md`의 공통 장애 코드 위에 추가해야 한다.
+
+## 5. 현재 검증 범위
+
+- `scripts/validate_plc_modbus_transport.py`
+  - fake Modbus client 기준 `PymodbusTcpTransport` write/readback 검증
+  - 첫 write timeout 뒤 reconnect/retry 성공 경로 검증
+  - 무응답 endpoint에서 `timeout`과 transport health degradation 검증
+- `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`
+  - `latency_ms`를 실제 write+readback 경과시간으로 기록

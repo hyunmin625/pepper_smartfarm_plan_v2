@@ -8,7 +8,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 from typing import Any
 
+from .backends import PublishRouter
 from .config import LoadedConfig
+from .quality import SensorHistoryEntry, evaluate_device_quality, evaluate_sensor_quality
 
 
 def utc_now() -> str:
@@ -59,6 +61,20 @@ def default_device_readback(device_type: str) -> dict[str, Any]:
     return {"run_state": "unknown"}
 
 
+def merge_override(record: dict[str, Any], override: dict[str, Any] | None) -> dict[str, Any]:
+    if not override:
+        return record
+    merged = dict(record)
+    for key, value in override.items():
+        if key in {"values", "readback"} and isinstance(value, dict):
+            current = dict(merged.get(key, {}))
+            current.update(value)
+            merged[key] = current
+            continue
+        merged[key] = value
+    return merged
+
+
 @dataclass
 class RuntimeMetrics:
     run_count: int = 0
@@ -66,6 +82,10 @@ class RuntimeMetrics:
     device_groups_processed: int = 0
     sensor_records_published: int = 0
     device_records_published: int = 0
+    mqtt_messages_published: int = 0
+    timeseries_records_written: int = 0
+    object_store_records_written: int = 0
+    anomaly_alerts_emitted: int = 0
     publish_target_counts: Counter[str] = field(default_factory=Counter)
     last_run_at: str | None = None
     last_error: str | None = None
@@ -87,28 +107,27 @@ class RuntimeMetrics:
             "# HELP sensor_ingestor_device_records_published Total normalized device records",
             "# TYPE sensor_ingestor_device_records_published counter",
             f"sensor_ingestor_device_records_published {self.device_records_published}",
+            "# HELP sensor_ingestor_mqtt_messages_published Total MQTT envelopes written",
+            "# TYPE sensor_ingestor_mqtt_messages_published counter",
+            f"sensor_ingestor_mqtt_messages_published {self.mqtt_messages_published}",
+            "# HELP sensor_ingestor_timeseries_records_written Total timeseries points written",
+            "# TYPE sensor_ingestor_timeseries_records_written counter",
+            f"sensor_ingestor_timeseries_records_written {self.timeseries_records_written}",
+            "# HELP sensor_ingestor_anomaly_alerts_emitted Total anomaly alerts emitted",
+            "# TYPE sensor_ingestor_anomaly_alerts_emitted counter",
+            f"sensor_ingestor_anomaly_alerts_emitted {self.anomaly_alerts_emitted}",
         ]
         for target_id, count in sorted(self.publish_target_counts.items()):
             lines.append(f'sensor_ingestor_publish_target_total{{target_id="{target_id}"}} {count}')
         return "\n".join(lines) + "\n"
 
 
-class InMemoryPublisher:
-    def __init__(self, publish_targets: dict[str, dict[str, Any]]) -> None:
-        self.publish_targets = publish_targets
-        self.last_payloads: dict[str, list[dict[str, Any]]] = {}
-
-    def publish(self, target_ids: list[str], records: list[dict[str, Any]], metrics: RuntimeMetrics) -> None:
-        for target_id in target_ids:
-            self.last_payloads[target_id] = records[:2]
-            metrics.publish_target_counts[target_id] += len(records)
-
-
 class SensorIngestorService:
     def __init__(self, loaded: LoadedConfig) -> None:
         self.loaded = loaded
         self.metrics = RuntimeMetrics()
-        self.publisher = InMemoryPublisher(loaded.publish_targets)
+        self.publisher = PublishRouter(loaded.publish_targets)
+        self.sensor_history: dict[str, SensorHistoryEntry] = {}
         self._http_server: ThreadingHTTPServer | None = None
         self._http_thread: Thread | None = None
 
@@ -126,48 +145,52 @@ class SensorIngestorService:
     def _device_groups(self) -> list[dict[str, Any]]:
         return [group for group in self.loaded.config.get("device_binding_groups", []) if group.get("enabled", False)]
 
-    def _read_sensor_group(self, group: dict[str, Any]) -> list[dict[str, Any]]:
+    def _read_sensor_group(self, group: dict[str, Any], overrides: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
         measured_at = utc_now()
         records: list[dict[str, Any]] = []
+        poller_profile = self.loaded.poller_profiles[group["poller_profile_id"]]
         for sensor_id in group["sensor_ids"]:
             sensor = self.loaded.sensors[sensor_id]
             values = {
                 field_name: default_value_for_field(field_name)
                 for field_name in sensor["measurement_fields"]
             }
-            records.append(
-                {
-                    "record_kind": "sensor",
-                    "site_id": self.site_id,
-                    "zone_id": sensor["zone_id"],
-                    "sensor_id": sensor_id,
-                    "sensor_type": sensor["sensor_type"],
-                    "measured_at": measured_at,
-                    "protocol": sensor["protocol"],
-                    "parser_id": group["parser_id"],
-                    "values": values,
-                }
-            )
+            base_record = {
+                "record_kind": "sensor",
+                "site_id": self.site_id,
+                "zone_id": sensor["zone_id"],
+                "sensor_id": sensor_id,
+                "sensor_type": sensor["sensor_type"],
+                "measured_at": measured_at,
+                "protocol": sensor["protocol"],
+                "parser_id": group["parser_id"],
+                "poll_interval_seconds": poller_profile["poll_interval_seconds"],
+                "quality_rule_set_id": group["quality_rule_set_id"],
+                "transport_status": "ok",
+                "calibration_due": False,
+                "values": values,
+            }
+            records.append(merge_override(base_record, overrides.get(sensor_id)))
         return records
 
-    def _read_device_group(self, group: dict[str, Any]) -> list[dict[str, Any]]:
+    def _read_device_group(self, group: dict[str, Any], overrides: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
         measured_at = utc_now()
         records: list[dict[str, Any]] = []
         for device_id in group["device_ids"]:
             device = self.loaded.devices[device_id]
-            records.append(
-                {
-                    "record_kind": "device",
-                    "site_id": self.site_id,
-                    "zone_id": device["zone_id"],
-                    "device_id": device_id,
-                    "device_type": device["device_type"],
-                    "measured_at": measured_at,
-                    "protocol": device["protocol"],
-                    "parser_id": group["parser_id"],
-                    "readback": default_device_readback(device["device_type"]),
-                }
-            )
+            base_record = {
+                "record_kind": "device",
+                "site_id": self.site_id,
+                "zone_id": device["zone_id"],
+                "device_id": device_id,
+                "device_type": device["device_type"],
+                "measured_at": measured_at,
+                "protocol": device["protocol"],
+                "parser_id": group["parser_id"],
+                "transport_status": "ok",
+                "readback": default_device_readback(device["device_type"]),
+            }
+            records.append(merge_override(base_record, overrides.get(device_id)))
         return records
 
     def _parse_records(self, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -178,59 +201,126 @@ class SensorIngestorService:
             parsed.append(record_copy)
         return parsed
 
-    def _normalize_records(self, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        normalized: list[dict[str, Any]] = []
-        for record in records:
-            base = {
+    def _normalize_sensor_record(self, record: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None]:
+        sensor = self.loaded.sensors[record["sensor_id"]]
+        rule_set = self.loaded.quality_rule_sets[record["quality_rule_set_id"]]
+        assessment, next_history = evaluate_sensor_quality(
+            measured_at=record["measured_at"],
+            values=record["values"],
+            rule_set=rule_set,
+            sample_interval_seconds=record["poll_interval_seconds"],
+            previous=self.sensor_history.get(record["sensor_id"]),
+            transport_status=record.get("transport_status", "ok"),
+            calibration_due=bool(record.get("calibration_due", False)),
+        )
+        self.sensor_history[record["sensor_id"]] = next_history
+        normalized = {
+            "site_id": record["site_id"],
+            "zone_id": record["zone_id"],
+            "measured_at": record["measured_at"],
+            "source": "sensor-ingestor",
+            "sensor_id": record["sensor_id"],
+            "sensor_type": record["sensor_type"],
+            "values": record["values"],
+            "calibration_version": f"{sensor['model_profile']}-baseline",
+            "quality_flag": assessment.quality_flag,
+            "quality_reason": assessment.quality_reason,
+            "automation_gate": assessment.automation_gate,
+            "quality_details": assessment.details,
+        }
+        alert = None
+        if assessment.quality_flag != "good":
+            alert = {
+                "alert_type": "sensor_anomaly",
                 "site_id": record["site_id"],
                 "zone_id": record["zone_id"],
+                "sensor_id": record["sensor_id"],
+                "sensor_type": record["sensor_type"],
                 "measured_at": record["measured_at"],
-                "source": "sensor-ingestor",
-                "quality_flag": "good",
+                "quality_flag": assessment.quality_flag,
+                "quality_reason": assessment.quality_reason,
+                "details": assessment.details,
             }
+        return normalized, alert
+
+    def _normalize_device_record(self, record: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None]:
+        assessment = evaluate_device_quality(
+            readback=record["readback"],
+            transport_status=record.get("transport_status", "ok"),
+        )
+        normalized = {
+            "site_id": record["site_id"],
+            "zone_id": record["zone_id"],
+            "measured_at": record["measured_at"],
+            "source": "sensor-ingestor",
+            "device_id": record["device_id"],
+            "device_type": record["device_type"],
+            "readback": record["readback"],
+            "quality_flag": assessment.quality_flag,
+            "quality_reason": assessment.quality_reason,
+            "automation_gate": assessment.automation_gate,
+            "quality_details": assessment.details,
+        }
+        alert = None
+        if assessment.quality_flag != "good":
+            alert = {
+                "alert_type": "device_readback_anomaly",
+                "site_id": record["site_id"],
+                "zone_id": record["zone_id"],
+                "device_id": record["device_id"],
+                "device_type": record["device_type"],
+                "measured_at": record["measured_at"],
+                "quality_flag": assessment.quality_flag,
+                "quality_reason": assessment.quality_reason,
+                "details": assessment.details,
+            }
+        return normalized, alert
+
+    def _normalize_records(self, records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        normalized: list[dict[str, Any]] = []
+        alerts: list[dict[str, Any]] = []
+        for record in records:
             if record["record_kind"] == "sensor":
-                sensor = self.loaded.sensors[record["sensor_id"]]
-                normalized.append(
-                    {
-                        **base,
-                        "sensor_id": record["sensor_id"],
-                        "sensor_type": record["sensor_type"],
-                        "values": record["values"],
-                        "calibration_version": f"{sensor['model_profile']}-baseline",
-                    }
-                )
+                normalized_record, alert = self._normalize_sensor_record(record)
             else:
-                normalized.append(
-                    {
-                        **base,
-                        "device_id": record["device_id"],
-                        "device_type": record["device_type"],
-                        "readback": record["readback"],
-                    }
-                )
-        return normalized
+                normalized_record, alert = self._normalize_device_record(record)
+            normalized.append(normalized_record)
+            if alert is not None:
+                alerts.append(alert)
+        return normalized, alerts
 
     def run_once(
         self,
         *,
         limit_sensor_groups: int | None = None,
         limit_device_groups: int | None = None,
+        overrides: dict[str, dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         processed_sensor_groups: list[str] = []
         processed_device_groups: list[str] = []
+        alerts_emitted: list[dict[str, Any]] = []
+        record_overrides = overrides or {}
 
         try:
             for group in self._sensor_groups()[:limit_sensor_groups]:
-                normalized = self._normalize_records(self._parse_records(self._read_sensor_group(group)))
+                normalized, alerts = self._normalize_records(
+                    self._parse_records(self._read_sensor_group(group, record_overrides))
+                )
                 self.publisher.publish(group["publish_targets"], normalized, self.metrics)
+                self.publisher.publish_alerts(alerts, self.metrics)
                 processed_sensor_groups.append(group["binding_group_id"])
+                alerts_emitted.extend(alerts)
                 self.metrics.sensor_groups_processed += 1
                 self.metrics.sensor_records_published += len(normalized)
 
             for group in self._device_groups()[:limit_device_groups]:
-                normalized = self._normalize_records(self._parse_records(self._read_device_group(group)))
+                normalized, alerts = self._normalize_records(
+                    self._parse_records(self._read_device_group(group, record_overrides))
+                )
                 self.publisher.publish(group["publish_targets"], normalized, self.metrics)
+                self.publisher.publish_alerts(alerts, self.metrics)
                 processed_device_groups.append(group["binding_group_id"])
+                alerts_emitted.extend(alerts)
                 self.metrics.device_groups_processed += 1
                 self.metrics.device_records_published += len(normalized)
 
@@ -249,8 +339,11 @@ class SensorIngestorService:
             "processed_device_groups": processed_device_groups,
             "sensor_records_published": self.metrics.sensor_records_published,
             "device_records_published": self.metrics.device_records_published,
+            "anomaly_alerts_emitted": self.metrics.anomaly_alerts_emitted,
+            "backend_status": self.publisher.status_payload(),
+            "alert_preview": alerts_emitted[:3],
             "health": self.health_payload(),
-            "metrics_preview": self.metrics.as_prometheus().splitlines()[:8],
+            "metrics_preview": self.metrics.as_prometheus().splitlines()[:14],
         }
 
     def health_payload(self) -> dict[str, Any]:
@@ -262,6 +355,9 @@ class SensorIngestorService:
             "last_error": self.metrics.last_error,
             "sensor_groups_processed": self.metrics.sensor_groups_processed,
             "device_groups_processed": self.metrics.device_groups_processed,
+            "mqtt_messages_published": self.metrics.mqtt_messages_published,
+            "timeseries_records_written": self.metrics.timeseries_records_written,
+            "anomaly_alerts_emitted": self.metrics.anomaly_alerts_emitted,
         }
 
     def start_http_server(self, port: int) -> None:

@@ -4,6 +4,81 @@
 
 ## 2026-04-11
 
+### 현장 범위와 품종 shortlist, 낮/밤 운영 기준 고정
+- `docs/site_scope_baseline.md`를 추가해 대상 현장을 `300평 연동형 비닐온실 1동`, `gh-01` 기준으로 고정했다.
+- 물리적으로는 대형 온실 1개지만 수집/제어/평가를 위해 `zone-a`, `zone-b`, `outside`, `nutrient-room`, `dry-room`의 논리 zone 5개를 유지하도록 정리했다.
+- 건고추/고춧가루용 적고추 품종 범위를 `왕조`, `칼탄열풍`, `조생강탄` shortlist로 좁혔다.
+- 현재 판매/추천 기사 기준으로는 `왕조`를 기본 기준 품종으로 두고, 병해·바이러스 대응은 `칼탄열풍`, 조생·강한 매운맛은 `조생강탄`을 대안으로 정리했다.
+- 공식 점유율 통계는 확인하지 못했으므로 `가장 많이 사용되는 품종`이 아니라 `현재 판매/추천 기준 shortlist`로 기록했다.
+- 공식 재배 자료를 기준으로 낮/밤 운영 기본값을 낮 `25~28℃`, 밤 `18℃ 전후`, 허용 운전 밴드 낮 `25~30℃`, 밤 `18~20℃`로 정리했다.
+- 정식기 보수 기준은 밤 `16℃ 이상`, 육묘 순화 기준은 정식 `7~10일 전` 낮 `22~23℃`, 밤 `14~15℃`로 반영했다.
+- 관련 문서도 함께 갱신했다: `docs/sensor_collection_plan.md`, `AI_MLOPS_PLAN.md`, `README.md`, `PROJECT_STATUS.md`, `todo.md`
+- 조사 근거:
+  - 농사로 고추 작목 정보: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=101628&menuId=PS03172
+  - 농사로 고추 양액재배 현장 기술지원: https://nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=259682&menuId=PS00077
+  - NH농우바이오 2026년 1월 추천품종 기사: https://www.newsam.co.kr/news/article.html?no=41799
+  - 아시아종묘 2025년 건고추 추천품종 기사: https://www.newsfm.kr/mobile/article.html?no=9677
+
+### optional Modbus TCP transport 검증과 safe mode 연동 추가
+- `docs/plc_modbus_governance.md`를 추가해 Modbus TCP를 현재 기본 PLC transport로 고정하고, write 허용 table, readback success condition, 공통 장애 코드, rollback 후보, safe mode 전환 조건을 정리했다.
+- `pyproject.toml`에 optional dependency `plc = ["pymodbus>=3.6,<4"]`를 추가해 실제 TCP/Modbus client 연결 경로를 명시했다.
+- `plc-adapter/plc_adapter/transports.py`에 `PymodbusTcpTransport`를 추가해 `modbus-tcp://host:port?unit_id=...` endpoint 파싱, holding register/coil write, input/holding/discrete/coil read, transport health 집계를 구현했다.
+- `plc-adapter/plc_adapter/codecs.py`를 보강해 encoder가 raw register/coil 값으로 직접 매핑되도록 바꿨다. fan은 speed register, valve는 coil/boolean, heater는 stage register, fertigation은 recipe code register를 쓰도록 정리했다.
+- `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`의 `latency_ms`를 고정값이 아니라 실제 write+readback 경과시간으로 계산하도록 보강했다.
+- `scripts/validate_plc_modbus_transport.py`를 추가해 fake Modbus client 기준으로 `PymodbusTcpTransport`의 reconnect/retry, write/readback, timeout, health degradation 경로를 검증하도록 했다.
+- 검증 결과:
+  - `python3 -m py_compile plc-adapter/plc_adapter/plc_tag_modbus_tcp.py plc-adapter/plc_adapter/transports.py scripts/validate_plc_modbus_transport.py` 통과
+  - `python3 scripts/validate_plc_modbus_transport.py` 기준 `fan_status acknowledged`, `source_water_status acknowledged`, `timeout_status timeout`, `errors []`
+
+### repeated runtime fault -> safe mode latch 추가
+- `execution-gateway/execution_gateway/state.py`에 `RuntimeFaultTracker`를 추가해 zone/site scope별 연속 `timeout`/`fault` 횟수를 기록하도록 했다.
+- 같은 파일에 `enter_safe_mode()`를 추가해 runtime fault 누적으로 `safe_mode_active=true`, `auto_mode_enabled=false` 전이를 기록하도록 했다.
+- `execution-gateway/execution_gateway/dispatch.py`를 보강해 adapter 결과가 `timeout` 또는 `fault`일 때 runtime fault tracker를 갱신하고, threshold 이상이면 zone/site scope에 `safe_mode`를 자동 latch하도록 연결했다.
+- `scripts/validate_execution_safe_mode.py`를 추가해 heater timeout 두 번 뒤 `gh-01-zone-b`와 `gh-01`이 모두 `safe_mode_active`가 되고, 후속 fan 요청이 `safe_mode_active`로 차단되는지 검증하도록 했다.
+- 검증 결과:
+  - `python3 -m py_compile execution-gateway/execution_gateway/state.py execution-gateway/execution_gateway/dispatch.py scripts/validate_execution_safe_mode.py` 통과
+  - `python3 scripts/validate_execution_safe_mode.py` 기준 `first_timeout_status dispatch_fault`, `second_timeout_status dispatch_fault`, `blocked_fan_status rejected`, `errors []`
+
+### execution-gateway dispatcher와 control state store 추가
+- `execution-gateway/execution_gateway/dispatch.py`를 추가해 preflight 통과 요청을 `plc-adapter` 또는 override state transition으로 dispatch하는 경로를 구현했다.
+- `execution-gateway/execution_gateway/state.py`를 추가해 `estop`, `manual_override`, `safe_mode`, `auto_mode_enabled` 상태를 scope별로 저장하도록 했다.
+- dispatcher는 `device_command` 처리 전에 `ControlStateStore`를 다시 조회해 `estop_active`, `manual_override_state_active`, `safe_mode_active`를 차단 사유로 반영한다.
+- `docs/execution_dispatcher_runtime.md`를 추가해 adapter 종류, audit log, override 상태 전이 기준을 문서화했다.
+- `.env.example`, `.env.dev.example`, `.env.staging.example`, `.env.prod.example`에 `EXECUTION_GATEWAY_AUDIT_LOG_PATH`를 추가했다.
+- `scripts/validate_execution_dispatcher.py`를 추가해 `override -> state update -> device block -> adapter dispatch -> audit log` 경로를 검증하도록 했다.
+- 검증 결과:
+  - `python3 -m py_compile execution-gateway/demo.py execution-gateway/execution_gateway/contracts.py execution-gateway/execution_gateway/normalizer.py execution-gateway/execution_gateway/guards.py execution-gateway/execution_gateway/state.py execution-gateway/execution_gateway/dispatch.py scripts/validate_execution_gateway_flow.py scripts/validate_execution_dispatcher.py` 통과
+  - `python3 scripts/validate_execution_dispatcher.py` 기준 `checked_cases 5`, `audit_rows 5`, `errors []`
+  - `python3 execution-gateway/demo.py` 기준 `emergency_stop_latch -> fan_blocked_by_estop -> emergency_stop_reset_request -> source_water_dispatch -> auto_mode_reentry_request` 흐름 확인
+  - `zone-a`는 estop reset 후 `auto_mode_enabled=false`, `site gh-01`는 auto reentry 후 `auto_mode_enabled=true`로 상태가 남는 것을 확인했다.
+
+### 승인 체계 기준 문서 추가
+- `docs/approval_governance.md`를 추가해 저위험/중위험/고위험 액션 분류를 고정했다.
+- 같은 문서에 `operator`, `shift_lead`, `facility_manager`, `safety_manager` 역할을 승인자로 정리했다.
+- 승인 UI 최소 표시 필드, timeout, 거절 시 fallback을 문서로 정리했다.
+
+### sensor-ingestor publish backend와 quality evaluator 추가
+- `sensor-ingestor/sensor_ingestor/backends.py`를 추가해 MQTT JSONL outbox, timeseries line protocol outbox, object store metadata outbox, anomaly alert outbox를 구현했다.
+- `sensor-ingestor/sensor_ingestor/quality.py`를 추가해 `quality_flag`, `quality_reason`, `automation_gate` 계산기를 구현했다.
+- `sensor-ingestor/sensor_ingestor/runtime.py`를 보강해 sensor/device normalize 시 품질 평가와 anomaly alert 생성을 수행하도록 했다.
+- `sensor-ingestor/main.py`에 반복 실행 간격 인자를 추가해 단발 실행 외 반복 run 루프도 동작하도록 고쳤다.
+- `.env.example`, `.env.dev.example`, `.env.staging.example`, `.env.prod.example`에 `SENSOR_INGESTOR_RUNTIME_DIR`와 outbox backend 경로 예시를 반영했다.
+- `scripts/validate_sensor_ingestor_runtime.py`를 추가해 MQTT/timeseries outbox와 alert outbox가 실제로 생성되는지 검증하도록 했다.
+- 검증 결과:
+  - `python3 -m py_compile sensor-ingestor/main.py sensor-ingestor/sensor_ingestor/config.py sensor-ingestor/sensor_ingestor/runtime.py sensor-ingestor/sensor_ingestor/backends.py sensor-ingestor/sensor_ingestor/quality.py scripts/validate_sensor_ingestor_runtime.py` 통과
+  - `python3 scripts/validate_sensor_ingestor_runtime.py` 기준 `mqtt_rows 12`, `timeseries_lines 20`, `alert_rows 1`, `errors []`
+  - `python3 sensor-ingestor/main.py --once --limit-sensor-groups 2 --limit-device-groups 1` 기준 backend 경로와 publish metrics가 summary에 반영되는 것을 확인했다.
+
+### 프로젝트 관리 초기화 단계 완료
+- `docs/project_bootstrap.md`를 추가해 코드명 `pepper-ops`, monorepo 결정, 공통 디렉터리 기준을 정리했다.
+- `docs/git_workflow.md`를 추가해 브랜치 전략, PR/Issue 템플릿, ADR 템플릿, CHANGELOG 정책, 릴리즈 태깅 규칙을 정리했다.
+- `docs/development_toolchain.md`, `.python-version`, `pyproject.toml`, `.pre-commit-config.yaml`을 추가해 Python 3.12, pip, ruff, black, mypy, pre-commit 기준을 고정했다.
+- `.env.dev.example`, `.env.staging.example`, `.env.prod.example`를 추가해 환경별 env template 분리 기준을 정리했다.
+- `docs/post_construction_sensor_cutover.md`를 추가해 공사 완료 후 실센서 연결 전환 절차를 정의했다.
+- `docs/glossary.md`, `docs/naming_conventions.md`를 추가해 용어집, robot_id 규칙, event naming 규칙을 정리했다.
+- `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/*`, `docs/adr/0000-template.md`, `CHANGELOG.md`를 추가해 협업 기본 템플릿을 마련했다.
+- `libs/README.md`, `infra/README.md`, `experiments/README.md`, `state-estimator/README.md`, `policy-engine/README.md`, `llm-orchestrator/README.md`를 추가해 monorepo skeleton을 고정했다.
+
 ### plc-adapter runtime endpoint와 Modbus address registry 추가
 - `docs/plc_runtime_endpoint_config.md`를 추가해 controller endpoint를 환경 변수로 주입하는 기준을 정리했다.
 - `.env.example`에 `PLC_ENDPOINT_GH_01_MAIN_PLC`, `PLC_ENDPOINT_GH_01_DRY_PLC` 예시 키를 추가했다.
@@ -32,6 +107,27 @@
   - `python3 scripts/validate_device_command_requests.py --input data/examples/device_command_mapping_samples.jsonl` 기준 `rows 8`, `errors 0`
   - `python3 scripts/validate_device_command_mappings.py` 기준 `rows 8`, `errors 0`
   - 8건 모두 `status acknowledged`
+
+### execution-gateway override contract 추가
+- `docs/execution_gateway_override_contract.md`를 추가해 `emergency_stop_latch`, `emergency_stop_reset_request`, `manual_override_start`, `manual_override_release`, `safe_mode_entry`, `auto_mode_reentry_request`를 일반 장치 명령과 분리된 계약으로 정의했다.
+- `schemas/control_override_request_schema.json`을 추가해 override 요청 구조를 JSON Schema로 고정했다.
+- `data/examples/control_override_request_samples.jsonl`에 override sample 5건을 추가했다.
+- `scripts/validate_control_override_requests.py`를 추가해 actor type, approval requirement, precondition 규칙을 검증하도록 했다.
+- 검증 결과:
+  - `python3 scripts/validate_control_override_requests.py` 기준 `rows 5`, `errors 0`
+  - `python3 -m py_compile scripts/validate_control_override_requests.py` 통과
+
+### execution-gateway preflight skeleton 추가
+- `docs/execution_gateway_flow.md`를 추가해 schema -> range -> availability -> duplicate -> cooldown -> policy -> approval -> audit -> dispatch 흐름을 정의했다.
+- `execution-gateway/execution_gateway/contracts.py`에 일반 장치 명령과 override 요청 dataclass loader를 추가했다.
+- `execution-gateway/execution_gateway/normalizer.py`에 `NormalizedRequest`와 dedupe/cooldown key 생성 규칙을 추가했다.
+- `execution-gateway/execution_gateway/guards.py`에 `DuplicateDetector`, `CooldownManager`, device/override preflight evaluator를 추가했다.
+- `execution-gateway/demo.py`를 추가해 heater pending, fan cooldown, estop latch, auto re-entry 케이스를 시연하도록 했다.
+- `scripts/validate_execution_gateway_flow.py`를 추가해 승인 대기, cooldown, duplicate, approved re-entry 경로를 회귀 검증하도록 했다.
+- 검증 결과:
+  - `python3 execution-gateway/demo.py`에서 heater `approval_pending`, fan `cooldown_active`, estop `ready`, auto re-entry `ready` 확인
+  - `python3 scripts/validate_execution_gateway_flow.py` 기준 `checked_cases 4`, `errors 0`
+  - `python3 -m py_compile execution-gateway/demo.py execution-gateway/execution_gateway/contracts.py execution-gateway/execution_gateway/normalizer.py execution-gateway/execution_gateway/guards.py scripts/validate_execution_gateway_flow.py` 통과
 
 ### Device Profile registry와 plc-adapter 인터페이스 강화
 - `docs/device_profile_registry.md`를 추가해 `model_profile`를 `plc-adapter` 실행 계약의 key로 쓰는 기준을 정리했다.

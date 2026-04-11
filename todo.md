@@ -21,6 +21,15 @@
 - [PLC Channel Address Registry](docs/plc_channel_address_registry.md)
 - [Device Command Mapping Matrix](docs/device_command_mapping_matrix.md)
 - [Execution Gateway Command Contract](docs/execution_gateway_command_contract.md)
+- [Execution Gateway Override Contract](docs/execution_gateway_override_contract.md)
+- [Execution Gateway Flow](docs/execution_gateway_flow.md)
+- [Site Scope Baseline](docs/site_scope_baseline.md)
+- [Project Bootstrap](docs/project_bootstrap.md)
+- [Git Workflow](docs/git_workflow.md)
+- [Development Toolchain](docs/development_toolchain.md)
+- [Post Construction Sensor Cutover](docs/post_construction_sensor_cutover.md)
+- [Glossary](docs/glossary.md)
+- [Naming Conventions](docs/naming_conventions.md)
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -38,61 +47,61 @@
 - [x] 온실 공사 일정과 AI 준비 일정 분리 (`AI_MLOPS_PLAN.md`, `schedule.md`)
 - [x] 실측 데이터 수집 전 AI 준비 범위 정의 (`AI_MLOPS_PLAN.md`)
 - [x] 공사 완료 전 사용 가능한 문서/시뮬레이션/합성 데이터 목록화 (`AI_MLOPS_PLAN.md`, `docs/rag_source_inventory.md`, `data/examples/synthetic_sensor_scenarios.jsonl`)
-- [ ] 공사 완료 후 센서 연결 전환 절차 정의
+- [x] 공사 완료 후 센서 연결 전환 절차 정의 (`docs/post_construction_sensor_cutover.md`, `AI_MLOPS_PLAN.md`)
 - [x] AI 준비 → 센서 계획 → 센서 구현 → 제어 계획 → 제어 구현 → UI → AI 연결 순서 확정 (`AI_MLOPS_PLAN.md`, `schedule.md`, `PLAN.md`)
 
 ## 0.1 프로젝트 구조 정의
-- [ ] 프로젝트 코드명 확정
+- [x] 프로젝트 코드명 확정 (`docs/project_bootstrap.md`)
 - [x] 저장소 구조 정의 (`AGENTS.md`, `README.md`)
-- [ ] monorepo 여부 결정
+- [x] monorepo 여부 결정 (`docs/project_bootstrap.md`)
 - [x] 서비스별 디렉터리 구조 설계 (`AGENTS.md`)
-- [ ] 공통 라이브러리 디렉터리 정의
+- [x] 공통 라이브러리 디렉터리 정의 (`docs/project_bootstrap.md`, `libs/README.md`)
 - [x] infra 디렉터리 구조 정의 (`AGENTS.md`)
 - [x] docs 디렉터리 구조 정의 (`AGENTS.md`)
 - [x] data 디렉터리 구조 정의 (`AGENTS.md`)
 - [x] experiments 디렉터리 구조 정의 (`AGENTS.md`)
 
 ## 0.2 형상관리/협업 준비
-- [ ] Git 브랜치 전략 정의
+- [x] Git 브랜치 전략 정의 (`docs/git_workflow.md`)
 - [x] commit convention 정의 (`AGENTS.md`)
-- [ ] PR 템플릿 작성
-- [ ] issue 템플릿 작성
-- [ ] ADR(Architecture Decision Record) 템플릿 작성
-- [ ] CHANGELOG 정책 정리
-- [ ] 릴리즈 태깅 규칙 정리
+- [x] PR 템플릿 작성 (`.github/pull_request_template.md`)
+- [x] issue 템플릿 작성 (`.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/feature_request.md`)
+- [x] ADR(Architecture Decision Record) 템플릿 작성 (`docs/adr/0000-template.md`, `docs/adr/README.md`)
+- [x] CHANGELOG 정책 정리 (`docs/git_workflow.md`, `CHANGELOG.md`)
+- [x] 릴리즈 태깅 규칙 정리 (`docs/git_workflow.md`)
 
 ## 0.3 개발 환경 공통화
-- [ ] Python 버전 고정
+- [x] Python 버전 고정 (`.python-version`, `pyproject.toml`, `docs/development_toolchain.md`)
 - [x] 가상환경 전략 정의 (`evals/README.md`, `WORK_LOG.md`)
-- [ ] package manager 선택
-- [ ] 린터 선택
-- [ ] formatter 선택
-- [ ] type checker 선택
-- [ ] pre-commit hook 구성
+- [x] package manager 선택 (`docs/development_toolchain.md`)
+- [x] 린터 선택 (`pyproject.toml`, `docs/development_toolchain.md`)
+- [x] formatter 선택 (`pyproject.toml`, `docs/development_toolchain.md`)
+- [x] type checker 선택 (`pyproject.toml`, `docs/development_toolchain.md`)
+- [x] pre-commit hook 구성 (`.pre-commit-config.yaml`, `docs/development_toolchain.md`)
 - [x] 환경 변수 템플릿 작성 (`.env.example`)
-- [ ] dev/staging/prod 환경 변수 분리
+- [x] dev/staging/prod 환경 변수 분리 (`.env.dev.example`, `.env.staging.example`, `.env.prod.example`, `docs/development_toolchain.md`)
 
 ## 0.4 문서 기반 정리
-- [ ] 용어집 작성
-- [ ] 장치 명명 규칙 정의
+- [x] 용어집 작성 (`docs/glossary.md`)
+- [x] 장치 명명 규칙 정의 (`docs/naming_conventions.md`, `docs/sensor_collection_plan.md`)
 - [x] zone_id 규칙 정의 (`docs/sensor_collection_plan.md`)
 - [x] sensor_id 규칙 정의 (`docs/sensor_collection_plan.md`)
 - [x] device_id 규칙 정의 (`docs/sensor_collection_plan.md`)
-- [ ] robot_id 규칙 정의
+- [x] robot_id 규칙 정의 (`docs/naming_conventions.md`)
 - [x] action_type enum 초안 작성 (`schemas/action_schema.json`)
-- [ ] 이벤트 이름 규칙 정의
+- [x] 이벤트 이름 규칙 정의 (`docs/naming_conventions.md`)
 
 ---
 
 # 1. 요구사항/현장 분석
 
 ## 1.1 현장 범위 확정
-- [ ] 대상 온실 수 확정
+- [x] 대상 온실 수 확정 (`docs/site_scope_baseline.md`, `docs/sensor_collection_plan.md`)
 - [x] 초기 적용 zone 확정 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] 작물 범위 확정 (`README.md`, `PROJECT_STATUS.md`, `PLAN.md`)
-- [ ] 품종 범위 확정
+- [x] 품종 범위 확정 (`docs/site_scope_baseline.md`)
 - [x] 생육 단계 운영 범위 정의 (`docs/expert_knowledge_map.md`, `EXPERT_AI_AGENT_PLAN.md`)
-- [ ] 낮/밤 운영 정책 정의
+- [x] 낮/밤 운영 정책 정의 (`docs/site_scope_baseline.md`)
 - [ ] 계절별 운영 범위 정의
 
 ## 1.2 센서 인벤토리 작성
@@ -483,7 +492,7 @@
 - [ ] 외기 센서 어댑터 작성
 - [ ] 각 어댑터 timeout 처리
 - [ ] 각 어댑터 retry 처리
-- [ ] 품질 플래그 생성 로직 작성
+- [x] 품질 플래그 생성 로직 작성 (`sensor-ingestor/sensor_ingestor/quality.py`, `sensor-ingestor/sensor_ingestor/runtime.py`)
 
 ## 6.3 sensor-ingestor 서비스
 - [x] 프로젝트 초기화 (`sensor-ingestor/README.md`, `sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/`)
@@ -492,8 +501,8 @@
 - [x] parser 구현 (`sensor-ingestor/sensor_ingestor/runtime.py`)
 - [x] validator 구현 (`scripts/validate_sensor_ingestor_config.py`, `sensor-ingestor/sensor_ingestor/config.py`)
 - [x] normalizer 구현 (`sensor-ingestor/sensor_ingestor/runtime.py`)
-- [ ] MQTT publisher 구현
-- [ ] timeseries writer 구현
+- [x] MQTT publisher 구현 (`sensor-ingestor/sensor_ingestor/backends.py`, `scripts/validate_sensor_ingestor_runtime.py`)
+- [x] timeseries writer 구현 (`sensor-ingestor/sensor_ingestor/backends.py`, `scripts/validate_sensor_ingestor_runtime.py`)
 - [x] health check endpoint 작성 (`sensor-ingestor/sensor_ingestor/runtime.py`, `/healthz`)
 - [x] metrics endpoint 작성 (`sensor-ingestor/sensor_ingestor/runtime.py`, `/metrics`)
 
@@ -502,8 +511,8 @@
 - [x] stale sensor rule 정의
 - [x] jump detection rule 정의
 - [x] missing data rule 정의
-- [ ] quality_flag 계산기 구현
-- [ ] sensor anomaly alert 연결
+- [x] quality_flag 계산기 구현 (`sensor-ingestor/sensor_ingestor/quality.py`, `sensor-ingestor/sensor_ingestor/runtime.py`)
+- [x] sensor anomaly alert 연결 (`sensor-ingestor/sensor_ingestor/backends.py`, `scripts/validate_sensor_ingestor_runtime.py`)
 
 ---
 
@@ -654,32 +663,32 @@
 
 ## 10.1 검증 흐름 정의
 - [x] schema validation 단계 정의 (`docs/execution_gateway_command_contract.md`, `schemas/device_command_request_schema.json`)
-- [ ] range validation 단계 정의
+- [x] range validation 단계 정의 (`docs/execution_gateway_flow.md`, `execution-gateway/execution_gateway/guards.py`)
 - [x] device availability check 단계 정의 (`docs/execution_gateway_command_contract.md`, `scripts/validate_device_command_requests.py`)
-- [ ] duplicate action check 단계 정의
-- [ ] cooldown check 단계 정의
-- [ ] policy re-evaluation 단계 정의
-- [ ] approval routing 단계 정의
-- [ ] audit logging 단계 정의
+- [x] duplicate action check 단계 정의 (`docs/execution_gateway_flow.md`, `execution-gateway/execution_gateway/normalizer.py`)
+- [x] cooldown check 단계 정의 (`docs/execution_gateway_flow.md`, `execution-gateway/execution_gateway/normalizer.py`)
+- [x] policy re-evaluation 단계 정의 (`docs/execution_gateway_flow.md`, `execution-gateway/execution_gateway/guards.py`)
+- [x] approval routing 단계 정의 (`docs/execution_gateway_flow.md`, `execution-gateway/execution_gateway/guards.py`, `docs/execution_gateway_override_contract.md`)
+- [x] audit logging 단계 정의 (`docs/execution_gateway_flow.md`)
 
 ## 10.2 게이트 구현
 - [x] validator 모듈 작성 (`scripts/validate_device_command_requests.py`)
-- [ ] command normalizer 작성
-- [ ] range clamp 전략 정의
-- [ ] duplicate detector 작성
-- [ ] cooldown manager 작성
-- [ ] approval handler 작성
-- [ ] rejection reason builder 작성
-- [ ] execution dispatcher 작성
+- [x] command normalizer 작성 (`execution-gateway/execution_gateway/normalizer.py`)
+- [x] range clamp 전략 정의 (`docs/execution_gateway_flow.md`)
+- [x] duplicate detector 작성 (`execution-gateway/execution_gateway/guards.py`)
+- [x] cooldown manager 작성 (`execution-gateway/execution_gateway/guards.py`)
+- [x] approval handler 작성 (`execution-gateway/execution_gateway/guards.py`)
+- [x] rejection reason builder 작성 (`execution-gateway/execution_gateway/guards.py`)
+- [x] execution dispatcher 작성 (`execution-gateway/execution_gateway/dispatch.py`, `execution-gateway/execution_gateway/state.py`, `scripts/validate_execution_dispatcher.py`)
 
 ## 10.3 승인 체계
-- [ ] 저위험 액션 목록 확정
-- [ ] 중위험 액션 목록 확정
-- [ ] 고위험 액션 목록 확정
-- [ ] 승인자 역할 정의
-- [ ] 승인 UI 요구사항 작성
-- [ ] 승인 timeout 정책 정의
-- [ ] 거절 시 fallback 정책 정의
+- [x] 저위험 액션 목록 확정 (`docs/approval_governance.md`)
+- [x] 중위험 액션 목록 확정 (`docs/approval_governance.md`)
+- [x] 고위험 액션 목록 확정 (`docs/approval_governance.md`)
+- [x] 승인자 역할 정의 (`docs/approval_governance.md`)
+- [x] 승인 UI 요구사항 작성 (`docs/approval_governance.md`)
+- [x] 승인 timeout 정책 정의 (`docs/approval_governance.md`)
+- [x] 거절 시 fallback 정책 정의 (`docs/approval_governance.md`)
 
 ---
 
@@ -691,12 +700,12 @@
 - [x] `source_water_valve`처럼 인터록/ack가 다른 장치를 별도 profile로 분리하는 기준 정의 (`docs/device_profile_registry.md`)
 - [x] site override address map schema/seed 정의 (`docs/plc_site_override_map.md`, `schemas/device_site_override_schema.json`, `data/examples/device_site_override_seed.json`)
 - [x] site override 정합성 검증기 작성 (`scripts/validate_device_site_overrides.py`)
-- [ ] PLC 통신 방식 확인
+- [x] PLC 통신 방식 확인 (`docs/plc_modbus_governance.md`)
 - [x] Modbus address map 확보 (`docs/plc_channel_address_registry.md`, `schemas/device_channel_address_registry_schema.json`, `data/examples/device_channel_address_registry_seed.json`, `scripts/build_device_channel_address_registry.py`, `scripts/validate_device_channel_address_registry.py`)
 - [ ] OPC UA node map 확보
-- [ ] register/write 안전 규칙 정의
-- [ ] readback 검증 방식 정의
-- [ ] 장애 코드 정의
+- [x] register/write 안전 규칙 정의 (`docs/plc_modbus_governance.md`)
+- [x] readback 검증 방식 정의 (`docs/plc_modbus_governance.md`, `scripts/validate_plc_modbus_transport.py`)
+- [x] 장애 코드 정의 (`docs/plc_modbus_governance.md`)
 
 ## 11.2 plc-adapter 구현
 - [x] `plc-adapter` interface contract 정의 (`docs/plc_adapter_interface_contract.md`, `plc-adapter/plc_adapter/interface.py`)
@@ -723,16 +732,16 @@
 - [x] 환기창 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
 - [x] 난방기 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
 - [x] CO2 명령 매핑 (`docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`)
-- [ ] 긴급 정지 명령 분리
-- [ ] 수동 override 명령 분리
+- [x] 긴급 정지 명령 분리 (`docs/execution_gateway_override_contract.md`, `schemas/control_override_request_schema.json`, `data/examples/control_override_request_samples.jsonl`, `scripts/validate_control_override_requests.py`)
+- [x] 수동 override 명령 분리 (`docs/execution_gateway_override_contract.md`, `schemas/control_override_request_schema.json`, `data/examples/control_override_request_samples.jsonl`, `scripts/validate_control_override_requests.py`)
 
 ## 11.4 실행 검증
-- [ ] write 후 readback 비교
-- [ ] 상태 반영 시간 측정
-- [ ] 무응답 장치 감지
-- [ ] 부분 성공 처리 방식 정의
-- [ ] rollback 가능 액션 정의
-- [ ] safe mode 전환 조건 연결
+- [x] write 후 readback 비교 (`scripts/validate_plc_modbus_transport.py`)
+- [x] 상태 반영 시간 측정 (`plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `scripts/validate_plc_modbus_transport.py`)
+- [x] 무응답 장치 감지 (`scripts/validate_plc_modbus_transport.py`)
+- [x] 부분 성공 처리 방식 정의 (`docs/plc_modbus_governance.md`)
+- [x] rollback 가능 액션 정의 (`docs/plc_modbus_governance.md`)
+- [x] safe mode 전환 조건 연결 (`execution-gateway/execution_gateway/state.py`, `execution-gateway/execution_gateway/dispatch.py`, `scripts/validate_execution_safe_mode.py`)
 
 ---
 
@@ -1146,7 +1155,7 @@
 ## 그 다음 주
 - [x] RAG vector store PoC 작성 (`scripts/build_chroma_index.py`, `scripts/rag_chroma_store.py`)
 - [x] 검색 품질 평가셋 작성 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
-- [ ] sensor-ingestor MVP 작성
+- [x] sensor-ingestor MVP 작성 (`sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/backends.py`, `sensor-ingestor/sensor_ingestor/quality.py`)
 - [ ] state-estimator MVP 작성
 - [ ] policy-engine MVP 작성
 - [ ] 파인튜닝 재실행
@@ -1154,7 +1163,7 @@
 - [ ] decision log 저장 구조 구현
 
 ## 그 다음 단계
-- [ ] execution-gateway MVP 구현
+- [x] execution-gateway MVP 구현 (`execution-gateway/execution_gateway/dispatch.py`, `execution-gateway/execution_gateway/state.py`, `scripts/validate_execution_dispatcher.py`)
 - [ ] plc-adapter 테스트 연결
 - [ ] approval UI 초안 작성
 - [ ] shadow mode 운영 개시

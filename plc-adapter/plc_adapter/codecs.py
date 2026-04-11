@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from zlib import crc32
 from typing import Any, Callable
 
 from .resolver import ResolvedDeviceContext
@@ -21,34 +22,11 @@ def encode_fan_percent(
     action_type: str,
     parameters: dict[str, Any],
 ) -> EncodedCommand:
-    return _encode_single_write_with_expected(context, action_type, parameters)
+    raw_value = parameters.get("speed_pct", 0) if parameters.get("run_state") == "on" else 0
+    return _encode_single_write_with_expected(context, action_type, parameters, raw_write_value=raw_value)
 
 
 def encode_position(
-    context: ResolvedDeviceContext,
-    action_type: str,
-    parameters: dict[str, Any],
-) -> EncodedCommand:
-    return _encode_single_write_with_expected(context, action_type, parameters, default_run_state="moving")
-
-
-def encode_binary_open_close(
-    context: ResolvedDeviceContext,
-    action_type: str,
-    parameters: dict[str, Any],
-) -> EncodedCommand:
-    return _encode_single_write_with_expected(context, action_type, parameters)
-
-
-def encode_stage(
-    context: ResolvedDeviceContext,
-    action_type: str,
-    parameters: dict[str, Any],
-) -> EncodedCommand:
-    return _encode_single_write_with_expected(context, action_type, parameters)
-
-
-def encode_recipe(
     context: ResolvedDeviceContext,
     action_type: str,
     parameters: dict[str, Any],
@@ -57,6 +35,40 @@ def encode_recipe(
         context,
         action_type,
         parameters,
+        raw_write_value=parameters.get("position_pct", 0),
+        default_run_state="moving",
+    )
+
+
+def encode_binary_open_close(
+    context: ResolvedDeviceContext,
+    action_type: str,
+    parameters: dict[str, Any],
+) -> EncodedCommand:
+    raw_value = parameters.get("run_state") in {"open", "on", "running"}
+    return _encode_single_write_with_expected(context, action_type, parameters, raw_write_value=raw_value)
+
+
+def encode_stage(
+    context: ResolvedDeviceContext,
+    action_type: str,
+    parameters: dict[str, Any],
+) -> EncodedCommand:
+    raw_value = parameters.get("stage", 0) if parameters.get("run_state") == "on" else 0
+    return _encode_single_write_with_expected(context, action_type, parameters, raw_write_value=raw_value)
+
+
+def encode_recipe(
+    context: ResolvedDeviceContext,
+    action_type: str,
+    parameters: dict[str, Any],
+) -> EncodedCommand:
+    recipe_id = str(parameters.get("recipe_id", "default"))
+    return _encode_single_write_with_expected(
+        context,
+        action_type,
+        parameters,
+        raw_write_value=recipe_code_from_id(recipe_id),
         expected_field_overrides={"recipe_stage": parameters.get("recipe_id"), "run_state": "running"},
     )
 
@@ -80,6 +92,7 @@ def _encode_single_write_with_expected(
     action_type: str,
     parameters: dict[str, Any],
     *,
+    raw_write_value: Any,
     default_run_state: str | None = None,
     expected_field_overrides: dict[str, Any] | None = None,
 ) -> EncodedCommand:
@@ -103,13 +116,22 @@ def _encode_single_write_with_expected(
 
     return EncodedCommand(
         write_values={
-            context.write_channel_ref: {
-                "action_type": action_type,
-                "parameters": parameters,
-            }
+            context.write_channel_ref: raw_write_value
         },
         mirror_read_values=mirror_read_values,
     )
+
+
+def recipe_code_from_id(recipe_id: str) -> int:
+    if recipe_id == "veg_a":
+        return 101
+    if recipe_id == "veg_b":
+        return 102
+    if recipe_id == "fruit_a":
+        return 201
+    if recipe_id == "fruit_b":
+        return 202
+    return crc32(recipe_id.encode("utf-8")) % 30000 + 1000
 
 
 class CodecRegistry:

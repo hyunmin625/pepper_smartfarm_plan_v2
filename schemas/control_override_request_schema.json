@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-smartfarm-plan-v2.local/schemas/control_override_request_schema.json",
+  "title": "Execution Gateway Control Override Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "issued_at",
+    "farm_id",
+    "scope_type",
+    "scope_id",
+    "override_type",
+    "approval_required",
+    "requested_by",
+    "reason"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "control_override_request.v1"
+    },
+    "request_id": { "type": "string", "minLength": 1 },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "farm_id": { "type": "string", "minLength": 1 },
+    "scope_type": { "type": "string", "enum": ["site", "zone", "device"] },
+    "scope_id": { "type": "string", "minLength": 1 },
+    "override_type": {
+      "type": "string",
+      "enum": [
+        "emergency_stop_latch",
+        "emergency_stop_reset_request",
+        "manual_override_start",
+        "manual_override_release",
+        "safe_mode_entry",
+        "auto_mode_reentry_request"
+      ]
+    },
+    "approval_required": { "type": "boolean" },
+    "requested_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {
+          "type": "string",
+          "enum": ["operator", "policy_engine", "system_monitor", "llm_orchestrator"]
+        },
+        "actor_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "approval_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approval_status": { "type": "string", "enum": ["not_required", "pending", "approved", "rejected"] },
+        "approver_id": { "type": ["string", "null"] },
+        "approved_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "operator_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operator_present": { "type": "boolean" },
+        "manual_override_active": { "type": "boolean" },
+        "estop_active": { "type": "boolean" }
+      }
+    },
+    "preconditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state_sync_completed": { "type": "boolean" },
+        "manual_override_cleared": { "type": "boolean" },
+        "estop_cleared": { "type": "boolean" }
+      }
+    },
+    "policy_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy_result": { "type": "string", "enum": ["pass", "approval_required", "blocked"] },
+        "policy_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

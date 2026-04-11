@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from time import perf_counter
 from typing import Any
 
 from .channel_address_registry import ChannelAddressRegistry, load_channel_address_registry
@@ -149,6 +150,7 @@ class PlcTagModbusTcpAdapter(PlcAdapterInterface):
             parameters=parameters,
         )
         endpoint = payload["controller_endpoint_resolved"]
+        start_time = perf_counter()
 
         last_error: str | None = None
         for attempt in range(self.max_retries + 1):
@@ -174,7 +176,7 @@ class PlcTagModbusTcpAdapter(PlcAdapterInterface):
                     status=status,
                     payload=payload,
                     readback=readback,
-                    latency_ms=(attempt + 1) * 10,
+                    latency_ms=max(1, int((perf_counter() - start_time) * 1000)),
                     failure_reason=failure_reason,
                 )
                 return result.__dict__
@@ -191,7 +193,7 @@ class PlcTagModbusTcpAdapter(PlcAdapterInterface):
             status="timeout",
             payload=payload,
             readback={},
-            latency_ms=(self.max_retries + 1) * 10,
+            latency_ms=max(1, int((perf_counter() - start_time) * 1000)),
             failure_reason=last_error,
         ).__dict__
 

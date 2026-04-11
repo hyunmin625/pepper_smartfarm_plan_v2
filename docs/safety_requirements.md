@@ -85,4 +85,5 @@
 
 1. 정책 엔진은 이 문서를 `hard_block`, `approval_required`, `manual_mode_only` 규칙으로 쪼개어 정책 JSON으로 변환한다.
 2. 실행 게이트는 `state_schema.json`의 `device_status.mode`, `recent_events`, `sensor_quality`를 사용해 검사한다.
-3. 로봇 관련 규칙은 `action_schema.json`의 `create_robot_task`와 `robot_tasks[]`에 직접 연결된다.
+3. 일반 장치 명령은 `docs/execution_gateway_command_contract.md`, override 전이는 `docs/execution_gateway_override_contract.md`에 연결한다.
+4. 로봇 관련 규칙은 `action_schema.json`의 `create_robot_task`와 `robot_tasks[]`에 직접 연결된다.

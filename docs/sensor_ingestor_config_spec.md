@@ -18,6 +18,7 @@
 - `publish_targets`: MQTT, timeseries, object store 목적지
 - `snapshot_pipeline`: 1분 snapshot, 5/30분 trend, retention 기준
 - `health_config`: heartbeat, lag alarm, metrics namespace
+- 로컬 개발에서는 실제 broker/DB 대신 `.env.example`의 `SENSOR_INGESTOR_*_OUTBOX_PATH`를 사용해 file-backed outbox로 기록한다.
 
 ## 3. Poller Profile 기준
 
@@ -58,4 +59,4 @@ Profile은 transport 동작만 가진다. 센서별 해석은 binding group의 `
 4. `publisher`: MQTT/topic, timeseries measurement, object store route로 분기
 5. `health`: heartbeat, lag, coverage 누락 감시
 
-다음 후속 작업은 `quality_flag` 계산 pseudocode와 PLC tag naming 규칙 확정이다.
+다음 후속 작업은 실제 MQTT broker, 실제 timeseries DB, snapshot/trend scheduler를 backend로 연결하는 것이다.

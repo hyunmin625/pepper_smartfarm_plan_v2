@@ -2,6 +2,8 @@
 
 이 문서는 `execution-gateway`가 `plc-adapter`로 넘기는 저수준 장치 명령 요청 형식을 정의한다.
 
+`emergency stop`, `manual override`, `safe mode`, `auto mode re-entry` 같은 제어 상태 전환은 이 문서가 아니라 `docs/execution_gateway_override_contract.md`를 따른다.
+
 ## 1. 목적
 
 - LLM 추천 액션과 실제 장치 실행 요청을 분리한다.

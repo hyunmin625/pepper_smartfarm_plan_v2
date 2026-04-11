@@ -15,6 +15,7 @@ def main() -> None:
     parser.add_argument("--config", default="data/examples/sensor_ingestor_config_seed.json")
     parser.add_argument("--catalog", default=None)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--loop-interval-seconds", type=int, default=30)
     parser.add_argument("--limit-sensor-groups", type=int, default=None)
     parser.add_argument("--limit-device-groups", type=int, default=None)
     parser.add_argument("--serve-port", type=int, default=None)
@@ -36,7 +37,12 @@ def main() -> None:
 
     try:
         while True:
-            time.sleep(30)
+            time.sleep(args.loop_interval_seconds)
+            summary = service.run_once(
+                limit_sensor_groups=args.limit_sensor_groups,
+                limit_device_groups=args.limit_device_groups,
+            )
+            print(json.dumps(summary, ensure_ascii=False, indent=2))
     except KeyboardInterrupt:
         service.stop_http_server()
 

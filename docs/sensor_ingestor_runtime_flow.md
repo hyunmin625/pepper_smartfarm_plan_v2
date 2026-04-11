@@ -1,6 +1,6 @@
 # Sensor Ingestor Runtime Flow
 
-이 문서는 `sensor-ingestor`가 설정 파일을 읽고 raw 수집값을 MQTT/timeseries 입력으로 바꾸는 실행 흐름을 정의한다.
+이 문서는 `sensor-ingestor`가 설정 파일을 읽고 raw 수집값을 MQTT/timeseries 입력으로 바꾸는 실행 흐름을 정의한다. 현재 구현은 외부 broker/DB 대신 file-backed outbox를 사용한다.
 
 ## 1. 시작 단계
 
@@ -23,6 +23,8 @@ for poller_profile in enabled_profiles:
         normalized_records = normalizer.normalize(normalizer_id, parsed_records)
         quality_records = quality_evaluator.evaluate(group.quality_rule_set_id, normalized_records)
         publisher.publish(group.publish_targets, quality_records)
+        if any record.quality_flag != "good":
+            alert_publisher.publish(sensor_anomaly_alert)
         scheduler.reschedule(group)
 ```
 
@@ -71,6 +73,7 @@ for poller_profile in enabled_profiles:
 - `tsdb-sensor-raw`, `tsdb-device-state`: 원시 이력 저장
 - `tsdb-sensor-snapshot`: 1분 snapshot과 5/30분 trend 입력
 - `object-store-vision`: 이미지 원본 저장, MQTT에는 메타데이터만 전송
+- 로컬 개발에서는 위 publish가 각각 `mqtt_outbox.jsonl`, `timeseries_outbox.lp`, `object_store_outbox.jsonl`에 기록된다.
 
 ## 5. Snapshot/Trend 생성
 
@@ -84,11 +87,12 @@ for poller_profile in enabled_profiles:
 - timeout/retry 초과 시 connection 상태를 `degraded`로 변경
 - 같은 poller에서 연속 실패가 임계치를 넘으면 `health_config.status_topic`에 경보 발행
 - manual import 미도착은 `bad`가 아니라 `pending_batch` 이벤트로 먼저 기록
+- `quality_flag != good`이면 `anomaly_alerts.jsonl`에 `sensor_anomaly` 또는 `device_readback_anomaly`를 기록한다.
 
 ## 7. 다음 구현 순서
 
-1. protocol adapter registry
-2. parser registry
-3. quality evaluator
-4. MQTT publisher / timeseries writer
-5. health check / metrics endpoint
+1. 실제 protocol adapter registry
+2. 실제 MQTT broker 연결
+3. 실제 timeseries DB writer 연결
+4. snapshot/trend scheduler 고도화
+5. anomaly alert를 alert service와 연동

@@ -10,6 +10,7 @@
 - 현재 브랜치: `master`
 - 원격 저장소: `https://github.com/hyunmin625/pepper_smartfarm_plan_v2.git`
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
+- 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
 
 ## 핵심 시스템 방향
 
@@ -33,7 +34,14 @@
 
 - `README.md`: 저장소 목적과 문서 탐색 순서
 - `PROJECT_STATUS.md`: 현재 진행 상태, 핵심 결정, 다음 우선순위
+- `docs/project_bootstrap.md`: 코드명, monorepo, 공통 디렉터리 기준
+- `docs/git_workflow.md`: 브랜치, PR/Issue, ADR, CHANGELOG, 태깅 규칙
+- `docs/development_toolchain.md`: Python/toolchain/env 기준
+- `docs/post_construction_sensor_cutover.md`: 공사 완료 후 실센서 연결 전환 절차
+- `docs/glossary.md`: 핵심 용어 사전
+- `docs/naming_conventions.md`: ID와 이벤트 이름 규칙
 - `AI_MLOPS_PLAN.md`: 온실 공사 중 먼저 진행할 AI 모델 준비, 센서 수집 계획, MLOps 루프
+- `docs/site_scope_baseline.md`: 대상 온실, 품종 shortlist, 낮/밤 운영 기준
 - `EXPERT_AI_AGENT_PLAN.md`: 적고추 재배 전주기 전문가 AI Agent 구축 단계
 - `PLAN.md`: 전체 목표, 아키텍처, 안전 원칙, RAG+파인튜닝 구조, MVP 범위
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
@@ -47,9 +55,14 @@
 - `docs/plc_site_override_map.md`: 현장 controller/channel binding을 profile과 분리 관리하는 기준
 - `docs/plc_runtime_endpoint_config.md`: controller endpoint를 환경 변수로 주입하는 기준
 - `docs/plc_channel_address_registry.md`: `channel_ref -> Modbus address` registry 기준
+- `docs/plc_modbus_governance.md`: Modbus TCP, write/readback, fault/safe mode 공통 기준
 - `docs/device_command_mapping_matrix.md`: 장치별 action/parameter/encoder/ack 매핑 기준
 - `docs/plc_tag_modbus_tcp_adapter.md`: `plc_tag_modbus_tcp` adapter skeleton 범위와 제약
 - `docs/execution_gateway_command_contract.md`: execution-gateway가 넘기는 저수준 device command 계약
+- `docs/execution_gateway_override_contract.md`: emergency stop, manual override, safe mode 전용 계약
+- `docs/execution_gateway_flow.md`: execution-gateway preflight 단계 정의
+- `docs/execution_dispatcher_runtime.md`: dispatcher, control state, audit log runtime 기준
+- `docs/approval_governance.md`: 위험도별 승인 체계와 timeout/fallback 기준
 - `docs/sensor_ingestor_config_spec.md`: poller profile, connection, binding group 기준
 - `docs/sensor_quality_rules_pseudocode.md`: `quality_flag`와 automation gate 규칙
 - `docs/sensor_ingestor_runtime_flow.md`: parser -> normalizer -> publish 실행 흐름
@@ -67,6 +80,12 @@
 
 ## 현재 완료된 작업
 
+- 프로젝트 코드명 `pepper-ops` 확정
+- 저장소 운영 방식을 `monorepo`로 고정하고 `libs/`, `infra/`, `experiments/` 기준을 정의
+- 공사 완료 후 실센서 연결 전환 절차 정의
+- Git 브랜치 전략, PR/Issue 템플릿, ADR 템플릿, CHANGELOG 정책, 릴리즈 태깅 규칙 정리
+- Python 3.12, pip, ruff, black, mypy, pre-commit, env 분리 기준 정리
+- 용어집과 naming convention 문서 작성
 - Git 저장소 초기화 및 GitHub 원격 연결
 - `AGENTS.md` 한글 기여자 가이드 작성
 - 계획 문서 전체 분석
@@ -98,6 +117,9 @@
 - 승인된 `farm_case` 후보를 RAG 청크로 변환하는 초안 추가: `scripts/build_farm_case_rag_chunks.py`, `data/rag/farm_case_seed_chunks.jsonl`
 - `farm_case` 혼합 인덱스에서 official guideline 우선 정렬 guardrail 구현: `scripts/search_rag_index.py`, `evals/rag_official_priority_eval_set.jsonl`
 - Phase -1 설계 산출물 보강 완료: offline runner spec, MLOps registry 설계, shadow mode report format, 합성 센서 시나리오 추가
+- 현장 범위 1차 고정 완료: `300평 연동형 비닐온실 1동`, `gh-01`, 논리 zone 5개 기준
+- 품종 운영 범위 1차 고정 완료: 건고추/고춧가루용 적고추, shortlist `왕조`, `칼탄열풍`, `조생강탄`
+- 공식 재배 자료 기준 낮/밤 운영 기본값 반영 완료: 낮 `25~28℃`, 밤 `18℃ 전후`, 허용 밴드 낮 `25~30℃`/밤 `18~20℃`
 - 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
 - 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
 - `sensor-ingestor` 설정 포맷과 poller profile 초안 완료: `docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`
@@ -106,6 +128,9 @@
 - 안전 요구사항 정리 완료: `docs/safety_requirements.md`
 - `sensor-ingestor` MVP skeleton 추가: `sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/config.py`
 - dry-run 실행과 `/healthz`, `/metrics` endpoint 응답 검증 완료
+- `sensor-ingestor` publish backend 추가: `sensor-ingestor/sensor_ingestor/backends.py`로 MQTT JSONL outbox, timeseries line protocol outbox, object store metadata outbox 연결
+- `sensor-ingestor` quality evaluator 추가: `sensor-ingestor/sensor_ingestor/quality.py`로 `quality_flag`, `quality_reason`, `automation_gate` 계산 구현
+- `scripts/validate_sensor_ingestor_runtime.py`로 publish backend 출력과 anomaly alert 발생 경로 검증 완료
 - `Device Profile` registry/schema 초안 추가: `docs/device_profile_registry.md`, `schemas/device_profile_registry_schema.json`, `data/examples/device_profile_registry_seed.json`
 - `model_profile -> profile_id` cross-check 검증기 추가: `scripts/validate_device_profile_registry.py`
 - `plc-adapter` interface contract와 mock skeleton 추가: `docs/plc_adapter_interface_contract.md`, `plc-adapter/plc_adapter/interface.py`, `plc-adapter/plc_adapter/mock_adapter.py`, `plc-adapter/demo.py`
@@ -121,9 +146,28 @@
 - adapter가 write/readback 시 logical ref가 아니라 transport ref 기준으로 in-memory transport를 호출하도록 보강
 - `plc_tag_modbus_tcp` adapter skeleton 추가: `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`, `plc-adapter/plc_adapter/transports.py`, `plc-adapter/plc_adapter/codecs.py`
 - in-memory transport 기준 connect/reconnect, write/readback, timeout/retry, health check, result mapping 검증 완료
+- optional `PymodbusTcpTransport` fake client 검증 완료: reconnect/retry, write/readback, timeout, health check 경로 확인
 - `execution-gateway -> plc-adapter` command contract 추가: `schemas/device_command_request_schema.json`, `data/examples/device_command_request_samples.jsonl`, `scripts/validate_device_command_requests.py`
 - 장치별 command mapping sample 8건과 실행 validator 추가: `docs/device_command_mapping_matrix.md`, `data/examples/device_command_mapping_samples.jsonl`, `scripts/validate_device_command_mappings.py`
 - 대표 장치 8건에 대해 `adapter.write_device_command()` 경로 검증 완료: fan, shade, vent, irrigation valve, heater, co2, fertigation, source water valve
+- override 전용 계약 추가: `schemas/control_override_request_schema.json`, `data/examples/control_override_request_samples.jsonl`, `scripts/validate_control_override_requests.py`
+- `emergency_stop_latch`, `manual_override_start/release`, `safe_mode_entry`, `auto_mode_reentry_request` 샘플 5건 검증 완료
+- `execution-gateway` skeleton 추가: `execution-gateway/execution_gateway/contracts.py`, `normalizer.py`, `guards.py`, `execution-gateway/demo.py`
+- preflight validator 추가: `scripts/validate_execution_gateway_flow.py`
+- 검증 결과:
+  - heater pending 요청은 `approval_pending`으로 reject
+  - fan 요청은 cooldown active일 때 reject
+  - duplicate estop 요청은 두 번째 요청이 duplicate로 reject
+  - approved auto re-entry 요청은 dispatch 가능
+- `execution-gateway` dispatcher 추가: `execution-gateway/execution_gateway/dispatch.py`, `execution-gateway/execution_gateway/state.py`
+- override 상태를 `ControlStateStore`에 저장하고, `estop/manual_override/safe_mode`가 active면 후속 device command를 차단하도록 연결
+- dispatch audit log 경로를 `.env.example`의 `EXECUTION_GATEWAY_AUDIT_LOG_PATH`로 외부화했다.
+- `scripts/validate_execution_dispatcher.py`로 `override -> state update -> device block -> adapter dispatch -> audit log` 경로를 검증했다.
+- `plc-adapter/plc_adapter/plc_tag_modbus_tcp.py`의 `latency_ms`를 실제 write+readback 경과시간으로 측정하도록 보강했다.
+- `scripts/validate_plc_modbus_transport.py`로 write 후 readback 비교, timeout 시 reconnect/retry, 무응답 장치 감지, transport health 경로를 검증했다.
+- `execution-gateway/execution_gateway/dispatch.py`와 `state.py`에 runtime fault tracker를 추가해 timeout/fault가 연속되면 zone/site scope를 `safe_mode_active`로 전환하도록 연결했다.
+- `scripts/validate_execution_safe_mode.py`로 repeated timeout 2회 후 `safe_mode` latch와 후속 device command 차단을 검증했다.
+- 승인 체계 문서화 완료: 저/중/고위험 액션, 승인자 역할, UI 요구사항, timeout, 거절 fallback을 `docs/approval_governance.md`에 정리했다.
 - 도메인 데이터 분류/포맷/정제 규칙 정리 완료: `docs/dataset_taxonomy.md`, `docs/training_data_format.md`, `docs/data_curation_rules.md`
 - 행동추천/장애대응/로봇우선순위/알람 seed와 eval seed 추가: `data/examples/*`, `evals/*_eval_set.jsonl`
 - 학습/eval JSONL 검증 스크립트 추가: `scripts/validate_training_examples.py`
@@ -134,13 +178,11 @@
 
 ## 다음 우선순위
 
-1. `sensor-ingestor` MQTT publisher와 timeseries writer 실제 backend 연결
-2. 긴급 정지 명령과 수동 override 명령을 별도 contract로 분리
-3. `plc_tag_modbus_tcp`를 실제 TCP/Modbus client와 실IP/실주소 테이블에 연결
-4. `execution-gateway` command normalizer와 duplicate/cooldown/policy 재평가 단계를 구현
-4. `data/examples` seed를 task별 20건 이상으로 확장
-5. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
-6. hard block 정책 10개와 approval 정책 10개 작성
+1. `plc_tag_modbus_tcp`를 실제 TCP/Modbus client와 실IP/실주소 테이블에 연결
+2. override contract를 execution-gateway state machine과 approval store로 고도화
+3. `data/examples` seed를 task별 20건 이상으로 확장
+4. retrieval 결과를 고정 리포트와 회귀 기준으로 관리하는 문서/스크립트 보강
+5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
 
 ## 주의할 점
 

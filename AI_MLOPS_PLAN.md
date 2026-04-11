@@ -7,6 +7,8 @@
 - 현재는 실측 온실 데이터가 없다.
 - 따라서 초기 단계는 장치 제어 구현이 아니라 AI 판단 체계, 데이터 스키마, RAG 지식베이스, 평가셋, MLOps 루프 구축이 우선이다.
 - 실제 센서 데이터가 들어오기 전까지는 재배 매뉴얼, 현장 SOP 초안, 시뮬레이션 데이터, 합성 시나리오, 공개 자료 기반 평가셋으로 모델을 준비한다.
+- 현재 기준 사이트는 `gh-01`, `300평 연동형 비닐온실 1동`이며 주 설비는 대형 온실 1개다.
+- 현재 품종 운영 범위는 `건고추/고춧가루용 적고추`이며 1차 shortlist는 `왕조`, `칼탄열풍`, `조생강탄`이다.
 
 ## Phase -1 진행 현황
 
@@ -62,6 +64,7 @@
 - `docs/mlops_registry_design.md`
 - `docs/shadow_mode_report_format.md`
 - `data/examples/synthetic_sensor_scenarios.jsonl`
+- `docs/post_construction_sensor_cutover.md`
 
 ## 2. 센서 수집 계획 보강
 
@@ -69,6 +72,7 @@
 
 현재 상세 문서:
 
+- `docs/site_scope_baseline.md`
 - `docs/sensor_collection_plan.md`
 - `docs/sensor_installation_inventory.md`
 - `schemas/sensor_catalog_schema.json`

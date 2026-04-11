@@ -37,6 +37,7 @@
 - RAG 지식베이스 범위 확정
 - 파인튜닝 방향 재정의
 - eval/MLOps 기본 구조 정의
+- 대상 온실, 품종, 낮/밤 운영 기준 baseline 확정
 
 ### 주요 작업
 - 전문가 지식 지도 작성
@@ -56,9 +57,13 @@
 - hard block 정책 10개 작성
 - approval 정책 10개 작성
 - 서비스 구조, API 구조, 이벤트 이름 초안 작성
+- `gh-01` site baseline, 품종 shortlist, 낮/밤 기준 문서화
 
 ### 완료 기준
 - expert knowledge map 초안 완료
+- 대상 현장 baseline 완료 (`300평 연동형 비닐온실 1동`, `gh-01`)
+- 품종 shortlist 완료 (`왕조`, `칼탄열풍`, `조생강탄`)
+- 낮/밤 운영 기준 완료 (낮 `25~28℃`, 밤 `18℃ 전후`)
 - sensor judgement matrix 초안 완료
 - state schema JSON 문서 완료
 - feature schema JSON 문서 완료
@@ -77,6 +82,7 @@
 - LLM이 JSON으로 안정적으로 행동 추천 가능하도록 만들기
 - RAG vector store PoC로 재배 지식 검색 가능성 확인
 - 수집 센서 종류, 수집 주기, 품질 기준 확정
+- 계절별 운영 범위와 계절 slice 기준 정리
 
 ### 주요 작업
 - train/val JSONL 생성
@@ -98,12 +104,14 @@
 - 상태판단 정확도 테스트
 - 행동추천 적합도 테스트
 - 금지행동 위반 테스트
+- 계절별 운영 범위 정의
 
 ### 완료 기준
 - JSON 출력 성공률 95% 이상
 - action_type 오류율 5% 이하
 - 주요 재배 질의에 대한 검색 hit rate 기준 통과
 - 센서 수집 계획 문서 완료
+- 계절별 운영 범위 문서 완료
 - 기본 케이스 행동추천 가능
 
 ---
