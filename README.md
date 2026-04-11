@@ -25,6 +25,38 @@
 - 파인튜닝은 JSON 출력, `action_type` 선택, 안전 거절, follow_up 같은 운영 행동 양식을 담당한다.
 - 모든 실행은 policy-engine과 execution-gateway를 통과해야 한다.
 
-## 현재 단계
+## 현재 진행 상황
 
-현재는 온실 공사 중인 구현 전 기획 단계입니다. 다음 우선순위는 전문가 지식 지도, 센서 판단 스키마, RAG 지식베이스, 평가셋, MLOps 루프, 센서 수집 계획 보강입니다. 제어 시스템 구현은 센서 수집 계획과 AI 준비가 끝난 뒤 진행합니다.
+현재는 온실 공사 중인 구현 전 기획 단계이지만, AI 준비와 RAG 기반은 상당 부분 구체화되었습니다.
+
+- RAG seed chunk: `100개` 구축 완료
+- 검색 평가셋: `40개` case로 확장 완료
+- 검색 방식 검증 완료:
+  - keyword-only: hit rate `1.0`, MRR `0.975`
+  - local TF-IDF + SVD: hit rate `1.0`, MRR `1.0`
+  - Chroma local: hit rate `1.0`, MRR `1.0`
+  - Chroma OpenAI embedding: hit rate `1.0`, MRR `1.0`
+- `farm_case` 운영 로그 환류 초안 작성 완료:
+  - `docs/farm_case_rag_pipeline.md`
+  - `schemas/farm_case_candidate_schema.json`
+
+## 현재 핵심 산출물
+
+- `data/rag/pepper_expert_seed_chunks.jsonl`: 적고추 전주기 전문가 지식 100개 청크
+- `artifacts/rag_index/pepper_expert_index.json`: 로컬 RAG 인덱스
+- `docs/rag_indexing_plan.md`: 인덱싱, 검색, 평가 방식
+- `docs/rag_next_steps.md`: 남은 보강 과제
+- `docs/farm_case_rag_pipeline.md`: 운영 로그를 `farm_case` RAG로 승격하는 절차
+- `scripts/build_rag_index.py`, `scripts/search_rag_index.py`: 기본 인덱싱/검색
+- `scripts/build_chroma_index.py`: ChromaDB 기반 vector index 생성
+- `scripts/evaluate_rag_retrieval.py`, `scripts/rag_smoke_test.py`: 검색 회귀 검증
+
+## 다음 우선순위
+
+1. RAG 지식 청크를 `200개` 수준까지 확장
+2. 품종별 기준, 지역별 월별 작업, 기상 재해 대응 지식 추가
+3. `farm_case_candidate` JSONL 샘플 10건 작성
+4. 최근 3~5일 상태를 반영하는 multi-turn contextual retrieval 설계
+5. hard block 정책과 approval 정책 구체화
+
+제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.
