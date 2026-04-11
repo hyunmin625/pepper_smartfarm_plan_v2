@@ -233,7 +233,7 @@
     - [x] OpenAI-backed Chroma의 낮은 MRR 케이스 분석 및 `local blend 4.0` 기본값 반영
     - [x] backend별 Chroma collection/manifest 분리로 차원 충돌 방지
     - [x] retrieval weight 튜닝 스크립트 추가 (`scripts/tune_rag_weights.py`)
-    - [ ] Semantic + Keyword 하이브리드 검색 가중치 재검증용 eval set 확장
+    - [x] Semantic + Keyword 하이브리드 검색 가중치 재검증용 eval set 40개 확장
 - [ ] **RAG 품질 평가 체계 구축**
     - [x] 시나리오별 검색 적중률(Hit Rate) 측정 1차 구현 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
     - [x] 출처 누락 방지를 위한 citation metadata 검증 로직 추가 (`scripts/validate_rag_chunks.py`)
@@ -241,7 +241,8 @@
     - [x] 할루시네이션 방지를 위한 응답 citation coverage 검증 로직 추가 (`scripts/validate_response_citations.py`)
     - [x] keyword-only, local vector, local-backed Chroma 검색 hit rate 비교
     - [x] OpenAI vector를 포함한 4모드 검색 hit rate 비교
-    - [ ] 4모드 비교를 더 긴 평가셋(40+ case)으로 재검증
+    - [x] 4모드 비교를 더 긴 평가셋(40 case)으로 재검증
+    - [ ] 4모드 비교를 계절·센서 이상 케이스 포함 60+ case로 재검증
 
 ## 2.7 AI 준비/MLOps 기반 구축
 - [ ] AI_MLOPS_PLAN.md 유지관리

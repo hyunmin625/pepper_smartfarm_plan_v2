@@ -64,6 +64,22 @@
 | 하우스 건조 판단 | `하우스 건조 35 40도 결로 제습 환기` | `pepper-house-drying-hygiene-001` |
 | 열풍건조 효율 판단 | `반절 열풍건조 60도 건조시간 절반 캡산틴` | `pepper-hotair-drying-split-001` |
 | 수확 후 세척 위생 판단 | `수확 후 큐어링 세척기 세척솔 곰팡이 오염` | `pepper-postharvest-wash-hygiene-001` |
+| 플러그 상토 판단 | `플러그 상토 pH 6.0 6.5 EC 0.5 1.2 분형근` | `pepper-plug-substrate-001` |
+| 가뭄 대응 판단 | `가뭄 pF 2.0 2.5 점적관수 멀칭` | `pepper-drought-001` |
+| 동해/재정식 판단 | `동해 -0.7 -1.85 10% 50% 재정식` | `pepper-cold-injury-001` |
+| 고온해 회복 판단 | `30도 40도 일소 낙화 생장점` | `pepper-heat-injury-001` |
+| 영양장애 진단 판단 | `하위엽 황화 EC 높음 질소 과잉 칼리 과다` | `pepper-nutrient-diagnosis-001` |
+| 칼슘·붕소 결핍 판단 | `석회결핍과 붕소결핍 함몰 흑갈색 생장점 정지` | `pepper-calcium-boron-001` |
+| 생리장해 복합 판단 | `석과 열과 일소과 화분관 신장 토양수분 급변` | `pepper-physiological-disorders-001` |
+| 오전 광 확보 판단 | `오전 광합성 70 80 커튼 골재 차광` | `pepper-morning-light-001` |
+| 비가림 구조 판단 | `비가림 폭 7.0m 높이 3.5m 고깔형 천창` | `pepper-rainshelter-structure-001` |
+| 비가림 표준 시비 판단 | `비가림 990㎡ 질소 19.0kg 토양 EC 0.3` | `pepper-rainshelter-fertilizer-ec-001` |
+| 비가림 초기 저일조 판단 | `정식 후 26일 저온 저일조 첫 수확 10일 지연` | `pepper-rainshelter-lowlight-yield-001` |
+| 비가림 매운맛 저하 판단 | `저온 저일조 캡사이신 디하이드로캡사이신 매운맛` | `pepper-rainshelter-lowlight-pungency-001` |
+| 비가림 관비 염류 판단 | `관비 분할공급 토양 EC 상승 속도 연작 비가림` | `pepper-rainshelter-fertigation-salinity-001` |
+| 비가림 멀칭/세척 판단 | `투명 멀칭 2 3도 흑색 멀칭 담수 세척 3회` | `pepper-rainshelter-mulch-leaching-001` |
+| 비가림 보온자재 판단 | `부직포 보온 덮개 -4.9도 26 28% 증수` | `pepper-rainshelter-frost-cover-001` |
+| 비가림 재식거리 판단 | `재식거리 100 120cm 20 35cm 밀식 약제 도달성` | `pepper-rainshelter-density-001` |
 
 ## Metadata Filter Test
 
@@ -75,14 +91,14 @@
 ## 통과 기준
 
 - 각 query에서 기대 chunk가 상위 3개 안에 포함된다.
-- 현재 기준 smoke test는 기본 query 22개와 metadata filter query 2개, 총 24개를 검증한다.
+- 현재 기준 smoke test는 기본 query 38개와 metadata filter query 2개, 총 40개를 검증한다.
 - 결과 metadata에 `document_id`, `source_url`, `risk_tags`, `sensor_tags`가 포함된다.
 - `citation_required`가 true인 chunk는 `source_url`, `source_pages`, `source_section`을 가진다.
 - 필터 query는 지정한 metadata 조건을 만족하는 chunk만 반환한다.
-- 현재 기준 retrieval eval은 keyword-only MRR 0.9583, local vector MRR 1.0, local-backed Chroma MRR 1.0, OpenAI-backed Chroma MRR 1.0이다.
+- 현재 기준 retrieval eval은 40개 case에서 keyword-only MRR 0.975, local vector MRR 1.0, local-backed Chroma MRR 1.0, OpenAI-backed Chroma MRR 1.0이다.
 
 ## 다음 개선
 
 - 병해충/IPM, 양액 pH/EC, 염류장해 query 추가
-- 더 긴 평가셋으로 4모드 재검증
+- 60개 이상 평가셋으로 4모드 재검증
 - local vector, local-backed Chroma, OpenAI-backed Chroma를 포함한 하이브리드 검색 가중치 비교

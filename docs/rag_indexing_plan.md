@@ -145,11 +145,11 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 - duplicate chunk_id: 0
 - validation errors: 0
 - warnings: 0
-- smoke tests: 기본 query 22개, metadata filter query 2개 PASS
-- retrieval eval(keyword): 24개 case, hit rate 1.0, MRR 0.9583
-- retrieval eval(local vector hybrid): 24개 case, hit rate 1.0, MRR 1.0
-- retrieval eval(local-backed Chroma hybrid): 24개 case, hit rate 1.0, MRR 1.0
-- retrieval eval(OpenAI-backed Chroma hybrid): 24개 case, hit rate 1.0, MRR 1.0
+- smoke tests: 기본 query 38개, metadata filter query 2개 PASS
+- retrieval eval(keyword): 40개 case, hit rate 1.0, MRR 0.975
+- retrieval eval(local vector hybrid): 40개 case, hit rate 1.0, MRR 1.0
+- retrieval eval(local-backed Chroma hybrid): 40개 case, hit rate 1.0, MRR 1.0
+- retrieval eval(OpenAI-backed Chroma hybrid): 40개 case, hit rate 1.0, MRR 1.0
 
 현재 검색 기능:
 
@@ -169,7 +169,7 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 1. `data/rag/pepper_expert_seed_chunks.jsonl`을 200개 수준까지 확장
 2. `RAG-SRC-001` PDF의 병해충/IPM, 양액재배/시설재배 장 추가 추출 지속
 3. 품종별 기준, 지역별 재배력, 월별 작업 캘린더를 metadata와 함께 청크화
-4. 24개 평가셋을 40개 이상으로 확장해 현재 기본 가중치 재검증
+4. 40개 평가셋을 60개 이상으로 확장해 계절/센서 이상 케이스까지 재검증
 5. `text` vs `chunk_summary` 임베딩 입력과 hybrid 가중치 재검토
 6. Semantic + Keyword 하이브리드 검색 가중치 최적화
 7. 운영 로그와 센서 구간을 `farm_case` RAG 후보로 변환하는 파이프라인 설계

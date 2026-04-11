@@ -8,8 +8,8 @@
 - `scripts/build_rag_index.py --skip-embeddings`로 로컬 JSON 인덱스를 재생성할 수 있다.
 - `scripts/validate_rag_chunks.py`로 JSONL 필수 필드, 중복 `chunk_id`, citation 경고를 확인할 수 있다.
 - `scripts/search_rag_index.py`는 keyword 검색, local TF-IDF + SVD vector score, OpenAI embedding 기반 vector score, ChromaDB vector score, metadata hard filter를 지원한다.
-- `scripts/rag_smoke_test.py`는 기본 query 22개와 metadata filter query 2개, 총 24개를 검증한다.
-- `scripts/evaluate_rag_retrieval.py` 기준 keyword-only는 hit rate 1.0, MRR 0.9583이고 local vector hybrid, local-backed Chroma hybrid, OpenAI-backed Chroma hybrid는 모두 hit rate 1.0, MRR 1.0이다.
+- `scripts/rag_smoke_test.py`는 기본 query 38개와 metadata filter query 2개, 총 40개를 검증한다.
+- `scripts/evaluate_rag_retrieval.py` 기준 keyword-only는 40개 case hit rate 1.0, MRR 0.975이고 local vector hybrid, local-backed Chroma hybrid, OpenAI-backed Chroma hybrid는 모두 hit rate 1.0, MRR 1.0이다.
 - `scripts/build_chroma_index.py`로 persistent Chroma collection을 만들 수 있고, 현재는 local-backed와 OpenAI-backed collection 검증까지 완료했다.
 
 ## 1. Knowledge Expansion
@@ -49,7 +49,7 @@
 
 남은 구현:
 
-- 24개 eval을 40개 이상으로 확대해 현 기본 score가 유지되는지 재검증
+- 40개 eval을 60개 이상으로 확대해 현 기본 score가 유지되는지 재검증
 - keyword-only, local vector, local-backed Chroma, OpenAI-backed Chroma 4모드 결과를 고정 리포트로 관리
 - Semantic + Keyword 가중치 최적화
 

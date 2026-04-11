@@ -59,12 +59,13 @@
 - 파인튜닝 후보 seed 샘플 작성: 상태판단 5개, 금지행동 5개
 - RAG 인덱싱 설계와 로컬 JSON 인덱스 빌드 스크립트 작성
 - RAG 검색 smoke test 스크립트 작성 및 6개 쿼리 통과
-- 농촌진흥청 PDF 기반 RAG 정밀 보강 완료: 수확 후·저장·건조 운영 query 포함 24개 smoke test 통과
+- 농촌진흥청 PDF 기반 RAG 정밀 보강 완료: 육묘·재해·영양장애·비가림 구조까지 포함한 40개 smoke test 통과
 - 농촌진흥청 PDF, 육묘/접목/식물공장, 비가림 재배 지식 추가로 RAG seed chunk 100개 확장 완료
-- RAG 검색 품질 평가 1차 구현: retrieval eval 24건, keyword-only hit rate 1.0, MRR 0.9583
-- 로컬 TF-IDF + SVD vector search PoC 구현: local hybrid retrieval eval 24건 hit rate 1.0, MRR 1.0
-- ChromaDB persistent vector store 도입: local-backed Chroma collection build/eval 완료, retrieval eval 24건 hit rate 1.0, MRR 1.0
-- OpenAI embedding 기반 Chroma collection build/eval 완료, local blend 4.0 적용 후 retrieval eval 24건 hit rate 1.0, MRR 1.0
+- RAG 검색 품질 평가 1차 구현: retrieval eval 40건, keyword-only hit rate 1.0, MRR 0.975
+- 로컬 TF-IDF + SVD vector search PoC 구현: local hybrid retrieval eval 40건 hit rate 1.0, MRR 1.0
+- ChromaDB persistent vector store 도입: local-backed Chroma collection build/eval 완료, retrieval eval 40건 hit rate 1.0, MRR 1.0
+- OpenAI embedding 기반 Chroma collection build/eval 완료, local blend 4.0 적용 후 retrieval eval 40건 hit rate 1.0, MRR 1.0
+- 40개 retrieval eval 재검증 완료: local vector, local-backed Chroma, OpenAI-backed Chroma 모두 hit rate 1.0, MRR 1.0 유지
 - Chroma collection/manifest를 backend별로 분리: `pepper_expert_chunks_local`, `pepper_expert_chunks_openai`
 - 응답 citation coverage 검증 스크립트 추가: `scripts/validate_response_citations.py`
 - retrieval weight 튜닝 스크립트 추가: `scripts/tune_rag_weights.py`
@@ -74,8 +75,8 @@
 
 1. RAG 지식 청크를 100개에서 200개 수준까지 추가 확장
 2. 적고추 품종별 임계값, 지역별 월별 작업, 기상 재해 대응 청크화 지속
-3. retrieval eval을 24개에서 40개 이상으로 확장해 현재 4모드 성능 재검증
-4. 운영 로그와 센서 데이터를 `farm_case` RAG 후보로 전환하는 파이프라인 설계
+3. 운영 로그와 센서 데이터를 `farm_case` RAG 후보로 전환하는 파이프라인 설계
+4. Multi-turn contextual retrieval 설계와 최근 3~5일 상태 반영 검색 전략 정의
 5. hard block 정책 10개와 approval 정책 10개 작성
 6. offline agent runner spec 작성
 

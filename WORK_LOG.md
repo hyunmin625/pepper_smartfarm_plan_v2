@@ -266,6 +266,22 @@
   - `./.venv/bin/python scripts/compare_rag_retrieval_modes.py --candidate-backend chroma --chroma-embedding-backend openai`
     - keyword baseline 대비 delta_mrr +0.0417
 
+### RAG retrieval eval 40개 확장 재검증
+- `evals/rag_retrieval_eval_set.jsonl`에 육묘 상토, 가뭄, 동해, 고온해, 영양장애, 칼슘·붕소 결핍, 오전 광, 비가림 구조·시비·저일조·관비·멀칭·보온·재식거리 관련 retrieval 케이스 16건을 추가했다.
+- `scripts/rag_smoke_test.py`에도 같은 범주의 smoke query 16건을 추가해 기본 query 38개와 metadata filter 2개, 총 40건을 검증하도록 확장했다.
+- 검증 결과:
+  - `./.venv/bin/python scripts/rag_smoke_test.py`
+    - 총 40건 PASS
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --fail-under 1.0`
+    - case_count 40, hit_rate 1.0, MRR 0.975
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend local --fail-under 1.0`
+    - case_count 40, hit_rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0`
+    - case_count 40, hit_rate 1.0, MRR 1.0
+  - `./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend openai --fail-under 1.0`
+    - case_count 40, hit_rate 1.0, MRR 1.0
+- 40개 평가셋 기준으로는 keyword-only baseline만 MRR 0.975로 낮고, local vector, local-backed Chroma, OpenAI-backed Chroma는 모두 MRR 1.0을 유지했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
