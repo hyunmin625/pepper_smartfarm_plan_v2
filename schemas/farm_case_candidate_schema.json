@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-smartfarm-plan-v2.local/schemas/farm_case_candidate_schema.json",
+  "title": "Farm Case Candidate",
+  "type": "object",
+  "required": [
+    "case_id",
+    "farm_id",
+    "zone_id",
+    "source_type",
+    "crop_type",
+    "growth_stage",
+    "sensor_tags",
+    "risk_tags",
+    "action_taken",
+    "outcome",
+    "review_status",
+    "chunk_summary"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "farm_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "zone_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_type": {
+      "const": "farm_case"
+    },
+    "crop_type": {
+      "type": "string",
+      "enum": ["red_pepper", "dried_red_pepper"]
+    },
+    "cultivar": {
+      "type": "string"
+    },
+    "season": {
+      "type": "string"
+    },
+    "cultivation_type": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "growth_stage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "trigger_type": {
+      "type": "string"
+    },
+    "sensor_tags": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_tags": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "sensor_quality": {
+      "type": "string",
+      "enum": ["good", "partial", "bad"]
+    },
+    "operation_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "causality_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visual_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "event_start_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_end_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sensor_window_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "operation_log_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ai_decision_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "action_taken": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["success", "partial_success", "failure", "unknown"]
+    },
+    "outcome_evidence": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "review_status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "approved", "rejected"]
+    },
+    "reviewer": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trust_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "chunk_summary": {
+      "type": "string",
+      "minLength": 20
+    },
+    "citation_required": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

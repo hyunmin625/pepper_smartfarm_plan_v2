@@ -282,6 +282,11 @@
     - case_count 40, hit_rate 1.0, MRR 1.0
 - 40개 평가셋 기준으로는 keyword-only baseline만 MRR 0.975로 낮고, local vector, local-backed Chroma, OpenAI-backed Chroma는 모두 MRR 1.0을 유지했다.
 
+### farm_case RAG 환류 파이프라인 초안 작성
+- `docs/farm_case_rag_pipeline.md`를 추가해 운영 로그, 센서 구간, AI 판단 로그를 `farm_case` RAG 후보로 묶는 event window 기준과 승격 절차를 정리했다.
+- `schemas/farm_case_candidate_schema.json`를 추가해 `case_id`, `farm_id`, `zone_id`, `growth_stage`, `sensor_tags`, `risk_tags`, `action_taken`, `outcome`, `review_status`, `chunk_summary` 등 핵심 필드를 고정했다.
+- `todo.md`, `PROJECT_STATUS.md`, `docs/rag_next_steps.md`에 `farm_case` 후보 변환 규칙, metadata 정의, 리뷰 승인 절차 링크를 반영했다.
+
 ## 운영 규칙
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.

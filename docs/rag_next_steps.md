@@ -83,6 +83,11 @@
 
 실제 농장 운영 데이터는 RAG의 별도 지식 계층으로 축적한다.
 
+기준 문서:
+
+- [farm_case RAG 환류 파이프라인](./farm_case_rag_pipeline.md)
+- [farm_case 후보 스키마](../schemas/farm_case_candidate_schema.json)
+
 수집 대상:
 
 - 센서 시계열: 온습도, 광, CO2, 토양수분, EC, pH, 배액률

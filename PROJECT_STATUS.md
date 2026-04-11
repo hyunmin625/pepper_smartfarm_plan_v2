@@ -38,6 +38,7 @@
 - `PLAN.md`: 전체 목표, 아키텍처, 안전 원칙, RAG+파인튜닝 구조, MVP 범위
 - `todo.md`: 세부 작업 목록과 구현 체크리스트
 - `docs/rag_next_steps.md`: RAG 데이터 확충, 벡터 검색, 메타데이터 필터, 현장 데이터 환류 과제
+- `docs/farm_case_rag_pipeline.md`: 운영 로그와 센서 구간을 `farm_case` RAG로 승격하는 기준과 리뷰 절차
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준
 - `WORK_LOG.md`: 진행한 작업, 커밋, 조사 근거 기록
 - `AGENTS.md`: 기여자와 AI 에이전트 작업 규칙
@@ -66,6 +67,7 @@
 - ChromaDB persistent vector store 도입: local-backed Chroma collection build/eval 완료, retrieval eval 40건 hit rate 1.0, MRR 1.0
 - OpenAI embedding 기반 Chroma collection build/eval 완료, local blend 4.0 적용 후 retrieval eval 40건 hit rate 1.0, MRR 1.0
 - 40개 retrieval eval 재검증 완료: local vector, local-backed Chroma, OpenAI-backed Chroma 모두 hit rate 1.0, MRR 1.0 유지
+- `farm_case` RAG 환류 파이프라인 초안과 후보 스키마 작성: `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json`
 - Chroma collection/manifest를 backend별로 분리: `pepper_expert_chunks_local`, `pepper_expert_chunks_openai`
 - 응답 citation coverage 검증 스크립트 추가: `scripts/validate_response_citations.py`
 - retrieval weight 튜닝 스크립트 추가: `scripts/tune_rag_weights.py`
@@ -75,7 +77,7 @@
 
 1. RAG 지식 청크를 100개에서 200개 수준까지 추가 확장
 2. 적고추 품종별 임계값, 지역별 월별 작업, 기상 재해 대응 청크화 지속
-3. 운영 로그와 센서 데이터를 `farm_case` RAG 후보로 전환하는 파이프라인 설계
+3. `farm_case` 후보 JSONL 샘플 10건과 event window builder 규칙 작성
 4. Multi-turn contextual retrieval 설계와 최근 3~5일 상태 반영 검색 전략 정의
 5. hard block 정책 10개와 approval 정책 10개 작성
 6. offline agent runner spec 작성

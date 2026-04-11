@@ -7,6 +7,7 @@
 - [AI 모델 준비 및 MLOps 계획](AI_MLOPS_PLAN.md)
 - [적고추 전문가 AI Agent 구축 계획](EXPERT_AI_AGENT_PLAN.md)
 - [RAG 보완 핵심 과제](docs/rag_next_steps.md)
+- [farm_case RAG 환류 파이프라인](docs/farm_case_rag_pipeline.md)
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
@@ -255,9 +256,12 @@
 - [ ] champion/challenger 모델 승격 규칙 정의
 - [ ] shadow mode 평가 리포트 포맷 정의
 - [ ] 운영 로그 → 학습 후보 변환 규칙 정의
-- [ ] 운영 로그 → RAG `farm_case` 후보 변환 규칙 정의
-- [ ] `farm_id`, `zone_id`, `cultivar`, `season`, `outcome` metadata 정의
-- [ ] 성공/실패 사례를 공식 지식과 충돌 검토 후 RAG에 반영하는 승인 절차 정의
+- [x] 운영 로그 → RAG `farm_case` 후보 변환 규칙 정의 (`docs/farm_case_rag_pipeline.md`)
+- [x] `farm_id`, `zone_id`, `cultivar`, `season`, `outcome` metadata 정의 (`schemas/farm_case_candidate_schema.json`)
+- [x] 성공/실패 사례를 공식 지식과 충돌 검토 후 RAG에 반영하는 승인 절차 정의 (`docs/farm_case_rag_pipeline.md`)
+- [ ] `farm_case_candidate` JSONL 샘플 10건 작성
+- [ ] event window builder 규칙을 세부 스펙으로 구체화
+- [ ] 승인된 `farm_case` 후보를 RAG chunk JSONL로 변환하는 스크립트 초안 작성
 
 ## 2.8 적고추 전문가 AI Agent 구축
 - [ ] 적고추 재배 전주기 단계 정의
