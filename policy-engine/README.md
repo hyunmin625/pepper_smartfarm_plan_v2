@@ -9,9 +9,11 @@ hard block, approval required, manual mode only 정책을 평가하는 서비스
 - `../data/examples/policy_output_validator_rules_seed.json`: `HSV-01`~`HSV-10`, `OV-01`~`OV-10` seed rule catalog
 - `../data/examples/policy_output_validator_cases.jsonl`: worker lock, rootzone conflict, climate degraded, robot clearance, approval contract 샘플
 - `../scripts/validate_policy_output_validator.py`: runtime validator 회귀 검증
+- `../llm-orchestrator/llm_orchestrator/runtime.py`: `LLM output -> validator -> audit log` wiring skeleton
+- `../scripts/validate_llm_output_validator_runtime.py`: orchestrator wiring 회귀 검증
 
 다음 단계:
 
-1. LLM orchestrator 출력 직후 `output_validator.apply_output_validator()`를 연결
+1. `llm-orchestrator/llm_orchestrator/runtime.py`를 실제 LLM runtime에 연결
 2. `validator_reason_codes`, `validator_decision`을 audit log와 shadow mode report에 남김
 3. 이후 policy evaluator와 approval router를 같은 request envelope 안에서 이어 붙임

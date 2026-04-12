@@ -284,15 +284,16 @@ def is_path_or_comms_loss_case(case: dict[str, Any]) -> bool:
         and any(
             keyword in summary
             for keyword in [
-                "관수",
-                "pump",
-                "밸브",
-                "원수",
+                "관수 펌프",
+                "irrigation pump",
+                "관수 메인 밸브",
+                "main valve",
+                "원수 메인 밸브",
                 "source water",
                 "건조실",
-                "dry",
+                "dry room",
+                "dry-room",
                 "dehumidifier",
-                "fan",
             ]
         )
     )

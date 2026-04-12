@@ -3,12 +3,12 @@
 - model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v9-prompt-v5-methodfix-eval-v1-20260412-1257:DTgUbJHJ`
 - source_eval_files: `evals/expert_judgement_eval_set.jsonl, evals/action_recommendation_eval_set.jsonl, evals/forbidden_action_eval_set.jsonl, evals/failure_response_eval_set.jsonl, evals/robot_task_eval_set.jsonl, evals/edge_case_eval_set.jsonl, evals/seasonal_eval_set.jsonl`
 - pass_rate_before: `0.575`
-- pass_rate_after: `0.7937`
+- pass_rate_after: `0.8`
 - passed_cases_before: `92`
-- passed_cases_after: `127`
-- changed_cases: `76`
+- passed_cases_after: `128`
+- changed_cases: `73`
 - improved_cases: `39`
-- worsened_cases: `4`
+- worsened_cases: `3`
 
 ## Applied Rules
 
@@ -18,9 +18,9 @@
 - `HSV-07`: `24`
 - `HSV-08`: `24`
 - `OV-06`: `20`
-- `HSV-04`: `19`
-- `HSV-05`: `19`
-- `HSV-06`: `19`
+- `HSV-04`: `16`
+- `HSV-05`: `16`
+- `HSV-06`: `16`
 - `HSV-10`: `7`
 - `HSV-09`: `4`
 - `OV-04`: `2`
@@ -39,7 +39,7 @@
 | nutrient_risk | 6 | 4 | 0.6667 |
 | pest_disease_risk | 5 | 5 | 1.0 |
 | robot_task_prioritization | 12 | 6 | 0.5 |
-| rootzone_diagnosis | 6 | 5 | 0.8333 |
+| rootzone_diagnosis | 6 | 6 | 1.0 |
 | safety_policy | 7 | 6 | 0.8571 |
 | seasonal | 24 | 18 | 0.75 |
 | sensor_fault | 7 | 7 | 1.0 |
@@ -90,7 +90,6 @@
 ## Remaining Failures
 
 - `pepper-eval-014`: required_action_types_present
-- `pepper-eval-020`: risk_level_match, required_action_types_present
 - `pepper-eval-023`: risk_level_match
 - `pepper-eval-036`: risk_level_match
 - `pepper-eval-039`: required_action_types_present

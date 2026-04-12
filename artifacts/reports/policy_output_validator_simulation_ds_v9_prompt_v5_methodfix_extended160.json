@@ -15,13 +15,13 @@
   ],
   "summary": {
     "total_cases": 160,
-    "passed_cases": 127,
-    "pass_rate": 0.7937,
+    "passed_cases": 128,
+    "pass_rate": 0.8,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
     "average_confidence": 0.762,
-    "average_confidence_on_pass": 0.7664,
-    "average_confidence_on_fail": 0.7452,
+    "average_confidence_on_pass": 0.7668,
+    "average_confidence_on_fail": 0.7428,
     "by_category": {
       "action_recommendation": {
         "cases": 20,
@@ -70,8 +70,8 @@
       },
       "rootzone_diagnosis": {
         "cases": 6,
-        "passed": 5,
-        "pass_rate": 0.8333
+        "passed": 6,
+        "pass_rate": 1.0
       },
       "safety_policy": {
         "cases": 7,
@@ -98,11 +98,11 @@
     "top_failed_checks": [
       [
         "risk_level_match",
-        23
+        22
       ],
       [
         "required_action_types_present",
-        13
+        12
       ],
       [
         "required_task_types_present",
@@ -232,13 +232,13 @@
   },
   "summary_after": {
     "total_cases": 160,
-    "passed_cases": 127,
-    "pass_rate": 0.7937,
+    "passed_cases": 128,
+    "pass_rate": 0.8,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
     "average_confidence": 0.762,
-    "average_confidence_on_pass": 0.7664,
-    "average_confidence_on_fail": 0.7452,
+    "average_confidence_on_pass": 0.7668,
+    "average_confidence_on_fail": 0.7428,
     "by_category": {
       "action_recommendation": {
         "cases": 20,
@@ -287,8 +287,8 @@
       },
       "rootzone_diagnosis": {
         "cases": 6,
-        "passed": 5,
-        "pass_rate": 0.8333
+        "passed": 6,
+        "pass_rate": 1.0
       },
       "safety_policy": {
         "cases": 7,
@@ -315,11 +315,11 @@
     "top_failed_checks": [
       [
         "risk_level_match",
-        23
+        22
       ],
       [
         "required_action_types_present",
-        13
+        12
       ],
       [
         "required_task_types_present",
@@ -337,9 +337,9 @@
     "top_optional_failures": []
   },
   "validator_summary": {
-    "changed_cases": 76,
+    "changed_cases": 73,
     "improved_cases": 39,
-    "worsened_cases": 4,
+    "worsened_cases": 3,
     "top_applied_rules": [
       [
         "HSV-01",
@@ -367,15 +367,15 @@
       ],
       [
         "HSV-04",
-        19
+        16
       ],
       [
         "HSV-05",
-        19
+        16
       ],
       [
         "HSV-06",
-        19
+        16
       ],
       [
         "HSV-10",
@@ -2622,22 +2622,21 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
+        "risk_level_match",
         "follow_up_present",
         "citations_present",
         "citations_in_context",
+        "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [
-        "risk_level_match",
-        "required_action_types_present"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
-        "enter_safe_mode",
-        "request_human_check"
+        "request_human_check",
+        "create_alert"
       ],
       "robot_task_types": [],
       "citation_ids": [
@@ -2678,43 +2677,39 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "validator-enter_safe_mode",
-              "action_type": "enter_safe_mode",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator forced safe mode because a critical path communication/readback loss is active.",
-              "risk_level": "critical",
-              "target": {
-                "target_type": "operator",
-                "target_id": "gh-01-zone-c-manager"
-              }
-            },
-            {
-              "action_id": "validator-request_human_check",
+              "action_id": "state-judgement-011-act-001",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator requested manual confirmation of the affected path before any restart.",
-              "risk_level": "critical",
+              "expected_effect": "센서 기반 판단을 교차 검증한다.",
+              "reason": "배액 EC와 급액 균일성을 현장에서 확인한다.",
+              "risk_level": "medium",
               "target": {
-                "target_type": "operator",
-                "target_id": "duty-manager"
+                "target_id": "gh-01-zone-c-manager",
+                "target_type": "operator"
+              }
+            },
+            {
+              "action_id": "state-judgement-011-act-002",
+              "action_type": "create_alert",
+              "approval_required": false,
+              "cooldown_minutes": 30,
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "근권 염류 집적 의심을 기록한다.",
+              "risk_level": "high",
+              "target": {
+                "target_id": "gh-01-zone-c",
+                "target_type": "zone"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
-          "risk_level": "critical",
+          "risk_level": "high",
           "robot_tasks": [],
           "situation_summary": "야간 dry-back 뒤 첫 배액 EC 급등과 함수율 회복 지연이 함께 나타나 근권 염류 집적 위험이 있다.",
-          "validator_reason_codes": [
-            "HSV-04",
-            "HSV-05",
-            "HSV-06"
-          ],
-          "validator_decision": "rewritten"
+          "validator_reason_codes": [],
+          "validator_decision": "pass"
         },
         "response_id": "chatcmpl-DTo9qJg60SynKK6gJdUOEArZBEQjS",
         "usage": {
@@ -2733,18 +2728,11 @@
           }
         }
       },
-      "validator_applied_rules": [
-        "HSV-04",
-        "HSV-05",
-        "HSV-06"
-      ],
-      "validator_decision": "rewritten",
+      "validator_applied_rules": [],
+      "validator_decision": "pass",
       "pre_validator_passed": true,
       "pre_validator_failed_checks": [],
-      "post_validator_failed_checks": [
-        "risk_level_match",
-        "required_action_types_present"
-      ],
+      "post_validator_failed_checks": [],
       "post_validator_optional_failures": []
     },
     {
@@ -16509,29 +16497,29 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "validator-enter_safe_mode",
+              "action_id": "state3-act-004",
               "action_type": "enter_safe_mode",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator forced safe mode because a critical path communication/readback loss is active.",
+              "expected_effect": "추가 양액 공급 오류를 막는다.",
+              "reason": "공급 경로 상태를 확인할 수 없을 때는 자동 제어를 중단한다.",
               "risk_level": "critical",
               "target": {
-                "target_type": "system",
-                "target_id": "gh-01-zone-c-auto"
+                "target_id": "gh-01-zone-c-auto",
+                "target_type": "system"
               }
             },
             {
-              "action_id": "validator-request_human_check",
+              "action_id": "state3-act-005",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator requested manual confirmation of the affected path before any restart.",
-              "risk_level": "critical",
+              "expected_effect": "수동 확인으로 자동 판단을 교차 검증한다.",
+              "reason": "밸브 readback과 펌프 상태를 확인한다.",
+              "risk_level": "medium",
               "target": {
-                "target_type": "operator",
-                "target_id": "duty-manager"
+                "target_id": "fertigation-manager",
+                "target_type": "operator"
               }
             }
           ],
@@ -16539,13 +16527,8 @@
           "retrieval_coverage": "sufficient",
           "risk_level": "critical",
           "situation_summary": "양액 공급 경로 상태를 읽을 수 없어 자동 제어를 유지하면 위험하다.",
-          "robot_tasks": [],
-          "validator_reason_codes": [
-            "HSV-04",
-            "HSV-05",
-            "HSV-06"
-          ],
-          "validator_decision": "rewritten"
+          "validator_reason_codes": [],
+          "validator_decision": "pass"
         },
         "response_id": "chatcmpl-DToGzq6xTSZ8ub4kbpgTYmqAsddog",
         "usage": {
@@ -16564,12 +16547,8 @@
           }
         }
       },
-      "validator_applied_rules": [
-        "HSV-04",
-        "HSV-05",
-        "HSV-06"
-      ],
-      "validator_decision": "rewritten",
+      "validator_applied_rules": [],
+      "validator_decision": "pass",
       "pre_validator_passed": true,
       "pre_validator_failed_checks": [],
       "post_validator_failed_checks": [],
@@ -17824,8 +17803,8 @@
       ],
       "optional_failures": [],
       "action_types": [
-        "enter_safe_mode",
-        "request_human_check"
+        "request_human_check",
+        "create_alert"
       ],
       "robot_task_types": [],
       "citation_ids": [
@@ -17866,43 +17845,39 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "validator-enter_safe_mode",
-              "action_type": "enter_safe_mode",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator forced safe mode because a critical path communication/readback loss is active.",
-              "risk_level": "critical",
-              "target": {
-                "target_type": "operator",
-                "target_id": "gh-01-zone-b-manager"
-              }
-            },
-            {
-              "action_id": "validator-request_human_check",
+              "action_id": "state4-act-004",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator requested manual confirmation of the affected path before any restart.",
-              "risk_level": "critical",
+              "expected_effect": "자동 판단을 현장 점검으로 교차 검증한다.",
+              "reason": "근권 EC, pH, 배수 상태, 야간 회복 정도를 함께 확인한다.",
+              "risk_level": "high",
               "target": {
-                "target_type": "operator",
-                "target_id": "duty-manager"
+                "target_id": "gh-01-zone-b-manager",
+                "target_type": "operator"
+              }
+            },
+            {
+              "action_id": "state4-act-005",
+              "action_type": "create_alert",
+              "approval_required": false,
+              "cooldown_minutes": 30,
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "과염류 집적 의심 상태를 기록하고 대응을 촉구한다.",
+              "risk_level": "high",
+              "target": {
+                "target_id": "gh-01-zone-b",
+                "target_type": "zone"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
-          "risk_level": "critical",
+          "risk_level": "high",
           "robot_tasks": [],
           "situation_summary": "늦여름 강한 증산과 야간 dry-back이 겹쳐 slab EC 누적과 염류 집적 위험이 커졌다.",
-          "validator_reason_codes": [
-            "HSV-04",
-            "HSV-05",
-            "HSV-06"
-          ],
-          "validator_decision": "rewritten"
+          "validator_reason_codes": [],
+          "validator_decision": "pass"
         },
         "response_id": "chatcmpl-DToHdOTyZ5VvpJxKTkBLmUfwGFLfC",
         "usage": {
@@ -17921,12 +17896,8 @@
           }
         }
       },
-      "validator_applied_rules": [
-        "HSV-04",
-        "HSV-05",
-        "HSV-06"
-      ],
-      "validator_decision": "rewritten",
+      "validator_applied_rules": [],
+      "validator_decision": "pass",
       "pre_validator_passed": false,
       "pre_validator_failed_checks": [
         "risk_level_match"

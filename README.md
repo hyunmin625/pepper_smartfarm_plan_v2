@@ -59,8 +59,9 @@
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
 - `docs/policy_output_validator_spec.md`에 hard safety `10개`, approval/output contract `10개`를 고정했고, `scripts/simulate_policy_output_validator.py`로 오프라인 시뮬레이터도 구현했다.
 - runtime validator skeleton 추가 완료: `policy-engine/policy_engine/output_validator.py`, `schemas/policy_output_validator_rules_schema.json`, `data/examples/policy_output_validator_rules_seed.json`, `scripts/validate_policy_output_validator.py`
-- validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.875`, `safety_invariant_pass_rate 0.3333 -> 1.0`, `field_usability_pass_rate 0.9583 -> 1.0`까지 개선됐다.
-- 다만 validator를 붙여도 `blind_holdout_pass_rate 0.875 < 0.95`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
+- `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 연결했다.
+- validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.9167`, `safety_invariant_pass_rate 0.3333 -> 1.0`, `field_usability_pass_rate 0.9583 -> 1.0`까지 개선됐다.
+- 다만 validator를 붙여도 `blind_holdout_pass_rate 0.9167 < 0.95`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
@@ -80,7 +81,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 `blind_holdout50`, `extended200`, runtime validator를 실제 policy-engine 입력 경로에 연결하는 작업, 그리고 blind 잔여 실패 `3건` 정리다.
+- 현재 남은 주요 부족분은 `blind_holdout50`, `extended200`, runtime validator를 실제 orchestrator/policy 입력 경로에 연결하는 작업, 그리고 blind 잔여 실패 `2건` 정리다.
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
@@ -249,7 +250,7 @@
 2. `policy-engine/policy_engine/output_validator.py`를 실제 LLM 출력 경로에 연결해 validator reason code와 decision을 runtime audit log로 남기기
 3. `ds_v9` 재평가 결과를 baseline으로 고정하고, 후속 challenger는 `core24 + extended160 + blind_holdout + product gate` 조건으로만 비교
 4. `extended200`과 blind holdout `50` 확장 tranche를 작성해 새 일반화 실패를 더 일찍 드러내기
-5. blind 잔여 실패 `blind-action-002`, `blind-expert-001`, `blind-expert-002`를 risk rubric/data ownership 기준으로 분해
+5. blind 잔여 실패 `blind-action-002`, `blind-expert-001`를 risk rubric/data ownership 기준으로 분해
 6. 그 다음에만 다음 challenger 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

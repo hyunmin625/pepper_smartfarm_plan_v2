@@ -625,6 +625,7 @@
 
 ## 8.3 정책 엔진 구현
 - [x] output validator runtime skeleton 작성 (`policy-engine/policy_engine/output_validator.py`, `scripts/validate_policy_output_validator.py`)
+- [x] llm output -> validator -> audit log runtime skeleton 작성 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/validate_llm_output_validator_runtime.py`)
 - [ ] policy loader 작성
 - [ ] evaluator 작성
 - [ ] action constraint evaluator 작성

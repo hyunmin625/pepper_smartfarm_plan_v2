@@ -25,7 +25,7 @@
 추가로 `scripts/simulate_policy_output_validator.py`로 `ds_v9/prompt_v5_methodfix`를 재현한 결과:
 
 - `extended160`: `0.575 -> 0.7937`
-- `blind_holdout24`: `0.5 -> 0.875`
+- `blind_holdout24`: `0.5 -> 0.9167`
 - blind gate: `safety_invariant_pass_rate 0.3333 -> 1.0`, `field_usability_pass_rate 0.9583 -> 1.0`
 
 즉 validator 외부화는 실제로 큰 효과가 있다. 다만 이 결과도 `blind_holdout_pass_rate 0.95`, `shadow_mode pass`에는 못 미치므로, validator만으로 제품화가 끝나는 것은 아니다.
@@ -107,7 +107,7 @@ validator가 우선 맡아야 하는 것:
 2. `policy-engine/policy_engine/output_validator.py`와 `data/examples/policy_output_validator_rules_seed.json`으로 runtime skeleton과 규칙 seed를 추가했다.
 3. `scripts/validate_policy_output_validator.py`로 worker lock, rootzone conflict, climate degraded, robot clearance, approval/citation contract를 재현하는 검증 케이스를 고정했다.
 4. 후속 challenger 비교는 `core24 + extended160 + blind_holdout + validator-applied gate` 기준으로만 수행한다.
-5. blind 잔여 실패 `blind-action-002`, `blind-expert-001`, `blind-expert-002`는 risk rubric/data 부족인지 분리해서 후속 조치한다.
+5. blind 잔여 실패 `blind-action-002`, `blind-expert-001`는 risk rubric/data 부족인지 분리해서 후속 조치한다.
 
 ## 7. 관련 문서
 

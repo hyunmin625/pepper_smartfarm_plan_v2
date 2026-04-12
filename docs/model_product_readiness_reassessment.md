@@ -12,10 +12,10 @@
 - 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
 - blind holdout 제품화 게이트 기준 `ds_v9`는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`이다.
 - 즉 `ds_v9`는 공개 benchmark와 robot field contract는 개선했지만, blind safety invariant는 오히려 악화됐다.
-- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.875`까지 회복된다.
+- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.9167`까지 회복된다.
 - validator 적용 blind gate는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라간다.
-- 그래도 `blind_holdout_pass_rate 0.875 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
-- 남은 blind 실패는 `blind-action-002`, `blind-expert-001`, `blind-expert-002` 세 건으로 좁혀졌다.
+- 그래도 `blind_holdout_pass_rate 0.9167 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
+- 남은 blind 실패는 `blind-action-002`, `blind-expert-001` 두 건으로 좁혀졌다.
 
 ### 실제 실패 의미
 
@@ -58,7 +58,7 @@
 - 현재 training `268건` 기준으로 위 split을 적용하면 validation은 `48건`, train은 `220건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
-- 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 3건 제거` 순서로 간다.
+- 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 2건 제거` 순서로 간다.
 
 ### C. 데이터 부족 문제인가
 
@@ -149,7 +149,7 @@
 5. `validator 외부화`
 - 한다.
 - offline 시뮬레이션과 runtime skeleton으로 효과는 이미 확인됐다.
-- 다음 단계는 runtime validator wiring과 blind 잔여 `3건` 제거다.
+- 다음 단계는 runtime validator wiring과 blind 잔여 `2건` 제거다.
 
 ## 4. 실행 계획
 
@@ -179,7 +179,7 @@
   - `seasonal`: `24`
 - blind holdout은 `24 -> 50`으로 확장한다.
 - 신규 training sample은 critical slice 중심으로 `+42` 내외만 추가한다.
-- blind holdout `24`의 남은 실패 `3건`은 별도 ownership으로 분리한다.
+- blind holdout `24`의 남은 실패 `2건`은 별도 ownership으로 분리한다.
   - validator로 줄일 수 없는 `risk_level` 경계 문제
   - validator가 강제해야 할 pair/contract 누락 문제
 
@@ -227,6 +227,6 @@
 
 - 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
 - validator 시뮬레이션과 runtime skeleton은 실제로 큰 개선을 만들었지만, 그 자체로 `0.95`와 `shadow mode pass`까지는 못 갔다.
-- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator runtime 연결`, `blind 잔여 3건 제거`, `critical slice만 보강`이다.
+- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator runtime 연결`, `blind 잔여 2건 제거`, `critical slice만 보강`이다.
 - 세부 기준은 `docs/risk_level_rubric.md`, `docs/critical_slice_augmentation_plan.md`, `scripts/report_risk_slice_coverage.py`에 고정한다.
 - 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.
