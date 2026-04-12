@@ -59,6 +59,8 @@
 - `ds_v11`는 이전 baseline `ds_v9/prompt_v5_methodfix`보다 모든 frozen gate에서 개선됐다. 비교값은 `core24 0.875 -> 0.9167`, `extended120 0.7083 -> 0.7667`, `extended160 0.575 -> 0.75`, `extended200 0.51 -> 0.7`, `blind_holdout50 raw 0.32 -> 0.7`, `blind_holdout50 validator 0.76 -> 0.9`다.
 - 다만 `ds_v11`도 제품 승격은 아니다. raw gate는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, validator gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `shadow_mode_status=not_run`로 모두 `hold`다.
 - `ds_v11` validator 적용 후 잔여 실패는 blind50 `5건`, extended200 `42건`이다. 중심 owner는 blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`, extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`다.
+- `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay도 생성했다. `decision_count 50`, `operator_agreement_rate 0.8`, `critical_disagreement_count 1`, `promotion_decision rollback`이며, 핵심 critical disagreement는 `blind-forbidden-007`이다.
+- 이 offline shadow replay는 `shadow_mode pass` 대체가 아니라, 실제 현장 shadow 전에 남은 의미 실패를 압축해 보는 사전 기준선이다.
 - `ds_v9/prompt_v5_methodfix`는 이제 frozen historical baseline으로 유지한다. raw `extended200 0.51`, `blind_holdout50 0.32`였고, validator 적용 후에도 `blind_holdout50 0.76`에 그쳤다.
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
 - `extended200` 실패군 재분류 완료: 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였고, 새 tranche 실패 `25건`은 `edge/seasonal`의 unseen generalization 문제를 더 선명하게 드러냈다.
@@ -96,7 +98,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, shadow mode 로그 확보, 그리고 그 이후 batch16 + next-only oversampling challenger가 정당한지 판단하는 일이다.
+- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 batch16 + next-only oversampling challenger가 정당한지 판단하는 일이다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료

@@ -67,3 +67,10 @@
 - runtime capture: `llm-orchestrator/llm_orchestrator/runtime.py`의 `run_shadow_mode_capture`
 - summary builder: `scripts/build_shadow_mode_report.py`
 - sample/runtime validation: `scripts/validate_shadow_mode_runtime.py`, `data/examples/shadow_mode_runtime_cases.jsonl`
+- offline replay helper: `scripts/build_shadow_mode_replay_from_eval.py`
+
+## offline replay 사용 원칙
+
+- blind holdout이나 extended eval report를 shadow audit 형식으로 재생성해 `사전 shadow 기준선`을 만들 수 있다.
+- 이 결과는 `real field shadow mode`를 대체하지 않는다.
+- 승격 판단에서는 offline replay를 참고 지표로만 쓰고, 실제 `shadow_mode pass`는 운영 로그 기반 리포트로만 판정한다.

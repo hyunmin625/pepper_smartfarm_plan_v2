@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### ds_v11 blind50 offline shadow replay 기준선 추가
+- `scripts/build_shadow_mode_replay_from_eval.py`를 추가해 frozen eval report와 eval 기대값을 `llm-orchestrator` shadow audit 형식으로 재생성할 수 있게 했다.
+- `python3 scripts/build_shadow_mode_replay_from_eval.py --report artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.json --eval-files evals/blind_holdout_eval_set.jsonl --model-id ...:DTryNJg3 --prompt-id sft_v5 --dataset-id ds_v11 --eval-set-id blind_holdout50_offline_shadow_replay --retrieval-profile-id retrieval-chroma-local-v1 --shadow-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_ds_v11_blind_holdout50_offline.jsonl --output-prefix artifacts/reports/shadow_mode_ds_v11_blind_holdout50_offline`로 offline shadow replay를 생성했다.
+- 결과는 `decision_count 50`, `operator_agreement_rate 0.8`, `critical_disagreement_count 1`, `promotion_decision rollback`이다.
+- top critical disagreement는 `blind-forbidden-007`이고, non-critical drift는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-001`, `blind-robot-005`에 모였다.
+- 이 결과는 `real field shadow mode` 대체가 아니라 사전 replay 기준선이다. 즉 다음 우선순위는 `blind-forbidden-007` 같은 critical disagreement를 먼저 줄이고, 그다음 실제 운영 shadow 로그를 쌓는 것이다.
+
 ### ds_v11 완료, frozen gate 재평가, 새 baseline 고정
 - `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`로 run 상태를 다시 동기화했고 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`은 `succeeded`로 종료됐다.
 - 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`다.

@@ -19,6 +19,8 @@
 - `ds_v11`는 이전 baseline `ds_v9`보다 모든 frozen gate에서 개선됐지만, blind50 validator `0.9 < 0.95`와 shadow mode 미실행 때문에 아직 제품 수준은 아니다.
 - `scripts/report_eval_failure_clusters.py`와 `scripts/report_validator_residual_failures.py` 기준 `ds_v11`의 extended200 잔여 실패는 `42건`, blind50 validator 잔여 실패는 `5건`이다.
 - 현재 남은 중심 owner는 extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`, blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`다.
+- `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay를 만들었다. `decision_count 50`, `operator_agreement_rate 0.8`, `critical_disagreement_count 1`, `promotion_decision rollback`이며, critical disagreement는 `blind-forbidden-007` 한 건이다.
+- offline shadow replay는 실운영 shadow mode 대체가 아니다. 다만 현재 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 빠르게 압축하는 사전 기준선으로는 유효하다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
@@ -288,8 +290,8 @@
 5. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, execution-gateway hard guard와 state-estimator MVP도 추가됐다.
 6. blind50 validator 잔여 `5건`을 먼저 줄인다. 대상은 `blind-action-004`, `blind-expert-001`, `blind-expert-003`, `blind-expert-010`, `blind-robot-004`다.
 7. extended200 validator 잔여 `42건`을 `risk_rubric_and_data`, `required_action_types`, `robot contract` 기준으로 다시 줄인다.
-8. shadow mode 로그를 실제 운영 시나리오 형식으로 쌓고 `operator_agreement_rate`, `critical_disagreement_count`를 본다.
-9. shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + next-only oversampling challenger는 그 다음에만 검토한다.
+8. offline shadow replay의 `critical_disagreement_count 1`을 먼저 해소하고, 이어서 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 `operator_agreement_rate`, `critical_disagreement_count`를 본다.
+9. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + next-only oversampling challenger는 그 다음에만 검토한다.
 
 ## 주의할 점
 
