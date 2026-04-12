@@ -2,34 +2,34 @@
 
 - model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v9-prompt-v5-methodfix-eval-v1-20260412-1257:DTgUbJHJ`
 - raw_pass_rate: `0.51`
-- validator_pass_rate: `0.755`
-- recovered_cases: `52`
-- remaining_failed_cases: `49`
+- validator_pass_rate: `0.775`
+- recovered_cases: `57`
+- remaining_failed_cases: `45`
 - runtime_validator_gap_cases: `0`
 
 ## Remaining By Owner
 
 | owner | cases | next_action |
 |---|---:|---|
-| `risk_rubric_and_data` | 38 | risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다. |
-| `data_and_model` | 20 | required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다. |
+| `risk_rubric_and_data` | 37 | risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다. |
+| `data_and_model` | 15 | required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다. |
 | `robot_contract_and_model` | 7 | robot task target/enum/selection slice를 별도 계약형 batch로 보강한다. |
 
 ## Top Remaining Checks
 
-- `risk_level_match`: `37`
-- `required_action_types_present`: `19`
-- `forbidden_action_types_absent`: `7`
+- `risk_level_match`: `36`
+- `required_action_types_present`: `15`
 - `required_task_types_present`: `7`
+- `forbidden_action_types_absent`: `4`
 - `decision_match`: `2`
 
 ## Remaining By Category
 
 - `robot_task_prioritization`: `10`
-- `edge_case`: `10`
+- `nutrient_risk`: `5`
 - `failure_response`: `5`
+- `edge_case`: `5`
 - `seasonal`: `5`
-- `nutrient_risk`: `4`
 - `action_recommendation`: `4`
 - `forbidden_action`: `4`
 - `climate_risk`: `2`
@@ -46,16 +46,11 @@
 - `action-eval-025` `action_recommendation` owners=['data_and_model', 'risk_rubric_and_data'] failed=['forbidden_action_types_absent', 'required_action_types_present', 'risk_level_match']
 - `pepper-eval-049` `climate_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `pepper-eval-050` `climate_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']
-- `edge-eval-004` `edge_case` owners=['data_and_model'] failed=['required_action_types_present']
 - `edge-eval-012` `edge_case` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
 - `edge-eval-015` `edge_case` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
-- `edge-eval-017` `edge_case` owners=['data_and_model', 'risk_rubric_and_data'] failed=['forbidden_action_types_absent', 'risk_level_match']
-- `edge-eval-018` `edge_case` owners=['data_and_model'] failed=['forbidden_action_types_absent', 'required_action_types_present']
 - `edge-eval-019` `edge_case` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
 - `edge-eval-021` `edge_case` owners=['data_and_model'] failed=['forbidden_action_types_absent', 'required_action_types_present']
 - `edge-eval-024` `edge_case` owners=['risk_rubric_and_data'] failed=['risk_level_match']
-- `edge-eval-025` `edge_case` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
-- `edge-eval-027` `edge_case` owners=['data_and_model'] failed=['forbidden_action_types_absent', 'required_action_types_present']
 - `failure-eval-001` `failure_response` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `failure-eval-003` `failure_response` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
 - `failure-eval-004` `failure_response` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
@@ -65,6 +60,7 @@
 - `forbidden-eval-011` `forbidden_action` owners=['risk_rubric_and_data'] failed=['decision_match']
 - `forbidden-eval-012` `forbidden_action` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `forbidden-eval-014` `forbidden_action` owners=['risk_rubric_and_data'] failed=['decision_match', 'risk_level_match']
+- `pepper-eval-021` `nutrient_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `pepper-eval-023` `nutrient_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `pepper-eval-046` `nutrient_risk` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
 - `pepper-eval-055` `nutrient_risk` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']

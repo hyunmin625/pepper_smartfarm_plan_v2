@@ -62,10 +62,11 @@
 - [x] `scripts/report_eval_failure_clusters.py`로 `extended160` 실패군 재분류와 validator 외부화 우선순위 정리 (`artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`)
 - [x] 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 재평가하고 결과 문서화
 - [x] `ds_v9` 재평가 결과를 baseline으로 고정하고 후속 challenger 비교표/문서에 같은 게이트를 강제 (`artifacts/fine_tuning/challenger_gate_baseline.md`)
-- [ ] blind50 validator 적용 후 잔여 실패 `14건`을 `risk_level`, `required_action_types`, `required_task_types` ownership으로 재분류
-- [x] blind50 validator 적용 후 잔여 실패 `14건`을 `risk_rubric_and_data / data_and_model / robot_contract_and_model / runtime_validator_gap` ownership으로 재분류 (`artifacts/reports/validator_residual_failures_ds_v9_prompt_v5_methodfix_blind_holdout50.md`)
-- [ ] `blind-edge-003`, `blind-edge-005` invariant 실패를 runtime wiring 전제에서 다시 검토
+- [x] blind50 validator 적용 후 잔여 실패 `12건`을 `risk_rubric_and_data / data_and_model / robot_contract_and_model` ownership으로 재분류 (`artifacts/reports/validator_residual_failures_ds_v9_prompt_v5_methodfix_blind_holdout50.md`)
+- [x] `blind-edge-003`, `blind-edge-005` invariant 실패를 runtime wiring 전제에서 다시 검토하고 validator 우선순위/trigger 보정으로 회복
 - [x] shadow mode audit -> summary report 경로 추가 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`)
+- [x] blind50 validator 잔여 `12건`을 batch14 sample `12건`으로 직접 역투영 (`docs/blind50_residual_batch14_plan.md`, `scripts/generate_batch14_residual_samples.py`)
+- [x] `scripts/build_openai_sft_datasets.py`, `scripts/report_risk_slice_coverage.py`가 stale `combined_training_samples.jsonl` 대신 현재 `training_sample_files()`를 직접 읽도록 보강
 
 ---
 

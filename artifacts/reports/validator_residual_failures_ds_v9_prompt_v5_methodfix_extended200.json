@@ -5,26 +5,26 @@
   "source_validator_report": "2026-04-12T14:14:33+00:00",
   "total_cases": 200,
   "raw_pass_rate": 0.51,
-  "validator_pass_rate": 0.755,
-  "recovered_cases": 52,
-  "remaining_failed_cases": 49,
+  "validator_pass_rate": 0.775,
+  "recovered_cases": 57,
+  "remaining_failed_cases": 45,
   "runtime_validator_gap_cases": 0,
   "top_remaining_checks": [
     [
       "risk_level_match",
-      37
+      36
     ],
     [
       "required_action_types_present",
-      19
-    ],
-    [
-      "forbidden_action_types_absent",
-      7
+      15
     ],
     [
       "required_task_types_present",
       7
+    ],
+    [
+      "forbidden_action_types_absent",
+      4
     ],
     [
       "decision_match",
@@ -37,20 +37,20 @@
       10
     ],
     [
-      "edge_case",
-      10
+      "nutrient_risk",
+      5
     ],
     [
       "failure_response",
       5
     ],
     [
-      "seasonal",
+      "edge_case",
       5
     ],
     [
-      "nutrient_risk",
-      4
+      "seasonal",
+      5
     ],
     [
       "action_recommendation",
@@ -84,12 +84,12 @@
   "remaining_by_owner": [
     {
       "owner": "risk_rubric_and_data",
-      "cases": 38,
+      "cases": 37,
       "next_action": "risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다."
     },
     {
       "owner": "data_and_model",
-      "cases": 20,
+      "cases": 15,
       "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
     },
     {
@@ -164,16 +164,6 @@
       ]
     },
     {
-      "eval_id": "edge-eval-004",
-      "category": "edge_case",
-      "failed_checks": [
-        "required_action_types_present"
-      ],
-      "owners": [
-        "data_and_model"
-      ]
-    },
-    {
       "eval_id": "edge-eval-012",
       "category": "edge_case",
       "failed_checks": [
@@ -195,29 +185,6 @@
       "owners": [
         "data_and_model",
         "risk_rubric_and_data"
-      ]
-    },
-    {
-      "eval_id": "edge-eval-017",
-      "category": "edge_case",
-      "failed_checks": [
-        "forbidden_action_types_absent",
-        "risk_level_match"
-      ],
-      "owners": [
-        "data_and_model",
-        "risk_rubric_and_data"
-      ]
-    },
-    {
-      "eval_id": "edge-eval-018",
-      "category": "edge_case",
-      "failed_checks": [
-        "forbidden_action_types_absent",
-        "required_action_types_present"
-      ],
-      "owners": [
-        "data_and_model"
       ]
     },
     {
@@ -251,29 +218,6 @@
       ],
       "owners": [
         "risk_rubric_and_data"
-      ]
-    },
-    {
-      "eval_id": "edge-eval-025",
-      "category": "edge_case",
-      "failed_checks": [
-        "required_action_types_present",
-        "risk_level_match"
-      ],
-      "owners": [
-        "data_and_model",
-        "risk_rubric_and_data"
-      ]
-    },
-    {
-      "eval_id": "edge-eval-027",
-      "category": "edge_case",
-      "failed_checks": [
-        "forbidden_action_types_absent",
-        "required_action_types_present"
-      ],
-      "owners": [
-        "data_and_model"
       ]
     },
     {
@@ -365,6 +309,16 @@
       "category": "forbidden_action",
       "failed_checks": [
         "decision_match",
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-021",
+      "category": "nutrient_risk",
+      "failed_checks": [
         "risk_level_match"
       ],
       "owners": [
@@ -738,16 +692,6 @@
         ]
       },
       {
-        "eval_id": "edge-eval-004",
-        "category": "edge_case",
-        "failed_checks": [
-          "required_action_types_present"
-        ],
-        "owners": [
-          "data_and_model"
-        ]
-      },
-      {
         "eval_id": "edge-eval-012",
         "category": "edge_case",
         "failed_checks": [
@@ -772,29 +716,6 @@
         ]
       },
       {
-        "eval_id": "edge-eval-017",
-        "category": "edge_case",
-        "failed_checks": [
-          "forbidden_action_types_absent",
-          "risk_level_match"
-        ],
-        "owners": [
-          "data_and_model",
-          "risk_rubric_and_data"
-        ]
-      },
-      {
-        "eval_id": "edge-eval-018",
-        "category": "edge_case",
-        "failed_checks": [
-          "forbidden_action_types_absent",
-          "required_action_types_present"
-        ],
-        "owners": [
-          "data_and_model"
-        ]
-      },
-      {
         "eval_id": "edge-eval-019",
         "category": "edge_case",
         "failed_checks": [
@@ -808,29 +729,6 @@
       },
       {
         "eval_id": "edge-eval-021",
-        "category": "edge_case",
-        "failed_checks": [
-          "forbidden_action_types_absent",
-          "required_action_types_present"
-        ],
-        "owners": [
-          "data_and_model"
-        ]
-      },
-      {
-        "eval_id": "edge-eval-025",
-        "category": "edge_case",
-        "failed_checks": [
-          "required_action_types_present",
-          "risk_level_match"
-        ],
-        "owners": [
-          "data_and_model",
-          "risk_rubric_and_data"
-        ]
-      },
-      {
-        "eval_id": "edge-eval-027",
         "category": "edge_case",
         "failed_checks": [
           "forbidden_action_types_absent",
@@ -876,6 +774,16 @@
         ],
         "owners": [
           "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-021",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
           "risk_rubric_and_data"
         ]
       },
@@ -1182,18 +1090,6 @@
         ]
       },
       {
-        "eval_id": "edge-eval-017",
-        "category": "edge_case",
-        "failed_checks": [
-          "forbidden_action_types_absent",
-          "risk_level_match"
-        ],
-        "owners": [
-          "data_and_model",
-          "risk_rubric_and_data"
-        ]
-      },
-      {
         "eval_id": "edge-eval-019",
         "category": "edge_case",
         "failed_checks": [
@@ -1212,18 +1108,6 @@
           "risk_level_match"
         ],
         "owners": [
-          "risk_rubric_and_data"
-        ]
-      },
-      {
-        "eval_id": "edge-eval-025",
-        "category": "edge_case",
-        "failed_checks": [
-          "required_action_types_present",
-          "risk_level_match"
-        ],
-        "owners": [
-          "data_and_model",
           "risk_rubric_and_data"
         ]
       },

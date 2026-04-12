@@ -9,13 +9,13 @@
   ],
   "summary": {
     "total_cases": 50,
-    "passed_cases": 36,
-    "pass_rate": 0.72,
+    "passed_cases": 38,
+    "pass_rate": 0.76,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
     "average_confidence": 0.7544,
-    "average_confidence_on_pass": 0.7453,
-    "average_confidence_on_fail": 0.7779,
+    "average_confidence_on_pass": 0.7511,
+    "average_confidence_on_fail": 0.765,
     "by_category": {
       "action_recommendation": {
         "cases": 7,
@@ -29,8 +29,8 @@
       },
       "edge_case": {
         "cases": 6,
-        "passed": 4,
-        "pass_rate": 0.6667
+        "passed": 6,
+        "pass_rate": 1.0
       },
       "failure_response": {
         "cases": 8,
@@ -82,19 +82,19 @@
     "top_failed_checks": [
       [
         "risk_level_match",
-        8
-      ],
-      [
-        "required_action_types_present",
-        3
+        7
       ],
       [
         "required_task_types_present",
         3
       ],
       [
-        "forbidden_action_types_absent",
+        "required_action_types_present",
         2
+      ],
+      [
+        "forbidden_action_types_absent",
+        1
       ]
     ],
     "top_optional_failures": []
@@ -202,13 +202,13 @@
   },
   "summary_after": {
     "total_cases": 50,
-    "passed_cases": 36,
-    "pass_rate": 0.72,
+    "passed_cases": 38,
+    "pass_rate": 0.76,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
     "average_confidence": 0.7544,
-    "average_confidence_on_pass": 0.7453,
-    "average_confidence_on_fail": 0.7779,
+    "average_confidence_on_pass": 0.7511,
+    "average_confidence_on_fail": 0.765,
     "by_category": {
       "action_recommendation": {
         "cases": 7,
@@ -222,8 +222,8 @@
       },
       "edge_case": {
         "cases": 6,
-        "passed": 4,
-        "pass_rate": 0.6667
+        "passed": 6,
+        "pass_rate": 1.0
       },
       "failure_response": {
         "cases": 8,
@@ -275,26 +275,26 @@
     "top_failed_checks": [
       [
         "risk_level_match",
-        8
-      ],
-      [
-        "required_action_types_present",
-        3
+        7
       ],
       [
         "required_task_types_present",
         3
       ],
       [
-        "forbidden_action_types_absent",
+        "required_action_types_present",
         2
+      ],
+      [
+        "forbidden_action_types_absent",
+        1
       ]
     ],
     "top_optional_failures": []
   },
   "validator_summary": {
-    "changed_cases": 31,
-    "improved_cases": 20,
+    "changed_cases": 32,
+    "improved_cases": 22,
     "worsened_cases": 0,
     "top_applied_rules": [
       [
@@ -314,24 +314,24 @@
         10
       ],
       [
-        "HSV-04",
+        "HSV-07",
         8
+      ],
+      [
+        "HSV-04",
+        7
       ],
       [
         "HSV-05",
-        8
+        7
       ],
       [
         "HSV-06",
-        8
-      ],
-      [
-        "HSV-07",
         7
       ],
       [
         "HSV-08",
-        5
+        6
       ],
       [
         "HSV-10",
@@ -1462,18 +1462,17 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
+        "risk_level_match",
         "follow_up_present",
         "citations_present",
         "citations_in_context",
         "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [
-        "risk_level_match"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
         "pause_automation",
@@ -1518,38 +1517,41 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "state4-act-001",
+              "action_id": "validator-pause_automation",
               "action_type": "pause_automation",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "잘못된 자동 제어 누적을 막는다.",
-              "reason": "핵심 센서가 빠진 상태에서는 자동 기후 제어를 유지하지 않는다.",
-              "risk_level": "high",
+              "expected_effect": "validator applied a conservative safety fallback.",
+              "reason": "validator paused automation because control evidence is degraded.",
+              "risk_level": "unknown",
               "target": {
-                "target_id": "gh-01-edge-zone-auto-control",
-                "target_type": "system"
+                "target_type": "system",
+                "target_id": "gh-01-edge-zone-auto-control"
               }
             },
             {
-              "action_id": "state4-act-002",
+              "action_id": "validator-request_human_check",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "수동 점검으로 자동 판단 공백을 메운다.",
-              "reason": "센서 복구와 실제 묘판 상태를 함께 확인한다.",
-              "risk_level": "medium",
+              "expected_effect": "validator applied a conservative safety fallback.",
+              "reason": "validator requested manual sensor or measurement confirmation.",
+              "risk_level": "unknown",
               "target": {
-                "target_id": "duty-manager",
-                "target_type": "operator"
+                "target_type": "operator",
+                "target_id": "duty-manager"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
-          "risk_level": "high",
+          "risk_level": "unknown",
           "situation_summary": "육묘 블록의 저온·과습 경향은 보이지만 상단 온도 센서가 빠져 자동 판단 근거가 완전하지 않다.",
-          "validator_reason_codes": [],
-          "validator_decision": "pass"
+          "validator_reason_codes": [
+            "HSV-07",
+            "HSV-08"
+          ],
+          "validator_decision": "rewritten"
         },
         "response_id": "chatcmpl-DTpswHeSOQF4ETIcFahV1gp3wi5X4",
         "usage": {
@@ -1568,15 +1570,16 @@
           }
         }
       },
-      "validator_applied_rules": [],
-      "validator_decision": "pass",
+      "validator_applied_rules": [
+        "HSV-07",
+        "HSV-08"
+      ],
+      "validator_decision": "rewritten",
       "pre_validator_passed": false,
       "pre_validator_failed_checks": [
         "risk_level_match"
       ],
-      "post_validator_failed_checks": [
-        "risk_level_match"
-      ],
+      "post_validator_failed_checks": [],
       "post_validator_optional_failures": []
     },
     {
@@ -1730,22 +1733,21 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
         "risk_level_match",
         "follow_up_present",
         "citations_present",
-        "citations_in_context"
-      ],
-      "failed_checks": [
+        "citations_in_context",
         "required_action_types_present",
         "forbidden_action_types_absent"
       ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
-        "enter_safe_mode",
-        "request_human_check"
+        "block_action",
+        "create_alert"
       ],
       "robot_task_types": [],
       "citation_ids": [
@@ -1786,12 +1788,12 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "validator-enter_safe_mode",
-              "action_type": "enter_safe_mode",
+              "action_id": "validator-block_action",
+              "action_type": "block_action",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator forced safe mode because a critical path communication/readback loss is active.",
+              "reason": "validator blocked action because worker/manual override/safe mode safety lock is active.",
               "risk_level": "critical",
               "target": {
                 "target_type": "system",
@@ -1799,16 +1801,16 @@
               }
             },
             {
-              "action_id": "validator-request_human_check",
-              "action_type": "request_human_check",
+              "action_id": "validator-create_alert",
+              "action_type": "create_alert",
               "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator requested manual confirmation of the affected path before any restart.",
+              "cooldown_minutes": 10,
+              "expected_effect": "operators are alerted to a blocking safety condition.",
+              "reason": "validator raised a critical operator alert for the active safety lock.",
               "risk_level": "critical",
               "target": {
-                "target_type": "operator",
-                "target_id": "duty-manager"
+                "target_type": "zone",
+                "target_id": "gh-01-edge-zone"
               }
             }
           ],
@@ -1821,9 +1823,6 @@
             "HSV-01",
             "HSV-02",
             "HSV-03",
-            "HSV-04",
-            "HSV-05",
-            "HSV-06",
             "OV-06"
           ],
           "validator_decision": "rewritten"
@@ -1849,9 +1848,6 @@
         "HSV-01",
         "HSV-02",
         "HSV-03",
-        "HSV-04",
-        "HSV-05",
-        "HSV-06",
         "OV-06"
       ],
       "validator_decision": "rewritten",
@@ -1859,10 +1855,7 @@
       "pre_validator_failed_checks": [
         "citations_present"
       ],
-      "post_validator_failed_checks": [
-        "required_action_types_present",
-        "forbidden_action_types_absent"
-      ],
+      "post_validator_failed_checks": [],
       "post_validator_optional_failures": []
     },
     {

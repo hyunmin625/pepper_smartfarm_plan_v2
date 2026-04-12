@@ -4,6 +4,17 @@
 
 ## 2026-04-12
 
+### batch14 잔여 실패 보강과 stale combined input 제거
+- `scripts/generate_batch14_residual_samples.py`를 추가해 `action_recommendation_samples_batch10.jsonl` `3건`, `state_judgement_samples_batch14.jsonl` `5건`, `robot_task_samples_batch5.jsonl` `4건`을 생성했다.
+- `docs/blind50_residual_batch14_plan.md`를 추가해 blind50 validator 잔여 `12건`을 batch14 sample과 eval id 단위로 직접 매핑했다.
+- `python3 scripts/generate_batch14_residual_samples.py` 기준 총 `12건`이 생성됐고, training 총량은 `288건`으로 늘었다.
+- `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py` 기준 sample `288건`, eval `250건`, duplicate `0`, contradiction `0`, eval overlap `0`, errors `0`을 다시 확인했다.
+- `python3 scripts/report_training_sample_stats.py` 기준 sample `288건`, class imbalance ratio `12.00`, action 분포 `request_human_check 137`, `create_alert 99`, `pause_automation 46`, `block_action 33`, `enter_safe_mode 16`으로 재고정했다.
+- `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread ...` 기준 추천 split은 train `238`, validation `50`이다.
+- 중요한 파이프라인 결함도 같이 수정했다. `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl` 대신 현재 `training_sample_files()` 집합을 직접 읽는다.
+- `python3 scripts/build_training_jsonl.py`, `python3 scripts/report_risk_slice_coverage.py` 재실행 결과 training 기준 `evidence_incomplete_unknown 11`, `robot_contract 48`, `gt_master_dryback_high 6`, `nursery_cold_humid_high 3`, rule failure `none`이다.
+- 결론은 더 좁혀졌다. hard safety invariant와 runtime gap은 validator로 정리됐고, 이제 후속 challenger는 batch14가 blind50 validator residual `12건`을 실제로 얼마나 줄이는지로만 판단하면 된다.
+
 ### validator 잔여 실패 owner 분류와 shadow mode 요약 경로 추가
 - `scripts/report_validator_residual_failures.py`를 추가해 validator 적용 후에도 남는 실패를 `risk_rubric_and_data`, `data_and_model`, `robot_contract_and_model`, `runtime_validator_gap` owner로 재분류할 수 있게 했다.
 - `python3 scripts/report_validator_residual_failures.py --raw-report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout50.json --validator-report artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_blind_holdout50.json --gate-report artifacts/reports/product_readiness_gate_ds_v9_prompt_v5_methodfix_blind_holdout50_validator_applied.json --output-prefix artifacts/reports/validator_residual_failures_ds_v9_prompt_v5_methodfix_blind_holdout50` 결과 blind50 잔여 `14건`은 `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`였다.
@@ -12,6 +23,15 @@
 - `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`, `data/examples/shadow_mode_runtime_cases.jsonl`를 추가해 shadow mode audit를 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`으로 요약할 수 있게 했다.
 - `python3 scripts/validate_shadow_mode_runtime.py` 기준 sample 3건에서 `operator_agreement_rate 0.6667`, `critical_disagreement_count 1`, `promotion_decision rollback`, `errors 0`을 확인했다.
 - 결론은 더 구체적이다. blind50 raw를 validator로 살린 뒤에도 남는 문제의 주축은 `risk_rubric_and_data`이며, 그 다음이 `required_action_types`와 `robot contract`다. 즉 다음 corrective round는 broad tuning이 아니라 owner별 미세 조정이어야 한다.
+
+### blind-edge residual runtime gap 제거
+- `policy-engine/policy_engine/output_validator.py`와 `scripts/simulate_policy_output_validator.py`를 보정해 `worker_present/manual_override`가 `path loss`보다 우선하도록 validator rewrite 순서를 수정했다.
+- 시뮬레이터의 degraded-control trigger에도 `센서 빠짐/누락/공백` 표현을 추가해 `blind-edge-003` 같은 nursery sensor-gap 케이스가 `risk_level=unknown`으로 보수 해석되도록 보강했다.
+- `data/examples/policy_output_validator_cases.jsonl`와 `scripts/validate_policy_output_validator.py`에 `worker present + irrigation path degraded -> block_action + create_alert 우선` 회귀 케이스를 추가했다.
+- `python3 scripts/validate_policy_output_validator.py`는 `checked_cases 6`, `errors 0`으로 통과했다.
+- `python3 scripts/simulate_policy_output_validator.py` 재실행 결과 blind50 validator 성능은 `0.72 -> 0.76`, `safety_invariant_pass_rate 0.9167 -> 1.0`으로 올라갔다.
+- `blind-edge-003`, `blind-edge-005`는 모두 회복됐고, blind50 validator 잔여는 `12건`, owner 분포는 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 줄었다.
+- 결론은 다시 더 명확해졌다. blind50 기준 hard safety invariant는 validator로 정리됐고, 이제 남은 핵심은 `risk_level` 경계와 `required_action_types`/`robot contract` 일반화다.
 
 ### extended200/blind50 확장과 마지막 완료 모델 재재평가
 - `scripts/generate_extended_eval_tranche4.py`를 추가해 extended eval을 최종 제품 주장 기준 `200건`까지 확장했다. 현재 분포는 `expert 60 / action 28 / forbidden 20 / failure 24 / robot 16 / edge 28 / seasonal 24`다.

@@ -12,36 +12,36 @@
 
 로컬 합본 기준:
 
-- training rows: `276`
-- extended eval rows: `160`
-- blind holdout rows: `24`
+- training rows: `288`
+- extended eval rows: `200`
+- blind holdout rows: `50`
 
 현재 training slice 관측치:
 
 - `safety_policy_hard_block`: `32`
 - `sensor_fault_unknown`: `26`
-- `evidence_incomplete_unknown`: `10`
+- `evidence_incomplete_unknown`: `11`
 - `failure_safe_mode`: `16`
-- `robot_task_prioritization`: `44`
-- `gt_master_dryback_high`: `4`
-- `nursery_cold_humid_high`: `2`
+- `robot_task_prioritization`: `48`
+- `gt_master_dryback_high`: `6`
+- `nursery_cold_humid_high`: `3`
 - action imbalance:
-  - `request_human_check`: `129`
-  - `create_alert`: `93`
-  - `pause_automation`: `44`
+  - `request_human_check`: `137`
+  - `create_alert`: `99`
+  - `pause_automation`: `46`
   - `block_action`: `33`
   - `enter_safe_mode`: `16`
 
 현재 eval/holdout 관측치:
 
-- extended eval `safety_policy_hard_block`: `16`
-- extended eval `sensor_fault_unknown`: `11`
-- extended eval `evidence_incomplete_unknown`: `8`
-- extended eval `failure_safe_mode`: `13`
-- blind holdout `safety_policy_hard_block`: `1`
-- blind holdout `failure_safe_mode`: `3`
-- blind holdout `robot_task_prioritization`: `3`
-- blind holdout `gt_master_dryback_high`: `1`
+- extended eval `safety_policy_hard_block`: `18`
+- extended eval `sensor_fault_unknown`: `13`
+- extended eval `evidence_incomplete_unknown`: `10`
+- extended eval `failure_safe_mode`: `19`
+- blind holdout `safety_policy_hard_block`: `6`
+- blind holdout `failure_safe_mode`: `6`
+- blind holdout `robot_task_prioritization`: `7`
+- blind holdout `gt_master_dryback_high`: `3`
 - blind holdout `nursery_cold_humid_high`: `1`
 
 ## 3. 우선 보강 목표
@@ -130,7 +130,7 @@
 
 목표:
 
-- current training `44` 유지
+- current training `48` 유지
 - hard case 라벨 품질 유지
 
 추가해야 할 상황:
@@ -149,8 +149,8 @@
 
 목표:
 
-- `gt_master_dryback_high`: `4`
-- `nursery_cold_humid_high`: `2`
+- `gt_master_dryback_high`: `6`
+- `nursery_cold_humid_high`: `3`
 
 추가해야 할 상황:
 
@@ -176,7 +176,7 @@
 
 총 추가량 가이드:
 
-- 현재 training critical slice와 남은 blind 의미 gap 보강 목표는 모두 채웠다.
+- 현재 training critical slice와 남은 blind 의미 gap 보강 목표는 모두 채웠고, batch14로 blind50 validator residual `12건`을 직접 training sample로 역투영했다.
 
 ## 5. eval 확장과 함께 가야 하는 항목
 
@@ -200,7 +200,7 @@ sample만 늘리면 안 된다. 아래 eval도 같이 늘린다.
 
 `python3 scripts/report_risk_slice_coverage.py` 기준 training 쪽 rule failure는 현재 `none`이다.
 
-즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 새로 보강한 두 blind 의미 gap이 실제 challenger에서 일반화되는지 확인하는 일이다.
+즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 batch14가 challenger에서 실제로 residual `12건`을 줄이는지 확인하는 일이다.
 
 ## 7. 제출 전 체크
 

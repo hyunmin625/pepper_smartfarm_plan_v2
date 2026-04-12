@@ -287,7 +287,7 @@ def apply_output_validator(
         )
         decision = "rewritten"
 
-    if path_degraded and any(catalog.get(rule_id, {}).get("enabled", True) for rule_id in ("HSV-04", "HSV-05", "HSV-06")):
+    elif path_degraded and any(catalog.get(rule_id, {}).get("enabled", True) for rule_id in ("HSV-04", "HSV-05", "HSV-06")):
         _rewrite_actions(
             output,
             risk_level="critical",

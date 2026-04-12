@@ -11,6 +11,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from training_data_config import training_sample_files
+
 
 DEFAULT_INPUT = Path("artifacts/training/combined_training_samples.jsonl")
 DEFAULT_TRAIN_OUTPUT = Path("artifacts/fine_tuning/openai_sft_train.jsonl")
@@ -420,6 +422,14 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def load_default_training_samples() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in training_sample_files():
+        rows.extend(load_jsonl(path))
+    rows.sort(key=lambda item: str(item.get("sample_id", "")))
+    return rows
+
+
 def family_for_task(task_type: str) -> str:
     return task_type
 
@@ -809,7 +819,13 @@ def main() -> None:
     parser.add_argument("--system-prompt-version", choices=sorted(SYSTEM_PROMPT_BY_VERSION), default=DEFAULT_SYSTEM_PROMPT_VERSION)
     args = parser.parse_args()
 
-    samples = load_jsonl(Path(args.input))
+    input_path = Path(args.input)
+    if input_path.as_posix() == DEFAULT_INPUT.as_posix():
+        samples = load_default_training_samples()
+        input_source = "training_sample_files"
+    else:
+        samples = load_jsonl(input_path)
+        input_source = input_path.as_posix()
     eval_signatures = load_eval_signatures([Path(path) for path in args.eval_files])
     filtered_samples, excluded_overlap_samples = filter_eval_overlap(samples, eval_signatures=eval_signatures)
     samples = filtered_samples
@@ -837,6 +853,7 @@ def main() -> None:
     print(f"validation_ratio: {args.validation_ratio}")
     print(f"validation_selection: {args.validation_selection}")
     print(f"system_prompt_version: {args.system_prompt_version}")
+    print(f"input_source: {input_source}")
     print(f"train_output: {Path(args.train_output).as_posix()}")
     print(f"validation_output: {Path(args.validation_output).as_posix()}")
     if args.print_family_summary:

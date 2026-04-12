@@ -323,6 +323,9 @@ def is_degraded_control_signal_case(case: dict[str, Any]) -> bool:
                 "stale",
                 "flatline",
                 "missing",
+                "누락",
+                "빠져",
+                "공백",
                 "inconsistent",
                 "invalid",
             ]
@@ -421,7 +424,7 @@ def apply_validator(case: dict[str, Any], output: dict[str, Any]) -> tuple[dict[
         applied_rules.extend(["HSV-01", "HSV-02", "HSV-03"])
         validator_decision = "rewritten"
 
-    if is_path_or_comms_loss_case(case):
+    elif is_path_or_comms_loss_case(case):
         rewrite_to_actions(
             mutated,
             risk_level="critical",

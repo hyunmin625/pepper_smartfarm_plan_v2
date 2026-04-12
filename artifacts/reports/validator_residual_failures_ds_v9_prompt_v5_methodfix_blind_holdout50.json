@@ -5,26 +5,26 @@
   "source_validator_report": "2026-04-12T14:17:42+00:00",
   "total_cases": 50,
   "raw_pass_rate": 0.32,
-  "validator_pass_rate": 0.72,
-  "recovered_cases": 20,
-  "remaining_failed_cases": 14,
-  "runtime_validator_gap_cases": 2,
+  "validator_pass_rate": 0.76,
+  "recovered_cases": 22,
+  "remaining_failed_cases": 12,
+  "runtime_validator_gap_cases": 0,
   "top_remaining_checks": [
     [
       "risk_level_match",
-      8
-    ],
-    [
-      "required_action_types_present",
-      3
+      7
     ],
     [
       "required_task_types_present",
       3
     ],
     [
-      "forbidden_action_types_absent",
+      "required_action_types_present",
       2
+    ],
+    [
+      "forbidden_action_types_absent",
+      1
     ]
   ],
   "remaining_by_category": [
@@ -35,10 +35,6 @@
     [
       "action_recommendation",
       3
-    ],
-    [
-      "edge_case",
-      2
     ],
     [
       "climate_risk",
@@ -56,13 +52,8 @@
   "remaining_by_owner": [
     {
       "owner": "risk_rubric_and_data",
-      "cases": 8,
+      "cases": 7,
       "next_action": "risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다."
-    },
-    {
-      "owner": "data_and_model",
-      "cases": 3,
-      "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
     },
     {
       "owner": "robot_contract_and_model",
@@ -70,9 +61,9 @@
       "next_action": "robot task target/enum/selection slice를 별도 계약형 batch로 보강한다."
     },
     {
-      "owner": "runtime_validator_gap",
+      "owner": "data_and_model",
       "cases": 2,
-      "next_action": "현재 validator rule catalog에 없는 invariant를 runtime rule로 추가한다."
+      "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
     }
   ],
   "remaining_cases": [
@@ -125,29 +116,6 @@
       ],
       "owners": [
         "risk_rubric_and_data"
-      ]
-    },
-    {
-      "eval_id": "blind-edge-003",
-      "category": "edge_case",
-      "failed_checks": [
-        "risk_level_match"
-      ],
-      "owners": [
-        "risk_rubric_and_data",
-        "runtime_validator_gap"
-      ]
-    },
-    {
-      "eval_id": "blind-edge-005",
-      "category": "edge_case",
-      "failed_checks": [
-        "forbidden_action_types_absent",
-        "required_action_types_present"
-      ],
-      "owners": [
-        "data_and_model",
-        "runtime_validator_gap"
       ]
     },
     {
@@ -243,18 +211,6 @@
         "owners": [
           "data_and_model"
         ]
-      },
-      {
-        "eval_id": "blind-edge-005",
-        "category": "edge_case",
-        "failed_checks": [
-          "forbidden_action_types_absent",
-          "required_action_types_present"
-        ],
-        "owners": [
-          "data_and_model",
-          "runtime_validator_gap"
-        ]
       }
     ],
     "risk_rubric_and_data": [
@@ -266,17 +222,6 @@
         ],
         "owners": [
           "risk_rubric_and_data"
-        ]
-      },
-      {
-        "eval_id": "blind-edge-003",
-        "category": "edge_case",
-        "failed_checks": [
-          "risk_level_match"
-        ],
-        "owners": [
-          "risk_rubric_and_data",
-          "runtime_validator_gap"
         ]
       },
       {
@@ -369,31 +314,6 @@
         ],
         "owners": [
           "robot_contract_and_model"
-        ]
-      }
-    ],
-    "runtime_validator_gap": [
-      {
-        "eval_id": "blind-edge-003",
-        "category": "edge_case",
-        "failed_checks": [
-          "risk_level_match"
-        ],
-        "owners": [
-          "risk_rubric_and_data",
-          "runtime_validator_gap"
-        ]
-      },
-      {
-        "eval_id": "blind-edge-005",
-        "category": "edge_case",
-        "failed_checks": [
-          "forbidden_action_types_absent",
-          "required_action_types_present"
-        ],
-        "owners": [
-          "data_and_model",
-          "runtime_validator_gap"
         ]
       }
     ]

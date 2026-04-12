@@ -12,11 +12,11 @@
 - 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
 - blind50 제품화 게이트 기준 raw `ds_v9`는 `promotion_decision=hold`, `blind_holdout_pass_rate=0.32`, `safety_invariant_pass_rate=0.25`, `field_usability_pass_rate=0.92`, `shadow_mode_status=not_run`이다.
 - 즉 `ds_v9`는 공개 benchmark 일부와 robot field contract 일부를 개선했지만, 제품 블라인드 세트로 가면 `failure/safety/edge` 일반화가 크게 무너진다.
-- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.72`까지 회복된다.
-- validator 적용 blind50 gate는 `safety_invariant_pass_rate 0.9167`, `field_usability_pass_rate 1.0`까지 올라간다.
-- 그래도 `blind_holdout_pass_rate 0.72 < 0.95`, `safety_invariant_failed_cases 2`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
-- blind50 validator 적용 후에도 실패 `14건`이 남는다. 중심은 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다.
-- `scripts/report_validator_residual_failures.py` 기준 blind50 validator 잔여 `14건`은 `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`로 나뉜다.
+- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 회복된다.
+- validator 적용 blind50 gate는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라간다.
+- 그래도 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
+- blind50 validator 적용 후에도 실패 `12건`이 남는다. 중심은 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다.
+- `scripts/report_validator_residual_failures.py` 기준 blind50 validator 잔여 `12건`은 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉜다.
 - 같은 기준으로 `extended200` validator 잔여 `49건`은 `risk_rubric_and_data 38`, `data_and_model 20`, `robot_contract_and_model 7`이다.
 - 즉 `validator`만으로는 충분하지 않고, `data + rubric + runtime wiring`이 함께 필요하다.
 
@@ -58,36 +58,38 @@
 
 - 다음 라운드부터는 `validation 14 고정`을 중단한다.
 - 권장 split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다.
-- 현재 training `276건` 기준으로 위 split을 적용하면 validation은 `49건`, train은 `227건`이 된다.
+- 현재 training `288건` 기준으로 위 split을 적용하면 validation은 `50건`, train은 `238건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
 - 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 2건 제거` 순서로 간다.
+- 기본 경로에서 stale `combined_training_samples.jsonl`을 읽어 새 batch가 누락되던 파이프라인도 수정했다. 이제 `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 현재 `training_sample_files()` 집합을 직접 읽는다.
 
 ### C. 데이터 부족 문제인가
 
 판단: `그렇다. 하지만 총량보다 critical slice 부족이 본질이다.`
 
-기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `276건`으로 늘렸다.
+기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `288건`으로 늘렸다.
 
 전체 action 분포도 치우쳐 있다.
 
-- `request_human_check`: `129`
-- `create_alert`: `93`
-- `pause_automation`: `44`
+- `request_human_check`: `137`
+- `create_alert`: `99`
+- `pause_automation`: `46`
 - `block_action`: `33`
 - `enter_safe_mode`: `16`
 
-- `action_recommendation`: `27`
+- `action_recommendation`: `30`
 - `rootzone_diagnosis`: `11`
 - `sensor_fault`: `26`
-- `climate_risk`: `8`
+- `climate_risk`: `10`
 - `pest_disease_risk`: `6`
 - `state_judgement`: `7`
 - `safety_policy`: `34`
 - `failure_response`: `36`
-- `robot_task_prioritization`: `44`
-- `gt_master_dryback_high`: `4`
-- `nursery_cold_humid_high`: `2`
+- `nutrient_risk`: `9`
+- `robot_task_prioritization`: `48`
+- `gt_master_dryback_high`: `6`
+- `nursery_cold_humid_high`: `3`
 
 문제는 다음 경계 사례 밀도가 낮다는 점이다.
 
@@ -103,7 +105,8 @@
 결론:
 
 - generic sample bulk-up은 비효율적이다.
-- 사용자가 제안한 `robot_task 20+`는 이미 충족했고, 현재 raw count는 `44`다.
+- 사용자가 제안한 `robot_task 20+`는 이미 충족했고, 현재 raw count는 `48`이다.
+- blind50 validator 잔여 `12건`은 `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 직접 training에 역투영했다.
 - 하지만 실제 문제는 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 계약 품질이다.
 - 아래 5개 slice를 우선 보강한다.
   - `safety_policy`: `+8`
@@ -121,7 +124,7 @@
 - `extended120`은 minimum gate로는 유효하지만, 제품화 기준으로는 여전히 작다.
 - `extended200`과 blind holdout `50`을 확보한 뒤 재심사한 결과, `ds_v9`는 raw 기준 `0.51`, `0.32`까지 내려갔다.
 - `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 외부화 우선 대상으로 묶였고, `extended200`에서는 그 수가 `50건`까지 늘었다.
-- 실제 시뮬레이션에서도 그 방향은 유효했다. `extended200`은 `151/200`, `blind_holdout50`은 `36/50`까지 회복됐다. 하지만 여전히 제품 승격 기준에는 못 미친다.
+- 실제 시뮬레이션에서도 그 방향은 유효했다. `extended200`은 `151/200`, `blind_holdout50`은 `38/50`까지 회복됐다. 하지만 여전히 제품 승격 기준에는 못 미친다.
 
 결론:
 
@@ -186,10 +189,9 @@
   - `seasonal`: `24`
 - blind holdout은 `50`까지 확장 완료했다.
 - 신규 training sample은 critical slice 중심으로 `+42` 내외만 추가한다.
-- blind50 validator 적용 후 남는 실패 `14건`은 별도 ownership으로 분리한다.
+- blind50 validator 적용 후 남는 실패 `12건`은 별도 ownership으로 분리한다.
   - validator로 줄일 수 없는 `risk_level` 경계 문제
   - validator를 붙여도 남는 `required_action_types`/`required_task_types` 문제
-  - shadow mode 전까지 제품 승격을 막는 invariant `2건`
 
 ### Phase 3. 재평가
 
@@ -235,7 +237,7 @@
 
 - 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
 - validator 시뮬레이션과 runtime skeleton은 실제로 큰 개선을 만들었지만, 그 자체로 `0.95`와 `shadow mode pass`까지는 못 갔다.
-- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `extended200/blind50 baseline 고정`, `policy/output validator runtime 연결`, `blind50 validator 잔여 14건 제거`, `safety invariant 잔여 2건 제거`, `critical slice만 보강`이다.
+- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `extended200/blind50 baseline 고정`, `policy/output validator runtime 연결`, `blind50 validator 잔여 12건 제거`, `critical slice만 보강`이다.
 - shadow mode도 이제 `not_run`을 넘어서야 한다. `llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 validator audit를 shadow-mode 승격 판단 형식까지 자동 요약할 수 있게 했다.
 - 세부 기준은 `docs/risk_level_rubric.md`, `docs/critical_slice_augmentation_plan.md`, `scripts/report_risk_slice_coverage.py`에 고정한다.
 - 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.

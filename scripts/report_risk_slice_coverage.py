@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from evaluate_fine_tuned_model import ALLOWED_ROBOT_TASK_TYPES
+from training_data_config import training_sample_files
 
 
 DEFAULT_DATASETS = {
@@ -29,6 +30,14 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
             item = json.loads(line)
             if isinstance(item, dict):
                 rows.append(item)
+    return rows
+
+
+def load_default_training_rows() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in training_sample_files():
+        rows.extend(load_jsonl(path))
+    rows.sort(key=lambda item: str(item.get("sample_id") or ""))
     return rows
 
 
@@ -363,7 +372,13 @@ def main() -> None:
     args = parser.parse_args()
 
     total_failures = 0
-    total_failures += summarize_dataset("training", load_jsonl(Path(args.training)))
+    training_path = Path(args.training)
+    training_rows = (
+        load_default_training_rows()
+        if training_path.as_posix() == DEFAULT_DATASETS["training"].as_posix()
+        else load_jsonl(training_path)
+    )
+    total_failures += summarize_dataset("training", training_rows)
     total_failures += summarize_dataset("extended_eval", load_jsonl(Path(args.extended_eval)))
     total_failures += summarize_dataset("blind_holdout", load_jsonl(Path(args.blind_holdout)))
 
