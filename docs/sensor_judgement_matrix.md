@@ -6,6 +6,7 @@
 
 - 단일 센서값만으로 제어 결정을 내리지 않는다.
 - `quality_flag`가 불량이면 자동 실행이 아니라 보수적 판단과 확인 요청을 우선한다.
+- `quality_flag`가 핵심 센서 `stale/missing/flatline/communication_loss`이면 state-estimator는 기본 `risk_level=unknown`으로 올린다.
 - 생육 단계, 최근 추세, 장치 상태, 운영 이벤트, RAG 근거를 함께 본다.
 - 최종 제어 명령은 policy-engine과 execution-gateway에서 재검증한다.
 

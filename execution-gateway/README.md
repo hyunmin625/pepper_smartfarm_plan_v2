@@ -8,6 +8,7 @@
 - request normalizer
 - duplicate detector
 - cooldown manager
+- hard-coded safety guard (`worker_present`, `sensor_quality blocked`, active interlocks)
 - approval / policy / manual override / estop guard
 - control state store
 - execution dispatcher

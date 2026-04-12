@@ -49,6 +49,15 @@ def main() -> int:
         }
         reset_estop_result = dispatcher.dispatch_control_override(ControlOverrideRequest.from_dict(reset_estop_request))
         source_water_result = dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(device_rows[1]))
+        worker_present_request = {
+            **device_rows[0],
+            "request_id": "cmd-worker-interlock-dispatch",
+            "operator_context": {
+                "manual_override": False,
+                "operator_present": True,
+            },
+        }
+        worker_present_result = dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(worker_present_request))
         auto_reentry_result = dispatcher.dispatch_control_override(ControlOverrideRequest.from_dict(override_rows[-1]))
 
         audit_rows = load_jsonl(audit_path)
@@ -61,13 +70,15 @@ def main() -> int:
             errors.append("estop reset did not update state")
         if source_water_result.status != "acknowledged":
             errors.append("source water dispatch did not reach adapter")
+        if worker_present_result.status != "rejected" or "hard_guard_worker_present" not in worker_present_result.reasons:
+            errors.append("worker_present_result was not blocked by hard safety guard")
         if auto_reentry_result.status != "state_updated":
             errors.append("auto mode reentry did not update state")
-        if len(audit_rows) != 5:
-            errors.append(f"expected 5 audit rows, found {len(audit_rows)}")
+        if len(audit_rows) != 6:
+            errors.append(f"expected 6 audit rows, found {len(audit_rows)}")
 
         summary = {
-            "checked_cases": 5,
+            "checked_cases": 6,
             "audit_rows": len(audit_rows),
             "zone_a_state": dispatcher.control_state.get("zone", "gh-01-zone-a").as_dict(),
             "site_state": dispatcher.control_state.get("site", "gh-01").as_dict(),

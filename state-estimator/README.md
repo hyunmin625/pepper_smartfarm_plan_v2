@@ -1,3 +1,29 @@
 # state-estimator
 
 센서 raw/feature 데이터를 받아 zone state와 risk score를 계산하는 서비스 자리다.
+
+## 현재 MVP 범위
+
+- 합성 센서 시나리오 기반 zone state 추정
+- `sensor_quality`가 신뢰 불가이면 `risk_level=unknown`으로 승격
+- `pause_automation + request_human_check` 같은 보수적 기본 조합 반환
+- `safe_mode_entry required`, `robot_safety_breach` 같은 강한 시그널은 `critical` 유지
+
+## 현재 구현 파일
+
+- `state-estimator/state_estimator/estimator.py`
+- `scripts/validate_state_estimator_mvp.py`
+- `data/examples/synthetic_sensor_scenarios.jsonl`
+
+## 검증 명령
+
+```bash
+python3 scripts/validate_state_estimator_mvp.py
+python3 scripts/validate_synthetic_scenarios.py
+```
+
+## MVP 판단 원칙
+
+- `sensor_quality.overall=bad` 또는 핵심 센서 `stale/missing/flatline/communication_loss`면 자동으로 `unknown`
+- `unknown` 상태에서는 `pause_automation`, `request_human_check`를 우선
+- 재부팅 후 state sync 미완료, robot safety breach처럼 명확한 강위험은 `critical`

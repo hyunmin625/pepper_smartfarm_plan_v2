@@ -19,6 +19,9 @@
 - `failure_response_samples_batch2.jsonl`: 장애대응 seed를 총 20건으로 확장하는 추가 묶음
 - `robot_task_samples.jsonl`: 수확/점검 후보의 로봇 작업 우선순위를 정하는 예시
 - `robot_task_samples_batch2.jsonl`: 로봇작업 seed를 총 20건으로 확장하는 추가 묶음
+- `state_judgement_samples_batch15_hard_cases.jsonl`: `worker_present`, `manual_override`, noisy sensor, rootzone evidence loss 같은 hard-case 전용 추가 묶음
+- `failure_response_samples_batch15_hard_cases.jsonl`: 통신 단절, 장치 stuck, reboot recovery 같은 safe-mode hard-case 전용 추가 묶음
+- `robot_task_samples_batch6_hard_cases.jsonl`: `worker_present`, `estop_active` 아래 robot task 차단 hard-case 추가 묶음
 - `reporting_samples.jsonl`: 운영자 알람과 보고서 문구를 생성하는 예시
 - `reporting_samples_batch2.jsonl`: 보고/알람 seed를 총 20건으로 확장하는 추가 묶음
 - `synthetic_sensor_scenarios.jsonl`: 실측 데이터가 없을 때 offline runner와 eval에 넣을 합성 센서 상태 시나리오

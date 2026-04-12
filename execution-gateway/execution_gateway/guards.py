@@ -9,6 +9,18 @@ from plc_adapter.device_profiles import DeviceProfileRegistry
 from .contracts import ControlOverrideRequest, DeviceCommandRequest
 from .normalizer import NormalizedRequest, normalize_control_override, normalize_device_command
 
+SAFE_DEVICE_ACTIONS_UNDER_INTERLOCK = {"pause_automation"}
+INTERLOCK_FLAG_REASON = {
+    "worker_present": "hard_guard_worker_present",
+    "manual_override_active": "hard_guard_manual_override_interlock",
+    "manual_override": "hard_guard_manual_override_interlock",
+    "safe_mode_active": "hard_guard_safe_mode_interlock",
+    "safe_mode": "hard_guard_safe_mode_interlock",
+    "estop_active": "hard_guard_estop_interlock",
+    "estop": "hard_guard_estop_interlock",
+    "sensor_quality_blocked": "hard_guard_sensor_quality_blocked",
+}
+
 
 @dataclass
 class PreflightDecision:
@@ -41,6 +53,50 @@ class CooldownManager:
         self.active_keys.add(key)
 
 
+def active_interlock_flags(request: DeviceCommandRequest) -> set[str]:
+    flags: set[str] = set()
+
+    if request.operator_present:
+        flags.add("worker_present")
+    if request.manual_override:
+        flags.add("manual_override_active")
+
+    raw = request.raw
+    for field_name in ("active_interlocks", "active_constraints", "safety_interlocks"):
+        value = raw.get(field_name)
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            if isinstance(item, str) and item.strip():
+                flags.add(item.strip())
+
+    sensor_quality = raw.get("sensor_quality")
+    if isinstance(sensor_quality, dict):
+        overall = sensor_quality.get("overall")
+        if overall == "bad" or sensor_quality.get("automation_gate") == "blocked":
+            flags.add("sensor_quality_blocked")
+
+    return flags
+
+
+def evaluate_hard_safety_guards(
+    request: DeviceCommandRequest,
+    *,
+    device: Any,
+    profile: Any,
+) -> list[str]:
+    del device, profile  # reserved for future profile-specific guard extension
+    if request.action_type in SAFE_DEVICE_ACTIONS_UNDER_INTERLOCK:
+        return []
+
+    reasons: list[str] = []
+    for flag in sorted(active_interlock_flags(request)):
+        reason = INTERLOCK_FLAG_REASON.get(flag)
+        if reason and reason not in reasons:
+            reasons.append(reason)
+    return reasons
+
+
 def evaluate_device_command(
     request: DeviceCommandRequest,
     *,
@@ -58,6 +114,14 @@ def evaluate_device_command(
         profile.validate_parameters(request.action_type, request.parameters)
     except ValueError as exc:
         reasons.append(f"range_validation_failed:{exc}")
+
+    reasons.extend(
+        evaluate_hard_safety_guards(
+            request,
+            device=device,
+            profile=profile,
+        )
+    )
 
     if request.manual_override and request.action_type != "pause_automation":
         reasons.append("manual_override_active")

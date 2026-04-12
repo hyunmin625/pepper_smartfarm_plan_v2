@@ -11,13 +11,14 @@
 
 1. schema validation
 2. range validation
-3. device availability / target scope check
-4. duplicate action check
-5. cooldown check
-6. policy re-evaluation
-7. approval routing
-8. audit logging
-9. dispatcher 전달
+3. hard-coded safety interlock check
+4. device availability / target scope check
+5. duplicate action check
+6. cooldown check
+7. policy re-evaluation
+8. approval routing
+9. audit logging
+10. dispatcher 전달
 
 ## 3. 현재 구현 기준
 
@@ -29,6 +30,12 @@
   - `device_command`: `device:{device_id}:{action_type}`
   - `override`: `override:{scope_type}:{scope_id}:{override_type}`
   - 최근 동일 key가 중복되면 reject한다.
+
+- hard-coded safety interlock check
+  - `operator_context.operator_present=true`면 `pause_automation` 외 동력 장치 명령은 reject한다.
+  - `sensor_quality.automation_gate=blocked` 또는 `sensor_quality.overall=bad`면 `pause_automation` 외 장치 명령은 reject한다.
+  - `active_interlocks`, `active_constraints`, `safety_interlocks`에 `worker_present`, `manual_override_active`, `safe_mode_active`, `estop_active`가 들어오면 execution-gateway에서 다시 reject한다.
+  - 목적은 LLM 출력과 무관하게 실행 게이트에서 안전 인터락을 강제하는 것이다.
 
 - cooldown check
   - dedupe key와 동일한 key를 사용한다.

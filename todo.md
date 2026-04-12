@@ -70,6 +70,10 @@
 - [x] batch14 기반 challenger draft 생성과 format 검증 (`artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`)
 - [x] 다음 submit용 dry-run manifest 생성 (`artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`)
 - [x] `ds_v11/prompt_v5_methodfix_batch14` 1회 실제 submit 시작 (`ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, latest status `queued`)
+- [x] execution-gateway hard-coded safety interlock 추가 (`execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
+- [x] state-estimator MVP 추가: `sensor_quality bad -> risk_level unknown` 기본 경로 구현 (`state-estimator/state_estimator/estimator.py`, `scripts/validate_state_estimator_mvp.py`)
+- [x] batch15 hard-case `10건` 추가와 next-only oversampling 규칙 고정 (`scripts/generate_batch15_hard_cases.py`, `docs/hard_case_oversampling_plan.md`)
+- [x] `scripts/build_openai_sft_datasets.py`에 train-only `--oversample-task-type` 지원 추가 및 dry-run format 검증 완료
 
 ---
 
@@ -609,6 +613,7 @@
 - [ ] final state schema validation
 - [ ] snapshot DB 저장
 - [ ] state updated event 발행
+- [x] state-estimator MVP 작성 (`state-estimator/state_estimator/estimator.py`, `scripts/validate_state_estimator_mvp.py`)
 
 ---
 
@@ -744,6 +749,7 @@
 - [x] approval handler 작성 (`execution-gateway/execution_gateway/guards.py`)
 - [x] rejection reason builder 작성 (`execution-gateway/execution_gateway/guards.py`)
 - [x] execution dispatcher 작성 (`execution-gateway/execution_gateway/dispatch.py`, `execution-gateway/execution_gateway/state.py`, `scripts/validate_execution_dispatcher.py`)
+- [x] hard-coded safety interlock 작성 (`execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
 
 ## 10.3 승인 체계
 - [x] 저위험 액션 목록 확정 (`docs/approval_governance.md`)

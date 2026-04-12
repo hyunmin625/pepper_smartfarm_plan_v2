@@ -28,6 +28,23 @@ DEFAULT_EVAL_FILES = (
     Path("evals/blind_holdout_eval_set.jsonl"),
 )
 
+ALLOWED_SAMPLE_TASK_TYPES = {
+    "qa_reference",
+    "state_judgement",
+    "climate_risk",
+    "rootzone_diagnosis",
+    "nutrient_risk",
+    "sensor_fault",
+    "pest_disease_risk",
+    "harvest_drying",
+    "safety_policy",
+    "action_recommendation",
+    "forbidden_action",
+    "failure_response",
+    "robot_task_prioritization",
+    "alert_report",
+}
+
 LEGACY_SYSTEM_PROMPT = (
     "You are pepper-ops, an agricultural decision assistant for red pepper greenhouse operations. "
     "Return JSON only. Use conservative recommendations when sensor quality or retrieval coverage is weak. "
@@ -786,6 +803,45 @@ def split_samples(
     return train_rows, validation_rows, family_summary
 
 
+def parse_oversample_specs(specs: list[str]) -> dict[str, int]:
+    oversample_factors: dict[str, int] = {}
+    for spec in specs:
+        if "=" not in spec:
+            raise ValueError(f"invalid oversample spec {spec!r}; expected task_type=factor")
+        task_type, factor_text = spec.split("=", 1)
+        task_type = task_type.strip()
+        if task_type not in ALLOWED_SAMPLE_TASK_TYPES:
+            raise ValueError(f"unsupported oversample task_type {task_type!r}")
+        try:
+            factor = int(factor_text)
+        except ValueError as exc:
+            raise ValueError(f"invalid oversample factor {factor_text!r}") from exc
+        if factor < 1:
+            raise ValueError(f"oversample factor must be >= 1 for {task_type!r}")
+        oversample_factors[task_type] = factor
+    return oversample_factors
+
+
+def apply_train_oversampling(
+    train_samples: list[dict[str, Any]],
+    oversample_factors: dict[str, int],
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, int]]]:
+    if not oversample_factors:
+        return train_samples, {}
+
+    expanded_rows: list[dict[str, Any]] = []
+    summary: dict[str, dict[str, int]] = {}
+    for sample in train_samples:
+        task_type = str(sample.get("task_type") or "unknown")
+        factor = oversample_factors.get(task_type, 1)
+        expanded_rows.extend([sample] * factor)
+        if factor > 1:
+            family_summary = summary.setdefault(task_type, {"base_rows": 0, "expanded_rows": 0, "factor": factor})
+            family_summary["base_rows"] += 1
+            family_summary["expanded_rows"] += factor
+    return expanded_rows, summary
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default=str(DEFAULT_INPUT))
@@ -815,6 +871,12 @@ def main() -> None:
         action="store_true",
         help="Print per-family train/validation counts after splitting.",
     )
+    parser.add_argument(
+        "--oversample-task-type",
+        action="append",
+        default=[],
+        help="Optional train-only oversampling in the form task_type=factor. Repeatable.",
+    )
     parser.add_argument("--eval-files", nargs="*", default=[str(path) for path in DEFAULT_EVAL_FILES])
     parser.add_argument("--system-prompt-version", choices=sorted(SYSTEM_PROMPT_BY_VERSION), default=DEFAULT_SYSTEM_PROMPT_VERSION)
     args = parser.parse_args()
@@ -836,6 +898,8 @@ def main() -> None:
         validation_ratio=args.validation_ratio,
         validation_selection=args.validation_selection,
     )
+    oversample_factors = parse_oversample_specs(args.oversample_task_type)
+    train_samples, oversample_summary = apply_train_oversampling(train_samples, oversample_factors)
     system_prompt = SYSTEM_PROMPT_BY_VERSION[args.system_prompt_version]
 
     train_rows = [to_openai_record(sample, system_prompt) for sample in train_samples]
@@ -853,6 +917,7 @@ def main() -> None:
     print(f"validation_ratio: {args.validation_ratio}")
     print(f"validation_selection: {args.validation_selection}")
     print(f"system_prompt_version: {args.system_prompt_version}")
+    print(f"oversample_task_types: {json.dumps(oversample_factors, ensure_ascii=False, sort_keys=True)}")
     print(f"input_source: {input_source}")
     print(f"train_output: {Path(args.train_output).as_posix()}")
     print(f"validation_output: {Path(args.validation_output).as_posix()}")
@@ -863,6 +928,11 @@ def main() -> None:
                 f"{item['family']},{item['total_rows']},{item['eligible_rows']},"
                 f"{item['train_rows']},{item['validation_rows']}"
             )
+    if oversample_summary:
+        print("oversample_family,base_rows,expanded_rows,factor")
+        for family in sorted(oversample_summary):
+            item = oversample_summary[family]
+            print(f"{family},{item['base_rows']},{item['expanded_rows']},{item['factor']}")
 
 
 if __name__ == "__main__":

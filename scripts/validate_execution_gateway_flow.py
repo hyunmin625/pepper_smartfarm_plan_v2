@@ -63,6 +63,46 @@ def main() -> None:
     if fan_decision.allow_dispatch or "cooldown_active" not in fan_decision.reasons:
         errors.append("fan_request should be blocked by cooldown_active")
 
+    worker_present_request = DeviceCommandRequest.from_dict(
+        {
+            **device_rows[0],
+            "request_id": "cmd-worker-interlock",
+            "operator_context": {
+                "manual_override": False,
+                "operator_present": True,
+            },
+        }
+    )
+    _, worker_present_decision = evaluate_device_command(
+        worker_present_request,
+        catalog=catalog,
+        registry=registry,
+        duplicates=DuplicateDetector(),
+        cooldowns=CooldownManager(),
+    )
+    if worker_present_decision.allow_dispatch or "hard_guard_worker_present" not in worker_present_decision.reasons:
+        errors.append("worker_present_request should be blocked by hard_guard_worker_present")
+
+    blocked_sensor_request = DeviceCommandRequest.from_dict(
+        {
+            **device_rows[0],
+            "request_id": "cmd-sensor-quality-blocked",
+            "sensor_quality": {
+                "overall": "bad",
+                "automation_gate": "blocked",
+            },
+        }
+    )
+    _, blocked_sensor_decision = evaluate_device_command(
+        blocked_sensor_request,
+        catalog=catalog,
+        registry=registry,
+        duplicates=DuplicateDetector(),
+        cooldowns=CooldownManager(),
+    )
+    if blocked_sensor_decision.allow_dispatch or "hard_guard_sensor_quality_blocked" not in blocked_sensor_decision.reasons:
+        errors.append("blocked_sensor_request should be blocked by hard_guard_sensor_quality_blocked")
+
     duplicate_detector = DuplicateDetector()
     _, first_duplicate_decision = evaluate_control_override(
         ControlOverrideRequest.from_dict(override_rows[0]),
@@ -90,7 +130,7 @@ def main() -> None:
     for error in errors:
         print(f"ERROR {error}", file=sys.stderr)
 
-    print("checked_cases: 4")
+    print("checked_cases: 6")
     print(f"errors: {len(errors)}")
     raise SystemExit(1 if errors else 0)
 

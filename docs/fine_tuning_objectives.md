@@ -9,12 +9,14 @@
 - 최신 재배 기준, 품종 차이, 병해 조건, SOP, 정책 근거는 RAG가 담당한다.
 - 수치 기준이 자주 바뀌거나 출처 추적이 필요한 내용은 파인튜닝으로 암기시키지 않는다.
 - 근거가 필요한 설명은 citation이 있는 retrieved context를 우선 사용한다.
+- 후속 prompt는 더 길게 만들지 않는다. 재배 수치와 도메인 근거는 citation이 달린 RAG를 우선한다.
 
 ### 운영형 계층
 
 - 파인튜닝은 JSON 출력 안정화와 운영 행동 양식을 담당한다.
 - 같은 입력에서 일관된 `action_type`, `requires_human_approval`, `follow_up`, `confidence`를 내는 것이 목표다.
 - 위험 상황에서는 적극적 제어보다 보수적 거절, 승인 요청, 재확인을 우선한다.
+- hard safety interlock은 execution-gateway / output validator가 맡고, 파인튜닝은 그 계약을 안정적으로 따르는 쪽에 집중한다.
 
 ## 2. 파인튜닝 목표
 
