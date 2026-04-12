@@ -171,6 +171,10 @@
 - 로컬 툴 보강: `scripts/build_openai_sft_datasets.py`는 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하고, `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검한다.
 - `risk_level` 정규화 기준 고정: `docs/risk_level_rubric.md`에 `critical > unknown > high > medium > low` 우선순위와 task family별 기준을 정리했다.
 - critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 12`, `sensor_unknown 6`, `evidence_incomplete_unknown 2`, `failure_safe_mode 11`, `robot_contract 24`이며 라벨 mismatch `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1`이 남아 있다.
+- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `194건`, class imbalance ratio `10.00`, action 분포는 `request_human_check 90`, `create_alert 69`, `pause_automation 16`, `block_action 12`, `enter_safe_mode 8`이다.
+- 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다.
+- `ds_v9` 재평가 세부 판단: `extended120`에서는 `ds_v5` 대비 개선됐지만, blind holdout 제품화 게이트는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`으로 여전히 막혔다.
+- 비교 해석: `ds_v9`는 robot field contract 실패를 `3 -> 1`로 줄였지만, blind safety invariant는 `0.5 -> 0.3333`으로 악화됐다. 따라서 현재 문제를 `robot raw count 부족`보다 `failure/safety 의미 계약과 risk/action 경계 문제`로 보는 쪽이 더 정확하다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -252,11 +256,12 @@
 ## 다음 우선순위
 
 1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화`, `policy/output validator`, `eval200` 계획을 먼저 고정
-2. 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 다시 정리하고, 후속 challenger가 생기면 같은 조건으로만 비교
+2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended120 + blind_holdout + product gate` 조건으로만 비교
 3. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 검토
-4. `Tranche 3`로 `extended160`, 이후 `extended200`과 blind holdout `50`까지 확장
-5. hard block 정책 10개와 approval 정책 10개를 정책 JSON 및 output validator로 구체화
-6. 그 다음에만 critical slice 중심 training `+42` 내외 보강과 다음 challenger 제출 여부를 결정
+4. 기존 training label mismatch `8건`을 먼저 정리하고 `safety_policy`, `sensor_fault`, `failure_response`, `rootzone evidence incomplete`, `robot contract`만 targeted 보강
+5. `Tranche 3`로 `extended160`, 이후 `extended200`과 blind holdout `50`까지 확장
+6. hard block 정책 10개와 approval 정책 10개를 정책 JSON 및 output validator로 구체화
+7. 그 다음에만 다음 challenger 제출 여부를 결정
 
 ## 주의할 점
 

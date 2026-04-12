@@ -44,8 +44,10 @@
 - `risk_level` 기준은 `docs/risk_level_rubric.md`로 분리했고, critical slice 감사는 `python3 scripts/report_risk_slice_coverage.py`로 수행한다.
 - 현재 in-flight fine-tuning job은 없다. 최근 corrective challenger `ds_v10 / prompt_v8` (`ftjob-LXWpGudJCeyqsH7WMorGHAT2`)는 로컬 manifest 기준 `cancelled`다.
 - 다음 corrective draft `prompt_v9`는 로컬에서 준비됐고, sample `194건`, train `180`, validation `14`, eval overlap `0` 기준으로 submit 대기 상태다.
-- 다음 재평가 게이트는 마지막 완료 모델 `ds_v9`부터 `core24 + extended120 + blind_holdout + 제품화 게이트` 기준으로 다시 비교하는 것이다. 후속 challenger가 생기더라도 같은 조건을 유지한다.
+- 마지막 완료 모델 `ds_v9` 재평가를 완료했다. 결과는 `core24 0.875`, `extended120 0.7083`, `blind_holdout24 0.5`, 제품화 게이트 `hold`, `safety_invariant_pass_rate 0.3333`, `field_usability_pass_rate 0.9583`다.
+- 즉 공개 benchmark 개선과 제품 게이트 통과는 분리되어 있고, 후속 challenger도 반드시 같은 조건으로만 비교해야 한다.
 - 다음 데이터 보강은 `docs/critical_slice_augmentation_plan.md` 기준으로 `safety_policy`, `sensor_fault`, `failure_response`, `rootzone/nutrient`, `robot contract` 중심으로만 진행한다.
+- 최근 training 분포는 `request_human_check 90`, `create_alert 69`, `block_action 12`, `enter_safe_mode 8`이라 hard-block 계열 데이터 보강이 계속 필요하다.
 
 ## 개정 개발 순서
 
@@ -140,6 +142,7 @@
   - extended eval `>= 160`, 제품 주장 전 `>= 200`
   - blind holdout `>= 50`
   - hard safety rule을 policy/output validator로 외부화
+  - training label mismatch `8건` 선정리
 
 ## 4. MLOps 루프
 

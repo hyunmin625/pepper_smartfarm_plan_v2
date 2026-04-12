@@ -23,6 +23,12 @@
 - `evidence_incomplete_unknown`: `2`
 - `failure_safe_mode`: `11`
 - `robot_task_prioritization`: `24`
+- action imbalance:
+  - `request_human_check`: `90`
+  - `create_alert`: `69`
+  - `pause_automation`: `16`
+  - `block_action`: `12`
+  - `enter_safe_mode`: `8`
 
 현재 eval/holdout 관측치:
 
@@ -133,6 +139,7 @@
 핵심:
 
 - 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 일관성이 중요하다.
+- 따라서 raw sample 수를 단순히 `20+`로 맞추는 것보다, 현장 unusable contract를 깨는 hard case를 의도적으로 넣는 편이 더 중요하다.
 
 ## 4. 최소 추가량
 

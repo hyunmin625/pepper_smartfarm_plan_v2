@@ -54,18 +54,20 @@
 - 최신 champion model 유지: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
 - 최신 champion eval 완료: `core24` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
 - baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v5/prompt_v5 결과가 `+0.3333`, 직전 champion ds_v4/prompt_v4 `0.7917` 대비 `+0.0833` 개선됐다.
-- `ds_v9/prompt_v5_methodfix`까지 재평가 완료: `0.875` 동률까지 도달했지만 회귀 케이스가 있어 champion은 여전히 ds_v5다.
+- `ds_v9/prompt_v5_methodfix` 재평가 완료: `core24 0.875`, `extended120 0.7083`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다. 공개 benchmark는 개선됐지만 blind/product gate는 통과하지 못했고, 공식 승격은 보류한다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
 - `scripts/report_eval_set_coverage.py --enforce-minimums` 통과 완료: `extended120` minimum gate 충족, 다음 확장 목표는 `extended160`
 - current champion extended120 baseline 확정: `ds_v5/prompt_v5`를 `120건` 전체에 재평가한 결과 pass rate `0.5417`, strict JSON rate `1.0`, 약한 family는 `safety_policy 0.0`, `robot_task_prioritization 0.25`, `sensor_fault 0.2`였다.
 - blind holdout 1차 도입 완료: `evals/blind_holdout_eval_set.jsonl` `24건`, 현재 champion `ds_v5/prompt_v5`는 blind holdout에서도 pass rate `0.5417`로 동일하게 낮게 나왔다.
+- 최신 완료 모델 blind 재평가 완료: `ds_v9/prompt_v5_methodfix`는 blind holdout `0.5`, safety invariant pass rate `0.3333`, field usability pass rate `0.9583`이다. 즉 robot contract는 일부 개선했지만 안전 invariant는 더 악화됐다.
 - 제품화 게이트 재정의 완료: 승격은 이제 `extended120/160`만이 아니라 `blind holdout >= 0.95`, `safety invariant failed = 0`, `field usability failed = 0`, `shadow mode pass`를 동시에 만족해야 한다.
 - 현재 champion 제품화 판정은 `hold`: blind holdout `0.5417`, safety invariant pass rate `0.5`, robot task field usability failure `3건`, shadow mode `not_run`
+- 최신 training 통계 재확인 완료: sample `194건`, class imbalance ratio `10.00`, `request_human_check 90`, `create_alert 69`, `block_action 12`, `enter_safe_mode 8`이다.
 - 다음 corrective draft 로컬 복구 완료: `state_judgement batch10 6건`, `failure_response batch10 3건`, `forbidden_action batch5 2건`, `robot_task batch3 4건`을 학습 seed에 반영해 총 `194건`으로 확장했다.
 - `prompt_v9` draft 추가 완료: `scripts/build_openai_sft_datasets.py`와 `scripts/evaluate_fine_tuned_model.py`에 `sft_v9`를 반영했고, OpenAI SFT draft는 train `180`, validation `14`, eval overlap `0`으로 생성됐다.
 - `prompt_v9`는 아직 submit하지 않았고, 제품 수준 재평가가 끝날 때까지 다음 corrective round 후보 draft로만 유지한다.
-- 제품 수준 재평가 문서화 완료: `docs/model_product_readiness_reassessment.md`에 따라 당분간 새 fine-tuning submit보다 `validation 강화`, `extended200 + blind50` 계획, `policy/output validator` 외부화를 우선한다.
+- 제품 수준 재평가 문서화 완료: `docs/model_product_readiness_reassessment.md`에 따라 당분간 새 fine-tuning submit보다 `validation 강화`, `extended200 + blind50` 계획, `policy/output validator` 외부화, `failure/safety/sensor` slice 보강을 우선한다.
 - `scripts/build_openai_sft_datasets.py`는 이제 `validation_ratio`, `validation_min_per_family`, `validation_selection=spread`를 지원하므로 다음 라운드부터 `validation 14` 고정을 해제할 수 있다.
 - `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검하도록 보강됐다.
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
@@ -235,9 +237,10 @@
 ## 다음 우선순위
 
 1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화 + policy/output validator + eval200 계획`을 먼저 고정
-2. 마지막 완료 모델 `ds_v9`를 먼저 같은 기준인 `core24 + extended120 + blind_holdout + product gate`로 재심사하고, 후속 challenger가 생기면 같은 조건으로만 비교
-3. `Tranche 3`로 `extended160`, 그 다음 `extended200`과 blind holdout `50`까지 확장
-4. `manual_override`, `worker_present`, `safe_mode`, `path loss`, `robot task contract`를 모델 prompt가 아니라 정책/출력 validator로 외부화
-5. 그 다음에만 critical slice 중심 training `+42` 내외 보강과 다음 fine-tuning 후보 제출 여부를 결정
+2. `ds_v9` 재평가 결과를 baseline으로 고정하고, 후속 challenger가 생기면 같은 조건으로만 비교
+3. 기존 training label mismatch `8건`을 먼저 정리하고 `safety_policy`, `sensor_fault`, `failure_response`, `rootzone evidence incomplete`, `robot contract`만 targeted 보강
+4. `Tranche 3`로 `extended160`, 그 다음 `extended200`과 blind holdout `50`까지 확장
+5. `manual_override`, `worker_present`, `safe_mode`, `path loss`, `robot task contract`를 모델 prompt가 아니라 정책/출력 validator로 외부화
+6. 그 다음에만 critical slice 중심 training `+42` 내외 보강과 다음 fine-tuning 후보 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

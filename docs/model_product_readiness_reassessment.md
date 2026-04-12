@@ -8,16 +8,18 @@
 
 - 마지막 완료 모델은 `ds_v9/prompt_v5_methodfix`다.
 - `ds_v10/prompt_v8`은 최근 sync 기준 `cancelled`이며, 완료 평가 결과가 아직 없다.
-- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `strict_json_rate 1.0`이다.
-- 하지만 현 champion `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
-- 제품화 게이트 기준 현재 champion은 `promotion_decision=hold`, `safety_invariant_pass_rate=0.5`, `field_usability_pass_rate=0.875`, `shadow_mode_status=not_run`이다.
+- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `extended120`에서 `0.7083`, `blind_holdout24`에서 `0.5`, `strict_json_rate 1.0`이다.
+- 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
+- blind holdout 제품화 게이트 기준 `ds_v9`는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`이다.
+- 즉 `ds_v9`는 공개 benchmark와 robot field contract는 개선했지만, blind safety invariant는 오히려 악화됐다.
 
 ### 실제 실패 의미
 
 - 실패의 중심은 JSON 포맷이 아니라 `risk_level`과 `required_action_types` 의미 불일치다.
 - `manual_override`, `worker_present`, `safe_mode`, `irrigation/source-water/dry-room path loss`에서 `block_action` 또는 `enter_safe_mode`가 빠진다.
 - `robot_task`는 점수보다 더 큰 field contract 문제를 보인다. 실제 현장에서는 `candidate_id` 또는 `target`이 없는 generic task는 unusable이다.
-- `extended120` 실패 시 평균 confidence가 pass 시보다 높아, 틀릴 때도 확신을 가지는 calibration 문제가 있다.
+- `ds_v9` 재평가에서도 핵심 실패는 여전히 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다.
+- `ds_v5`는 `extended120` 실패 시 평균 confidence가 pass 시보다 높아 calibration 문제가 있었고, `ds_v9`는 calibration은 다소 안정됐지만 blind safety invariant는 개선하지 못했다.
 
 ## 2. 원인 판단
 
@@ -58,6 +60,14 @@
 
 현재 training `194건` 중 critical slice는 얇다.
 
+전체 action 분포도 치우쳐 있다.
+
+- `request_human_check`: `90`
+- `create_alert`: `69`
+- `pause_automation`: `16`
+- `block_action`: `12`
+- `enter_safe_mode`: `8`
+
 - `rootzone_diagnosis`: `5`
 - `sensor_fault`: `6`
 - `climate_risk`: `6`
@@ -79,6 +89,8 @@
 결론:
 
 - generic sample bulk-up은 비효율적이다.
+- 사용자가 제안한 `robot_task 20+`는 현재 raw count 기준으로는 이미 충족한다.
+- 하지만 실제 문제는 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 계약 품질이다.
 - 아래 5개 slice를 우선 보강한다.
   - `safety_policy`: `+8`
   - `failure_response`: `+10`
@@ -94,7 +106,7 @@
 - `core24`는 빠른 회귀 확인용으로는 유효하지만 제품 판단용으로는 너무 작다.
 - `extended120`은 minimum gate로는 유효하지만, 제품화 기준으로는 여전히 작다.
 - blind holdout은 `24건`이라 invariant/field usability를 보기엔 방향은 맞지만 표본이 작다.
-- 최신 완료 모델 `ds_v9`도 아직 `extended120 + blind_holdout + product gate` 기준으로 재심사되지 않았다.
+- 최신 완료 모델 `ds_v9`를 같은 기준으로 재심사한 결과, `extended120`은 개선됐지만 blind/product gate는 여전히 막혔다.
 
 결론:
 
@@ -138,6 +150,7 @@
 - `scripts/report_eval_set_coverage.py`로 `product200` 목표와 blind holdout 규모를 함께 점검한다.
 - `scripts/build_openai_sft_datasets.py` split 옵션을 `validation_ratio`와 `spread` 기준으로 강화한다.
 - hard safety rule 10개와 robot output contract를 `policy/output validator` 사양으로 고정한다.
+- `ds_v9` 재평가 결과를 baseline 문서와 상태 문서에 고정한다.
 
 ### Phase 2. 저비용 데이터/평가 조치
 
@@ -157,9 +170,9 @@
 
 - 마지막 완료 모델부터 같은 기준으로 재평가한다.
 - 순서:
-  1. `ds_v9`를 `core24 + extended120 + blind_holdout + product gate`로 다시 본다.
+  1. `ds_v9` 재평가 결과를 baseline으로 고정한다.
   2. `ds_v10`이 다시 실행되거나 후속 challenger가 생기면 같은 기준으로 비교한다.
-  3. 둘 다 정책 validator를 붙인 결과와 순수 모델 결과를 함께 기록한다.
+  3. 새 challenger는 정책 validator를 붙인 결과와 순수 모델 결과를 함께 기록한다.
 
 ### Phase 4. 그 이후에만 fine-tuning 재개
 

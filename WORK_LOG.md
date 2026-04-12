@@ -4,6 +4,26 @@
 
 ## 2026-04-12
 
+### ds_v9 재평가와 최신 원인 재확인
+- `python3 scripts/report_training_sample_stats.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/validate_training_examples.py`, `python3 scripts/report_risk_slice_coverage.py`를 다시 실행해 현재 기준선을 재확인했다.
+- 결과는 sample `194건`, class imbalance ratio `10.00`, action 분포 `request_human_check 90`, `create_alert 69`, `pause_automation 16`, `block_action 12`, `enter_safe_mode 8`, duplicate `0`, contradiction `0`, eval overlap `0`이다.
+- 이 재집계로 사용자 제안 중 `데이터 불균형`과 `eval leakage 재점검`은 맞다고 확인됐다. 다만 `robot_task`는 raw count가 `24건`이라 단순 건수 부족보다 `candidate_id/target`, exact enum, `approval_required` 계약 문제 쪽이 더 크다고 재판정했다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTgUbJHJ --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended120`로 마지막 완료 모델 `ds_v9/prompt_v5_methodfix`를 `extended120`에 재평가했다.
+- `extended120` 결과는 `pass_rate 0.7083`, `strict_json_rate 1.0`이며, `ds_v5 0.5417` 대비 개선됐다. 하지만 top failed checks는 여전히 `risk_level_match 27`, `required_action_types_present 16`, `required_task_types_present 5`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTgUbJHJ --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout`로 blind holdout도 다시 평가했다.
+- blind holdout 결과는 `pass_rate 0.5`, `strict_json_rate 1.0`이며, 취약 family는 `failure_response 0.0`, `sensor_fault 0.0`, `robot_task_prioritization 0.3333`, `safety_policy 0.5`다.
+- `python3 scripts/validate_product_readiness_gate.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout.json --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/product_readiness_gate_ds_v9_prompt_v5_methodfix_blind_holdout`로 제품화 게이트를 다시 검증했다.
+- 결과는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`이다.
+- 비교 해석:
+  - `ds_v9`는 `ds_v5` 대비 공개 benchmark와 robot field usability는 개선했다.
+  - 하지만 blind safety invariant는 `0.5 -> 0.3333`으로 악화됐다.
+  - 따라서 실제 병목은 `robot count 부족`보다 `failure/safety 의미 계약`, `risk_level 경계`, `hard safety action 누락`에 있다.
+- 사용자 제안 반영 정리:
+  - `safety_policy`, `sensor_fault`, `failure_response`, `rootzone evidence incomplete` 중심 보강은 유지
+  - `risk decision tree`는 긴 프롬프트 규칙이 아니라 `docs/risk_level_rubric.md`와 eval 기대값에 고정
+  - 승격 기준은 계속 `core24`가 아니라 `extended120/160 + blind/product gate`
+  - 새 fine-tuning보다 먼저 `validator 외부화`, `label mismatch 정리`, `eval 확장`을 수행
+
 ### 제품 수준 재평가와 무지출 우선순위 재정렬
 - `docs/model_product_readiness_reassessment.md`를 추가해 현재 병목을 `모델 자체`보다 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트로 재정리했다.
 - 로컬 run manifest 기준 `ds_v10/prompt_v8` 상태가 `queued`가 아니라 `cancelled`로 정리된 것을 확인했고, 현재 재평가 기준은 마지막 완료 모델 `ds_v9`부터 다시 보는 것으로 바꿨다.
