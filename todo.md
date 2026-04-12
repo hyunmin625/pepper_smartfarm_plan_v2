@@ -226,19 +226,24 @@
 ## 2.5.1 평가셋 확장 게이트
 - [x] 현재 eval 분포/총량 리포트 스크립트 추가 (`scripts/report_eval_set_coverage.py`)
 - [x] `build_eval_jsonl.py`에 file별 row 수 출력 추가 (`scripts/build_eval_jsonl.py`)
-- [ ] 현재 `24건`을 `core regression set`으로 동결하고 append-only 운영 기준 명시 (`docs/eval_scaleup_plan.md`)
-- [ ] `Tranche 1`: eval 총량 `60+`까지 확장
-- [ ] `Tranche 2`: eval 총량 `120`까지 확장
+- [x] 현재 `24건`을 `core regression set`으로 동결하고 append-only 운영 기준 명시 (`docs/eval_scaleup_plan.md`)
+- [x] `Tranche 1`: eval 총량 `60+`까지 확장
+- [x] `Tranche 2`: eval 총량 `120`까지 확장
 - [ ] `Tranche 3`: eval 총량 `160`까지 확장
-- [ ] `expert_judgement_eval_set.jsonl`를 `40` 이상으로 확장
-- [ ] `action_recommendation_eval_set.jsonl`를 `16` 이상으로 확장
-- [ ] `forbidden_action_eval_set.jsonl`를 `12` 이상으로 확장
-- [ ] `failure_response_eval_set.jsonl`를 `12` 이상으로 확장
-- [ ] `robot_task_eval_set.jsonl`를 `8` 이상으로 확장
-- [ ] `edge_case_eval_set.jsonl`를 `16` 이상으로 확장
-- [ ] `seasonal_eval_set.jsonl`를 `16` 이상으로 확장
-- [ ] `scripts/report_eval_set_coverage.py --enforce-minimums`를 fine-tuning 재개 전 필수 게이트로 적용
-- [ ] `extended120` 게이트를 넘기기 전까지 새 fine-tuning submit 중지
+- [x] `expert_judgement_eval_set.jsonl`를 `40` 이상으로 확장
+- [x] `action_recommendation_eval_set.jsonl`를 `16` 이상으로 확장
+- [x] `forbidden_action_eval_set.jsonl`를 `12` 이상으로 확장
+- [x] `failure_response_eval_set.jsonl`를 `12` 이상으로 확장
+- [x] `robot_task_eval_set.jsonl`를 `8` 이상으로 확장
+- [x] `edge_case_eval_set.jsonl`를 `16` 이상으로 확장
+- [x] `seasonal_eval_set.jsonl`를 `16` 이상으로 확장
+- [x] `scripts/report_eval_set_coverage.py --enforce-minimums` 통과로 minimum gate 확인
+- [x] `extended120` 게이트를 넘기기 전까지 새 fine-tuning submit 중지 원칙 문서화
+- [x] champion `ds_v5/prompt_v5`를 `core24 + extended120` benchmark baseline으로 고정
+- [x] corrective seed `batch10` + robot/forbidden 보강을 반영해 combined training `194건`으로 재생성
+- [x] `prompt_v9` SFT draft(train `180`, validation `14`, eval overlap `0`) 생성
+- [ ] challenger `ds_v10/prompt_v8`를 같은 benchmark로 재평가하고 champion과 비교
+- [ ] `ds_v10` 결과와 blind holdout / 제품화 게이트를 보고 `prompt_v9`를 `ds_v11`로 submit할지 결정
 
 ## 2.6 RAG 지식베이스 구축 [완료]
 - [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)

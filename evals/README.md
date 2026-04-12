@@ -13,19 +13,20 @@
 - `robot_task_eval_set.jsonl`: 로봇 작업 우선순위 평가셋
 - `edge_case_eval_set.jsonl`: 장치 readback, 인터록, 수동개입, 센서 조합 edge case 평가셋
 - `seasonal_eval_set.jsonl`: 겨울 육묘, 봄 활착, 여름 고온, 가을 후기 수확 계절별 평가셋
+- `blind_holdout_eval_set.jsonl`: corrective tuning에 사용하지 않는 제품화용 blind holdout 평가셋
 
 현재 row 수는 아래와 같다.
 
-- `expert_judgement_eval_set.jsonl`: `8`
-- `action_recommendation_eval_set.jsonl`: `2`
-- `forbidden_action_eval_set.jsonl`: `2`
-- `failure_response_eval_set.jsonl`: `2`
-- `robot_task_eval_set.jsonl`: `2`
-- `edge_case_eval_set.jsonl`: `4`
-- `seasonal_eval_set.jsonl`: `4`
-- 총합: `24`
+- `expert_judgement_eval_set.jsonl`: `40`
+- `action_recommendation_eval_set.jsonl`: `16`
+- `forbidden_action_eval_set.jsonl`: `12`
+- `failure_response_eval_set.jsonl`: `12`
+- `robot_task_eval_set.jsonl`: `8`
+- `edge_case_eval_set.jsonl`: `16`
+- `seasonal_eval_set.jsonl`: `16`
+- 총합: `120`
 
-이 `24건`은 앞으로 `core regression set`으로 유지한다. 승격과 제품화 판단은 `docs/eval_scaleup_plan.md`의 `extended120` 최소 / `extended160` 권장 기준으로 수행한다.
+초기 `24건`은 그대로 `core regression set`으로 유지하고, 현재 extended benchmark는 최소 게이트 `120건`까지 확보했다. 다만 제품화 판단은 `extended120/160`만으로 하지 않고 `docs/productization_promotion_gate.md`의 blind holdout, safety invariant, field usability, shadow mode 게이트를 함께 사용한다.
 
 ## 평가 목적
 
@@ -53,13 +54,14 @@
 
 ## 다음 확장
 
-1. `scripts/report_eval_set_coverage.py`로 현재 총량과 파일별 부족분을 먼저 확인
-2. `Tranche 1`에서 eval 총량을 `60+`까지 확장
-3. `Tranche 2`에서 eval 총량을 `120`까지 확장
+1. `scripts/report_eval_set_coverage.py --enforce-minimums`로 `extended120` minimum gate를 계속 확인
+2. 현재 champion/challenger를 `core24 + extended120` 기준으로 다시 평가
+3. `Tranche 3`에서 eval 총량을 `160`까지 확장
 4. 정상/주의/위험/차단 케이스 균형화
 5. 생육 단계별 케이스 분리
 6. RAG citation 정답 chunk 지정
 7. eval JSONL 구조 검증을 `scripts/validate_training_examples.py`로 자동 확인
+8. blind holdout 결과와 제품화 게이트 리포트를 별도로 기록
 
 ## RAG 검색 평가 실행
 
@@ -103,24 +105,39 @@ OpenAI embedding 기반 평가를 돌릴 때는 저장소 루트 `.env`에 `OPEN
 
 ## Fine-tuned Model 평가 실행
 
-최신 fine-tuned model `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`의 `3.4 파인튜닝 결과 검증`은 아래 명령으로 실행한다.
+현재 champion model `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`의 `3.4 파인튜닝 결과 검증`은 아래 명령으로 실행한다.
 
 ```bash
 ./.venv/bin/python scripts/evaluate_fine_tuned_model.py \
-  --system-prompt-version sft_v3 \
-  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg \
-  --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3
+  --system-prompt-version sft_v5 \
+  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo \
+  --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5
 ```
 
-현재 champion 결과는 eval `24건` 기준 `pass_rate 0.6667`, `strict_json_rate 1.0`이다. v1 legacy baseline(`0.5417`)은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관하고, 직전 ds_v2/prompt_v2 champion(`0.625`)보다도 개선됐다.
+현재 champion 결과는 `core24` 기준 `pass_rate 0.875`, `strict_json_rate 1.0`이고, `extended120` baseline 기준 `pass_rate 0.5417`, `strict_json_rate 1.0`이다. v1 legacy baseline(`0.5417`)은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관한다.
 
-다음 draft prompt 비교는 아래처럼 실행한다.
+같은 champion을 extended benchmark 전체에 다시 태우려면 아래처럼 실행한다.
 
 ```bash
 python3 scripts/evaluate_fine_tuned_model.py \
-  --system-prompt-version sft_v3 \
-  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg \
-  --output-prefix artifacts/reports/fine_tuned_model_eval_prompt_v3
+  --system-prompt-version sft_v5 \
+  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo \
+  --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_extended120
+```
+
+blind holdout과 제품화 게이트는 아래처럼 별도로 실행한다.
+
+```bash
+./.venv/bin/python scripts/evaluate_fine_tuned_model.py \
+  --system-prompt-version sft_v5 \
+  --model ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo \
+  --eval-files evals/blind_holdout_eval_set.jsonl \
+  --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout
+
+python3 scripts/validate_product_readiness_gate.py \
+  --report artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout.json \
+  --eval-files evals/blind_holdout_eval_set.jsonl \
+  --output-prefix artifacts/reports/product_readiness_gate_ds_v5_prompt_v5_blind_holdout
 ```
 
 산출물:
@@ -128,9 +145,17 @@ python3 scripts/evaluate_fine_tuned_model.py \
 - `artifacts/reports/fine_tuned_model_eval_latest.json`
 - `artifacts/reports/fine_tuned_model_eval_latest.jsonl`
 - `artifacts/reports/fine_tuned_model_eval_latest.md`
-- `artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3.json`
-- `artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3.jsonl`
-- `artifacts/reports/fine_tuned_model_eval_ds_v3_prompt_v3.md`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5.json`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5.md`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_extended120.json`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_extended120.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_extended120.md`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout.json`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout.jsonl`
+- `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout.md`
+- `artifacts/reports/product_readiness_gate_ds_v5_prompt_v5_blind_holdout.json`
+- `artifacts/reports/product_readiness_gate_ds_v5_prompt_v5_blind_holdout.md`
 - `artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2.json`
 - `artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2.jsonl`
 - `artifacts/reports/fine_tuned_model_eval_ds_v2_prompt_v2.md`
@@ -141,7 +166,7 @@ python3 scripts/evaluate_fine_tuned_model.py \
 - `artifacts/reports/fine_tuned_model_eval_prompt_v2.jsonl`
 - `artifacts/reports/fine_tuned_model_eval_prompt_v2.md`
 
-`--system-prompt-version sft_v3`는 현재 champion 검증용 기본 prompt다. `--system-prompt-version legacy`는 v1 baseline 비교용으로 유지한다.
+`--system-prompt-version sft_v5`는 현재 champion 검증용 기본 prompt다. `--system-prompt-version legacy`는 v1 baseline 비교용으로 유지한다.
 
 이 스크립트는 eval JSONL을 실제 모델에 질의한 뒤 아래 항목을 요약한다.
 

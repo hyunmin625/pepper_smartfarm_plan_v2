@@ -11,8 +11,8 @@
 - 원격 저장소: `https://github.com/hyunmin625/pepper_smartfarm_plan_v2.git`
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
-- 현재 fine-tuning core benchmark는 eval `24건`이며, 이는 승격/제품화 판단에 부족하다고 재판정했다.
-- 현재 `24건`은 `core regression set`으로 유지하고, 새 운영 게이트는 `extended120` 최소 / `extended160` 권장 기준으로 확장한다.
+- 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로 유지한다.
+- `extended120` 최소 benchmark는 달성했다. 현재 분포는 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`이며, 다음 운영 게이트는 `core24 + extended120` 재평가와 `extended160` 확장이다.
 
 ## 핵심 시스템 방향
 
@@ -136,15 +136,22 @@
 - 핵심 센서 1차 상용 모델 조사 완료: `Vaisala HMP110`, `Vaisala GMP252`, `Apogee SQ-522-SS`, `METER TEROS 12`, `Bluelab Guardian Inline Wi-Fi`, `Vaisala WXT536`
 - 장치별 최소/최대 setpoint 범위 정리 완료: `setpoint_bounds`를 sensor catalog와 command validation에 반영
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광, 관수 펄스, 양액기 drift 점검, CO2/난방/건조실 SOP를 문서화
-- 학습 seed 7개 task family를 `batch5`까지 확장 완료: 총 164건 (`data/examples/*_samples*.jsonl`)
-- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 164개 sample에서 duplicate 0, contradiction 0 확인
+- 학습 seed 7개 task family를 추가 corrective batch까지 확장 완료: 총 194건 (`data/examples/*_samples*.jsonl`)
+- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 194개 sample에서 duplicate 0, contradiction 0, eval overlap 0 확인
 - 파인튜닝 목표 재정의 완료: `docs/fine_tuning_objectives.md`, `schemas/action_schema.json`
 - 학습/eval 합본 생성과 통계 리포트 완료: `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`, `scripts/report_training_sample_stats.py`, `docs/training_sample_manual_review.md`
 - 파인튜닝 runbook 1차 완료: `docs/fine_tuning_runbook.md`
 - OpenAI SFT 실행 경로와 실제 submit 검증 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정 후 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`, `batch3 + prompt_v2` 기준 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3` 기준 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`까지 모두 `succeeded`
 - 최신 champion model 유지: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
-- 최신 champion eval: eval `24건` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
+- 최신 champion eval: `core24` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
 - baseline 보관 완료: v1 legacy baseline `0.5417`은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관했고, ds_v5/prompt_v5 결과는 baseline 대비 `+0.3333`, 직전 champion ds_v4/prompt_v4 대비 `+0.0833` 개선됐다.
+- extended benchmark 최소치 달성: eval row `120건`, 분포 `40/16/12/12/8/16/16`, `scripts/report_eval_set_coverage.py --enforce-minimums` 통과
+- current champion extended120 baseline 확정: `artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_extended120.*` 기준 pass rate `0.5417`, strict JSON rate `1.0`, top failed checks는 `risk_level_match 35건`, `required_action_types_present 22건`, `required_task_types_present 6건`이다.
+- extended120 약점 구간 확인: `safety_policy 0.0`, `robot_task_prioritization 0.25`, `sensor_fault 0.2`, `failure_response 0.4167`, `edge_case 0.4375`
+- blind holdout 도입 완료: `scripts/build_blind_holdout_eval_set.py`로 `evals/blind_holdout_eval_set.jsonl` `24건`을 freeze했고, build/validation 기본 overlap 검사에도 포함했다.
+- blind holdout 재평가 완료: 현재 champion `ds_v5/prompt_v5`는 blind holdout에서도 pass rate `0.5417`, strict JSON rate `1.0`으로 낮게 나왔고, 공개 `extended120` 적응만으로는 제품화 일반화를 입증하지 못했다.
+- 제품화 게이트 리포트 추가: `scripts/validate_product_readiness_gate.py` 기준 현재 champion은 `promotion_decision=hold`, `safety_invariant_pass_rate=0.5`, `field_usability_pass_rate=0.875`, `shadow_mode_status=not_run`이다.
+- 현재 확인된 실사용 blocking issue: `manual_override`/`worker_present`/핵심 readback loss에서 `block_action` 또는 `enter_safe_mode`가 누락되는 케이스, `sensor_fault` 전체 위험도를 `unknown` 대신 `high`로 과상향하는 케이스, `robot_task`가 `inspect_crop`/`skip_area` 대신 generic task name을 내는 케이스가 남아 있다.
 - 파인튜닝 plateau 원인 수정 완료: `scripts/build_openai_sft_datasets.py`를 task-level split으로 바꾸고, validation은 각 task의 earliest holdout만 사용하도록 조정했으며, exact train/eval overlap filtering을 추가했다.
 - train/eval overlap 원본 정리 완료: `action-rec-025`를 eval과 동일 입력에서 분리된 저장 구역 watch 사례로 재작성했고, `scripts/audit_training_data_consistency.py`에 eval overlap 검사까지 추가했다.
 - 방법론 수정 후 사전검증 완료: `sample_rows 175`, duplicate `0`, contradiction `0`, eval overlap `0`, cleaned SFT dataset은 train `161`, validation `14`, format error `0`이다.
@@ -153,8 +160,11 @@
 - 방법론 수정 효과 확인: 기존 champion에서 실패하던 `pepper-eval-006`과 `action-eval-002`는 해결됐지만, `rootzone_diagnosis`와 `failure_response` 한 케이스가 새로 회귀해 최고 기록은 아직 `ds_v5/prompt_v5`가 유지된다.
 - `ds_v10/prompt_v8` corrective round 제출 완료: `ftjob-LXWpGudJCeyqsH7WMorGHAT2` (`ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205`)를 제출했다. train `165`, validation `14`, submit 직후 상태는 `validating_files`다.
 - `ds_v10/prompt_v8`의 최근 sync 기준 상태는 `queued`다.
-- eval scale-up 즉시 조치 시작: `docs/eval_scaleup_plan.md`, `scripts/report_eval_set_coverage.py`, `scripts/build_eval_jsonl.py` 보강으로 `core24 + extended120/160` 운영 기준을 고정했다.
+- eval scale-up minimum 달성: `docs/eval_scaleup_plan.md`, `scripts/report_eval_set_coverage.py`, `scripts/build_eval_jsonl.py`, `scripts/generate_extended_eval_sets.py` 기준으로 `core24 + extended120/160` 운영 기준을 고정했고, 현재 minimum gate는 통과했다.
 - `ds_v10` 입력은 `batch9` corrective sample 4건과 `prompt_v8` 규칙 3개로 구성했다. 대상은 `rootzone_diagnosis high-risk`, `failure_response sensor_stale high`, `manual_override + safe_mode -> block_action + create_alert`다.
+- 다음 corrective draft 로컬 복구 완료: `state_judgement batch10 6건`, `failure_response batch10 3건`, `forbidden_action batch5 2건`, `robot_task batch3 4건`을 추가해 combined training을 `194건`으로 재생성했다.
+- `prompt_v9` draft build 완료: `scripts/build_openai_sft_datasets.py --system-prompt-version sft_v9` 기준 train `180`, validation `14`, eval overlap `0`이며 산출물은 `artifacts/fine_tuning/openai_sft_train_prompt_v9.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v9.jsonl`이다.
+- 기본 validation 범위는 extended eval `120건`과 blind holdout `24건`을 함께 포함한 총 `144건`이다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -176,7 +186,7 @@
 - ds_v6/prompt_v6 run 완료: `ftjob-etLIrpngO2P9RMI545Od6u1N` (`ft-sft-gpt41mini-ds_v6-prompt_v6-eval_v1-20260412-094328`)는 `succeeded`로 종료됐지만 pass rate `0.875`로 최고 기록을 갱신하지 못했다.
 - ds_v7/prompt_v7 run 완료: `ftjob-v8oFS0ZvHlWsxB6u7VAky2Bp` (`ft-sft-gpt41mini-ds_v7-prompt_v7-eval_v1-20260412-103159`)는 `succeeded`로 종료됐지만 pass rate `0.8333`으로 회귀했다.
 - ds_v8/prompt_v5_rebase run 완료: `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)는 `succeeded`로 종료됐지만 pass rate `0.8333`으로 최고 기록을 갱신하지 못했다.
-- edge case/계절별 평가셋 추가 완료: `evals/edge_case_eval_set.jsonl`, `evals/seasonal_eval_set.jsonl`, 전체 eval row 24건 검증 완료
+- edge case/계절별 평가셋을 포함한 extended benchmark 검증 완료: 전체 eval row `120건`, duplicate `0`, eval overlap `0`, format error `0`
 - 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
 - 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
 - `sensor-ingestor` 설정 포맷과 poller profile 초안 완료: `docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`
@@ -235,12 +245,12 @@
 
 ## 다음 우선순위
 
-1. `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 sync해 `ds_v10/prompt_v8`이 `succeeded`로 끝나는 즉시 eval `24건`을 다시 실행
-2. 현재 `24건`을 `core regression set`으로 동결하고 eval 총량을 `60+`까지 우선 확장
-3. `extended120` 미달 상태에서는 새 fine-tuning submit을 중지하고, `scripts/report_eval_set_coverage.py --enforce-minimums`를 재개 게이트로 사용
-4. `extended120`을 넘긴 뒤 champion과 challenger를 `core24 + extended120` 기준으로 재평가
-5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
-6. offline runner/state-estimator MVP 착수 범위를 확정
+1. `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 sync해 `ds_v10/prompt_v8`이 `succeeded`로 끝나는 즉시 `core24 + extended120` 기준 eval을 다시 실행
+2. 현재 고정된 champion baseline `ds_v5/prompt_v5 extended120 pass_rate 0.5417`과 ds_v10 결과를 비교
+3. ds_v10이 blind holdout / safety invariant를 못 넘기면 준비된 `prompt_v9` draft(train `180` / validation `14`)를 다음 challenger 후보로 전환
+4. `Tranche 3`로 hardest slice를 추가해 `extended160` 권장 게이트까지 확장
+5. `scripts/report_eval_set_coverage.py --enforce-minimums`를 계속 유지하고, fine-tuning 비교는 `core24` 단독이 아니라 `core24 + extended120` 기준으로 기록
+6. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화하고 offline runner/state-estimator MVP 착수 범위를 확정
 
 ## 주의할 점
 

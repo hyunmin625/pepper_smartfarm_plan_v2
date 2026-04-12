@@ -59,6 +59,7 @@ DEFAULT_EVAL_FILES = [
     Path("evals/robot_task_eval_set.jsonl"),
     Path("evals/edge_case_eval_set.jsonl"),
     Path("evals/seasonal_eval_set.jsonl"),
+    Path("evals/blind_holdout_eval_set.jsonl"),
 ]
 
 

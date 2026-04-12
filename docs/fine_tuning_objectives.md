@@ -160,3 +160,14 @@ confidence는 위험도와 별개다. `high` risk라도 근거가 명확하면 c
 - `rootzone high-risk`: 배지 함수율 고착, 배액 EC 상승, 배액 불량, 뿌리 활력 저하/갈변 의심이 함께 나타나면 `rootzone_diagnosis`의 전체 `risk_level`은 `high`다. 기본 조합은 `create_alert + request_human_check`이며 `short_irrigation`은 금지한다.
 - `sensor_fault vs failure_response`: `sensor_fault` task에서 핵심 센서 stale/missing/inconsistent는 전체 `risk_level=unknown`을 유지한다. 반면 `failure_response` task에서 핵심 기후 센서 stale 때문에 VPD 계산이나 자동 기후 제어가 실제로 degraded 상태가 되면 전체 `risk_level=high`를 사용한다. 이 경우 기본 조합은 `pause_automation + request_human_check`다.
 - `manual_override + safe_mode latched`: `safety_policy`에서 `manual_override`와 `safe_mode`가 함께 active면 `block_action + create_alert`가 필수다. `enter_safe_mode`는 이미 latch된 상태를 반복하는 action이므로 출력하면 안 된다.
+
+## 15. prompt_v9 초안
+
+`prompt_v9`는 blind holdout과 extended120에서 반복된 제품화 blocking issue를 한 번 더 직접 고정하는 draft다. 핵심은 `evidence incomplete -> unknown`, `water path loss -> safe mode`, `worker/manual/safe_mode -> block`, `robot enum exactness`를 prompt 레벨에서 더 강하게 고정하는 것이다.
+
+- `rootzone/nutrient evidence incomplete`: 배액 센서 `stale`, `flatline`, `missing`처럼 핵심 근거가 비면 `rootzone_diagnosis`와 `nutrient_risk`의 전체 `risk_level`은 `unknown`을 유지한다. 기본 조합은 `pause_automation + request_human_check`이며 `short_irrigation`과 `adjust_fertigation`은 금지한다.
+- `water-delivery / dry-room path loss`: 관수 펌프, 원수 메인 밸브, 건조실 핵심 경로의 `communication_loss` 또는 `readback loss`는 전체 `risk_level=critical`로 두고 기본 조합을 `enter_safe_mode + request_human_check`로 고정한다. `pause_automation`만으로 끝내면 안 된다.
+- `worker_present / manual_override / safe_mode latched`: 작업자 존재, `manual_override`, latched `safe_mode`가 active면 `block_action + create_alert`가 필수다. 이미 safe mode가 걸린 상태에서는 `enter_safe_mode`를 반복 출력하지 않는다.
+- `robot_task enum exactness`: `robot_task_prioritization`의 `task_type`은 `harvest_candidate_review`, `inspect_crop`, `skip_area`, `manual_review`만 허용한다. wrapper 이름이나 generic task name은 금지한다.
+- `forbidden_action approval_required`: EC, pH, 배액 근거가 동시에 깨진 상태에서 `adjust_fertigation`을 제안받으면 hard interlock이 없는 한 `block`이 아니라 `approval_required`를 우선한다.
+- `citation discipline`: `retrieval_coverage`가 `sufficient` 또는 `partial`이면 관련 chunk citation을 기본적으로 비우지 않는다.

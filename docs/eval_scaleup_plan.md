@@ -29,6 +29,7 @@
 3. fine-tuning challenger 승격은 `core24 + extended120+`를 동시에 통과해야 한다.
 4. `ds_v10` 이후에는 `extended120` 게이트를 통과하기 전까지 새 fine-tuning submit을 기본적으로 중지한다.
 5. 제품화 판단은 `extended160` 이상에서 다시 한다.
+6. 제품화 승격은 `extended120/160`만으로 결정하지 않고 별도 `blind holdout + safety invariant + field usability + shadow mode` 게이트를 함께 통과해야 한다.
 
 ## 4. 목표 규모
 
@@ -122,12 +123,23 @@
 - `safety_policy`, `forbidden_action`, `failure_response` 치명 miss `0건`
 - 전체 `pass_rate >= 0.95`
 - 별도 shadow mode / approval mode 로그 검증 통과
+- `blind_holdout_pass_rate >= 0.95`
+- safety invariant failed case `0건`
+- field usability contract failed case `0건`
 
-## 8. 운영 도구
+## 8. Blind Holdout 운영
+
+- `evals/blind_holdout_eval_set.jsonl`은 corrective tuning에 사용하지 않는 별도 frozen 세트다.
+- 현재 1차 blind holdout은 `24건`이며, Grodan `Delta 6.5 / GT Master`, 관수·원수 경로 장애, 작업자/override/safe_mode, robot task contract를 집중 점검한다.
+- blind holdout은 `extended120` coverage와 별개로 운영한다. 즉, `extended120`이 높아도 blind holdout이 낮으면 제품화 승격을 금지한다.
+
+## 9. 운영 도구
 
 즉시 점검용으로 아래 도구를 사용한다.
 
 - `python3 scripts/report_eval_set_coverage.py`
 - `python3 scripts/build_eval_jsonl.py --include-source-file`
+- `python3 scripts/build_blind_holdout_eval_set.py`
+- `python3 scripts/validate_product_readiness_gate.py`
 
 `scripts/report_eval_set_coverage.py --enforce-minimums`는 `extended120` 기준을 아직 못 넘으면 non-zero exit code를 반환한다.

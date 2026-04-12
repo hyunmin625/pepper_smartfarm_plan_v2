@@ -56,6 +56,9 @@
 - `compatible_dataset_ids`
 - `status`: `candidate`, `staging`, `champion`, `archived`
 - `eval_summary`
+- `blind_holdout_summary`
+- `field_usability_summary`
+- `shadow_mode_summary`
 - `promotion_note`
 
 ## Eval Set Registry
@@ -97,6 +100,9 @@
 - citation coverage `>= 0.95`
 - retrieval hit rate `>= 0.95`
 - approval 누락 `= 0`
+- blind holdout pass rate `>= 0.95`
+- safety invariant failed case `= 0`
+- field usability failed case `= 0`
 - shadow mode에서 critical disagreement `= 0`
 
 운영 승격 순서:

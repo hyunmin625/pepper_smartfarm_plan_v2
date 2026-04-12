@@ -4,6 +4,36 @@
 
 ## 2026-04-12
 
+### batch10 / prompt_v9 corrective draft 복구
+- 작업트리 기준 최신 corrective seed로 `data/examples/state_judgement_samples_batch10.jsonl`, `data/examples/failure_response_samples_batch10.jsonl`, `data/examples/forbidden_action_samples_batch5.jsonl`, `data/examples/robot_task_samples_batch3.jsonl`이 남아 있는 것을 확인하고 학습 합본에 다시 반영했다.
+- 새 corrective 묶음은 `rootzone/nutrient evidence incomplete -> risk_level unknown + pause_automation + request_human_check`, `irrigation/source-water/dry-room path loss -> enter_safe_mode + request_human_check`, `worker_present/manual_override/safe_mode latched -> block_action + create_alert`, `robot_task enum exactness`, `fertigation evidence incomplete -> approval_required`를 직접 겨냥한다.
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V9_SYSTEM_PROMPT`를 추가했고 `scripts/evaluate_fine_tuned_model.py`도 `sft_v9` 선택을 지원하도록 맞췄다.
+- `python3 scripts/validate_training_examples.py` 기준 `sample_files 36`, `sample_rows 194`, `eval_files 8`, `eval_rows 144`, duplicate `0`, eval duplicate `0`, errors `0`을 확인했다.
+- `python3 scripts/build_training_jsonl.py --include-source-file`와 `python3 scripts/audit_training_data_consistency.py` 기준 combined training `194건`, duplicate `0`, contradiction `0`, eval overlap `0`을 다시 확인했다.
+- `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v9 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v9.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v9.jsonl`로 OpenAI SFT draft를 다시 생성했고 결과는 train `180`, validation `14`다.
+- 현재 `prompt_v9`는 `ds_v10`의 `core24 + extended120` 재평가 결과가 나오기 전까지 submit하지 않는 대기 draft로 유지한다.
+
+### blind holdout / 제품화 게이트 도입
+- `scripts/build_blind_holdout_eval_set.py`를 추가해 corrective tuning에 사용하지 않는 `evals/blind_holdout_eval_set.jsonl` `24건`과 `artifacts/training/blind_holdout_eval_cases.jsonl`을 생성했다.
+- blind holdout은 Grodan `Delta 6.5 / GT Master`, 핵심 readback/communication loss, `worker_present`, `manual_override`, `safe_mode`, robot task field contract를 직접 겨냥한다.
+- `scripts/build_openai_sft_datasets.py`, `scripts/validate_training_examples.py` 기본 eval 목록에 blind holdout을 포함시켜 이후 학습 데이터가 blind holdout과 exact overlap되지 않도록 고정했다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTbkkFBo --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout`로 현재 champion을 blind holdout에 재평가했다.
+- 결과는 `pass_rate 0.5417`, `strict_json_rate 1.0`이며 top failed checks는 `risk_level_match 7건`, `required_action_types_present 4건`, `required_task_types_present 2건`, `citations_present 2건`이다.
+- `scripts/validate_product_readiness_gate.py --report artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_blind_holdout.json ...`를 실행한 결과 `promotion_decision=hold`, `safety_invariant_pass_rate=0.5`, `field_usability_pass_rate=0.875`, `shadow_mode_status=not_run`으로 판정됐다.
+- 실제 blocking issue는 `manual_override`/`worker_present`에서 `block_action + create_alert` 대신 `pause_automation`으로 빠지는 케이스, irrigation/source-water/dry-room readback loss에서 `enter_safe_mode` 대신 `pause_automation`으로 끝나는 케이스, `robot_task`가 `inspect_crop`/`skip_area` 대신 generic `create_robot_task`를 쓰는 케이스다.
+
+### extended120 minimum benchmark 달성
+- `scripts/generate_extended_eval_sets.py`를 추가해 eval JSONL 7종을 append-only 방식으로 `extended120` minimum 분포까지 확장했다.
+- 최종 분포는 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`, 총 `120건`이다.
+- `python3 scripts/validate_training_examples.py` 기준 `eval_rows 120`, `eval_duplicate_ids 0`, `eval_errors 0`을 확인했다.
+- `python3 scripts/build_eval_jsonl.py --include-source-file`로 `artifacts/training/combined_eval_cases.jsonl`를 다시 생성했고 최종 row 수는 `120`이다.
+- `python3 scripts/report_eval_set_coverage.py --enforce-minimums`를 실행해 `extended120` minimum gate 통과를 확인했다.
+- `python3 scripts/audit_training_data_consistency.py` 기준 duplicate `0`, contradiction `0`, eval overlap `0`을 확인했다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTbkkFBo --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5_extended120`로 현재 champion을 `120건` 전체에 재평가했다.
+- extended120 baseline 결과는 `pass_rate 0.5417`, `strict_json_rate 1.0`이며, top failed checks는 `risk_level_match 35건`, `required_action_types_present 22건`, `required_task_types_present 6건`이다.
+- family별 취약 구간은 `safety_policy 0.0`, `robot_task_prioritization 0.25`, `sensor_fault 0.2`, `failure_response 0.4167`, `edge_case 0.4375`로 확인됐다.
+- 현재 다음 단계는 eval 확장 자체가 아니라, champion `ds_v5`와 challenger `ds_v10`을 `core24 + extended120` 기준으로 다시 평가하고 `Tranche 3`로 `extended160`을 채우는 것이다.
+
 ### eval scale-up 게이트 반영과 현재 상황 기록
 - `v5` 이후 fine-tuning이 `0.875` 부근에서 정체되고 `fail-set churn`이 반복돼, 현재 eval `24건`만으로는 승격/제품화 판단이 어렵다고 재판정했다.
 - 현재 `24건`은 `core regression set`으로 유지하고, 새 운영 게이트는 `extended120` 최소 / `extended160` 권장 기준으로 확장하기로 결정했다.

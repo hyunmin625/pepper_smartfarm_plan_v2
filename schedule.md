@@ -36,11 +36,11 @@
 
 ## 즉시 조정 사항 (2026-04-12)
 
-- 현재 fine-tuning benchmark `24건`은 challenger 승격과 제품화 판단에 부족하다고 본다.
-- 현재 `24건`은 `core regression set`으로 유지한다.
-- 다음 운영 게이트는 `extended120`, 권장 게이트는 `extended160`이다.
-- 현재 in-flight run인 `ds_v10 / prompt_v8` 이후에는 `extended120`을 넘기기 전까지 새 fine-tuning submit을 기본적으로 중지한다.
-- 즉시 우선순위는 `새 seed 추가`보다 `eval 확장`이다.
+- 현재 fine-tuning `core24`는 challenger 비교용 append-only 회귀셋으로 유지한다.
+- `extended120` minimum gate는 이미 달성했다. 현재 분포는 `40/16/12/12/8/16/16`이다.
+- 다음 운영 게이트는 champion/challenger를 `core24 + extended120` 기준으로 재평가하는 것이고, 권장 게이트는 `extended160`이다.
+- 현재 in-flight run인 `ds_v10 / prompt_v8`는 최근 sync 기준 `queued`다.
+- 즉시 우선순위는 `새 seed 추가`보다 `extended120 실평가`와 `extended160` 확장이다.
 
 ---
 
@@ -105,7 +105,7 @@
 ### 주요 작업
 - train/val JSONL 생성
 - expert judgement eval set 초안 작성
-- eval `24 -> 60+` 1차 tranche 작성
+- eval `core24 + extended120` 운영 기준 반영
 - state judgement 샘플 작성
 - forbidden action 샘플 작성
 - RAG chunking 전략 정의
@@ -134,7 +134,7 @@
 - 핵심 센서 shortlist 문서 완료
 - 계절별 운영 범위 문서 완료
 - 기본 케이스 행동추천 가능
-- eval 총량 `60+` 달성
+- eval 총량 `120` 달성
 
 ---
 
