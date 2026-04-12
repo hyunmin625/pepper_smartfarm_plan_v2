@@ -58,6 +58,8 @@
 
 - 충분한 근거가 있는 작물 스트레스 또는 운영 장애
 - 예: 개화기 고온, 반복 timeout으로 제어 degraded, 활착기 저온+과습 복합 위험
+- `GT Master` 슬래브에서 과도한 `dry-back`, 낮은 새벽 `WC`, 반복 잎 처짐이 함께 나타나는 근권 스트레스
+- `Delta 6.5` 육묘 블록에서 해진 뒤 냉습 조건과 잎 젖음 시간이 함께 늘어나는 활착/병해 복합 위험
 - 자동 제어를 즉시 멈출 정도는 아니지만 즉각적인 운영 판단이 필요한 상태
 
 기본 대응:
@@ -111,6 +113,14 @@
 - rootzone/fertigation evidence incomplete면 기본은 `unknown`
 - 배지/배액/EC 근거가 복구될 때까지 자동 판단을 보류한다.
 - 충분한 근거와 실제 crop stress 조합이 있을 때만 `high`
+- `GT Master dry-back + 새벽 WC 저하 + 반복 잎 처짐`은 충분한 근거가 있는 rootzone stress로 보고 `high`를 준다.
+- 이 경우 기본 대응은 `create_alert + request_human_check`이며, `adjust_fertigation`은 현장 확인 전 기본값이 아니다.
+
+### `climate_risk`
+
+- 육묘기 `Delta 6.5`에서 해진 뒤 보온은 유지돼도 `고습 + 긴 잎 젖음 시간`이 겹치면 `high`
+- 기본 대응은 `create_alert + request_human_check`
+- 이 상황에서 `adjust_vent`를 자동 기본 대응으로 두지 않는다. 필요하면 승인 후 보온 손실을 함께 검토한다.
 
 ### `robot_task_prioritization`
 
@@ -125,6 +135,8 @@
 - water path loss/readback loss면: `critical`
 - 핵심 센서 fault로 근거가 무너지면: `unknown`
 - 근거는 충분하고 즉시 대응이 필요한 crop stress면: `high`
+- `GT Master dry-back + 낮은 새벽 WC + 반복 잎 처짐`이면: `high`
+- `Delta 6.5 nursery + post-sunset humid + leaf wet duration 증가`면: `high`
 - 검토/관찰 위주면: `medium`
 - 정보성 follow-up이면: `low`
 

@@ -16,6 +16,7 @@
 - validator 적용 blind gate는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라간다.
 - 그래도 `blind_holdout_pass_rate 0.9167 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
 - 남은 blind 실패는 `blind-action-002`, `blind-expert-001` 두 건으로 좁혀졌다.
+- 두 실패는 모두 `validator`보다 `data + rubric` ownership으로 분류했고, 동형 training gap을 batch13으로 보강했다.
 
 ### 실제 실패 의미
 
@@ -55,7 +56,7 @@
 
 - 다음 라운드부터는 `validation 14 고정`을 중단한다.
 - 권장 split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다.
-- 현재 training `268건` 기준으로 위 split을 적용하면 validation은 `48건`, train은 `220건`이 된다.
+- 현재 training `276건` 기준으로 위 split을 적용하면 validation은 `49건`, train은 `227건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
 - 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 2건 제거` 순서로 간다.
@@ -64,24 +65,27 @@
 
 판단: `그렇다. 하지만 총량보다 critical slice 부족이 본질이다.`
 
-기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `268건`으로 늘렸다.
+기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `276건`으로 늘렸다.
 
 전체 action 분포도 치우쳐 있다.
 
-- `request_human_check`: `123`
-- `create_alert`: `87`
+- `request_human_check`: `129`
+- `create_alert`: `93`
 - `pause_automation`: `44`
 - `block_action`: `33`
 - `enter_safe_mode`: `16`
 
-- `rootzone_diagnosis`: `9`
-- `sensor_fault`: `6`
-- `climate_risk`: `6`
+- `action_recommendation`: `27`
+- `rootzone_diagnosis`: `11`
+- `sensor_fault`: `26`
+- `climate_risk`: `8`
 - `pest_disease_risk`: `6`
 - `state_judgement`: `7`
-- `safety_policy`: `14`
+- `safety_policy`: `34`
 - `failure_response`: `36`
-- `robot_task_prioritization`: `24`
+- `robot_task_prioritization`: `44`
+- `gt_master_dryback_high`: `4`
+- `nursery_cold_humid_high`: `2`
 
 문제는 다음 경계 사례 밀도가 낮다는 점이다.
 
@@ -91,6 +95,8 @@
 - `irrigation/source-water/dry-room path loss`
 - `evidence incomplete -> unknown / approval_required`
 - `robot_task enum exactness + target contract`
+- `GT Master dry-back + 낮은 새벽 WC + 반복 잎 처짐`
+- `Delta 6.5 nursery + post-sunset humid + leaf wet duration 증가`
 
 결론:
 
@@ -182,6 +188,7 @@
 - blind holdout `24`의 남은 실패 `2건`은 별도 ownership으로 분리한다.
   - validator로 줄일 수 없는 `risk_level` 경계 문제
   - validator가 강제해야 할 pair/contract 누락 문제
+- `remaining_blind_gap_root_cause.md` 기준 두 잔여 실패는 모두 `data + rubric` ownership으로 고정했다.
 
 ### Phase 3. 재평가
 

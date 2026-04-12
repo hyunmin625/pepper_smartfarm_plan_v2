@@ -209,6 +209,30 @@ def is_robot_contract_slice(row: dict[str, Any]) -> bool:
     return task_type_for_row(row) == "robot_task_prioritization"
 
 
+def is_gt_master_dryback_high_slice(row: dict[str, Any]) -> bool:
+    if task_type_for_row(row) not in {"action_recommendation", "rootzone_diagnosis"}:
+        return False
+    text = text_blob(row)
+    return (
+        ("gt master" in text or "gt_master" in text)
+        and any(token in text for token in ("dry-back", "dryback"))
+        and any(token in text for token in ("wc", "함수율"))
+        and any(token in text for token in ("잎 처짐", "wilt"))
+    )
+
+
+def is_nursery_cold_humid_high_slice(row: dict[str, Any]) -> bool:
+    if task_type_for_row(row) != "climate_risk":
+        return False
+    text = text_blob(row)
+    return (
+        ("delta 6.5" in text or "delta65" in text or "육묘" in text or "nursery" in text)
+        and any(token in text for token in ("해진", "post_sunset", "post-sunset", "야간"))
+        and any(token in text for token in ("습도", "humidity"))
+        and any(token in text for token in ("잎 젖음", "leaf wet", "결로"))
+    )
+
+
 def rule_checks(row: dict[str, Any]) -> list[str]:
     failures: list[str] = []
     risk = risk_level_for_row(row)
@@ -245,6 +269,18 @@ def rule_checks(row: dict[str, Any]) -> list[str]:
                 failures.append("robot_task_target_missing")
                 break
 
+    if is_gt_master_dryback_high_slice(row):
+        if risk != "high":
+            failures.append("gt_master_dryback_should_be_high")
+        if not {"create_alert", "request_human_check"}.issubset(actions):
+            failures.append("gt_master_dryback_actions_missing")
+
+    if is_nursery_cold_humid_high_slice(row):
+        if risk != "high":
+            failures.append("nursery_cold_humid_should_be_high")
+        if not {"create_alert", "request_human_check"}.issubset(actions):
+            failures.append("nursery_cold_humid_actions_missing")
+
     return failures
 
 
@@ -260,6 +296,10 @@ def slice_hits(row: dict[str, Any]) -> list[str]:
         names.append("failure_safe_mode")
     if is_robot_contract_slice(row):
         names.append("robot_contract")
+    if is_gt_master_dryback_high_slice(row):
+        names.append("gt_master_dryback_high")
+    if is_nursery_cold_humid_high_slice(row):
+        names.append("nursery_cold_humid_high")
     return names
 
 
@@ -295,6 +335,8 @@ def summarize_dataset(name: str, rows: list[dict[str, Any]]) -> int:
         "evidence_incomplete_unknown",
         "failure_safe_mode",
         "robot_contract",
+        "gt_master_dryback_high",
+        "nursery_cold_humid_high",
     ):
         print(f"  {slice_name}: {slice_counter[slice_name]}")
     print("rule_failures")

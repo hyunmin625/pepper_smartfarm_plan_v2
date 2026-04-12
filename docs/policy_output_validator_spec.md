@@ -109,6 +109,19 @@ validator가 우선 맡아야 하는 것:
 4. 후속 challenger 비교는 `core24 + extended160 + blind_holdout + validator-applied gate` 기준으로만 수행한다.
 5. blind 잔여 실패 `blind-action-002`, `blind-expert-001`는 risk rubric/data 부족인지 분리해서 후속 조치한다.
 
+## 8. Validator Out-Of-Scope
+
+아래 두 유형은 현재 라운드에서 validator로 직접 고치지 않는다.
+
+- `GT Master dry-back + 낮은 새벽 WC + 반복 잎 처짐`
+- `Delta 6.5 nursery + post-sunset humid + leaf wet duration 증가`
+
+이유:
+
+- 두 케이스는 hard safety invariant나 output schema 문제보다 `도메인 의미 일반화` 문제에 가깝다.
+- 여기까지 validator로 덮기 시작하면 score chasing 규칙이 되고, 제품 일반화에 불리하다.
+- 따라서 위 두 케이스는 `docs/risk_level_rubric.md`와 training sample batch13으로 해결한다.
+
 ## 7. 관련 문서
 
 - `docs/productization_promotion_gate.md`

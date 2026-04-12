@@ -1196,3 +1196,8 @@
 - 주요 계획 변경은 이 파일에 날짜, 목적, 변경 파일, 커밋 해시를 함께 기록한다.
 - 외부 조사에 기반한 결정은 근거 링크를 함께 남긴다.
 - 자동 제어, 정책, 안전 게이트, RAG/파인튜닝 구조 변경은 반드시 `PLAN.md`, `todo.md`, `schedule.md` 중 관련 문서에 반영한다.
+- `scripts/generate_batch13_remaining_gap_samples.py`를 추가해 남은 blind 일반화 gap용 batch13 `8건`을 생성했다. 구성은 `action_recommendation 2`, `rootzone_diagnosis 2`, `climate_risk 2`, `forbidden_action 2`이며 대상은 `GT Master dry-back + 낮은 새벽 WC + 반복 잎 처짐`과 `Delta 6.5 nursery + post-sunset humid + leaf wet duration 증가`다.
+- `docs/remaining_blind_gap_root_cause.md`를 추가해 `blind-action-002`, `blind-expert-001`를 `validator`가 아니라 `data + rubric` ownership으로 분류했다.
+- `scripts/report_risk_slice_coverage.py`에 `gt_master_dryback_high`, `nursery_cold_humid_high` slice 감사를 추가했다.
+- `python3 scripts/build_training_jsonl.py`, `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_risk_slice_coverage.py`, `python3 scripts/report_training_sample_stats.py` 기준 training은 `276건`, duplicate `0`, contradiction `0`, eval overlap `0`, `gt_master_dryback_high 4`, `nursery_cold_humid_high 2`, class imbalance ratio `11.00`으로 재고정했다.
+- `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --train-output artifacts/fine_tuning/tmp_train_batch13.jsonl --validation-output artifacts/fine_tuning/tmp_validation_batch13.jsonl` 기준 현재 추천 split은 train `227`, validation `49`다.

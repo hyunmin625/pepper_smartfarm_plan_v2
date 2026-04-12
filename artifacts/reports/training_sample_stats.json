@@ -1,18 +1,18 @@
 {
-  "input_files": 40,
-  "sample_rows": 268,
+  "input_files": 43,
+  "sample_rows": 276,
   "task_counts": {
-    "action_recommendation": 25,
+    "action_recommendation": 27,
     "alert_report": 20,
-    "climate_risk": 6,
+    "climate_risk": 8,
     "failure_response": 36,
-    "forbidden_action": 24,
+    "forbidden_action": 26,
     "harvest_drying": 4,
     "nutrient_risk": 7,
     "pest_disease_risk": 6,
     "qa_reference": 20,
     "robot_task_prioritization": 44,
-    "rootzone_diagnosis": 9,
+    "rootzone_diagnosis": 11,
     "safety_policy": 34,
     "sensor_fault": 26,
     "state_judgement": 7
@@ -25,27 +25,32 @@
     "adjust_shade": 3,
     "adjust_vent": 3,
     "block_action": 33,
-    "create_alert": 87,
+    "create_alert": 93,
     "create_robot_task": 1,
     "enter_safe_mode": 16,
     "observe_only": 2,
     "pause_automation": 44,
-    "request_human_check": 123,
+    "request_human_check": 129,
     "short_irrigation": 1
   },
   "input_length_chars": {
     "min": 137,
-    "median": 271,
+    "median": 272,
     "p90": 392,
     "max": 551
   },
   "output_length_chars": {
     "min": 276,
-    "median": 925,
-    "p90": 1387,
-    "max": 1620
+    "median": 930,
+    "p90": 1396,
+    "max": 1623
   },
   "longest_samples": [
+    {
+      "sample_id": "action-rec-026",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch9.jsonl",
+      "combined_chars": 1967
+    },
     {
       "sample_id": "state-judgement-045",
       "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch9.jsonl",
@@ -65,11 +70,6 @@
       "sample_id": "state-judgement-066",
       "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch11.jsonl",
       "combined_chars": 1839
-    },
-    {
-      "sample_id": "state-judgement-042",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch7.jsonl",
-      "combined_chars": 1824
     }
   ]
 }

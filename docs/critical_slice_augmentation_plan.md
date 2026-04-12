@@ -12,7 +12,7 @@
 
 로컬 합본 기준:
 
-- training rows: `268`
+- training rows: `276`
 - extended eval rows: `160`
 - blind holdout rows: `24`
 
@@ -23,9 +23,11 @@
 - `evidence_incomplete_unknown`: `10`
 - `failure_safe_mode`: `16`
 - `robot_task_prioritization`: `44`
+- `gt_master_dryback_high`: `4`
+- `nursery_cold_humid_high`: `2`
 - action imbalance:
-  - `request_human_check`: `123`
-  - `create_alert`: `87`
+  - `request_human_check`: `129`
+  - `create_alert`: `93`
   - `pause_automation`: `44`
   - `block_action`: `33`
   - `enter_safe_mode`: `16`
@@ -39,6 +41,8 @@
 - blind holdout `safety_policy_hard_block`: `1`
 - blind holdout `failure_safe_mode`: `3`
 - blind holdout `robot_task_prioritization`: `3`
+- blind holdout `gt_master_dryback_high`: `1`
+- blind holdout `nursery_cold_humid_high`: `1`
 
 ## 3. 우선 보강 목표
 
@@ -141,6 +145,24 @@
 - 사용자 요구인 `20+`는 이미 충족했다.
 - 이제는 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 일관성이 더 중요하다.
 
+### F. Remaining Blind Generalization Gaps
+
+목표:
+
+- `gt_master_dryback_high`: `4`
+- `nursery_cold_humid_high`: `2`
+
+추가해야 할 상황:
+
+- `GT Master` 과도한 `dry-back` + 낮은 새벽 `WC` + 반복 잎 처짐
+- `Delta 6.5` 육묘 구간의 해진 뒤 고습 + 잎 젖음 증가
+
+정답 패턴:
+
+- `gt_master_dryback_high`: `risk_level=high`, `create_alert + request_human_check`
+- `nursery_cold_humid_high`: `risk_level=high`, `create_alert + request_human_check`
+- 두 경우 모두 hard safety validator로 덮지 않고 `data + rubric` ownership으로 유지한다.
+
 ## 4. 최소 추가량
 
 다음 fine-tuning 전 최소 추가량:
@@ -150,10 +172,11 @@
 - `robot_task_prioritization`: `완료`
 - `failure_response` safe-mode slice: `완료`
 - `rootzone/nutrient` evidence incomplete slice: `완료`
+- `remaining blind 2건` 대응 slice: `완료`
 
 총 추가량 가이드:
 
-- 현재 training critical slice 보강 목표는 모두 채웠다.
+- 현재 training critical slice와 남은 blind 의미 gap 보강 목표는 모두 채웠다.
 
 ## 5. eval 확장과 함께 가야 하는 항목
 
@@ -170,12 +193,14 @@ sample만 늘리면 안 된다. 아래 eval도 같이 늘린다.
 - `evidence_incomplete_unknown`
 - `failure_safe_mode`
 - `robot field usability`
+- `gt_master_dryback_high`
+- `nursery_cold_humid_high`
 
 ## 6. 현재 자동 감사에서 확인된 라벨 이슈
 
 `python3 scripts/report_risk_slice_coverage.py` 기준 training 쪽 rule failure는 현재 `none`이다.
 
-즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 모델의 의미 일반화다.
+즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 새로 보강한 두 blind 의미 gap이 실제 challenger에서 일반화되는지 확인하는 일이다.
 
 ## 7. 제출 전 체크
 

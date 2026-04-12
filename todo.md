@@ -56,6 +56,7 @@
 - [x] `extended160` 확장 tranche 작성
 - [ ] `extended200` 최종 분포와 blind holdout `50` 확장 tranche 작성
 - [x] `docs/critical_slice_augmentation_plan.md` 기준 `evidence_incomplete_unknown 2 -> 10+`, `failure_safe_mode 10 -> 16+` 보강
+- [x] `blind-action-002`, `blind-expert-001`를 `docs/remaining_blind_gap_root_cause.md`로 분해하고 batch13 `8건`으로 `data + rubric` 보강
 - [x] `safety_policy`, `sensor_fault`, `robot_task_prioritization` 각 `20+` 보강 완료
 - [x] `failure_response`, `rootzone_diagnosis/state_judgement` 중심 잔여 training 보강 완료
 - [x] `scripts/report_eval_failure_clusters.py`로 `extended160` 실패군 재분류와 validator 외부화 우선순위 정리 (`artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`)

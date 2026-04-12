@@ -18,6 +18,7 @@
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - validator 적용 후 blind gate 결과는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`이지만, `blind_holdout_pass_rate 0.9167 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`다.
+- 남은 blind 실패 `2건`은 `docs/remaining_blind_gap_root_cause.md`로 다시 분해했고, 둘 다 `validator`가 아니라 `data + rubric` ownership으로 고정했다.
 
 ## 핵심 시스템 방향
 
@@ -145,8 +146,8 @@
 - 핵심 센서 1차 상용 모델 조사 완료: `Vaisala HMP110`, `Vaisala GMP252`, `Apogee SQ-522-SS`, `METER TEROS 12`, `Bluelab Guardian Inline Wi-Fi`, `Vaisala WXT536`
 - 장치별 최소/최대 setpoint 범위 정리 완료: `setpoint_bounds`를 sensor catalog와 command validation에 반영
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광, 관수 펄스, 양액기 drift 점검, CO2/난방/건조실 SOP를 문서화
-- 학습 seed 7개 task family를 batch12까지 확장 완료: 총 268건 (`data/examples/*_samples*.jsonl`)
-- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 268개 sample에서 duplicate 0, contradiction 0, eval overlap 0 확인
+- 학습 seed 7개 task family를 batch13까지 확장 완료: 총 276건 (`data/examples/*_samples*.jsonl`)
+- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 276개 sample에서 duplicate 0, contradiction 0, eval overlap 0 확인
 - 파인튜닝 목표 재정의 완료: `docs/fine_tuning_objectives.md`, `schemas/action_schema.json`
 - 학습/eval 합본 생성과 통계 리포트 완료: `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`, `scripts/report_training_sample_stats.py`, `docs/training_sample_manual_review.md`
 - 파인튜닝 runbook 1차 완료: `docs/fine_tuning_runbook.md`
@@ -176,8 +177,8 @@
 - 제품 수준 재평가 결론: 현재 병목은 base model보다는 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트에 있다.
 - 로컬 툴 보강: `scripts/build_openai_sft_datasets.py`는 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하고, `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검한다.
 - `risk_level` 정규화 기준 고정: `docs/risk_level_rubric.md`에 `critical > unknown > high > medium > low` 우선순위와 task family별 기준을 정리했다.
-- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 32`, `sensor_unknown 26`, `evidence_incomplete_unknown 10`, `failure_safe_mode 16`, `robot_contract 44`이며 training rule failure는 현재 `none`이다.
-- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `268건`, class imbalance ratio `11.00`, action 분포는 `request_human_check 123`, `create_alert 87`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
+- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 32`, `sensor_unknown 26`, `evidence_incomplete_unknown 10`, `failure_safe_mode 16`, `robot_contract 44`, `gt_master_dryback_high 4`, `nursery_cold_humid_high 2`이며 training rule failure는 현재 `none`이다.
+- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `276건`, class imbalance ratio `11.00`, action 분포는 `request_human_check 129`, `create_alert 93`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
 - 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다.
 - `scripts/report_eval_failure_clusters.py`와 `artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`로 `extended160` 실패 `68건`을 root cause로 재분류했다.
 - top root cause는 `low_friction_action_bias_over_interlock 25`, `citations_missing_in_actionable_output 20`, `sensor_or_evidence_gap_not_marked_unknown 17`, `critical_hazard_undercalled 14`다.
@@ -269,12 +270,13 @@
 1. `policy-engine/policy_engine/output_validator.py`를 실제 LLM 출력 경로에 연결하고 `validator_reason_codes`, `validator_decision`을 runtime audit log로 남긴다.
 2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended160 + blind_holdout + product gate` 조건으로만 비교한다.
 3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
-4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `220`, validation `48`이다.
+4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `227`, validation `49`다.
 5. 사용자 요구 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`
 6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, runtime policy/output validator 연결, blind 잔여 실패 `2건` 원인 분석이다.
 7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, offline/runtime skeleton도 구현했다. 다음 단계는 runtime wiring과 shadow mode 기록이다.
 8. 남은 blind 실패 `blind-action-002`, `blind-expert-001`를 데이터/rubric ownership 관점에서 다시 분해한다.
-9. 그 다음에만 다음 challenger 제출 여부를 결정
+9. batch13으로 `gt_master_dryback_high`, `nursery_cold_humid_high`를 training에 고정하고 audit slice로도 잡히게 유지한다.
+10. 그 다음에만 다음 challenger 제출 여부를 결정
 
 ## 주의할 점
 
