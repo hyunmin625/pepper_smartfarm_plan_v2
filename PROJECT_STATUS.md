@@ -13,6 +13,7 @@
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
 - 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로만 유지한다.
 - `extended160` promotion baseline은 확보했다. 현재 분포는 `expert 48 / action 20 / forbidden 16 / failure 16 / robot 12 / edge 24 / seasonal 24`이다. 다만 제품 수준 재평가 기준으로는 `extended200 + blind_holdout50`까지 계획을 올려야 한다.
+- `ds_v9` `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 validator 외부화 우선 대상으로 묶였다.
 
 ## 핵심 시스템 방향
 
@@ -87,6 +88,7 @@
 - `docs/shadow_mode_report_format.md`: shadow mode 승격 판단 리포트 형식
 - `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 fine-tuning 재개 조건
 - `docs/risk_level_rubric.md`: `risk_level` 정의와 우선순위 기준
+- `docs/policy_output_validator_spec.md`: hard safety/output contract를 모델 밖으로 강제하는 기준
 - `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 critical slice 계획
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준
 - `WORK_LOG.md`: 진행한 작업, 커밋, 조사 근거 기록
@@ -173,6 +175,11 @@
 - critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 32`, `sensor_unknown 26`, `evidence_incomplete_unknown 10`, `failure_safe_mode 16`, `robot_contract 44`이며 training rule failure는 현재 `none`이다.
 - 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `268건`, class imbalance ratio `11.00`, action 분포는 `request_human_check 123`, `create_alert 87`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
 - 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다.
+- `scripts/report_eval_failure_clusters.py`와 `artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`로 `extended160` 실패 `68건`을 root cause로 재분류했다.
+- top root cause는 `low_friction_action_bias_over_interlock 25`, `citations_missing_in_actionable_output 20`, `sensor_or_evidence_gap_not_marked_unknown 17`, `critical_hazard_undercalled 14`다.
+- validator 외부화 우선 대상은 `pause_automation_missing_on_degraded_control_signal 13`, `block_action_missing_on_safety_lock 11`, `safe_mode_pair_missing_on_path_or_comms_loss 7`, `robot_task_enum_drift 3`이다.
+- hard safety `10개`, approval/output contract `10개`를 `docs/policy_output_validator_spec.md`에 고정했다.
+- `artifacts/fine_tuning/challenger_gate_baseline.md`에 `ds_v9`의 `core24 + extended120 + extended160 + blind_holdout24 + product gate` 기준선을 고정했다.
 - `ds_v9` 재평가 세부 판단: `extended120`에서는 `ds_v5` 대비 개선됐지만, blind holdout 제품화 게이트는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`으로 여전히 막혔다.
 - 비교 해석: `ds_v9`는 robot field contract 실패를 `3 -> 1`로 줄였지만, blind safety invariant는 `0.5 -> 0.3333`으로 악화됐다. 따라서 현재 문제를 `robot raw count 부족`보다 `failure/safety 의미 계약과 risk/action 경계 문제`로 보는 쪽이 더 정확하다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
@@ -255,13 +262,13 @@
 
 ## 다음 우선순위
 
-1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화`, `policy/output validator`, `eval200` 계획을 먼저 고정
-2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended120 + blind_holdout + product gate` 조건으로만 비교
+1. `docs/policy_output_validator_spec.md` 기준으로 validator 시뮬레이터를 붙여 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`이 실제로 얼마나 실패를 줄이는지 기록
+2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended160 + blind_holdout + product gate` 조건으로만 비교
 3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
 4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `220`, validation `48`이다.
 5. 사용자 요구 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`
-6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, policy/output validator, 새 tranche 일반화 원인 분석이다.
-7. hard block 정책 10개와 approval 정책 10개를 정책 JSON 및 output validator로 구체화
+6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, policy/output validator 구현, 새 tranche 일반화 원인 분석이다.
+7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`로 고정됐고, 다음 단계는 정책 JSON 및 validator 시뮬레이터 구현이다.
 8. 그 다음에만 다음 challenger 제출 여부를 결정
 
 ## 주의할 점

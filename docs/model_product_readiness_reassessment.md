@@ -107,6 +107,7 @@
 - `extended120`은 minimum gate로는 유효하지만, 제품화 기준으로는 여전히 작다.
 - blind holdout은 `24건`이라 invariant/field usability를 보기엔 방향은 맞지만 표본이 작다.
 - 최신 완료 모델 `ds_v9`를 같은 기준으로 재심사한 결과, `extended120`은 개선됐지만 blind/product gate는 여전히 막혔다.
+- `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 외부화 우선 대상으로 묶였다.
 
 결론:
 
@@ -150,7 +151,7 @@
 
 - `scripts/report_eval_set_coverage.py`로 `product200` 목표와 blind holdout 규모를 함께 점검한다.
 - `scripts/build_openai_sft_datasets.py` split 옵션을 `validation_ratio`와 `spread` 기준으로 강화한다.
-- hard safety rule 10개와 robot output contract를 `policy/output validator` 사양으로 고정한다.
+- hard safety rule 10개와 robot/output contract 10개를 `docs/policy_output_validator_spec.md`로 고정한다.
 - `ds_v9` 재평가 결과를 baseline 문서와 상태 문서에 고정한다.
 
 ### Phase 2. 저비용 데이터/평가 조치

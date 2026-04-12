@@ -16,11 +16,12 @@
 6. `docs/productization_promotion_gate.md`: blind holdout, safety invariant, field usability, shadow mode 승격 게이트
 7. `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 재개 조건
 8. `docs/risk_level_rubric.md`: `risk_level` 정의와 우선순위 기준
-9. `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 slice와 수량
-10. `schedule.md`: 개정 실행 순서와 8주 일정
-11. `todo.md`: 세부 작업 체크리스트
-12. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-13. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+9. `docs/policy_output_validator_spec.md`: hard safety/output contract를 모델 밖으로 빼는 기준
+10. `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 slice와 수량
+11. `schedule.md`: 개정 실행 순서와 8주 일정
+12. `todo.md`: 세부 작업 체크리스트
+13. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+14. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -48,13 +49,16 @@
 - 학습 seed 중복/모순 감사 자동화 완료: `268개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
 - 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
 - 학습/eval 합본 생성과 통계 리포트 완료: training `268건`, extended eval `160건`, blind holdout `24건`, 기본 validation 기준 eval 총 `184건`, longest sample 수동 검토 완료
-- `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 다음 게이트는 champion/challenger를 `core24 + extended120` 기준으로 재평가하는 것이다.
+- `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 현재 승격 baseline은 `extended160`이며 challenger 비교도 이 기준으로만 진행한다.
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
 - 최신 champion model 유지: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
 - 최신 champion eval 완료: `core24` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
 - baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v5/prompt_v5 결과가 `+0.3333`, 직전 champion ds_v4/prompt_v4 `0.7917` 대비 `+0.0833` 개선됐다.
 - `ds_v9/prompt_v5_methodfix` 재평가 완료: `core24 0.875`, `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다. 공개 benchmark 총량을 늘리자 다시 무너졌고, 공식 승격은 계속 보류한다.
+- `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
+- `docs/policy_output_validator_spec.md`에 hard safety `10개`, approval/output contract `10개`를 고정했다. 다음 단계는 새 FT가 아니라 validator 시뮬레이터 구현이다.
+- `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
 - `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 승격 baseline은 `pass`이며, `core24` 단독 승격은 금지다.
@@ -73,7 +77,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 새 tranche 일반화 실패다.
+- 현재 남은 주요 부족분은 `blind_holdout50`, `extended200`, `policy/output validator 구현`, 그리고 새 tranche 일반화 실패다.
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
@@ -238,11 +242,11 @@
 
 ## 다음 우선순위
 
-1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화 + policy/output validator + eval200 계획`을 먼저 고정
-2. `ds_v9` 재평가 결과를 baseline으로 고정하고, 후속 challenger가 생기면 같은 조건으로만 비교
-3. 기존 training label mismatch `8건`을 먼저 정리하고 `safety_policy`, `sensor_fault`, `failure_response`, `rootzone evidence incomplete`, `robot contract`만 targeted 보강
-4. `Tranche 3`로 `extended160`, 그 다음 `extended200`과 blind holdout `50`까지 확장
-5. `manual_override`, `worker_present`, `safe_mode`, `path loss`, `robot task contract`를 모델 prompt가 아니라 정책/출력 validator로 외부화
+1. `docs/policy_output_validator_spec.md` 기준으로 validator 시뮬레이터를 붙여 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`이 실제로 얼마나 실패를 줄이는지 기록
+2. `ds_v9` 재평가 결과를 baseline으로 고정하고, 후속 challenger는 `core24 + extended160 + blind_holdout + product gate` 조건으로만 비교
+3. `extended200`과 blind holdout `50` 확장 tranche를 작성해 새 일반화 실패를 더 일찍 드러내기
+4. `manual_override`, `worker_present`, `safe_mode`, `path loss`, `robot task contract`를 모델 prompt가 아니라 정책/출력 validator로 외부화
+5. 그 다음에만 다음 challenger 제출 여부를 결정
 6. 그 다음에만 critical slice 중심 training `+42` 내외 보강과 다음 fine-tuning 후보 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

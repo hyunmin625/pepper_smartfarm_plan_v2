@@ -4,6 +4,16 @@
 
 ## 2026-04-12
 
+### extended160 실패군 리포트와 validator 사양 고정
+- `scripts/report_eval_failure_clusters.py`를 추가해 평가 리포트 JSON과 원본 eval JSONL을 함께 읽고 실패군을 공통 root cause로 재분류할 수 있게 했다.
+- `python3 scripts/report_eval_failure_clusters.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended160.json --output-prefix artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160 --base-case-count 120`로 `extended160` 실패군 리포트를 생성했다.
+- 결과는 전체 실패 `68건`, new tranche 실패 `22건`, validator 우선 실패 `34건`이었다.
+- top root cause는 `low_friction_action_bias_over_interlock 25`, `citations_missing_in_actionable_output 20`, `sensor_or_evidence_gap_not_marked_unknown 17`, `critical_hazard_undercalled 14`다.
+- validator 외부화 우선 대상은 `pause_automation_missing_on_degraded_control_signal 13`, `block_action_missing_on_safety_lock 11`, `safe_mode_pair_missing_on_path_or_comms_loss 7`, `robot_task_enum_drift 3`으로 정리됐다.
+- `docs/policy_output_validator_spec.md`를 추가해 hard safety `10개`, approval/output contract `10개`, model vs validator ownership, 다음 구현 범위를 고정했다.
+- `artifacts/fine_tuning/challenger_gate_baseline.md`를 추가해 `ds_v9`를 후속 challenger의 공식 비교 기준으로 고정했다.
+- 결론은 더 선명해졌다. 지금 단계의 핵심은 새 FT가 아니라 validator 시뮬레이터 구현과 `extended200 + blind_holdout50` 확장이다.
+
 ### batch12 보강과 extended160 재평가
 - `scripts/generate_batch12_targeted_samples.py`를 추가해 `failure_response_samples_batch11.jsonl` `6건`, `state_judgement_samples_batch12.jsonl` `8건`을 생성했다.
 - batch12 반영 후 `python3 scripts/build_training_jsonl.py --include-source-file`, `python3 scripts/report_training_sample_stats.py`, `python3 scripts/report_risk_slice_coverage.py` 기준 training은 `268건`, class imbalance ratio `11.00`, `failure_safe_mode 16`, `evidence_incomplete_unknown 10`, training rule failure `none`이 됐다.
