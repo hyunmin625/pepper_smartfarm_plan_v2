@@ -1,6 +1,6 @@
 {
-  "input_files": 36,
-  "sample_rows": 194,
+  "input_files": 38,
+  "sample_rows": 254,
   "task_counts": {
     "action_recommendation": 25,
     "alert_report": 20,
@@ -11,38 +11,38 @@
     "nutrient_risk": 3,
     "pest_disease_risk": 6,
     "qa_reference": 20,
-    "robot_task_prioritization": 24,
+    "robot_task_prioritization": 44,
     "rootzone_diagnosis": 5,
-    "safety_policy": 14,
-    "sensor_fault": 6,
+    "safety_policy": 34,
+    "sensor_fault": 26,
     "state_judgement": 7
   },
-  "class_imbalance_ratio": 10.0,
+  "class_imbalance_ratio": 14.666666666666666,
   "action_type_counts": {
     "adjust_fan": 1,
     "adjust_fertigation": 2,
     "adjust_heating": 4,
     "adjust_shade": 3,
     "adjust_vent": 3,
-    "block_action": 12,
-    "create_alert": 69,
+    "block_action": 33,
+    "create_alert": 87,
     "create_robot_task": 1,
-    "enter_safe_mode": 8,
+    "enter_safe_mode": 10,
     "observe_only": 2,
-    "pause_automation": 16,
-    "request_human_check": 90,
+    "pause_automation": 36,
+    "request_human_check": 109,
     "short_irrigation": 1
   },
   "input_length_chars": {
     "min": 137,
-    "median": 236,
-    "p90": 350,
-    "max": 538
+    "median": 266,
+    "p90": 394,
+    "max": 551
   },
   "output_length_chars": {
     "min": 276,
-    "median": 655,
-    "p90": 1277,
+    "median": 881,
+    "p90": 1391,
     "max": 1620
   },
   "longest_samples": [
@@ -62,14 +62,14 @@
       "combined_chars": 1843
     },
     {
+      "sample_id": "state-judgement-066",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch11.jsonl",
+      "combined_chars": 1839
+    },
+    {
       "sample_id": "state-judgement-042",
       "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch7.jsonl",
       "combined_chars": 1824
-    },
-    {
-      "sample_id": "state-judgement-040",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch6.jsonl",
-      "combined_chars": 1806
     }
   ]
 }

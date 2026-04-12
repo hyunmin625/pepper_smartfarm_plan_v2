@@ -44,8 +44,8 @@
 - 핵심 센서 1차 상용 모델 shortlist 완료: `HMP110`, `GMP252`, `SQ-522-SS`, `TEROS 12`, `Guardian Inline Wi-Fi`, `WXT536`
 - 장치별 최소/최대 setpoint 범위 고정 완료: fan/vent/shade/irrigation/heater/CO2/fertigation/dehumidifier/dry-fan
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광 우선순위, 관수 펄스 원칙, CO2/난방/건조실 운전 SOP 반영
-- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `194건`
-- 학습 seed 중복/모순 감사 자동화 완료: `194개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
+- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `254건`
+- 학습 seed 중복/모순 감사 자동화 완료: `254개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
 - 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
 - 학습/eval 합본 생성과 통계 리포트 완료: training `194건`, extended eval `120건`, blind holdout `24건`, 기본 validation 기준 eval 총 `144건`, longest sample 수동 검토 완료
 - `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 다음 게이트는 champion/challenger를 `core24 + extended120` 기준으로 재평가하는 것이다.
@@ -57,13 +57,13 @@
 - `ds_v9/prompt_v5_methodfix` 재평가 완료: `core24 0.875`, `extended120 0.7083`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다. 공개 benchmark는 개선됐지만 blind/product gate는 통과하지 못했고, 공식 승격은 보류한다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
-- `scripts/report_eval_set_coverage.py --enforce-minimums` 통과 완료: `extended120` minimum gate 충족, 다음 확장 목표는 `extended160`
+- `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 승격 baseline은 `fail`이며, `core24` 단독 승격은 금지다.
 - current champion extended120 baseline 확정: `ds_v5/prompt_v5`를 `120건` 전체에 재평가한 결과 pass rate `0.5417`, strict JSON rate `1.0`, 약한 family는 `safety_policy 0.0`, `robot_task_prioritization 0.25`, `sensor_fault 0.2`였다.
 - blind holdout 1차 도입 완료: `evals/blind_holdout_eval_set.jsonl` `24건`, 현재 champion `ds_v5/prompt_v5`는 blind holdout에서도 pass rate `0.5417`로 동일하게 낮게 나왔다.
 - 최신 완료 모델 blind 재평가 완료: `ds_v9/prompt_v5_methodfix`는 blind holdout `0.5`, safety invariant pass rate `0.3333`, field usability pass rate `0.9583`이다. 즉 robot contract는 일부 개선했지만 안전 invariant는 더 악화됐다.
 - 제품화 게이트 재정의 완료: 승격은 이제 `extended120/160`만이 아니라 `blind holdout >= 0.95`, `safety invariant failed = 0`, `field usability failed = 0`, `shadow mode pass`를 동시에 만족해야 한다.
 - 현재 champion 제품화 판정은 `hold`: blind holdout `0.5417`, safety invariant pass rate `0.5`, robot task field usability failure `3건`, shadow mode `not_run`
-- 최신 training 통계 재확인 완료: sample `194건`, class imbalance ratio `10.00`, `request_human_check 90`, `create_alert 69`, `block_action 12`, `enter_safe_mode 8`이다.
+- 최신 training 통계 재확인 완료: sample `254건`, class imbalance ratio `14.67`, `request_human_check 109`, `create_alert 87`, `pause_automation 36`, `block_action 33`, `enter_safe_mode 10`이다.
 - 다음 corrective draft 로컬 복구 완료: `state_judgement batch10 6건`, `failure_response batch10 3건`, `forbidden_action batch5 2건`, `robot_task batch3 4건`을 학습 seed에 반영해 총 `194건`으로 확장했다.
 - `prompt_v9` draft 추가 완료: `scripts/build_openai_sft_datasets.py`와 `scripts/evaluate_fine_tuned_model.py`에 `sft_v9`를 반영했고, OpenAI SFT draft는 train `180`, validation `14`, eval overlap `0`으로 생성됐다.
 - `prompt_v9`는 아직 submit하지 않았고, 제품 수준 재평가가 끝날 때까지 다음 corrective round 후보 draft로만 유지한다.
@@ -71,7 +71,8 @@
 - `scripts/build_openai_sft_datasets.py`는 이제 `validation_ratio`, `validation_min_per_family`, `validation_selection=spread`를 지원하므로 다음 라운드부터 `validation 14` 고정을 해제할 수 있다.
 - `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검하도록 보강됐다.
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
-- `docs/critical_slice_augmentation_plan.md`에 따라 현재 training의 주요 부족분은 `safety hard block 12`, `sensor_fault unknown 6`, `evidence incomplete unknown 2`, `failure safe_mode 11`이고, 다음 라운드는 이 갭을 메우는 방식으로만 보강한다.
+- 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
+- 현재 training의 남은 주요 부족분은 `evidence incomplete unknown 2`, `failure safe_mode 10`, `extended160/200` eval coverage 부족이다.
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료

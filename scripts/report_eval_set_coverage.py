@@ -53,6 +53,11 @@ DEFAULT_RECOMMENDED_TOTAL = 160
 DEFAULT_PRODUCT_TOTAL = 200
 DEFAULT_BLIND_HOLDOUT_MINIMUM = 24
 DEFAULT_BLIND_HOLDOUT_PRODUCT = 50
+PROMOTION_BASELINE_TARGETS = {
+    "extended120": DEFAULT_MINIMUM_TOTAL,
+    "extended160": DEFAULT_RECOMMENDED_TOTAL,
+    "extended200": DEFAULT_PRODUCT_TOTAL,
+}
 
 
 def count_rows(path: Path) -> int:
@@ -108,6 +113,17 @@ def main() -> None:
         action="store_true",
         help="Exit non-zero when total or per-file minimum targets are not met.",
     )
+    parser.add_argument(
+        "--promotion-baseline",
+        choices=sorted(PROMOTION_BASELINE_TARGETS),
+        default="extended160",
+        help="Coverage baseline to use for fine-tuning promotion decisions.",
+    )
+    parser.add_argument(
+        "--enforce-promotion-baseline",
+        action="store_true",
+        help="Exit non-zero when the chosen promotion baseline is not met.",
+    )
     args = parser.parse_args()
 
     total = 0
@@ -142,6 +158,10 @@ def main() -> None:
     print(f"minimum_total_pass,{str(total_ok).lower()}")
     print(f"recommended_total_pass,{str(recommended_ok).lower()}")
     print(f"product_total_pass,{str(product_ok).lower()}")
+    promotion_target = PROMOTION_BASELINE_TARGETS[args.promotion_baseline]
+    promotion_ok = total >= promotion_target and blind_holdout_rows >= args.blind_holdout_minimum
+    print(f"promotion_baseline,{args.promotion_baseline}")
+    print(f"promotion_baseline_total_target,{promotion_target}")
 
     blind_holdout_path = Path(args.blind_holdout_file)
     blind_holdout_rows = count_rows(blind_holdout_path)
@@ -153,12 +173,19 @@ def main() -> None:
     print(f"blind_holdout_product_target,{args.blind_holdout_product_target}")
     print(f"blind_holdout_minimum_pass,{str(blind_holdout_minimum_ok).lower()}")
     print(f"blind_holdout_product_pass,{str(blind_holdout_product_ok).lower()}")
+    print(f"promotion_baseline_pass,{str(promotion_ok).lower()}")
 
     if args.enforce_minimums and (not total_ok or below_minimum):
         if not total_ok:
             print("error: total eval rows are below the minimum target.")
         if below_minimum:
             print(f"error: per-file minimums not met for {', '.join(sorted(below_minimum))}.")
+        raise SystemExit(1)
+    if args.enforce_promotion_baseline and not promotion_ok:
+        print(
+            "error: fine-tuning promotion baseline is not met. "
+            f"required total rows: {promotion_target}, blind holdout minimum: {args.blind_holdout_minimum}."
+        )
         raise SystemExit(1)
 
 

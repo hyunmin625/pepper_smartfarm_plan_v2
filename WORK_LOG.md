@@ -4,6 +4,20 @@
 
 ## 2026-04-12
 
+### batch11 약점 구간 보강과 승격 기준 고정
+- 사용자 지시에 따라 `safety_policy`, `sensor_fault`, `robot_task_prioritization`를 각각 `20+` 보강하는 batch11을 추가했다.
+  - `data/examples/state_judgement_samples_batch11.jsonl` `40건`
+  - `data/examples/robot_task_samples_batch4.jsonl` `20건`
+- `python3 scripts/validate_training_examples.py` 기준 sample `254건`, eval `144건`, sample duplicate `0`, eval duplicate `0`, errors `0`을 확인했다.
+- `python3 scripts/audit_training_data_consistency.py`를 다시 실행해 duplicate `0`, contradiction `0`, eval overlap `0`을 재확인했다.
+- `python3 scripts/build_training_jsonl.py --include-source-file`로 combined training `254건`을 다시 생성했다.
+- `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread` 기준 추천 split은 train `207`, validation `47`이다.
+- `python3 scripts/report_training_sample_stats.py` 기준 최신 분포는 `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`, action 분포는 `request_human_check 109`, `create_alert 87`, `pause_automation 36`, `block_action 33`, `enter_safe_mode 10`이다.
+- `state-judgement-024`, `failure-response-007`, `failure-response-009`, `failure-response-014`를 rubric 기준에 맞게 수정했고, `scripts/report_risk_slice_coverage.py`는 일반 `device_readback_mismatch`를 water-path safe-mode slice로 과대분류하지 않도록 보정했다.
+- 현재 `python3 scripts/report_risk_slice_coverage.py` 기준 training rule failure는 `none`이다.
+- `scripts/report_eval_set_coverage.py`에 `--promotion-baseline`과 `--enforce-promotion-baseline`를 추가해 승격 기본 게이트를 `extended160`으로 고정했다.
+- 현재 결과는 `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 `promotion_baseline_pass=false`다. 즉 `core24`는 회귀 확인용으로만 유지되고, 현 시점 승격은 여전히 금지다.
+
 ### ds_v9 재평가와 최신 원인 재확인
 - `python3 scripts/report_training_sample_stats.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/validate_training_examples.py`, `python3 scripts/report_risk_slice_coverage.py`를 다시 실행해 현재 기준선을 재확인했다.
 - 결과는 sample `194건`, class imbalance ratio `10.00`, action 분포 `request_human_check 90`, `create_alert 69`, `pause_automation 16`, `block_action 12`, `enter_safe_mode 8`, duplicate `0`, contradiction `0`, eval overlap `0`이다.

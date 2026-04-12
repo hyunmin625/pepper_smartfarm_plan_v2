@@ -182,10 +182,25 @@ def is_failure_safe_mode_slice(row: dict[str, Any]) -> bool:
     if {"enter_safe_mode", "request_human_check"}.issubset(actions):
         return True
     text = text_blob(row)
-    if any(token in text for token in ("dry-room-comm-loss", "irrigation_pump_comm_loss", "source_water", "readback_mismatch")):
+    water_path_tokens = (
+        "dry-room-comm-loss",
+        "irrigation_pump_comm_loss",
+        "irrigation_valve_readback_mismatch",
+        "source_water",
+        "source-water",
+        "source water",
+        "water-room",
+    )
+    if any(token in text for token in water_path_tokens):
         return True
     failure = failure_type(row).lower()
-    if failure in {"communication_loss", "device_readback_mismatch", "irrigation_readback_mismatch", "readback_mismatch"}:
+    if failure in {"irrigation_readback_mismatch", "readback_mismatch"} and any(
+        token in text for token in water_path_tokens if token != "dry-room-comm-loss"
+    ):
+        return True
+    if failure == "communication_loss" and any(
+        token in text for token in ("dry-room-comm-loss", "irrigation_pump_comm_loss", "source_water", "source-water", "source water")
+    ):
         return True
     return False
 

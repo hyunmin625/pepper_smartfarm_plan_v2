@@ -38,16 +38,17 @@
 
 - 설계 문서, 스키마, seed dataset, eval set, registry 규칙, shadow report 포맷이 모두 존재한다.
 - 따라서 **실측 데이터 없는 상태에서 AI 준비 구축과 MLOps 기반 설계는 완료**로 판정한다.
-- 다음 단계의 중심은 문서 설계가 아니라 `core24 + extended120` 기준 모델 재평가, `extended160` 확장, `offline runner 구현`, `policy JSON 작성`이다.
+- 다음 단계의 중심은 문서 설계가 아니라 `extended160` 기준 승격 게이트 고정, `extended200` 확장, `offline runner 구현`, `policy JSON 작성`이다.
 - `24건` eval만으로는 challenger 승격과 제품화 판단을 하기 어렵다고 재판정했고, 현재는 `core24`를 유지하면서 `extended120` minimum benchmark를 이미 달성했다.
 - `extended120`만으로도 제품화 판단이 부족하다고 재판정했고, blind holdout / safety invariant / field usability / shadow mode를 별도 승격 게이트로 추가했다.
 - `risk_level` 기준은 `docs/risk_level_rubric.md`로 분리했고, critical slice 감사는 `python3 scripts/report_risk_slice_coverage.py`로 수행한다.
 - 현재 in-flight fine-tuning job은 없다. 최근 corrective challenger `ds_v10 / prompt_v8` (`ftjob-LXWpGudJCeyqsH7WMorGHAT2`)는 로컬 manifest 기준 `cancelled`다.
-- 다음 corrective draft `prompt_v9`는 로컬에서 준비됐고, sample `194건`, train `180`, validation `14`, eval overlap `0` 기준으로 submit 대기 상태다.
+- 다음 corrective draft는 로컬 seed `254건`, 추천 split train `207`, validation `47`, eval overlap `0` 상태까지 준비했다.
 - 마지막 완료 모델 `ds_v9` 재평가를 완료했다. 결과는 `core24 0.875`, `extended120 0.7083`, `blind_holdout24 0.5`, 제품화 게이트 `hold`, `safety_invariant_pass_rate 0.3333`, `field_usability_pass_rate 0.9583`다.
 - 즉 공개 benchmark 개선과 제품 게이트 통과는 분리되어 있고, 후속 challenger도 반드시 같은 조건으로만 비교해야 한다.
-- 다음 데이터 보강은 `docs/critical_slice_augmentation_plan.md` 기준으로 `safety_policy`, `sensor_fault`, `failure_response`, `rootzone/nutrient`, `robot contract` 중심으로만 진행한다.
-- 최근 training 분포는 `request_human_check 90`, `create_alert 69`, `block_action 12`, `enter_safe_mode 8`이라 hard-block 계열 데이터 보강이 계속 필요하다.
+- 사용자 지시 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`.
+- 최근 training 분포는 `request_human_check 109`, `create_alert 87`, `pause_automation 36`, `block_action 33`, `enter_safe_mode 10`이다.
+- 남은 데이터 병목은 `failure_safe_mode 10`과 `evidence_incomplete_unknown 2`다.
 
 ## 개정 개발 순서
 
@@ -65,7 +66,7 @@
 - RAG 지식베이스 설계: 문서 chunking, 메타데이터, vector store, citation 저장 구조
 - 파인튜닝 데이터 설계: 상태 해석, 행동 추천, 금지 행동, 실패 대응, follow_up, confidence
 - 평가셋 구축: JSON 형식 준수, 금지 행동 차단, 근거 문서 반영률, 보수적 응답, hallucination
-- 평가셋 운영 원칙: 현재 `24건`은 core regression set으로 동결하고, 승격/제품화는 `extended120/160` benchmark에서 판단
+- 평가셋 운영 원칙: 현재 `24건`은 core regression set으로 동결하고, 승격 기본 게이트는 `extended160`, 제품화 판단은 `extended200 + blind_holdout50`에서 판단
 - 제품화 운영 원칙: `extended120/160` 외에 `blind_holdout >= 0.95`, safety invariant fail `0`, field usability fail `0`, shadow mode pass가 추가로 필요
 - 모델/프롬프트 버전 관리: prompt version, model version, dataset version, eval version
 - 의사결정 시뮬레이터: 실제 온실 없이도 센서 상태 JSON을 넣고 LLM 판단을 검증하는 offline runner

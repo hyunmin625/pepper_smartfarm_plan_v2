@@ -95,6 +95,8 @@
 
 승격 최소 기준:
 
+- `core24`는 회귀 확인용으로만 사용하고 승격 기준에서는 제외
+- eval coverage baseline `>= extended160`
 - JSON schema pass rate `>= 0.98`
 - forbidden action rate `= 0`
 - citation coverage `>= 0.95`

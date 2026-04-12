@@ -12,23 +12,23 @@
 
 로컬 합본 기준:
 
-- training rows: `194`
+- training rows: `254`
 - extended eval rows: `120`
 - blind holdout rows: `24`
 
 현재 training slice 관측치:
 
-- `safety_policy_hard_block`: `12`
-- `sensor_fault_unknown`: `6`
+- `safety_policy_hard_block`: `32`
+- `sensor_fault_unknown`: `26`
 - `evidence_incomplete_unknown`: `2`
-- `failure_safe_mode`: `11`
-- `robot_task_prioritization`: `24`
+- `failure_safe_mode`: `10`
+- `robot_task_prioritization`: `44`
 - action imbalance:
-  - `request_human_check`: `90`
-  - `create_alert`: `69`
-  - `pause_automation`: `16`
-  - `block_action`: `12`
-  - `enter_safe_mode`: `8`
+  - `request_human_check`: `109`
+  - `create_alert`: `87`
+  - `pause_automation`: `36`
+  - `block_action`: `33`
+  - `enter_safe_mode`: `10`
 
 현재 eval/holdout 관측치:
 
@@ -46,8 +46,8 @@
 
 목표:
 
-- current training `14` -> `20+`
-- hard-block slice `12` -> `20+`
+- current training `34` 유지
+- hard-block slice `32` 유지
 
 추가해야 할 상황:
 
@@ -67,7 +67,7 @@
 
 목표:
 
-- current training `6` -> `20+`
+- current training `26` 유지
 
 추가해야 할 상황:
 
@@ -86,8 +86,8 @@
 
 목표:
 
-- current training `30` 유지, 단 `path_loss/readback safe_mode` slice `8` -> `14+`
-- current training `30` 유지, 단 `path_loss/readback safe_mode` slice `11` -> `16+`
+- current training `30` 유지
+- `path_loss/readback safe_mode` slice `10` -> `16+`
 
 추가해야 할 상황:
 
@@ -126,8 +126,8 @@
 
 목표:
 
-- current training `24` 유지
-- hard case `+8~12`
+- current training `44` 유지
+- hard case 라벨 품질 유지
 
 추가해야 할 상황:
 
@@ -138,22 +138,22 @@
 
 핵심:
 
-- 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 일관성이 중요하다.
-- 따라서 raw sample 수를 단순히 `20+`로 맞추는 것보다, 현장 unusable contract를 깨는 hard case를 의도적으로 넣는 편이 더 중요하다.
+- 사용자 요구인 `20+`는 이미 충족했다.
+- 이제는 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 일관성이 더 중요하다.
 
 ## 4. 최소 추가량
 
 다음 fine-tuning 전 최소 추가량:
 
-- `safety_policy`: `+8`
-- `sensor_fault`: `+14`
-- `failure_response` safe-mode slice: `+5`
+- `safety_policy`: `완료`
+- `sensor_fault`: `완료`
+- `robot_task_prioritization`: `완료`
+- `failure_response` safe-mode slice: `+6`
 - `rootzone/nutrient` evidence incomplete slice: `+8`
-- `robot_task` contract hard case: `+8`
 
 총 추가량 가이드:
 
-- `+44` 내외
+- `+14` 내외
 
 ## 5. eval 확장과 함께 가야 하는 항목
 
@@ -173,18 +173,14 @@ sample만 늘리면 안 된다. 아래 eval도 같이 늘린다.
 
 ## 6. 현재 자동 감사에서 확인된 라벨 이슈
 
-`python3 scripts/report_risk_slice_coverage.py` 기준 training 쪽에서 아래 mismatch가 보인다.
+`python3 scripts/report_risk_slice_coverage.py` 기준 training 쪽 rule failure는 현재 `none`이다.
 
-- `failure_safe_mode_risk_not_critical`: `4`
-- `failure_safe_mode_actions_missing`: `3`
-- `safety_hard_block_actions_missing`: `1`
-
-즉, 새 sample을 추가하기 전에 기존 training label 일부도 함께 정리해야 한다.
+즉, 기존 training label mismatch 정리까지 완료됐고, 남은 병목은 `failure_safe_mode`와 `evidence_incomplete_unknown`의 절대량 부족이다.
 
 ## 7. 제출 전 체크
 
 - `python3 scripts/audit_training_data_consistency.py`
 - `python3 scripts/report_risk_slice_coverage.py`
-- `python3 scripts/report_eval_set_coverage.py`
+- `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160`
 
 위 세 결과가 모두 새 기준과 맞아야 다음 fine-tuning을 검토한다.
