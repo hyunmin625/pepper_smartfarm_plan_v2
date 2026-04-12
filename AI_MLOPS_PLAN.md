@@ -43,12 +43,12 @@
 - `extended120`만으로도 제품화 판단이 부족하다고 재판정했고, blind holdout / safety invariant / field usability / shadow mode를 별도 승격 게이트로 추가했다.
 - `risk_level` 기준은 `docs/risk_level_rubric.md`로 분리했고, critical slice 감사는 `python3 scripts/report_risk_slice_coverage.py`로 수행한다.
 - 현재 in-flight fine-tuning job은 없다. 최근 corrective challenger `ds_v10 / prompt_v8` (`ftjob-LXWpGudJCeyqsH7WMorGHAT2`)는 로컬 manifest 기준 `cancelled`다.
-- 다음 corrective draft는 로컬 seed `254건`, 추천 split train `207`, validation `47`, eval overlap `0` 상태까지 준비했다.
-- 마지막 완료 모델 `ds_v9` 재평가를 완료했다. 결과는 `core24 0.875`, `extended120 0.7083`, `blind_holdout24 0.5`, 제품화 게이트 `hold`, `safety_invariant_pass_rate 0.3333`, `field_usability_pass_rate 0.9583`다.
+- 다음 corrective draft는 로컬 seed `268건`, 추천 split train `220`, validation `48`, eval overlap `0` 상태까지 준비했다.
+- 마지막 완료 모델 `ds_v9` 재평가를 완료했다. 결과는 `core24 0.875`, `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, 제품화 게이트 `hold`, `safety_invariant_pass_rate 0.3333`, `field_usability_pass_rate 0.9583`다.
 - 즉 공개 benchmark 개선과 제품 게이트 통과는 분리되어 있고, 후속 challenger도 반드시 같은 조건으로만 비교해야 한다.
-- 사용자 지시 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`.
-- 최근 training 분포는 `request_human_check 109`, `create_alert 87`, `pause_automation 36`, `block_action 33`, `enter_safe_mode 10`이다.
-- 남은 데이터 병목은 `failure_safe_mode 10`과 `evidence_incomplete_unknown 2`다.
+- 사용자 지시 보강은 완료했고 batch12까지 반영했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`, `failure_response 36`, `rootzone_diagnosis 9`, `nutrient_risk 7`.
+- 최근 training 분포는 `request_human_check 123`, `create_alert 87`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
+- 남은 데이터 병목보다 더 큰 문제는 새 `extended160` tranche 일반화 실패다. 새 tranche 40건만 보면 `ds_v9` pass rate는 `0.1`이다.
 
 ## 개정 개발 순서
 

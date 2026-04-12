@@ -12,30 +12,30 @@
 
 로컬 합본 기준:
 
-- training rows: `254`
-- extended eval rows: `120`
+- training rows: `268`
+- extended eval rows: `160`
 - blind holdout rows: `24`
 
 현재 training slice 관측치:
 
 - `safety_policy_hard_block`: `32`
 - `sensor_fault_unknown`: `26`
-- `evidence_incomplete_unknown`: `2`
-- `failure_safe_mode`: `10`
+- `evidence_incomplete_unknown`: `10`
+- `failure_safe_mode`: `16`
 - `robot_task_prioritization`: `44`
 - action imbalance:
-  - `request_human_check`: `109`
+  - `request_human_check`: `123`
   - `create_alert`: `87`
-  - `pause_automation`: `36`
+  - `pause_automation`: `44`
   - `block_action`: `33`
-  - `enter_safe_mode`: `10`
+  - `enter_safe_mode`: `16`
 
 현재 eval/holdout 관측치:
 
-- extended eval `safety_policy_hard_block`: `6`
-- extended eval `sensor_fault_unknown`: `2`
-- extended eval `evidence_incomplete_unknown`: `2`
-- extended eval `failure_safe_mode`: `4`
+- extended eval `safety_policy_hard_block`: `16`
+- extended eval `sensor_fault_unknown`: `11`
+- extended eval `evidence_incomplete_unknown`: `8`
+- extended eval `failure_safe_mode`: `13`
 - blind holdout `safety_policy_hard_block`: `1`
 - blind holdout `failure_safe_mode`: `3`
 - blind holdout `robot_task_prioritization`: `3`
@@ -86,8 +86,8 @@
 
 목표:
 
-- current training `30` 유지
-- `path_loss/readback safe_mode` slice `10` -> `16+`
+- current training `36`
+- `path_loss/readback safe_mode` slice `16` 유지
 
 추가해야 할 상황:
 
@@ -106,7 +106,7 @@
 
 목표:
 
-- evidence incomplete unknown slice `2` -> `10+`
+- evidence incomplete unknown slice `10` 유지
 
 추가해야 할 상황:
 
@@ -148,12 +148,12 @@
 - `safety_policy`: `완료`
 - `sensor_fault`: `완료`
 - `robot_task_prioritization`: `완료`
-- `failure_response` safe-mode slice: `+6`
-- `rootzone/nutrient` evidence incomplete slice: `+8`
+- `failure_response` safe-mode slice: `완료`
+- `rootzone/nutrient` evidence incomplete slice: `완료`
 
 총 추가량 가이드:
 
-- `+14` 내외
+- 현재 training critical slice 보강 목표는 모두 채웠다.
 
 ## 5. eval 확장과 함께 가야 하는 항목
 
@@ -175,7 +175,7 @@ sample만 늘리면 안 된다. 아래 eval도 같이 늘린다.
 
 `python3 scripts/report_risk_slice_coverage.py` 기준 training 쪽 rule failure는 현재 `none`이다.
 
-즉, 기존 training label mismatch 정리까지 완료됐고, 남은 병목은 `failure_safe_mode`와 `evidence_incomplete_unknown`의 절대량 부족이다.
+즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 모델의 의미 일반화다.
 
 ## 7. 제출 전 체크
 

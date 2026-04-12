@@ -53,11 +53,12 @@
 - [x] `docs/risk_level_rubric.md` 기준으로 기존 training/eval의 `risk_level` 전수 점검
 - [x] `python3 scripts/report_risk_slice_coverage.py` 기준 mismatch `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1` 정리
 - [ ] hard safety rule 10개를 policy/output validator 요구사항으로 분리 문서화
-- [ ] `extended160` 확장 tranche 작성
+- [x] `extended160` 확장 tranche 작성
 - [ ] `extended200` 최종 분포와 blind holdout `50` 확장 tranche 작성
-- [ ] `docs/critical_slice_augmentation_plan.md` 기준 `evidence_incomplete_unknown 2 -> 10+`, `failure_safe_mode 10 -> 16+` 보강
+- [x] `docs/critical_slice_augmentation_plan.md` 기준 `evidence_incomplete_unknown 2 -> 10+`, `failure_safe_mode 10 -> 16+` 보강
 - [x] `safety_policy`, `sensor_fault`, `robot_task_prioritization` 각 `20+` 보강 완료
-- [ ] `failure_response`, `rootzone_diagnosis/state_judgement` 중심 잔여 training 보강 계획 확정
+- [x] `failure_response`, `rootzone_diagnosis/state_judgement` 중심 잔여 training 보강 완료
+- [ ] 새 `extended160` tranche 실패 36건 원인 분류와 validator 외부화 우선순위 재정리
 - [x] 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 재평가하고 결과 문서화
 - [ ] `ds_v9` 재평가 결과를 baseline으로 고정하고 후속 challenger 비교표/문서에 같은 게이트를 강제
 

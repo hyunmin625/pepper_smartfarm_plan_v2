@@ -12,7 +12,7 @@
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
 - 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로만 유지한다.
-- `extended120` 최소 benchmark는 달성했다. 현재 분포는 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`이다. 다만 제품 수준 재평가 기준으로는 `extended160`을 넘어 `extended200 + blind_holdout50`까지 계획을 올려야 한다.
+- `extended160` promotion baseline은 확보했다. 현재 분포는 `expert 48 / action 20 / forbidden 16 / failure 16 / robot 12 / edge 24 / seasonal 24`이다. 다만 제품 수준 재평가 기준으로는 `extended200 + blind_holdout50`까지 계획을 올려야 한다.
 
 ## 핵심 시스템 방향
 
@@ -139,8 +139,8 @@
 - 핵심 센서 1차 상용 모델 조사 완료: `Vaisala HMP110`, `Vaisala GMP252`, `Apogee SQ-522-SS`, `METER TEROS 12`, `Bluelab Guardian Inline Wi-Fi`, `Vaisala WXT536`
 - 장치별 최소/최대 setpoint 범위 정리 완료: `setpoint_bounds`를 sensor catalog와 command validation에 반영
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광, 관수 펄스, 양액기 drift 점검, CO2/난방/건조실 SOP를 문서화
-- 학습 seed 7개 task family를 batch11까지 확장 완료: 총 254건 (`data/examples/*_samples*.jsonl`)
-- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 254개 sample에서 duplicate 0, contradiction 0, eval overlap 0 확인
+- 학습 seed 7개 task family를 batch12까지 확장 완료: 총 268건 (`data/examples/*_samples*.jsonl`)
+- 학습 seed 중복/모순 감사 자동화 완료: `scripts/audit_training_data_consistency.py`와 `scripts/validate_training_examples.py` 기준 268개 sample에서 duplicate 0, contradiction 0, eval overlap 0 확인
 - 파인튜닝 목표 재정의 완료: `docs/fine_tuning_objectives.md`, `schemas/action_schema.json`
 - 학습/eval 합본 생성과 통계 리포트 완료: `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`, `scripts/report_training_sample_stats.py`, `docs/training_sample_manual_review.md`
 - 파인튜닝 runbook 1차 완료: `docs/fine_tuning_runbook.md`
@@ -170,9 +170,9 @@
 - 제품 수준 재평가 결론: 현재 병목은 base model보다는 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트에 있다.
 - 로컬 툴 보강: `scripts/build_openai_sft_datasets.py`는 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하고, `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검한다.
 - `risk_level` 정규화 기준 고정: `docs/risk_level_rubric.md`에 `critical > unknown > high > medium > low` 우선순위와 task family별 기준을 정리했다.
-- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 32`, `sensor_unknown 26`, `evidence_incomplete_unknown 2`, `failure_safe_mode 10`, `robot_contract 44`이며 training rule failure는 현재 `none`이다.
-- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `194건`, class imbalance ratio `10.00`, action 분포는 `request_human_check 90`, `create_alert 69`, `pause_automation 16`, `block_action 12`, `enter_safe_mode 8`이다.
-- 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다.
+- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 32`, `sensor_unknown 26`, `evidence_incomplete_unknown 10`, `failure_safe_mode 16`, `robot_contract 44`이며 training rule failure는 현재 `none`이다.
+- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `268건`, class imbalance ratio `11.00`, action 분포는 `request_human_check 123`, `create_alert 87`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
+- 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다.
 - `ds_v9` 재평가 세부 판단: `extended120`에서는 `ds_v5` 대비 개선됐지만, blind holdout 제품화 게이트는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`으로 여전히 막혔다.
 - 비교 해석: `ds_v9`는 robot field contract 실패를 `3 -> 1`로 줄였지만, blind safety invariant는 `0.5 -> 0.3333`으로 악화됐다. 따라서 현재 문제를 `robot raw count 부족`보다 `failure/safety 의미 계약과 risk/action 경계 문제`로 보는 쪽이 더 정확하다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
@@ -257,10 +257,10 @@
 
 1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화`, `policy/output validator`, `eval200` 계획을 먼저 고정
 2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended120 + blind_holdout + product gate` 조건으로만 비교
-3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재는 아직 승격 불가다.
-4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `207`, validation `47`이다.
+3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
+4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `220`, validation `48`이다.
 5. 사용자 요구 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`
-6. 남은 targeted 보강은 `failure_response safe_mode`, `rootzone evidence incomplete`, `eval extended160/200`, blind holdout `50`이다.
+6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, policy/output validator, 새 tranche 일반화 원인 분석이다.
 7. hard block 정책 10개와 approval 정책 10개를 정책 JSON 및 output validator로 구체화
 8. 그 다음에만 다음 challenger 제출 여부를 결정
 

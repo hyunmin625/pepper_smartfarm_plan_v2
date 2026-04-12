@@ -155,18 +155,17 @@ def main() -> None:
     total_ok = total >= args.minimum_total
     recommended_ok = total >= args.recommended_total
     product_ok = total >= args.product_total
-    print(f"minimum_total_pass,{str(total_ok).lower()}")
-    print(f"recommended_total_pass,{str(recommended_ok).lower()}")
-    print(f"product_total_pass,{str(product_ok).lower()}")
-    promotion_target = PROMOTION_BASELINE_TARGETS[args.promotion_baseline]
-    promotion_ok = total >= promotion_target and blind_holdout_rows >= args.blind_holdout_minimum
-    print(f"promotion_baseline,{args.promotion_baseline}")
-    print(f"promotion_baseline_total_target,{promotion_target}")
-
     blind_holdout_path = Path(args.blind_holdout_file)
     blind_holdout_rows = count_rows(blind_holdout_path)
     blind_holdout_minimum_ok = blind_holdout_rows >= args.blind_holdout_minimum
     blind_holdout_product_ok = blind_holdout_rows >= args.blind_holdout_product_target
+    promotion_target = PROMOTION_BASELINE_TARGETS[args.promotion_baseline]
+    promotion_ok = total >= promotion_target and blind_holdout_rows >= args.blind_holdout_minimum
+    print(f"minimum_total_pass,{str(total_ok).lower()}")
+    print(f"recommended_total_pass,{str(recommended_ok).lower()}")
+    print(f"product_total_pass,{str(product_ok).lower()}")
+    print(f"promotion_baseline,{args.promotion_baseline}")
+    print(f"promotion_baseline_total_target,{promotion_target}")
     print(f"blind_holdout_file,{blind_holdout_path.as_posix()}")
     print(f"blind_holdout_rows,{blind_holdout_rows}")
     print(f"blind_holdout_minimum_target,{args.blind_holdout_minimum}")

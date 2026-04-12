@@ -4,6 +4,19 @@
 
 ## 2026-04-12
 
+### batch12 보강과 extended160 재평가
+- `scripts/generate_batch12_targeted_samples.py`를 추가해 `failure_response_samples_batch11.jsonl` `6건`, `state_judgement_samples_batch12.jsonl` `8건`을 생성했다.
+- batch12 반영 후 `python3 scripts/build_training_jsonl.py --include-source-file`, `python3 scripts/report_training_sample_stats.py`, `python3 scripts/report_risk_slice_coverage.py` 기준 training은 `268건`, class imbalance ratio `11.00`, `failure_safe_mode 16`, `evidence_incomplete_unknown 10`, training rule failure `none`이 됐다.
+- `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread` 기준 추천 split은 train `220`, validation `48`이다.
+- `scripts/generate_extended_eval_tranche3.py`를 추가해 extended eval을 `160건`까지 확장했다. 현재 분포는 `expert 48 / action 20 / forbidden 16 / failure 16 / robot 12 / edge 24 / seasonal 24`다.
+- `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline` 기준 coverage gate는 통과했고 `promotion_baseline_pass=true`다.
+- `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py` 기준 sample `268건`, eval `184건`, duplicate `0`, contradiction `0`, eval overlap `0`, errors `0`을 다시 확인했다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTgUbJHJ --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended160`로 마지막 완료 모델 `ds_v9`를 새 `extended160`에 재평가했다.
+- 결과는 `pass_rate 0.575`, `strict_json_rate 1.0`이었다. 즉 `extended120 0.7083`에서 `extended160 0.575`로 다시 하락했다.
+- 새 tranche 40건만 보면 `pass_rate 0.1`이었고, 주요 실패는 `required_action_types_present 22`, `risk_level_match 21`, `citations_present 20`이었다.
+- family별 새 약점은 `failure_response 0.3889`, `robot_task_prioritization 0.25`, `sensor_fault 0.2857`, `safety_policy 0.4286`, `edge_case 0.4167`, `seasonal 0.5417`다.
+- 결론은 그대로다. training critical slice 보강만으로는 제품 수준 일반화가 해결되지 않았고, 다음 우선순위는 `policy/output validator`, `blind_holdout50`, `extended200`, tranche 실패 원인 분류다.
+
 ### batch11 약점 구간 보강과 승격 기준 고정
 - 사용자 지시에 따라 `safety_policy`, `sensor_fault`, `robot_task_prioritization`를 각각 `20+` 보강하는 batch11을 추가했다.
   - `data/examples/state_judgement_samples_batch11.jsonl` `40건`

@@ -8,7 +8,7 @@
 
 - 마지막 완료 모델은 `ds_v9/prompt_v5_methodfix`다.
 - `ds_v10/prompt_v8`은 최근 sync 기준 `cancelled`이며, 완료 평가 결과가 아직 없다.
-- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `extended120`에서 `0.7083`, `blind_holdout24`에서 `0.5`, `strict_json_rate 1.0`이다.
+- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `extended120`에서 `0.7083`, `extended160`에서 `0.575`, `blind_holdout24`에서 `0.5`, `strict_json_rate 1.0`이다.
 - 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
 - blind holdout 제품화 게이트 기준 `ds_v9`는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`이다.
 - 즉 `ds_v9`는 공개 benchmark와 robot field contract는 개선했지만, blind safety invariant는 오히려 악화됐다.
@@ -50,7 +50,7 @@
 
 - 다음 라운드부터는 `validation 14 고정`을 중단한다.
 - 권장 split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다.
-- 현재 training `194건` 기준으로 위 split을 적용하면 validation은 `39건`, train은 `155건`이 된다.
+- 현재 training `268건` 기준으로 위 split을 적용하면 validation은 `48건`, train은 `220건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
 
@@ -58,23 +58,23 @@
 
 판단: `그렇다. 하지만 총량보다 critical slice 부족이 본질이다.`
 
-현재 training `194건` 중 critical slice는 얇다.
+기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `268건`으로 늘렸다.
 
 전체 action 분포도 치우쳐 있다.
 
-- `request_human_check`: `90`
-- `create_alert`: `69`
-- `pause_automation`: `16`
-- `block_action`: `12`
-- `enter_safe_mode`: `8`
+- `request_human_check`: `123`
+- `create_alert`: `87`
+- `pause_automation`: `44`
+- `block_action`: `33`
+- `enter_safe_mode`: `16`
 
-- `rootzone_diagnosis`: `5`
+- `rootzone_diagnosis`: `9`
 - `sensor_fault`: `6`
 - `climate_risk`: `6`
 - `pest_disease_risk`: `6`
 - `state_judgement`: `7`
 - `safety_policy`: `14`
-- `failure_response`: `30`
+- `failure_response`: `36`
 - `robot_task_prioritization`: `24`
 
 문제는 다음 경계 사례 밀도가 낮다는 점이다.
@@ -89,7 +89,7 @@
 결론:
 
 - generic sample bulk-up은 비효율적이다.
-- 사용자가 제안한 `robot_task 20+`는 현재 raw count 기준으로는 이미 충족한다.
+- 사용자가 제안한 `robot_task 20+`는 이미 충족했고, 현재 raw count는 `44`다.
 - 하지만 실제 문제는 건수보다 `enum exactness`, `candidate_id/target`, `approval_required` 계약 품질이다.
 - 아래 5개 slice를 우선 보강한다.
   - `safety_policy`: `+8`
@@ -112,6 +112,7 @@
 
 - `core24`는 그대로 유지한다.
 - challenger 비교는 최소 `core24 + extended160`으로 올린다.
+- 실제 재평가 결과 `ds_v9`는 `extended160 0.575`로 떨어졌고, 새 tranche 40건만 보면 pass rate `0.1`이었다.
 - 제품 수준 주장에는 `extended200 + blind_holdout50 + product gate + shadow mode`가 필요하다.
 
 ## 3. 최종 판단
@@ -154,7 +155,7 @@
 
 ### Phase 2. 저비용 데이터/평가 조치
 
-- `extended160`까지 먼저 확장한다.
+- `extended160`까지 확장했고, 현재 총량 게이트는 통과했다.
 - 이후 `extended200` 분포를 아래처럼 채운다.
   - `expert_judgement`: `60`
   - `action_recommendation`: `28`
