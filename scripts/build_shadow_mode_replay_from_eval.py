@@ -62,19 +62,43 @@ def text_contains(summary: str, *needles: str) -> bool:
     return any(needle.lower() in lowered for needle in needles)
 
 
+def text_contains_all(summary: str, *needles: str) -> bool:
+    lowered = summary.lower()
+    return all(needle.lower() in lowered for needle in needles)
+
+
 def build_context(eval_case: dict[str, Any]) -> dict[str, Any]:
     input_state = eval_case.get("input_state", {})
     expected = eval_case.get("expected", {})
     summary = str(input_state.get("summary") or "")
+    failure_type = str(eval_case.get("failure_type") or "")
 
-    worker_present = text_contains(summary, "작업자", "worker")
-    manual_override_active = text_contains(summary, "manual override")
-    safe_mode_active = text_contains(summary, "safe_mode")
+    worker_negated = text_contains(
+        summary,
+        "작업자 출입 이벤트는 없다",
+        "작업자 없음",
+        "worker present is false",
+        "worker entry is not active",
+        "출입 이벤트는 없다",
+    )
+    worker_present = (text_contains(summary, "작업자가", "worker present", "worker-entry", "출입 이벤트가 active")) and not worker_negated
+    manual_override_active = text_contains(summary, "manual override가 active", "manual_override active", "manual override active", "수동 override가 active")
+    safe_mode_active = text_contains(summary, "safe_mode가 active", "safe_mode active", "safe mode가 active", "safe mode active")
     zone_clearance_uncertain = text_contains(summary, "clear 신호도 불안정", "우회", "blocked", "접근할 수 없어")
     aisle_slip_hazard = text_contains(summary, "미끄럼", "바닥이 젖어", "slip")
-    irrigation_path_degraded = text_contains(summary, "관수 메인 밸브", "irrigation", "readback mismatch")
-    source_water_path_degraded = text_contains(summary, "원수", "source water")
-    dry_room_path_degraded = text_contains(summary, "건조실", "dehumidifier 상태 태그가 끊긴")
+    path_loss_signal = text_contains(
+        summary,
+        "통신",
+        "communication",
+        "readback mismatch",
+        "write timeout",
+        "stale readback",
+        "ack",
+        "상태 태그가 끊긴",
+    ) or failure_type in {"communication_loss", "readback_mismatch", "irrigation_readback_mismatch"}
+    irrigation_path_degraded = path_loss_signal and text_contains(summary, "관수 메인 밸브", "관수 펌프", "irrigation pump", "irrigation main valve")
+    source_water_path_degraded = path_loss_signal and text_contains(summary, "원수 메인 밸브", "source water")
+    dry_room_path_degraded = path_loss_signal and text_contains(summary, "건조실", "dry room", "dry-room", "dehumidifier")
 
     rootzone_sensor_conflict = text_contains(
         summary,
@@ -98,7 +122,6 @@ def build_context(eval_case: dict[str, Any]) -> dict[str, Any]:
     climate_control_degraded = text_contains(
         summary,
         "자동 보온 제어가 degraded",
-        "dehumidifier 상태 태그가 끊긴",
     )
     core_climate_interpretable = not climate_sensor_gap
 

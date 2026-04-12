@@ -8,10 +8,12 @@
 - `llm-orchestrator/llm_orchestrator/runtime.py`와 `scripts/build_shadow_mode_replay_from_eval.py`를 수정해 `forbidden_action`을 일반 `recommended_actions`가 아니라 `decision + blocked_action_type` 계약으로 비교하도록 바꿨다.
 - `scripts/build_shadow_mode_report.py`와 `docs/shadow_mode_report_format.md`도 함께 갱신해 shadow report가 `ai_decision_after`, `operator_decision`, `ai_blocked_action_type_after`, `operator_blocked_action_type`를 기록하도록 맞췄다.
 - runtime validator에는 빠져 있던 `HSV-09`를 `policy-engine/policy_engine/output_validator.py`에 추가했다. 이제 `forbidden_action + adjust_fertigation + rootzone sensor conflict`는 simulation과 동일하게 `decision=approval_required`로 승격된다.
+- 이어서 `scripts/build_shadow_mode_replay_from_eval.py`의 context builder를 보정했다. `worker_present`는 negation-aware로 바꾸고, `safe_mode_active`는 실제 active 표현이 있을 때만 잡고, `dry_room_path_degraded`는 `failure_type=communication_loss`와 통신/readback 신호가 있을 때만 승격한다.
 - `data/examples/policy_output_validator_cases.jsonl`에 `validator-case-007`을 추가했고, `python3 scripts/validate_policy_output_validator.py` 기준 `checked_cases 7`, `errors 0`을 확인했다.
 - `python3 scripts/build_shadow_mode_replay_from_eval.py --report artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.json --eval-files evals/blind_holdout_eval_set.jsonl --model-id ...:DTryNJg3 --prompt-id sft_v5 --dataset-id ds_v11 --eval-set-id blind_holdout50_offline_shadow_replay --retrieval-profile-id retrieval-chroma-local-v1 --shadow-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_ds_v11_blind_holdout50_offline.jsonl --output-prefix artifacts/reports/shadow_mode_ds_v11_blind_holdout50_offline`를 다시 실행했다.
-- 그 결과 offline shadow replay 기준선은 `operator_agreement_rate 0.88`, `critical_disagreement_count 0`, `promotion_decision hold`로 개선됐다.
-- 결론은 명확하다. `blind-forbidden-007`은 모델 실패가 아니라 shadow/replay 계약 불일치였고, 현재 남은 offline shadow drift는 `blind-action-003`, `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-001`, `blind-robot-005` 같은 non-critical 일반화 문제다.
+- 그 결과 offline shadow replay 기준선은 `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`로 더 올라갔다.
+- `blind-forbidden-007`, `blind-forbidden-002`, `blind-action-003`, `blind-robot-001`, `blind-failure-008`은 모델 failure가 아니라 shadow/replay contract 또는 heuristic mismatch였다는 점을 분리했다.
+- 현재 남은 offline shadow drift는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이고, owner는 `data_and_model 3`, `robot_contract_and_model 1`로 정리했다.
 
 ### ds_v11 blind50 offline shadow replay 기준선 추가
 - `scripts/build_shadow_mode_replay_from_eval.py`를 추가해 frozen eval report와 eval 기대값을 `llm-orchestrator` shadow audit 형식으로 재생성할 수 있게 했다.

@@ -72,10 +72,11 @@
 - [x] `ds_v11/prompt_v5_methodfix_batch14` 1회 실제 submit 및 완료 (`ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `succeeded`)
 - [x] `ds_v11/prompt_v5_methodfix_batch14`를 frozen gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 재평가
 - [x] `ds_v11` residual failure 재분류: extended200 validator 잔여 `42건`, blind50 validator 잔여 `5건`
-- [x] `ds_v11` blind50 기준 offline shadow replay 생성 및 계약 정렬 (`decision_count 50`, `operator_agreement_rate 0.88`, `critical_disagreement_count 0`, `promotion_decision hold`)
+- [x] `ds_v11` blind50 기준 offline shadow replay 생성 및 계약/heuristic 정렬 (`decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`)
 - [ ] `ds_v11` shadow mode audit sample을 누적하고 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 실제 운영 로그 형식으로 검증
 - [x] offline shadow replay false critical disagreement(`blind-forbidden-007`) 해소 및 runtime `HSV-09` 정렬
-- [ ] offline shadow replay 잔여 drift(`blind-action-003`, `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-001`, `blind-robot-005`)의 owner별 fix를 확정
+- [x] offline shadow replay false drift(`blind-action-003`, `blind-robot-001`, `blind-failure-008`)를 replay contract/heuristic 수정으로 제거
+- [ ] offline shadow replay 잔여 drift(`blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`)의 owner별 fix를 batch 설계로 확정
 - [ ] blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data / data_and_model` 기준 targeted fix 여부를 확정
 - [ ] extended200 validator 잔여 `42건` 중 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`의 우선순위 batch를 설계
 - [ ] batch16 + next-only oversampling challenger 제출 여부를 shadow mode와 residual 축소 결과 이후에만 결정
