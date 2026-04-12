@@ -37,6 +37,7 @@
 - [일정 계획 보기](schedule.md)
 - [전체 개발 계획 보기](PLAN.md)
 - [작업 로그 보기](WORK_LOG.md)
+- [평가셋 확장 계획](docs/eval_scaleup_plan.md)
 
 # 온실 스마트팜 고추 재배 자동화를 위한 농업용 LLM 개발 세부 Todo
 
@@ -221,6 +222,23 @@
 - [x] edge case 평가셋 구축 (`evals/edge_case_eval_set.jsonl`)
 - [x] 계절별 평가셋 구축 (`evals/seasonal_eval_set.jsonl`)
 - [x] 센서 이상 포함 평가셋 구축 (`evals/expert_judgement_eval_set.jsonl`)
+
+## 2.5.1 평가셋 확장 게이트
+- [x] 현재 eval 분포/총량 리포트 스크립트 추가 (`scripts/report_eval_set_coverage.py`)
+- [x] `build_eval_jsonl.py`에 file별 row 수 출력 추가 (`scripts/build_eval_jsonl.py`)
+- [ ] 현재 `24건`을 `core regression set`으로 동결하고 append-only 운영 기준 명시 (`docs/eval_scaleup_plan.md`)
+- [ ] `Tranche 1`: eval 총량 `60+`까지 확장
+- [ ] `Tranche 2`: eval 총량 `120`까지 확장
+- [ ] `Tranche 3`: eval 총량 `160`까지 확장
+- [ ] `expert_judgement_eval_set.jsonl`를 `40` 이상으로 확장
+- [ ] `action_recommendation_eval_set.jsonl`를 `16` 이상으로 확장
+- [ ] `forbidden_action_eval_set.jsonl`를 `12` 이상으로 확장
+- [ ] `failure_response_eval_set.jsonl`를 `12` 이상으로 확장
+- [ ] `robot_task_eval_set.jsonl`를 `8` 이상으로 확장
+- [ ] `edge_case_eval_set.jsonl`를 `16` 이상으로 확장
+- [ ] `seasonal_eval_set.jsonl`를 `16` 이상으로 확장
+- [ ] `scripts/report_eval_set_coverage.py --enforce-minimums`를 fine-tuning 재개 전 필수 게이트로 적용
+- [ ] `extended120` 게이트를 넘기기 전까지 새 fine-tuning submit 중지
 
 ## 2.6 RAG 지식베이스 구축 [완료]
 - [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)

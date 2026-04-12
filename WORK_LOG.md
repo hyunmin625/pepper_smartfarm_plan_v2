@@ -4,6 +4,16 @@
 
 ## 2026-04-12
 
+### eval scale-up 게이트 반영과 현재 상황 기록
+- `v5` 이후 fine-tuning이 `0.875` 부근에서 정체되고 `fail-set churn`이 반복돼, 현재 eval `24건`만으로는 승격/제품화 판단이 어렵다고 재판정했다.
+- 현재 `24건`은 `core regression set`으로 유지하고, 새 운영 게이트는 `extended120` 최소 / `extended160` 권장 기준으로 확장하기로 결정했다.
+- 현재 file별 eval row 기준선은 `expert 8 / action 2 / forbidden 2 / failure 2 / robot 2 / edge 4 / seasonal 4`, 총 `24`다.
+- `docs/eval_scaleup_plan.md`를 추가해 목표 분포, tranche(`24 -> 60+ -> 120 -> 160`), fine-tuning 재개 조건을 고정했다.
+- `scripts/report_eval_set_coverage.py`를 추가해 현재 eval 분포와 `extended120/160` 목표 대비 부족분을 즉시 확인할 수 있게 했다.
+- `scripts/build_eval_jsonl.py`는 file별 row 수를 함께 출력하도록 보강했다.
+- `README.md`, `PLAN.md`, `AI_MLOPS_PLAN.md`, `todo.md`, `schedule.md`, `PROJECT_STATUS.md`, `evals/README.md`에 eval scale-up 계획과 `ds_v10` 이후 추가 fine-tuning submit 중지 원칙을 반영했다.
+- `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205.json`로 현재 in-flight run 상태를 다시 확인했고, 최근 sync 기준 `ftjob-LXWpGudJCeyqsH7WMorGHAT2`는 `queued`다.
+
 ### ds_v10 / prompt_v8 corrective round 제출
 - `ds_v9` eval 뒤 남은 실패 3건을 다시 분석했다.
   - `pepper-eval-003`: `rootzone_diagnosis`가 `high` 대신 `medium`

@@ -12,6 +12,7 @@
 - [센서 모델 shortlist](docs/sensor_model_shortlist.md)
 - [장치 setpoint 범위](docs/device_setpoint_ranges.md)
 - [장치 운전 경험 규칙](docs/device_operation_rules.md)
+- [평가셋 확장 계획](docs/eval_scaleup_plan.md)
 - [세부 개발 Todo](todo.md)
 - [8주 일정 계획](schedule.md)
 - [작업 로그](WORK_LOG.md)
@@ -167,6 +168,15 @@ LLM은 다음을 직접 수행하지 않는다.
 - 장애 시 safe mode로 전환한다.
 - 수동 개입이 항상 가능해야 한다.
 
+## 4.4 평가셋 운영 원칙
+
+- 현재 fine-tuning benchmark `24건`은 빠른 회귀 확인용 `core regression set`으로 유지한다.
+- 승격 판단은 `core24`만으로 하지 않고 `extended120` 이상에서 다시 수행한다.
+- 제품화 판단은 `extended160` 이상에서 수행한다.
+- `forbidden_action`, `failure_response`, `edge_case`, `seasonal`은 최소치 미달 상태에서 새 fine-tuning submit을 진행하지 않는다.
+- 현재 in-flight run(`ds_v10`) 이후에는 `extended120` 게이트를 넘기기 전까지 새 fine-tuning 실험을 기본적으로 중지한다.
+- 자세한 분포 목표와 tranche 계획은 `docs/eval_scaleup_plan.md`를 기준으로 관리한다.
+
 ---
 
 ## 5. 개발 단계 개요
@@ -231,6 +241,7 @@ LLM은 다음을 직접 수행하지 않는다.
 - 파인튜닝 학습셋
 - JSON schema
 - 평가셋
+- `core24 + extended120/160` benchmark 운영 기준
 
 ## Phase 2. 센서/장치 데이터 파이프라인 구축
 목표:

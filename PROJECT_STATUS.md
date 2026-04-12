@@ -11,6 +11,8 @@
 - 원격 저장소: `https://github.com/hyunmin625/pepper_smartfarm_plan_v2.git`
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
+- 현재 fine-tuning core benchmark는 eval `24건`이며, 이는 승격/제품화 판단에 부족하다고 재판정했다.
+- 현재 `24건`은 `core regression set`으로 유지하고, 새 운영 게이트는 `extended120` 최소 / `extended160` 권장 기준으로 확장한다.
 
 ## 핵심 시스템 방향
 
@@ -150,6 +152,8 @@
 - `ds_v9/prompt_v5_methodfix` eval 완료: pass rate `0.875`, strict JSON rate `1.0`으로 기존 champion과 동률이며, 실패 케이스는 `pepper-eval-003`, `failure-eval-001`, `edge-eval-004`다.
 - 방법론 수정 효과 확인: 기존 champion에서 실패하던 `pepper-eval-006`과 `action-eval-002`는 해결됐지만, `rootzone_diagnosis`와 `failure_response` 한 케이스가 새로 회귀해 최고 기록은 아직 `ds_v5/prompt_v5`가 유지된다.
 - `ds_v10/prompt_v8` corrective round 제출 완료: `ftjob-LXWpGudJCeyqsH7WMorGHAT2` (`ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205`)를 제출했다. train `165`, validation `14`, submit 직후 상태는 `validating_files`다.
+- `ds_v10/prompt_v8`의 최근 sync 기준 상태는 `queued`다.
+- eval scale-up 즉시 조치 시작: `docs/eval_scaleup_plan.md`, `scripts/report_eval_set_coverage.py`, `scripts/build_eval_jsonl.py` 보강으로 `core24 + extended120/160` 운영 기준을 고정했다.
 - `ds_v10` 입력은 `batch9` corrective sample 4건과 `prompt_v8` 규칙 3개로 구성했다. 대상은 `rootzone_diagnosis high-risk`, `failure_response sensor_stale high`, `manual_override + safe_mode -> block_action + create_alert`다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
@@ -232,10 +236,11 @@
 ## 다음 우선순위
 
 1. `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 sync해 `ds_v10/prompt_v8`이 `succeeded`로 끝나는 즉시 eval `24건`을 다시 실행
-2. `ds_v10`이 champion `0.875`를 넘기면 `fine_tuned_model_eval_latest.*`와 비교표를 새 champion 기준으로 승격
-3. `ds_v10`이 다시 동률 또는 회귀면 `sensor_fault`와 `failure_response`의 `risk_level` 의미를 eval/seed/prompt 관점에서 더 엄격히 분리
-4. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
-5. offline runner/state-estimator MVP 착수 범위를 확정
+2. 현재 `24건`을 `core regression set`으로 동결하고 eval 총량을 `60+`까지 우선 확장
+3. `extended120` 미달 상태에서는 새 fine-tuning submit을 중지하고, `scripts/report_eval_set_coverage.py --enforce-minimums`를 재개 게이트로 사용
+4. `extended120`을 넘긴 뒤 champion과 challenger를 `core24 + extended120` 기준으로 재평가
+5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+6. offline runner/state-estimator MVP 착수 범위를 확정
 
 ## 주의할 점
 

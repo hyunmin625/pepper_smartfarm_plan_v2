@@ -16,6 +16,7 @@
 - [전체 개발 계획 보기](PLAN.md)
 - [세부 Todo 보기](todo.md)
 - [작업 로그 보기](WORK_LOG.md)
+- [평가셋 확장 계획 보기](docs/eval_scaleup_plan.md)
 
 ---
 
@@ -30,6 +31,16 @@
 5. 통합 제어 시스템 구현
 6. 사용자 UI 대시보드 개발
 7. AI 모델과 통합 제어 시스템 연결
+
+---
+
+## 즉시 조정 사항 (2026-04-12)
+
+- 현재 fine-tuning benchmark `24건`은 challenger 승격과 제품화 판단에 부족하다고 본다.
+- 현재 `24건`은 `core regression set`으로 유지한다.
+- 다음 운영 게이트는 `extended120`, 권장 게이트는 `extended160`이다.
+- 현재 in-flight run인 `ds_v10 / prompt_v8` 이후에는 `extended120`을 넘기기 전까지 새 fine-tuning submit을 기본적으로 중지한다.
+- 즉시 우선순위는 `새 seed 추가`보다 `eval 확장`이다.
 
 ---
 
@@ -54,6 +65,7 @@
 - 적고추/건고추 재배 매뉴얼, 현장 SOP, 장치 운전 기준 수집 목록 작성
 - offline decision runner 설계
 - eval set 기준 정의
+- `core24 + extended120/160` benchmark 운영 기준 정의
 - model/prompt/dataset version 규칙 정의
 - 기존 Q&A → 상태/행동 구조로 재분류
 - 행동추천 JSON 샘플 100개 생성
@@ -77,6 +89,7 @@
 - 학습 샘플 200개 이상 확보
 - 정책 JSON 20개 이상 작성
 - AI_MLOPS_PLAN.md 기준 반영
+- eval scale-up 기준 문서 완료
 
 ---
 
@@ -92,6 +105,7 @@
 ### 주요 작업
 - train/val JSONL 생성
 - expert judgement eval set 초안 작성
+- eval `24 -> 60+` 1차 tranche 작성
 - state judgement 샘플 작성
 - forbidden action 샘플 작성
 - RAG chunking 전략 정의
@@ -120,6 +134,7 @@
 - 핵심 센서 shortlist 문서 완료
 - 계절별 운영 범위 문서 완료
 - 기본 케이스 행동추천 가능
+- eval 총량 `60+` 달성
 
 ---
 
@@ -271,6 +286,7 @@
 
 - Week 2: JSON 출력 안정화 전에는 다음 단계 진행 금지
 - Week 2: RAG 검색 품질 기준 없이 하이브리드 판단 운영 금지
+- Week 2: `extended120` 미달 상태에서는 새 fine-tuning submit 기본 중지
 - Week 3: 센서 품질 플래그 없이 학습 데이터 반영 금지
 - Week 4: 정책 엔진 없이 자동화 금지
 - Week 5: execution-gateway 없이 PLC 연결 금지

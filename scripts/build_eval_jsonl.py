@@ -50,9 +50,12 @@ def main() -> None:
     args = parser.parse_args()
 
     rows: list[dict[str, Any]] = []
+    per_file_counts: dict[str, int] = {}
     for file_name in args.inputs:
         path = Path(file_name)
-        for row in load_jsonl(path):
+        file_rows = load_jsonl(path)
+        per_file_counts[path.name] = len(file_rows)
+        for row in file_rows:
             if args.include_source_file:
                 row = dict(row)
                 row["source_file"] = path.as_posix()
@@ -67,6 +70,9 @@ def main() -> None:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
     print(f"input_files: {len(args.inputs)}")
+    print("file_rows:")
+    for file_name in sorted(per_file_counts):
+        print(f"  {file_name}: {per_file_counts[file_name]}")
     print(f"rows: {len(rows)}")
     print(f"output: {output_path.as_posix()}")
 

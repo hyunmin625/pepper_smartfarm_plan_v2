@@ -39,6 +39,9 @@
 - 설계 문서, 스키마, seed dataset, eval set, registry 규칙, shadow report 포맷이 모두 존재한다.
 - 따라서 **실측 데이터 없는 상태에서 AI 준비 구축과 MLOps 기반 설계는 완료**로 판정한다.
 - 다음 단계의 중심은 문서 설계가 아니라 `ds_v3/prompt_v3` 실패 케이스 보강, `offline runner 구현`, `policy JSON 작성`, `고정 회귀 리포트와 정책 데이터 확장`이다.
+- 다만 `24건` eval만으로는 challenger 승격과 제품화 판단을 하기 어렵다고 재판정했고, 현재는 `core24`를 유지하면서 `extended120` 최소 / `extended160` 권장 benchmark로 확장하는 계획을 우선 반영한다.
+- 현재 in-flight fine-tuning job은 `ds_v10 / prompt_v8` (`ftjob-LXWpGudJCeyqsH7WMorGHAT2`)이며, 최근 sync 기준 상태는 `queued`다.
+- `ds_v10` 이후에는 `extended120` 게이트를 넘기기 전까지 새 fine-tuning submit을 기본적으로 중지한다.
 
 ## 개정 개발 순서
 
@@ -56,6 +59,7 @@
 - RAG 지식베이스 설계: 문서 chunking, 메타데이터, vector store, citation 저장 구조
 - 파인튜닝 데이터 설계: 상태 해석, 행동 추천, 금지 행동, 실패 대응, follow_up, confidence
 - 평가셋 구축: JSON 형식 준수, 금지 행동 차단, 근거 문서 반영률, 보수적 응답, hallucination
+- 평가셋 운영 원칙: 현재 `24건`은 core regression set으로 동결하고, 승격/제품화는 `extended120/160` benchmark에서 판단
 - 모델/프롬프트 버전 관리: prompt version, model version, dataset version, eval version
 - 의사결정 시뮬레이터: 실제 온실 없이도 센서 상태 JSON을 넣고 LLM 판단을 검증하는 offline runner
 
@@ -118,6 +122,15 @@
 9. 모델 평가: 기존 champion 모델과 후보 모델 비교
 10. 승인 후 배포: shadow mode에서 검증 후 제한 적용
 
+이 단계에서 model 승격과 추가 fine-tuning 재개는 아래 게이트를 먼저 통과해야 한다.
+
+- `python3 scripts/report_eval_set_coverage.py --enforce-minimums`
+- total eval rows `>= 120`
+- `forbidden_action >= 12`
+- `failure_response >= 12`
+- `edge_case >= 16`
+- `seasonal >= 16`
+
 ## 4. MLOps 루프
 
 MLOps는 다음 폐쇄 루프로 운영한다.
@@ -155,6 +168,8 @@ MLOps는 다음 폐쇄 루프로 운영한다.
 - 정책 엔진이 hard block과 approval 판단을 수행해야 한다.
 - 모델 변경은 eval 결과와 버전 기록 없이 운영에 반영하지 않는다.
 - AI 모델은 통합 제어 시스템 구현 후, shadow mode부터 연결한다.
+- `24건` core regression만으로 challenger를 승격하지 않는다.
+- `extended120` 미달 상태에서는 새 fine-tuning spend보다 eval 확장을 우선한다.
 
 ## 참고 근거
 

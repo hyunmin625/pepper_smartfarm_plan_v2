@@ -12,10 +12,11 @@
 2. `AI_MLOPS_PLAN.md`: 온실 공사 중 선행할 AI 모델 준비와 MLOps 흐름
 3. `EXPERT_AI_AGENT_PLAN.md`: 적고추 재배 전주기 전문가 AI Agent 구축 단계
 4. `PLAN.md`: 전체 시스템 목표, 아키텍처, 안전 원칙
-5. `schedule.md`: 개정 실행 순서와 8주 일정
-6. `todo.md`: 세부 작업 체크리스트
-7. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-8. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+5. `docs/eval_scaleup_plan.md`: `core24 + extended120/160` 평가 확장 계획
+6. `schedule.md`: 개정 실행 순서와 8주 일정
+7. `todo.md`: 세부 작업 체크리스트
+8. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+9. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -43,6 +44,7 @@
 - 학습 seed 중복/모순 감사 자동화 완료: `164개` sample 기준 duplicate `0`, contradiction `0`
 - 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
 - 학습/eval 합본 생성과 통계 리포트 완료: training `164건`, eval `24건`, class imbalance/action_type/길이 분포 확인, longest sample 수동 검토 완료
+- 현재 eval `24건`은 fine-tuning 승격과 제품화 판단에 부족하다고 판정했고, `core24`는 회귀셋으로 유지한 채 `extended120` 최소 / `extended160` 권장 기준으로 확대하는 계획을 시작했다.
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
 - 최신 fine-tuned model 확보 완료: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`
@@ -51,6 +53,7 @@
 - 다음 라운드용 `batch5/prompt_v4` draft 준비 완료: 남은 8개 실패 케이스를 반영해 seed를 `164건`으로 확장했고, OpenAI SFT draft 파일은 train `150`, validation `14`로 생성·검증을 마쳤다.
 - 새 challenger submit 완료: `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` (`ds_v4/prompt_v4`, `pepper-ops-sft-v1.3.0`)는 현재 `validating_files` 상태다.
 - edge case/계절별 평가셋 추가 완료: eval 파일 `7종`, eval row `24건`
+- `scripts/report_eval_set_coverage.py` 추가: 현재 eval 분포(`8/2/2/2/2/4/4`)와 `120/160` 목표 대비 부족분을 즉시 확인 가능
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료

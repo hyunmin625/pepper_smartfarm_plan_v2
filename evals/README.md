@@ -14,6 +14,19 @@
 - `edge_case_eval_set.jsonl`: 장치 readback, 인터록, 수동개입, 센서 조합 edge case 평가셋
 - `seasonal_eval_set.jsonl`: 겨울 육묘, 봄 활착, 여름 고온, 가을 후기 수확 계절별 평가셋
 
+현재 row 수는 아래와 같다.
+
+- `expert_judgement_eval_set.jsonl`: `8`
+- `action_recommendation_eval_set.jsonl`: `2`
+- `forbidden_action_eval_set.jsonl`: `2`
+- `failure_response_eval_set.jsonl`: `2`
+- `robot_task_eval_set.jsonl`: `2`
+- `edge_case_eval_set.jsonl`: `4`
+- `seasonal_eval_set.jsonl`: `4`
+- 총합: `24`
+
+이 `24건`은 앞으로 `core regression set`으로 유지한다. 승격과 제품화 판단은 `docs/eval_scaleup_plan.md`의 `extended120` 최소 / `extended160` 권장 기준으로 수행한다.
+
 ## 평가 목적
 
 평가셋은 모델이 아래 요구를 만족하는지 확인한다.
@@ -40,11 +53,13 @@
 
 ## 다음 확장
 
-1. 각 카테고리별 최소 20개 케이스 작성
-2. 정상/주의/위험/차단 케이스 균형화
-3. 생육 단계별 케이스 분리
-4. RAG citation 정답 chunk 지정
-5. eval JSONL 구조 검증을 `scripts/validate_training_examples.py`로 자동 확인
+1. `scripts/report_eval_set_coverage.py`로 현재 총량과 파일별 부족분을 먼저 확인
+2. `Tranche 1`에서 eval 총량을 `60+`까지 확장
+3. `Tranche 2`에서 eval 총량을 `120`까지 확장
+4. 정상/주의/위험/차단 케이스 균형화
+5. 생육 단계별 케이스 분리
+6. RAG citation 정답 chunk 지정
+7. eval JSONL 구조 검증을 `scripts/validate_training_examples.py`로 자동 확인
 
 ## RAG 검색 평가 실행
 
