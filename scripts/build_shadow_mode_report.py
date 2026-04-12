@@ -102,7 +102,11 @@ def build_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "zone_id": row.get("zone_id"),
                 "critical_disagreement": bool(row.get("critical_disagreement")),
                 "ai_action_types_after": row.get("ai_action_types_after", []),
+                "ai_decision_after": row.get("ai_decision_after"),
+                "ai_blocked_action_type_after": row.get("ai_blocked_action_type_after"),
                 "operator_action_types": row.get("operator_action_types", []),
+                "operator_decision": row.get("operator_decision"),
+                "operator_blocked_action_type": row.get("operator_blocked_action_type"),
                 "validator_reason_codes": row.get("validator_reason_codes", []),
             }
             for row in top_disagreements
@@ -149,10 +153,22 @@ def render_markdown(summary: dict[str, Any]) -> str:
 
     if summary["top_disagreements"]:
         for item in summary["top_disagreements"]:
+            decision_suffix = ""
+            if item.get("ai_decision_after") or item.get("operator_decision"):
+                decision_suffix = (
+                    f" ai_decision={item.get('ai_decision_after')}"
+                    f" operator_decision={item.get('operator_decision')}"
+                )
+            blocked_suffix = ""
+            if item.get("ai_blocked_action_type_after") or item.get("operator_blocked_action_type"):
+                blocked_suffix = (
+                    f" ai_blocked={item.get('ai_blocked_action_type_after')}"
+                    f" operator_blocked={item.get('operator_blocked_action_type')}"
+                )
             lines.append(
                 f"- `{item['request_id']}` `{item['task_type']}` critical={item['critical_disagreement']}"
                 f" ai={item['ai_action_types_after']} operator={item['operator_action_types']}"
-                f" validator={item['validator_reason_codes']}"
+                f"{decision_suffix}{blocked_suffix} validator={item['validator_reason_codes']}"
             )
     else:
         lines.append("- 없음")

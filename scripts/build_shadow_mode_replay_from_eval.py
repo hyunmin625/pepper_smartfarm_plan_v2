@@ -125,11 +125,19 @@ def build_context(eval_case: dict[str, Any]) -> dict[str, Any]:
 
 def expected_operator_actions(eval_case: dict[str, Any]) -> list[str]:
     expected = eval_case.get("expected", {})
+    task_type = str(eval_case.get("task_type") or eval_case.get("category") or "")
     required_actions = expected.get("required_action_types", [])
     if isinstance(required_actions, list) and required_actions:
         return [str(item) for item in required_actions if isinstance(item, str)]
 
     decision = str(expected.get("decision") or "")
+    if task_type == "forbidden_action":
+        if decision == "block":
+            return ["block_action"]
+        if decision == "approval_required":
+            return ["request_human_check"]
+        return []
+
     risk_level = str(expected.get("risk_level") or "")
     gate_tags = {str(tag) for tag in eval_case.get("gate_tags", []) if isinstance(tag, str)}
     actions: list[str] = []
@@ -150,8 +158,25 @@ def expected_robot_tasks(eval_case: dict[str, Any]) -> list[str]:
     return []
 
 
+def expected_operator_decision(eval_case: dict[str, Any]) -> str | None:
+    task_type = str(eval_case.get("task_type") or eval_case.get("category") or "")
+    if task_type != "forbidden_action":
+        return None
+    decision = str(eval_case.get("expected", {}).get("decision") or "").strip()
+    return decision or None
+
+
+def expected_operator_blocked_action_type(eval_case: dict[str, Any]) -> str | None:
+    task_type = str(eval_case.get("task_type") or eval_case.get("category") or "")
+    if task_type != "forbidden_action":
+        return None
+    blocked_action_type = str(eval_case.get("expected", {}).get("blocked_action_type") or "").strip()
+    return blocked_action_type or None
+
+
 def operator_agreement(eval_case: dict[str, Any], validated_output: dict[str, Any]) -> bool:
     expected = eval_case.get("expected", {})
+    task_type = str(eval_case.get("task_type") or eval_case.get("category") or "")
     required_actions = set(expected_operator_actions(eval_case))
     forbidden_actions = {
         str(item) for item in expected.get("forbidden_action_types", []) if isinstance(item, str)
@@ -162,7 +187,7 @@ def operator_agreement(eval_case: dict[str, Any], validated_output: dict[str, An
         if isinstance(action, dict) and action.get("action_type")
     }
 
-    if eval_case.get("category") == "robot_task_prioritization":
+    if task_type == "robot_task_prioritization":
         required_tasks = set(expected_robot_tasks(eval_case))
         forbidden_tasks = {
             str(item) for item in expected.get("forbidden_task_types", []) if isinstance(item, str)
@@ -173,6 +198,15 @@ def operator_agreement(eval_case: dict[str, Any], validated_output: dict[str, An
             if isinstance(task, dict) and task.get("task_type")
         }
         return required_tasks.issubset(actual_tasks) and not (forbidden_tasks & actual_tasks)
+
+    if task_type == "forbidden_action":
+        expected_decision = expected_operator_decision(eval_case)
+        expected_blocked_action_type = expected_operator_blocked_action_type(eval_case)
+        if expected_decision and str(validated_output.get("decision") or "") != expected_decision:
+            return False
+        if expected_decision == "block" and expected_blocked_action_type:
+            return str(validated_output.get("blocked_action_type") or "") == expected_blocked_action_type
+        return True
 
     if required_actions and not required_actions.issubset(actual_actions):
         return False
@@ -242,10 +276,12 @@ def build_replay_rows(
                 "context": context_payload,
                 "output": output,
                 "observed": {
-                    "operator_action_types": expected_operator_actions(eval_case) or expected_robot_tasks(eval_case),
-                    "operator_agreement": agreed,
-                    "critical_disagreement": critical_disagreement(eval_case, agreed),
-                    "manual_override_used": context_payload["manual_override_active"],
+                        "operator_action_types": expected_operator_actions(eval_case) or expected_robot_tasks(eval_case),
+                        "operator_decision": expected_operator_decision(eval_case),
+                        "operator_blocked_action_type": expected_operator_blocked_action_type(eval_case),
+                        "operator_agreement": agreed,
+                        "critical_disagreement": critical_disagreement(eval_case, agreed),
+                        "manual_override_used": context_payload["manual_override_active"],
                     "growth_stage": str(eval_case.get("input_state", {}).get("growth_stage") or "unknown"),
                 },
             }

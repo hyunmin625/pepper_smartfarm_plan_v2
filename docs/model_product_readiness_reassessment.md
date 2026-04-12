@@ -10,7 +10,7 @@
 - raw blind50 gate는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, validator blind50 gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`이지만 둘 다 `promotion_decision=hold`다.
 - `ds_v11`는 기존 baseline `ds_v9`보다 모든 frozen gate에서 개선됐다. 하지만 `blind_holdout50 validator 0.9 < 0.95`와 `shadow_mode_status=not_run` 때문에 제품 수준 주장은 여전히 불가하다.
 - validator 적용 후 잔여 실패는 `blind_holdout50 5건`, `extended200 42건`이다. owner 기준으로 blind50은 `data_and_model 3`, `risk_rubric_and_data 2`, extended200은 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`다.
-- blind50 기준 offline shadow replay도 추가로 만들었다. 결과는 `decision_count 50`, `operator_agreement_rate 0.8`, `critical_disagreement_count 1`, `promotion_decision rollback`이다.
+- blind50 기준 offline shadow replay도 추가로 만들었다. 초기에는 `forbidden_action`을 일반 action처럼 비교해 `operator_agreement_rate 0.8`, `critical_disagreement_count 1`, `promotion_decision rollback`이었지만, `forbidden_action = decision + blocked_action_type` 계약으로 정렬하고 runtime validator에 `HSV-09`를 넣은 뒤 현재 기준선은 `operator_agreement_rate 0.88`, `critical_disagreement_count 0`, `promotion_decision hold`다.
 - 이 replay는 `real field shadow mode`를 대체하지 않는다. 다만 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 실제 shadow 형식으로 압축해 다음 batch 우선순위를 잡는 데는 유효하다.
 - 따라서 현재 결론은 `다음 submit`이 아니라 `shadow mode`, `risk rubric/data 경계 수정`, `required_action_types` 보강, 그 다음에야 batch16 + oversampling challenger 검토다.
 

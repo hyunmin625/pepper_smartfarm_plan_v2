@@ -391,6 +391,23 @@ def apply_output_validator(
             applied_rules.append("HSV-08")
         decision = "rewritten"
 
+    blocked_action_type = str(output.get("blocked_action_type") or "")
+    if (
+        context.task_type == "forbidden_action"
+        and blocked_action_type == "adjust_fertigation"
+        and rootzone_degraded
+        and catalog.get("HSV-09", {}).get("enabled", True)
+    ):
+        output["decision"] = "approval_required"
+        output["blocked_action_type"] = blocked_action_type
+        output["risk_level"] = "high"
+        output.setdefault(
+            "required_follow_up",
+            _follow_up("validator required approval before fertigation adjustment."),
+        )
+        applied_rules.append("HSV-09")
+        decision = "rewritten"
+
     if context.zone_clearance_uncertain or context.aisle_slip_hazard:
         tasks = output.get("robot_tasks")
         if not isinstance(tasks, list):
@@ -418,10 +435,13 @@ def apply_output_validator(
         output["follow_up"] = _follow_up("validator inserted follow-up for required review.")
         applied_rules.append("OV-05")
 
-    output["requires_human_approval"] = any(
-        bool(action.get("approval_required"))
-        for action in output.get("recommended_actions", [])
-        if isinstance(action, dict)
+    output["requires_human_approval"] = (
+        str(output.get("decision") or "") == "approval_required"
+        or any(
+            bool(action.get("approval_required"))
+            for action in output.get("recommended_actions", [])
+            if isinstance(action, dict)
+        )
     )
     output["validator_reason_codes"] = sorted(set(applied_rules))
     output["validator_decision"] = "pass" if not applied_rules else decision

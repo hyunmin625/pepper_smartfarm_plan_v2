@@ -83,6 +83,8 @@ class ShadowModeMetadata:
 class ShadowModeObservedOutcome:
     operator_action_types: list[str]
     operator_agreement: bool | None = None
+    operator_decision: str | None = None
+    operator_blocked_action_type: str | None = None
     critical_disagreement: bool = False
     manual_override_used: bool = False
     growth_stage: str = "unknown"
@@ -98,6 +100,8 @@ class ShadowModeObservedOutcome:
         return cls(
             operator_action_types=operator_action_types,
             operator_agreement=operator_agreement_raw if isinstance(operator_agreement_raw, bool) else None,
+            operator_decision=str(raw.get("operator_decision") or "").strip() or None,
+            operator_blocked_action_type=str(raw.get("operator_blocked_action_type") or "").strip() or None,
             critical_disagreement=bool(raw.get("critical_disagreement")),
             manual_override_used=bool(raw.get("manual_override_used")),
             growth_stage=str(raw.get("growth_stage") or "unknown"),
@@ -124,7 +128,11 @@ class ShadowModeAuditRecord:
     validator_reason_codes: list[str]
     ai_action_types_before: list[str]
     ai_action_types_after: list[str]
+    ai_decision_after: str | None
+    ai_blocked_action_type_after: str | None
     operator_action_types: list[str]
+    operator_decision: str | None
+    operator_blocked_action_type: str | None
     operator_agreement: bool
     critical_disagreement: bool
     manual_override_used: bool
@@ -152,7 +160,11 @@ class ShadowModeAuditRecord:
             "validator_reason_codes": self.validator_reason_codes,
             "ai_action_types_before": self.ai_action_types_before,
             "ai_action_types_after": self.ai_action_types_after,
+            "ai_decision_after": self.ai_decision_after,
+            "ai_blocked_action_type_after": self.ai_blocked_action_type_after,
             "operator_action_types": self.operator_action_types,
+            "operator_decision": self.operator_decision,
+            "operator_blocked_action_type": self.operator_blocked_action_type,
             "operator_agreement": self.operator_agreement,
             "critical_disagreement": self.critical_disagreement,
             "manual_override_used": self.manual_override_used,
@@ -172,7 +184,14 @@ def _shadow_audit_path() -> Path:
     return Path(configured) if configured else DEFAULT_SHADOW_AUDIT_PATH
 
 
-def _action_types(payload: dict[str, Any]) -> list[str]:
+def _action_types(task_type: str, payload: dict[str, Any]) -> list[str]:
+    if task_type == "forbidden_action":
+        decision = str(payload.get("decision") or "")
+        if decision == "block":
+            return ["block_action"]
+        if decision == "approval_required":
+            return ["request_human_check"]
+        return []
     return [
         str(action.get("action_type"))
         for action in payload.get("recommended_actions", [])
@@ -201,9 +220,20 @@ def _retrieval_hit(payload: dict[str, Any]) -> bool:
     return coverage in {"sufficient", "partial"}
 
 
-def _operator_agreement(ai_action_types: list[str], observed: ShadowModeObservedOutcome) -> bool:
+def _operator_agreement(
+    task_type: str,
+    payload: dict[str, Any],
+    ai_action_types: list[str],
+    observed: ShadowModeObservedOutcome,
+) -> bool:
     if observed.operator_agreement is not None:
         return observed.operator_agreement
+    if task_type == "forbidden_action" and observed.operator_decision:
+        if str(payload.get("decision") or "") != observed.operator_decision:
+            return False
+        if observed.operator_decision == "block" and observed.operator_blocked_action_type:
+            return str(payload.get("blocked_action_type") or "") == observed.operator_blocked_action_type
+        return True
     return sorted(ai_action_types) == sorted(observed.operator_action_types)
 
 
@@ -248,8 +278,8 @@ def run_output_validator(envelope: LLMDecisionEnvelope) -> tuple[dict[str, Any],
         validator_reason_codes=result.applied_rules,
         risk_level_before=before.get("risk_level"),
         risk_level_after=result.output.get("risk_level"),
-        action_types_before=_action_types(before),
-        action_types_after=_action_types(result.output),
+        action_types_before=_action_types(envelope.task_type, before),
+        action_types_after=_action_types(envelope.task_type, result.output),
         created_at=datetime.now(UTC).isoformat(),
     )
     audit_path = _write_audit(audit)
@@ -262,7 +292,7 @@ def run_shadow_mode_capture(
     observed: ShadowModeObservedOutcome,
 ) -> tuple[dict[str, Any], ValidationAuditRecord, ShadowModeAuditRecord, Path]:
     validated_output, validator_audit, _ = run_output_validator(envelope)
-    ai_action_types_after = _action_types(validated_output)
+    ai_action_types_after = _action_types(envelope.task_type, validated_output)
     shadow_record = ShadowModeAuditRecord(
         request_id=envelope.request_id,
         model_id=metadata.model_id,
@@ -282,8 +312,12 @@ def run_shadow_mode_capture(
         validator_reason_codes=validator_audit.validator_reason_codes,
         ai_action_types_before=validator_audit.action_types_before,
         ai_action_types_after=ai_action_types_after,
+        ai_decision_after=str(validated_output.get("decision") or "").strip() or None,
+        ai_blocked_action_type_after=str(validated_output.get("blocked_action_type") or "").strip() or None,
         operator_action_types=observed.operator_action_types,
-        operator_agreement=_operator_agreement(ai_action_types_after, observed),
+        operator_decision=observed.operator_decision,
+        operator_blocked_action_type=observed.operator_blocked_action_type,
+        operator_agreement=_operator_agreement(envelope.task_type, validated_output, ai_action_types_after, observed),
         critical_disagreement=observed.critical_disagreement,
         manual_override_used=observed.manual_override_used,
         blocked_action_recommendation_count=_blocked_action_recommendation_count(ai_action_types_after),

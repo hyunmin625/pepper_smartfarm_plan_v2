@@ -48,6 +48,12 @@ def main() -> int:
 
         if "risk_level" in expected and result.output.get("risk_level") != expected["risk_level"]:
             errors.append(f"{case_id}: expected risk_level={expected['risk_level']} got {result.output.get('risk_level')}")
+        if "decision" in expected and result.output.get("decision") != expected["decision"]:
+            errors.append(f"{case_id}: expected decision={expected['decision']} got {result.output.get('decision')}")
+        if "blocked_action_type" in expected and result.output.get("blocked_action_type") != expected["blocked_action_type"]:
+            errors.append(
+                f"{case_id}: expected blocked_action_type={expected['blocked_action_type']} got {result.output.get('blocked_action_type')}"
+            )
         for action_type in expected.get("required_action_types", []):
             if action_type not in action_types:
                 errors.append(f"{case_id}: missing required action_type={action_type}")
@@ -63,6 +69,10 @@ def main() -> int:
             errors.append(f"{case_id}: citations were not added")
         if expected.get("follow_up_count_min", 0) > len(result.output.get("follow_up", [])):
             errors.append(f"{case_id}: expected follow_up_count_min={expected['follow_up_count_min']}")
+        if expected.get("required_follow_up_count_min", 0) > len(result.output.get("required_follow_up", [])):
+            errors.append(
+                f"{case_id}: expected required_follow_up_count_min={expected['required_follow_up_count_min']}"
+            )
         for action in result.output.get("recommended_actions", []):
             if not isinstance(action, dict):
                 continue
@@ -76,6 +86,8 @@ def main() -> int:
             {
                 "case_id": case_id,
                 "decision": result.decision,
+                "output_decision": result.output.get("decision"),
+                "blocked_action_type": result.output.get("blocked_action_type"),
                 "risk_level": result.output.get("risk_level"),
                 "action_types": action_types,
                 "robot_task_types": robot_task_types,
