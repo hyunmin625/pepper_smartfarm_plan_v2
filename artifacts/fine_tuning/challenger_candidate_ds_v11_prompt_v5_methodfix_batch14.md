@@ -40,14 +40,36 @@
 - dry_run_status: `prepared`
 - submit_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`
 - job_id: `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`
-- current_status: `queued`
+- current_status: `succeeded`
 - events_path: `artifacts/fine_tuning/events/ftjob-dTfcY631bh5HJJKJnI5Xi0ML.jsonl`
+- fine_tuned_model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`
+
+## Frozen Gate Result
+
+- `core24`: `0.9167`
+- `extended120`: `0.7667`
+- `extended160`: `0.75`
+- `extended200`: `0.7`
+- `blind_holdout50 raw`: `0.7`
+- `blind_holdout50 validator`: `0.9`
+- `product_readiness_gate_raw`: `hold`
+- `product_readiness_gate_validator_applied`: `hold`
+
+## Residual Summary
+
+- `extended200` validator 잔여 실패: `42건`
+  - `risk_rubric_and_data 34`
+  - `data_and_model 13`
+  - `robot_contract_and_model 2`
+- `blind_holdout50` validator 잔여 실패: `5건`
+  - `data_and_model 3`
+  - `risk_rubric_and_data 2`
 
 ## Why This Candidate Only
 
-- `ds_v9/prompt_v5_methodfix`는 raw `extended200 0.51`, `blind_holdout50 0.32`다.
-- validator 적용 후에도 `blind_holdout50 0.76`이라 제품 승격과는 거리가 있다.
-- 따라서 다음 제출은 broad prompt 변경이 아니라 batch14 residual `12건` 반영 여부를 확인하는 `한 번의 dataset challenger`로 제한한다.
+- `ds_v11`는 `ds_v9` baseline을 모든 frozen gate에서 넘겼다.
+- 다만 validator 적용 후에도 `blind_holdout50 0.9 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격과는 거리가 있다.
+- 따라서 다음 제출은 자동으로 열지 않는다. shadow mode와 residual `5/42` 축소 근거가 생길 때만 후속 challenger를 검토한다.
 
 ## Submit Preconditions
 
@@ -59,5 +81,5 @@
    - `blind_holdout50`
    - `product_readiness_gate_raw`
    - `product_readiness_gate_validator_applied`
-2. blind50 validator 기준선 `0.76`을 넘기지 못하면 후속 submit 금지
+2. blind50 validator 기준선 `0.9`를 넘기지 못하면 후속 submit 금지
 3. shadow mode 없이 제품 승격 주장 금지

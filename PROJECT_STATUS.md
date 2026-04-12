@@ -13,13 +13,16 @@
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
 - 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로만 유지한다.
 - `extended200`과 blind holdout `50` frozen coverage를 확보했다. 현재 분포는 `expert 60 / action 28 / forbidden 20 / failure 24 / robot 16 / edge 28 / seasonal 24`, blind holdout은 `50건`이다.
-- `ds_v9` `extended200` 실패군 재분류 결과 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였다.
-- `scripts/simulate_policy_output_validator.py`로 offline validator 시뮬레이터를 구현했고, `ds_v9` 기준 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선 효과를 확인했다.
+- `ds_v11/prompt_v5_methodfix_batch14` run `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`은 `succeeded`로 종료됐고 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`다.
+- `ds_v11` frozen gate 재평가 완료: `core24 0.9167`, `extended120 0.7667`, `extended160 0.75`, `extended200 0.7`, `blind_holdout50 raw 0.7`, `blind_holdout50 validator 0.9`, `strict_json_rate 1.0`이다.
+- `ds_v11` raw gate는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, validator gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `shadow_mode_status=not_run`으로 모두 `hold`다.
+- `ds_v11`는 이전 baseline `ds_v9`보다 모든 frozen gate에서 개선됐지만, blind50 validator `0.9 < 0.95`와 shadow mode 미실행 때문에 아직 제품 수준은 아니다.
+- `scripts/report_eval_failure_clusters.py`와 `scripts/report_validator_residual_failures.py` 기준 `ds_v11`의 extended200 잔여 실패는 `42건`, blind50 validator 잔여 실패는 `5건`이다.
+- 현재 남은 중심 owner는 extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`, blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
-- validator 적용 후 blind50 gate 결과는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`이지만, `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`다.
-- blind50 validator 적용 후에도 실패 `12건`이 남는다. 즉 hard safety 외부화는 완료됐지만 제품 수준 일반화는 아직 아니다.
-- `scripts/report_validator_residual_failures.py` 기준 blind50 validator 잔여 `12건`은 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉜다.
+- 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
+- 같은 historical baseline `ds_v9` 기준 blind50 validator 잔여 실패는 `12건`이었고, 이는 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉘었다.
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 training slice로 직접 역투영했다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 `training_sample_files()`를 직접 읽는다.
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 reject한다.
@@ -27,7 +30,7 @@
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
 - `scripts/build_openai_sft_datasets.py`는 이제 `--oversample-task-type task_type=factor`를 지원한다. next-only dry-run 기준 권장 가중치를 적용하면 train `803`, validation `57`, SFT format error `0`이다.
-- 다음 challenger `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 1회만 실제 submit했다. 현재 run은 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `queued`, train `238`, validation `50`이다.
+- `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 이미 완료 평가까지 끝났다. train `238`, validation `50`, 결과 model `DTryNJg3`, frozen gate 기준 새 comparison baseline으로 고정한다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`로 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 자동 집계할 수 있다.
 
 ## 핵심 시스템 방향
@@ -278,14 +281,15 @@
 
 ## 다음 우선순위
 
-1. `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`가 끝나면 frozen gate(`core24 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 즉시 재평가한다.
+1. `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2` 결과를 새 frozen baseline으로 유지하고, 후속 challenger는 같은 gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)에서만 비교한다.
 2. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
 3. 다음 dataset split 기본값은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다. 현재 추천 split은 train `238`, validation `50`이다.
 4. 사용자 요구 보강은 완료했다: `safety_policy 56`, `sensor_fault 28`, `robot_task_prioritization 50`, `failure_response 50`
 5. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, execution-gateway hard guard와 state-estimator MVP도 추가됐다.
-6. blind50 validator 적용 후 남는 `12건`이 `ds_v11`에서 실제로 줄어드는지 먼저 본다.
-7. shadow mode 로그를 실제 운영 시나리오 형식으로 쌓고 `operator_agreement_rate`, `critical_disagreement_count`를 본다.
-8. `ds_v11`가 잔여 실패를 충분히 줄이지 못할 때만 `docs/hard_case_oversampling_plan.md` 기준 next-only oversampling challenger를 검토한다.
+6. blind50 validator 잔여 `5건`을 먼저 줄인다. 대상은 `blind-action-004`, `blind-expert-001`, `blind-expert-003`, `blind-expert-010`, `blind-robot-004`다.
+7. extended200 validator 잔여 `42건`을 `risk_rubric_and_data`, `required_action_types`, `robot contract` 기준으로 다시 줄인다.
+8. shadow mode 로그를 실제 운영 시나리오 형식으로 쌓고 `operator_agreement_rate`, `critical_disagreement_count`를 본다.
+9. shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + next-only oversampling challenger는 그 다음에만 검토한다.
 
 ## 주의할 점
 

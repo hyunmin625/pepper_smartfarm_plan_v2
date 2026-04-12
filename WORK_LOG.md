@@ -4,6 +4,18 @@
 
 ## 2026-04-13
 
+### ds_v11 완료, frozen gate 재평가, 새 baseline 고정
+- `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`로 run 상태를 다시 동기화했고 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`은 `succeeded`로 종료됐다.
+- 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`다.
+- 같은 frozen gate로 raw 재평가를 다시 실행했다. 결과는 `core24 0.9167`, `extended120 0.7667`, `extended160 0.75`, `extended200 0.7`, `blind_holdout50 0.7`, `strict_json_rate 1.0`이다.
+- blind50 raw 제품화 게이트는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, `promotion_decision=hold`였다.
+- validator 적용 후 blind50은 `0.9`, extended200은 `0.79`까지 올라갔고, validator-applied gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `promotion_decision=hold`였다.
+- `python3 scripts/report_eval_failure_clusters.py --report artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_extended200.json --output-prefix artifacts/reports/eval_failure_clusters_ds_v11_prompt_v5_methodfix_batch14_extended200 --base-case-count 160` 결과 extended200 실패 `60건`, validator 우선 실패 `12건`, new tranche 실패 `13건`이었다.
+- 같은 스크립트로 blind50을 재분류한 결과 실패 `15건`, validator 우선 실패 `7건`이었다.
+- `python3 scripts/report_validator_residual_failures.py --raw-report artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_extended200.json --validator-report artifacts/reports/policy_output_validator_simulation_ds_v11_prompt_v5_methodfix_batch14_extended200.json --output-prefix artifacts/reports/validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_extended200` 결과 extended200 validator 잔여 `42건`은 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`로 재분류됐다.
+- `python3 scripts/report_validator_residual_failures.py --raw-report artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.json --validator-report artifacts/reports/policy_output_validator_simulation_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.json --gate-report artifacts/reports/product_readiness_gate_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50_validator_applied.json --output-prefix artifacts/reports/validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50` 결과 blind50 validator 잔여 `5건`은 `data_and_model 3`, `risk_rubric_and_data 2`였다.
+- 결론은 명확하다. `ds_v11`는 `ds_v9`를 모든 frozen gate에서 넘었고 새 comparison baseline이 됐지만, 아직 `blind50 validator 0.9 < 0.95`와 `shadow_mode_status=not_run` 때문에 제품 승격은 아니다.
+
 ### batch16 safety reinforcement 30건 추가
 - evaluator 지적을 직접 반영해 `scripts/generate_batch16_safety_reinforcement.py`를 추가하고 safety reinforcement sample `30건`을 생성했다.
 - 구성은 `worker_present 10건`, `manual_override/safe_mode 10건`, `critical readback/communication loss 10건`이다.
@@ -11,7 +23,7 @@
 - `critical readback/communication loss` 케이스는 모두 `risk_level=critical`, `enter_safe_mode + request_human_check`로 고정했다.
 - `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_risk_slice_coverage.py`, `python3 scripts/report_training_sample_stats.py`를 다시 실행해 sample `328`, duplicate `0`, contradiction `0`, eval overlap `0`, training rule failure `none`을 확인했다.
 - 현재 training slice는 `safety_hard_block 54`, `failure_safe_mode 30`까지 올라갔고, action 분포는 `block_action 55`, `enter_safe_mode 30`으로 강화됐다.
-- 이 배치는 현재 `queued`인 `ds_v11`에는 소급 적용하지 않는다. `ds_v11` 평가가 충분하지 않을 때만 후속 challenger용 보강분으로 사용한다.
+- 이 배치는 완료된 `ds_v11`에도 소급 적용하지 않는다. shadow mode와 residual 분석 뒤 후속 challenger가 정당화될 때만 사용한다.
 
 ### hard-coded safety interlock, state-estimator MVP, batch15 hard-case 준비
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`가 active면 LLM 출력과 무관하게 `pause_automation` 외 장치 명령을 reject한다.
@@ -22,14 +34,14 @@
 - `python3 scripts/report_risk_slice_coverage.py` 기준 현재 training slice는 `safety_hard_block 34`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 20`, `robot_contract 50`, `gt_master_dryback_high 6`, `nursery_cold_humid_high 3`이며 rule failure는 `none`이다.
 - `python3 scripts/report_training_sample_stats.py` 기준 sample `298건`, class imbalance ratio `12.50`, action 분포는 `request_human_check 143`, `create_alert 101`, `pause_automation 48`, `block_action 35`, `enter_safe_mode 20`이다.
 - `scripts/build_openai_sft_datasets.py`에 `--oversample-task-type task_type=factor`를 추가했다. batch16 반영 후 next-only dry-run에서 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`을 적용하면 train `803`, validation `57`, `python3 scripts/validate_openai_sft_dataset.py /tmp/openai_sft_train_hardcase_v2.jsonl /tmp/openai_sft_validation_hardcase_v2.jsonl` 기준 format error `0`이다.
-- 결론은 명확하다. hard safety는 execution-gateway와 state-estimator에서 더 결정론적으로 처리하고, batch15 + train-only oversampling은 현재 `queued`인 `ds_v11` 평가가 끝난 뒤 필요할 때만 후속 challenger에 적용한다.
+- 결론은 명확하다. hard safety는 execution-gateway와 state-estimator에서 더 결정론적으로 처리하고, batch15 + train-only oversampling은 완료된 `ds_v11`의 shadow mode와 residual 결과를 본 뒤 필요할 때만 후속 challenger에 적용한다.
 
 ### ds_v11 / prompt_v5_methodfix_batch14 실제 제출 시작
 - `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline`, `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`를 다시 실행했고 모두 통과했다.
 - submit 직전 기준은 sample `288`, eval `250`, duplicate `0`, contradiction `0`, eval overlap `0`, `extended160` promotion baseline `pass`, SFT format error `0`이었다.
 - `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model gpt-4.1-mini-2025-04-14 --model-version pepper-ops-sft-v1.8.0 --dataset-version ds_v11 --prompt-version prompt_v5_methodfix_batch14 --eval-version eval_v2 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl --notes "batch14 residual fix with spread validation 50; single controlled submit"`로 실제 challenger를 한 번만 제출했다.
 - 제출 결과 experiment는 `ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407`, job id는 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`이다.
-- `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`를 다시 실행한 최신 sync 기준 현재 상태는 `queued`, events 경로는 `artifacts/fine_tuning/events/ftjob-dTfcY631bh5HJJKJnI5Xi0ML.jsonl`이다.
+- 제출 시점 기록 기준 최신 sync 상태는 `queued`였고, 이후 완료 결과는 같은 날짜의 `ds_v11 완료, frozen gate 재평가` 항목에 반영했다.
 - 결론은 그대로다. 이 run이 batch14 residual `12건`을 frozen gate에서 실제로 줄이는지 먼저 확인하고, 평가가 끝나기 전에는 후속 submit을 만들지 않는다.
 
 ### batch14 challenger dry-run package 고정

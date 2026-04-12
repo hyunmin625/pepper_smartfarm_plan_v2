@@ -54,10 +54,12 @@
 - `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 현재 승격 baseline은 `extended160`이고, 최종 제품 주장 baseline은 `extended200 + blind_holdout50`이다.
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
-- 최신 champion model 유지: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
-- 최신 champion eval 완료: `core24` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
-- baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v5/prompt_v5 결과가 `+0.3333`, 직전 champion ds_v4/prompt_v4 `0.7917` 대비 `+0.0833` 개선됐다.
-- `ds_v9/prompt_v5_methodfix` 재평가 완료: `core24 0.875`, `extended120 0.7083`, `extended160 0.575`, `extended200 0.51`, `blind_holdout50 0.32`, `strict_json_rate 1.0`이다. frozen eval 총량을 제품 기준으로 올리자 일반화가 더 크게 무너졌고, 공식 승격은 계속 보류한다.
+- 최신 완료 challenger `ds_v11/prompt_v5_methodfix_batch14` 재평가 완료: `core24 0.9167`, `extended120 0.7667`, `extended160 0.75`, `extended200 0.7`, `blind_holdout50 raw 0.7`, `blind_holdout50 validator 0.9`, `strict_json_rate 1.0`이다.
+- 최신 완료 challenger model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`
+- `ds_v11`는 이전 baseline `ds_v9/prompt_v5_methodfix`보다 모든 frozen gate에서 개선됐다. 비교값은 `core24 0.875 -> 0.9167`, `extended120 0.7083 -> 0.7667`, `extended160 0.575 -> 0.75`, `extended200 0.51 -> 0.7`, `blind_holdout50 raw 0.32 -> 0.7`, `blind_holdout50 validator 0.76 -> 0.9`다.
+- 다만 `ds_v11`도 제품 승격은 아니다. raw gate는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, validator gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `shadow_mode_status=not_run`로 모두 `hold`다.
+- `ds_v11` validator 적용 후 잔여 실패는 blind50 `5건`, extended200 `42건`이다. 중심 owner는 blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`, extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`다.
+- `ds_v9/prompt_v5_methodfix`는 이제 frozen historical baseline으로 유지한다. raw `extended200 0.51`, `blind_holdout50 0.32`였고, validator 적용 후에도 `blind_holdout50 0.76`에 그쳤다.
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
 - `extended200` 실패군 재분류 완료: 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였고, 새 tranche 실패 `25건`은 `edge/seasonal`의 unseen generalization 문제를 더 선명하게 드러냈다.
 - `docs/policy_output_validator_spec.md`에 hard safety `10개`, approval/output contract `10개`를 고정했고, `scripts/simulate_policy_output_validator.py`로 오프라인 시뮬레이터도 구현했다.
@@ -72,7 +74,7 @@
 - `scripts/report_validator_residual_failures.py`로 blind50 validator 잔여 실패를 owner 기준으로 다시 분류했다. 현재 잔여 `12건`은 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`이다.
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 직접 학습 보강 대상으로 옮겼다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다. 새 batch 누락을 조용히 통과시키지 않도록 파이프라인을 고쳤다.
-- 다음 challenger `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 1회만 실제 submit했다. 현재 run은 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `queued`, train `238`, validation `50`이다.
+- `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2` run `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`는 `succeeded`로 종료됐다. training `238`, validation `50`이며 결과 model은 `DTryNJg3`다.
 - `batch15` hard-case `10건`과 batch16 safety reinforcement `30건`을 추가해 이후 challenger에서 `safety_policy/failure_response/sensor_fault/robot_task`를 train-only oversampling으로 증폭할 준비를 마쳤다. dry-run 기준 권장 가중치 적용 시 train `803`, validation `57`, SFT format error `0`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 shadow report 요약과 승격 판단(`promote / hold / rollback`)을 자동 생성할 수 있다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
@@ -94,7 +96,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 blind50 validator 적용 후 잔여 실패 `12건`이 challenger에서 실제로 줄어드는지 검증하는 일, shadow mode 로그 확보, 그리고 필요 시 `docs/hard_case_oversampling_plan.md` 기준 next-only oversampling을 적용하는 일이다.
+- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, shadow mode 로그 확보, 그리고 그 이후 batch16 + next-only oversampling challenger가 정당한지 판단하는 일이다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
@@ -262,9 +264,9 @@
 
 1. `docs/policy_output_validator_spec.md` 기준으로 validator 시뮬레이터를 붙여 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`이 실제로 얼마나 실패를 줄이는지 기록
 2. `policy-engine/policy_engine/output_validator.py`를 실제 LLM 출력 경로에 연결해 validator reason code와 decision을 runtime audit log로 남기기
-3. `ds_v9` 재평가 결과를 baseline으로 고정하고, 후속 challenger는 `core24 + extended160 + extended200 + blind_holdout50 + product gate` 조건으로만 비교
-4. blind50 validator 적용 후 남는 `12건`을 owner 기준으로 줄이기: `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`
-5. batch14 `12건`을 포함한 challenger를 같은 frozen gate로 한 번만 재검증
-5. 그 다음에만 다음 challenger 제출 여부를 결정
+3. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
+4. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
+5. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
+6. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + next-only oversampling challenger 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

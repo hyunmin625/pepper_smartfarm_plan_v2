@@ -69,7 +69,13 @@
 - [x] `scripts/build_openai_sft_datasets.py`, `scripts/report_risk_slice_coverage.py`가 stale `combined_training_samples.jsonl` 대신 현재 `training_sample_files()`를 직접 읽도록 보강
 - [x] batch14 기반 challenger draft 생성과 format 검증 (`artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`)
 - [x] 다음 submit용 dry-run manifest 생성 (`artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`)
-- [x] `ds_v11/prompt_v5_methodfix_batch14` 1회 실제 submit 시작 (`ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, latest status `queued`)
+- [x] `ds_v11/prompt_v5_methodfix_batch14` 1회 실제 submit 및 완료 (`ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `succeeded`)
+- [x] `ds_v11/prompt_v5_methodfix_batch14`를 frozen gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 재평가
+- [x] `ds_v11` residual failure 재분류: extended200 validator 잔여 `42건`, blind50 validator 잔여 `5건`
+- [ ] `ds_v11` shadow mode audit sample을 누적하고 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 실제 운영 로그 형식으로 검증
+- [ ] blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data / data_and_model` 기준 targeted fix 여부를 확정
+- [ ] extended200 validator 잔여 `42건` 중 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`의 우선순위 batch를 설계
+- [ ] batch16 + next-only oversampling challenger 제출 여부를 shadow mode와 residual 축소 결과 이후에만 결정
 - [x] execution-gateway hard-coded safety interlock 추가 (`execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
 - [x] state-estimator MVP 추가: `sensor_quality bad -> risk_level unknown` 기본 경로 구현 (`state-estimator/state_estimator/estimator.py`, `scripts/validate_state_estimator_mvp.py`)
 - [x] batch15 hard-case `10건` 추가와 next-only oversampling 규칙 고정 (`scripts/generate_batch15_hard_cases.py`, `docs/hard_case_oversampling_plan.md`)
@@ -276,7 +282,7 @@
 - [x] `prompt_v9` SFT draft(train `180`, validation `14`, eval overlap `0`) 생성
 - [x] 마지막 완료 모델 `ds_v9/prompt_v5_methodfix`를 `extended200 + blind_holdout50 + raw/validator gate` 기준으로 재평가
 - [x] batch14 residual 보강을 반영한 다음 challenger `ds_v11/prompt_v5_methodfix_batch14` dry-run package 준비
-- [ ] `ds_v11/prompt_v5_methodfix_batch14`를 frozen gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 재평가
+- [x] `ds_v11/prompt_v5_methodfix_batch14`를 frozen gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 재평가
 
 ## 2.6 RAG 지식베이스 구축 [완료]
 - [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)

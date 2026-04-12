@@ -1,0 +1,172 @@
+{
+  "schema_version": "validator_residual_report.v1",
+  "model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+  "source_raw_report": "",
+  "source_validator_report": "2026-04-12T17:04:04+00:00",
+  "total_cases": 50,
+  "raw_pass_rate": 0.7,
+  "validator_pass_rate": 0.9,
+  "recovered_cases": 10,
+  "remaining_failed_cases": 5,
+  "runtime_validator_gap_cases": 0,
+  "top_remaining_checks": [
+    [
+      "required_action_types_present",
+      3
+    ],
+    [
+      "forbidden_action_types_absent",
+      2
+    ],
+    [
+      "risk_level_match",
+      2
+    ]
+  ],
+  "remaining_by_category": [
+    [
+      "action_recommendation",
+      1
+    ],
+    [
+      "climate_risk",
+      1
+    ],
+    [
+      "nutrient_risk",
+      1
+    ],
+    [
+      "rootzone_diagnosis",
+      1
+    ],
+    [
+      "robot_task_prioritization",
+      1
+    ]
+  ],
+  "remaining_by_owner": [
+    {
+      "owner": "data_and_model",
+      "cases": 3,
+      "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
+    },
+    {
+      "owner": "risk_rubric_and_data",
+      "cases": 2,
+      "next_action": "risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다."
+    }
+  ],
+  "remaining_cases": [
+    {
+      "eval_id": "blind-action-004",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "forbidden_action_types_absent",
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-001",
+      "category": "climate_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-003",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-robot-004",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-010",
+      "category": "rootzone_diagnosis",
+      "failed_checks": [
+        "forbidden_action_types_absent",
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    }
+  ],
+  "owner_case_map": {
+    "data_and_model": [
+      {
+        "eval_id": "blind-action-004",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "forbidden_action_types_absent",
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-003",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-010",
+        "category": "rootzone_diagnosis",
+        "failed_checks": [
+          "forbidden_action_types_absent",
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      }
+    ],
+    "risk_rubric_and_data": [
+      {
+        "eval_id": "blind-expert-001",
+        "category": "climate_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-robot-004",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      }
+    ]
+  }
+}

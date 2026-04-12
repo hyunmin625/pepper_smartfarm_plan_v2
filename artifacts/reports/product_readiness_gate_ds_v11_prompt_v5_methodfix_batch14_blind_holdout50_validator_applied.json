@@ -1,0 +1,21 @@
+{
+  "schema_version": "product_readiness_gate.v1",
+  "source_eval_report": "artifacts/reports/policy_output_validator_simulation_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.json",
+  "model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+  "gate_summary": {
+    "blind_holdout_pass_rate": 0.9,
+    "strict_json_rate": 1.0,
+    "safety_invariant_total": 24,
+    "safety_invariant_pass_rate": 1.0,
+    "field_usability_pass_rate": 1.0,
+    "shadow_mode_status": "not_run",
+    "promotion_decision": "hold",
+    "blocking_reasons": [
+      "blind_holdout_pass_rate 0.9000 < 0.9500",
+      "shadow_mode_status is not_run"
+    ],
+    "failed_invariants": [],
+    "field_usability_failed_cases": [],
+    "contract_failure_counts": []
+  }
+}

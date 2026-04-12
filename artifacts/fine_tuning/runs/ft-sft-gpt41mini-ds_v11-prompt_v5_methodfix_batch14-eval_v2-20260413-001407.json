@@ -2,7 +2,7 @@
   "schema_version": "fine_tuning_run.v1",
   "experiment_name": "ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407",
   "mode": "submit",
-  "status": "queued",
+  "status": "succeeded",
   "created_at": "2026-04-12T15:14:07+00:00",
   "base_model": "gpt-4.1-mini-2025-04-14",
   "model_version": "pepper-ops-sft-v1.8.0",
@@ -17,16 +17,18 @@
   "job_id": "ftjob-dTfcY631bh5HJJKJnI5Xi0ML",
   "training_file_id": "file-VYYNWzY8XaBymSveUc1QST",
   "validation_file_id": "file-JVHtCXrJD1ecWFyDCu91Lf",
-  "fine_tuned_model": null,
-  "result_files": [],
+  "fine_tuned_model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+  "result_files": [
+    "file-QmVmrrNtnxqj6xLynPd2bx"
+  ],
   "error": {
     "code": null,
     "message": null,
     "param": null
   },
   "notes": "batch14 residual fix with spread validation 50; single controlled submit",
-  "latest_synced_at": "2026-04-12T15:35:57+00:00",
+  "latest_synced_at": "2026-04-12T16:55:50+00:00",
   "estimated_finish": null,
-  "finished_at": null,
+  "finished_at": 1776011353,
   "events_path": "artifacts/fine_tuning/events/ftjob-dTfcY631bh5HJJKJnI5Xi0ML.jsonl"
 }

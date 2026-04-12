@@ -1,0 +1,1059 @@
+{
+  "schema_version": "validator_residual_report.v1",
+  "model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+  "source_raw_report": "",
+  "source_validator_report": "2026-04-12T17:28:14+00:00",
+  "total_cases": 200,
+  "raw_pass_rate": 0.7,
+  "validator_pass_rate": 0.79,
+  "recovered_cases": 24,
+  "remaining_failed_cases": 42,
+  "runtime_validator_gap_cases": 0,
+  "top_remaining_checks": [
+    [
+      "risk_level_match",
+      33
+    ],
+    [
+      "required_action_types_present",
+      13
+    ],
+    [
+      "decision_match",
+      2
+    ],
+    [
+      "required_task_types_present",
+      2
+    ],
+    [
+      "forbidden_action_types_absent",
+      1
+    ]
+  ],
+  "remaining_by_category": [
+    [
+      "failure_response",
+      8
+    ],
+    [
+      "seasonal",
+      8
+    ],
+    [
+      "action_recommendation",
+      6
+    ],
+    [
+      "nutrient_risk",
+      4
+    ],
+    [
+      "forbidden_action",
+      4
+    ],
+    [
+      "edge_case",
+      4
+    ],
+    [
+      "robot_task_prioritization",
+      3
+    ],
+    [
+      "rootzone_diagnosis",
+      2
+    ],
+    [
+      "climate_risk",
+      2
+    ],
+    [
+      "state_judgement",
+      1
+    ]
+  ],
+  "remaining_by_owner": [
+    {
+      "owner": "risk_rubric_and_data",
+      "cases": 34,
+      "next_action": "risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다."
+    },
+    {
+      "owner": "data_and_model",
+      "cases": 13,
+      "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
+    },
+    {
+      "owner": "robot_contract_and_model",
+      "cases": 2,
+      "next_action": "robot task target/enum/selection slice를 별도 계약형 batch로 보강한다."
+    }
+  ],
+  "remaining_cases": [
+    {
+      "eval_id": "action-eval-003",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "action-eval-007",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "action-eval-016",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "required_action_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "data_and_model",
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "action-eval-021",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "action-eval-022",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "required_action_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "data_and_model",
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "action-eval-023",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-010",
+      "category": "climate_risk",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-049",
+      "category": "climate_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "edge-eval-003",
+      "category": "edge_case",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "edge-eval-009",
+      "category": "edge_case",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "edge-eval-012",
+      "category": "edge_case",
+      "failed_checks": [
+        "required_action_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "data_and_model",
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "edge-eval-021",
+      "category": "edge_case",
+      "failed_checks": [
+        "forbidden_action_types_absent",
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-001",
+      "category": "failure_response",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-003",
+      "category": "failure_response",
+      "failed_checks": [
+        "required_action_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "data_and_model",
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-004",
+      "category": "failure_response",
+      "failed_checks": [
+        "required_action_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "data_and_model",
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-005",
+      "category": "failure_response",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-006",
+      "category": "failure_response",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-007",
+      "category": "failure_response",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-009",
+      "category": "failure_response",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "failure-eval-011",
+      "category": "failure_response",
+      "failed_checks": [
+        "required_action_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "data_and_model",
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "forbidden-eval-008",
+      "category": "forbidden_action",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "forbidden-eval-011",
+      "category": "forbidden_action",
+      "failed_checks": [
+        "decision_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "forbidden-eval-012",
+      "category": "forbidden_action",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "forbidden-eval-014",
+      "category": "forbidden_action",
+      "failed_checks": [
+        "decision_match",
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-021",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-022",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-023",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-056",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "robot-eval-013",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "required_task_types_present"
+      ],
+      "owners": [
+        "robot_contract_and_model"
+      ]
+    },
+    {
+      "eval_id": "robot-eval-015",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "robot-eval-016",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "required_task_types_present",
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data",
+        "robot_contract_and_model"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-003",
+      "category": "rootzone_diagnosis",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-018",
+      "category": "rootzone_diagnosis",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-003",
+      "category": "seasonal",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-006",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-008",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-010",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-011",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-012",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-013",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "seasonal-eval-015",
+      "category": "seasonal",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "pepper-eval-014",
+      "category": "state_judgement",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    }
+  ],
+  "owner_case_map": {
+    "data_and_model": [
+      {
+        "eval_id": "pepper-eval-010",
+        "category": "climate_risk",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-014",
+        "category": "state_judgement",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "action-eval-003",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "action-eval-016",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "action-eval-022",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-003",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-004",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-005",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-006",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-011",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "edge-eval-012",
+        "category": "edge_case",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "edge-eval-021",
+        "category": "edge_case",
+        "failed_checks": [
+          "forbidden_action_types_absent",
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-003",
+        "category": "seasonal",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      }
+    ],
+    "risk_rubric_and_data": [
+      {
+        "eval_id": "pepper-eval-003",
+        "category": "rootzone_diagnosis",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-018",
+        "category": "rootzone_diagnosis",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-021",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-022",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-023",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-049",
+        "category": "climate_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "pepper-eval-056",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "action-eval-007",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "action-eval-016",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "action-eval-021",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "action-eval-022",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "action-eval-023",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "forbidden-eval-008",
+        "category": "forbidden_action",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "forbidden-eval-011",
+        "category": "forbidden_action",
+        "failed_checks": [
+          "decision_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "forbidden-eval-012",
+        "category": "forbidden_action",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "forbidden-eval-014",
+        "category": "forbidden_action",
+        "failed_checks": [
+          "decision_match",
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-001",
+        "category": "failure_response",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-003",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-004",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-007",
+        "category": "failure_response",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-009",
+        "category": "failure_response",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "failure-eval-011",
+        "category": "failure_response",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "robot-eval-015",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "robot-eval-016",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "required_task_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data",
+          "robot_contract_and_model"
+        ]
+      },
+      {
+        "eval_id": "edge-eval-003",
+        "category": "edge_case",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "edge-eval-009",
+        "category": "edge_case",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "edge-eval-012",
+        "category": "edge_case",
+        "failed_checks": [
+          "required_action_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "data_and_model",
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-006",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-008",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-010",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-011",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-012",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-013",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "seasonal-eval-015",
+        "category": "seasonal",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      }
+    ],
+    "robot_contract_and_model": [
+      {
+        "eval_id": "robot-eval-013",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "required_task_types_present"
+        ],
+        "owners": [
+          "robot_contract_and_model"
+        ]
+      },
+      {
+        "eval_id": "robot-eval-016",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "required_task_types_present",
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data",
+          "robot_contract_and_model"
+        ]
+      }
+    ]
+  }
+}

@@ -2,11 +2,21 @@
 
 이 문서는 `0.95`를 단순 benchmark score가 아니라, 실제 `건고추 온실 스마트팜에 사용 가능한 AI 모델 제품 수준`으로 다시 해석하기 위한 재평가 메모다.
 
+## Update 2026-04-13: ds_v11 완료 후 판단
+
+- 최신 완료 모델은 `ds_v11/prompt_v5_methodfix_batch14`다.
+- 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`다.
+- frozen gate 재평가 결과는 `core24 0.9167`, `extended120 0.7667`, `extended160 0.75`, `extended200 0.7`, `blind_holdout50 raw 0.7`, `blind_holdout50 validator 0.9`, `strict_json_rate 1.0`이다.
+- raw blind50 gate는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, validator blind50 gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`이지만 둘 다 `promotion_decision=hold`다.
+- `ds_v11`는 기존 baseline `ds_v9`보다 모든 frozen gate에서 개선됐다. 하지만 `blind_holdout50 validator 0.9 < 0.95`와 `shadow_mode_status=not_run` 때문에 제품 수준 주장은 여전히 불가하다.
+- validator 적용 후 잔여 실패는 `blind_holdout50 5건`, `extended200 42건`이다. owner 기준으로 blind50은 `data_and_model 3`, `risk_rubric_and_data 2`, extended200은 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`다.
+- 따라서 현재 결론은 `다음 submit`이 아니라 `shadow mode`, `risk rubric/data 경계 수정`, `required_action_types` 보강, 그 다음에야 batch16 + oversampling challenger 검토다.
+
 ## 1. 현재 로컬 증거
 
-### 마지막 완료 모델 기준
+### historical baseline `ds_v9` 기준
 
-- 마지막 완료 모델은 `ds_v9/prompt_v5_methodfix`다.
+- 비교용 historical baseline은 `ds_v9/prompt_v5_methodfix`다.
 - `ds_v10/prompt_v8`은 최근 sync 기준 `cancelled`이며, 완료 평가 결과가 아직 없다.
 - `ds_v9`는 `core24`에서 `pass_rate 0.875`, `extended120`에서 `0.7083`, `extended160`에서 `0.575`, `extended200`에서 `0.51`, `blind_holdout50`에서 `0.32`, `strict_json_rate 1.0`이다.
 - 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
