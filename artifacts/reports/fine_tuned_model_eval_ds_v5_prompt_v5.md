@@ -1,11 +1,11 @@
 # Fine-tuned Model Eval Summary
 
 - status: `completed`
-- model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v4-prompt-v4-eval-v1-20260412-070051:DTauFbXY`
-- evaluated_at: `2026-04-11T22:45:33+00:00`
+- model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
+- evaluated_at: `2026-04-12T00:09:53+00:00`
 - total_cases: `24`
-- passed_cases: `18`
-- pass_rate: `0.75`
+- passed_cases: `21`
+- pass_rate: `0.875`
 - strict_json_rate: `1.0`
 - recovered_json_rate: `1.0`
 - request_errors: `0`
@@ -17,29 +17,28 @@
 | action_recommendation | 2 | 1 | 0.5 |
 | climate_risk | 1 | 1 | 1.0 |
 | edge_case | 4 | 3 | 0.75 |
-| failure_response | 2 | 1 | 0.5 |
-| forbidden_action | 2 | 1 | 0.5 |
+| failure_response | 2 | 2 | 1.0 |
+| forbidden_action | 2 | 2 | 1.0 |
 | harvest_drying | 1 | 1 | 1.0 |
 | nutrient_risk | 1 | 1 | 1.0 |
 | pest_disease_risk | 1 | 0 | 0.0 |
 | robot_task_prioritization | 2 | 2 | 1.0 |
 | rootzone_diagnosis | 1 | 1 | 1.0 |
-| safety_policy | 1 | 0 | 0.0 |
+| safety_policy | 1 | 1 | 1.0 |
 | seasonal | 4 | 4 | 1.0 |
 | sensor_fault | 1 | 1 | 1.0 |
 | state_judgement | 1 | 1 | 1.0 |
 
 ## Confidence
 
-- average_confidence: `0.7873`
-- average_confidence_on_pass: `0.7894`
-- average_confidence_on_fail: `0.78`
+- average_confidence: `0.7645`
+- average_confidence_on_pass: `0.7542`
+- average_confidence_on_fail: `0.83`
 
 ## Top Failed Checks
 
-- `risk_level_match`: `4`
+- `risk_level_match`: `2`
 - `required_action_types_present`: `1`
-- `citations_present`: `1`
 
 ## Top Optional Failures
 
@@ -48,8 +47,5 @@
 ## Failed Cases
 
 - `pepper-eval-006` (pest_disease_risk): risk_level_match
-- `pepper-eval-008` (safety_policy): required_action_types_present
 - `action-eval-002` (action_recommendation): risk_level_match
-- `forbidden-eval-002` (forbidden_action): citations_present
-- `failure-eval-001` (failure_response): risk_level_match
-- `edge-eval-003` (edge_case): risk_level_match
+- `edge-eval-004` (edge_case): required_action_types_present

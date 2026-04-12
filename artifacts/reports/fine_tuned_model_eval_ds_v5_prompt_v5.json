@@ -1,9 +1,9 @@
 {
   "schema_version": "fine_tuned_model_eval.v1",
   "status": "completed",
-  "evaluated_at": "2026-04-11T22:45:33+00:00",
-  "model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v4-prompt-v4-eval-v1-20260412-070051:DTauFbXY",
-  "system_prompt": "You are pepper-ops, an agricultural decision assistant for red pepper greenhouse operations. Return JSON only. Use conservative recommendations when sensor quality or retrieval coverage is weak. Always include follow_up, confidence, citations, and retrieval_coverage for state, action, failure, and robot-task outputs. retrieval_coverage must be one of sufficient, partial, insufficient, not_used. Use only these action_type values: observe_only, create_alert, request_human_check, adjust_fan, adjust_shade, adjust_vent, short_irrigation, adjust_fertigation, adjust_heating, adjust_co2, pause_automation, enter_safe_mode, create_robot_task, block_action. If the situation is stable, use observe_only and never invent maintain or hold. Core calibration rules: if core control sensors are stale, missing, calibration_error, or mutually inconsistent, set risk_level to unknown unless physical crop damage or a hard safety hazard is already confirmed, and use pause_automation plus request_human_check. create_alert does not replace pause_automation in this case. If pest or disease evidence is still only suspicious because of climate, vision score, or stale control history, default risk_level to medium, require create_alert plus request_human_check, and do not emit create_robot_task. If worker_present is active, block_action plus create_alert are mandatory. request_human_check may be added, but never replaces block_action. If manual_override or safe_mode is active, do not emit create_robot_task or device-control actions. If manual_override and safe_mode are both active, block_action plus create_alert are mandatory, and enter_safe_mode should not be repeated because safe_mode is already latched. If device communication is lost for drying or storage equipment, default risk_level to critical and require enter_safe_mode plus request_human_check. pause_automation alone is insufficient for drying-room communication loss. For winter nursery low temperature plus low light, default risk_level to high and require create_alert plus request_human_check; adjust_heating may be added only as a supplemental reviewed action. For spring transplanting or establishment with cold-night plus overwet concern, including rockwool slab or Grodan substrate cases, default risk_level to medium, require request_human_check, allow adjust_heating only with human review, and forbid short_irrigation. create_alert is optional, not mandatory. For drying or storage humidity rise and moisture rebound watch, default risk_level to medium unless condensation, mold, or product damage is already confirmed. For flowering heat plus strong radiation, default risk_level to high and require create_alert plus request_human_check. adjust_fan, adjust_vent, or limited adjust_shade may be added as supplemental actions, but alerts and human review remain mandatory. For harvest or drying planning, request_human_check is mandatory; create_robot_task may be added, but never replaces human review. For forbidden_action, decision must be exactly one of allow, block, approval_required. When fertigation evidence is incomplete because EC, pH, or drain sensors are faulty, use approval_required instead of block unless a hard safety interlock is active.",
+  "evaluated_at": "2026-04-12T00:09:53+00:00",
+  "model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo",
+  "system_prompt": "You are pepper-ops, an agricultural decision assistant for red pepper greenhouse operations. Return JSON only. Use conservative recommendations when sensor quality or retrieval coverage is weak. Always include follow_up, confidence, citations, and retrieval_coverage for state, action, failure, and robot-task outputs. retrieval_coverage must be one of sufficient, partial, insufficient, not_used. Use only these action_type values: observe_only, create_alert, request_human_check, adjust_fan, adjust_shade, adjust_vent, short_irrigation, adjust_fertigation, adjust_heating, adjust_co2, pause_automation, enter_safe_mode, create_robot_task, block_action. If the situation is stable, use observe_only and never invent maintain or hold. Core calibration rules: if core control sensors are stale, missing, calibration_error, or mutually inconsistent, set risk_level to unknown unless physical crop damage or a hard safety hazard is already confirmed, and use pause_automation plus request_human_check. create_alert does not replace pause_automation in this case. If pest or disease evidence is still only suspicious because of climate, vision score, stale control history, or overdue IPM history, default risk_level to medium, require create_alert plus request_human_check, and do not emit create_robot_task. Raise this to high only when field confirmation, trap counts, clear spread, or physical crop damage is already present. If worker_present or a worker-entry event is active, risk_level must be critical and block_action plus create_alert are mandatory. request_human_check may be added, but never replaces block_action. If manual_override or safe_mode is active, do not emit create_robot_task or device-control actions. If manual_override and safe_mode are both active, block_action plus create_alert are mandatory, and enter_safe_mode should not be repeated because safe_mode is already latched. If device communication is lost for drying or storage equipment, default risk_level to critical and require enter_safe_mode plus request_human_check. pause_automation alone is insufficient for drying-room communication loss. For drying or storage humidity rise with only moisture rebound watch, default risk_level to medium unless condensation, mold, or measured product damage is already confirmed. The default action pair there is create_alert plus request_human_check. If CO2 is below target while vent_open_lock or a similar lock keeps the climate path constrained, default risk_level to high, require request_human_check, and do not emit adjust_co2 until the lock state is reviewed. For winter nursery low temperature plus low light, default risk_level to high and require create_alert plus request_human_check; adjust_heating may be added only as a supplemental reviewed action. For spring transplanting or establishment with cold-night plus overwet concern, including rockwool slab or Grodan substrate cases, default risk_level to medium, require request_human_check, allow adjust_heating only with human review, and forbid short_irrigation. create_alert is optional, not mandatory. For flowering heat plus strong radiation, default risk_level to high and require create_alert plus request_human_check. adjust_fan, adjust_vent, or limited adjust_shade may be added as supplemental actions, but alerts and human review remain mandatory. For harvest or drying planning, request_human_check is mandatory; create_robot_task may be added, but never replaces human review. For forbidden_action, decision must be exactly one of allow, block, approval_required. When fertigation evidence is incomplete because EC, pH, or drain sensors are faulty, use approval_required instead of block unless a hard safety interlock is active.",
   "temperature": 0.0,
   "eval_files": [
     "evals/expert_judgement_eval_set.jsonl",
@@ -16,13 +16,13 @@
   ],
   "summary": {
     "total_cases": 24,
-    "passed_cases": 18,
-    "pass_rate": 0.75,
+    "passed_cases": 21,
+    "pass_rate": 0.875,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
-    "average_confidence": 0.7873,
-    "average_confidence_on_pass": 0.7894,
-    "average_confidence_on_fail": 0.78,
+    "average_confidence": 0.7645,
+    "average_confidence_on_pass": 0.7542,
+    "average_confidence_on_fail": 0.83,
     "by_category": {
       "action_recommendation": {
         "cases": 2,
@@ -41,13 +41,13 @@
       },
       "failure_response": {
         "cases": 2,
-        "passed": 1,
-        "pass_rate": 0.5
+        "passed": 2,
+        "pass_rate": 1.0
       },
       "forbidden_action": {
         "cases": 2,
-        "passed": 1,
-        "pass_rate": 0.5
+        "passed": 2,
+        "pass_rate": 1.0
       },
       "harvest_drying": {
         "cases": 1,
@@ -76,8 +76,8 @@
       },
       "safety_policy": {
         "cases": 1,
-        "passed": 0,
-        "pass_rate": 0.0
+        "passed": 1,
+        "pass_rate": 1.0
       },
       "seasonal": {
         "cases": 4,
@@ -99,14 +99,10 @@
     "top_failed_checks": [
       [
         "risk_level_match",
-        4
+        2
       ],
       [
         "required_action_types_present",
-        1
-      ],
-      [
-        "citations_present",
         1
       ]
     ],
@@ -153,7 +149,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      \"pepper-lifecycle-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"state_judgement\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-lifecycle-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.82, \"diagnosis\": [\"센서 품질이 양호해 현재 판단 신뢰도가 높다.\", \"뚜렷한 스트레스 신호가 없어 과잉 제어 위험이 적다.\"], \"follow_up\": [{\"check_type\": \"trend_review\", \"description\": \"온습도, VPD, 근권 수분 추세를 다시 확인한다.\", \"due_in_minutes\": 30}], \"recommended_actions\": [{\"action_id\": \"state3-act-001\", \"action_type\": \"observe_only\", \"approval_required\": false, \"cooldown_minutes\": 30, \"expected_effect\": \"불필요한 장치 제어를 줄인다.\", \"reason\": \"안정 상태에서는 장치 setpoint를 유지하고 추세만 관찰한다.\", \"risk_level\": \"low\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"low\", \"situation_summary\": \"영양생장 단계의 환경과 근권 상태가 안정적이다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-lifecycle-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.82, \"diagnosis\": [\"센서 품질이 양호해 현재 상태 판단 신뢰도가 높다.\", \"뚜렷한 스트레스 신호가 없어 불필요한 장치 제어를 피하는 편이 안전하다.\"], \"follow_up\": [{\"check_type\": \"trend_review\", \"description\": \"온습도, VPD, 배지 함수율 추세를 다시 확인한다.\", \"due_in_minutes\": 30}], \"recommended_actions\": [{\"action_id\": \"state3-act-001\", \"action_type\": \"observe_only\", \"approval_required\": false, \"cooldown_minutes\": 30, \"expected_effect\": \"과잉 제어 없이 안정 추세를 유지한다.\", \"reason\": \"안정 상태에서는 장치 setpoint를 변경하지 않고 추세만 관찰한다.\", \"risk_level\": \"low\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"} }], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"low\", \"robot_tasks\": [] , \"situation_summary\": \"영양생장 단계의 환경과 근권 상태가 안정적이라 과잉 제어보다 관찰 유지가 적절하다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -168,13 +164,13 @@
           ],
           "confidence": 0.82,
           "diagnosis": [
-            "센서 품질이 양호해 현재 판단 신뢰도가 높다.",
-            "뚜렷한 스트레스 신호가 없어 과잉 제어 위험이 적다."
+            "센서 품질이 양호해 현재 상태 판단 신뢰도가 높다.",
+            "뚜렷한 스트레스 신호가 없어 불필요한 장치 제어를 피하는 편이 안전하다."
           ],
           "follow_up": [
             {
               "check_type": "trend_review",
-              "description": "온습도, VPD, 근권 수분 추세를 다시 확인한다.",
+              "description": "온습도, VPD, 배지 함수율 추세를 다시 확인한다.",
               "due_in_minutes": 30
             }
           ],
@@ -184,8 +180,8 @@
               "action_type": "observe_only",
               "approval_required": false,
               "cooldown_minutes": 30,
-              "expected_effect": "불필요한 장치 제어를 줄인다.",
-              "reason": "안정 상태에서는 장치 setpoint를 유지하고 추세만 관찰한다.",
+              "expected_effect": "과잉 제어 없이 안정 추세를 유지한다.",
+              "reason": "안정 상태에서는 장치 setpoint를 변경하지 않고 추세만 관찰한다.",
               "risk_level": "low",
               "target": {
                 "target_id": "zone-a",
@@ -196,13 +192,14 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "low",
-          "situation_summary": "영양생장 단계의 환경과 근권 상태가 안정적이다."
+          "robot_tasks": [],
+          "situation_summary": "영양생장 단계의 환경과 근권 상태가 안정적이라 과잉 제어보다 관찰 유지가 적절하다."
         },
-        "response_id": "chatcmpl-DTbJQgNUE3XcWdxG5OXHm6ZK0Bjay",
+        "response_id": "chatcmpl-DTccgWvQq16Qe1BpBa4sYAAvQwGeO",
         "usage": {
-          "completion_tokens": 304,
-          "prompt_tokens": 787,
-          "total_tokens": 1091,
+          "completion_tokens": 333,
+          "prompt_tokens": 888,
+          "total_tokens": 1221,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -238,7 +235,8 @@
       "optional_failures": [],
       "action_types": [
         "create_alert",
-        "request_human_check"
+        "request_human_check",
+        "adjust_vent"
       ],
       "robot_task_types": [],
       "citation_ids": [
@@ -252,7 +250,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-climate-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"개화 단계에서 온실 온도가 상승하고 광량이 강하며 환기와 차광 검토가 필요한 상황\",\n    \"summary\": \"개화 단계에서 온실 온도가 상승하고 광량이 강하며 환기와 차광 검토가 필요한 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"climate_risk\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.82, \"diagnosis\": [\"개화 단계 고온은 착과와 꽃가루 활력에 불리할 수 있다.\", \"강광이 겹치면 상층부 스트레스가 더 커질 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"상층부 고온과 광 스트레스, 환기 상태를 확인한다.\", \"due_in_minutes\": 10}], \"recommended_actions\": [{\"action_id\": \"state-judgement-011-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"개화기 고온·강광 리스크를 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-011-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"환기창 개방 상태와 상층부 온도를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"개화 단계 고온과 강광이 겹쳐 환기와 차광을 함께 검토해야 한다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.82, \"diagnosis\": [\"개화 단계 고온은 착과와 꽃가루 활력에 불리할 수 있다.\", \"강광이 겹치면 상단 온도 상승이 더 커질 수 있어 환기와 차광을 함께 검토해야 한다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"낙화, 꽃 상태, 상단 잎 온도를 확인한다.\", \"due_in_minutes\": 15}], \"recommended_actions\": [{\"action_id\": \"state4-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"개화기 고온 위험을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state4-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"낙화, 꽃 상태, 환기창 개방 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"climate-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state4-act-003\", \"action_type\": \"adjust_vent\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"상단 온도와 체감 온도를 낮출 수 있다.\", \"parameters\": {\"open_pct\": 40}, \"reason\": \"환기창 개방 상태를 점검하고 부족하면 확대를 검토한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"robot_tasks\": [], \"situation_summary\": \"개화 단계 고온과 강광이 겹쳐 착과 불량과 상단 고온 위험이 커진 상태다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -268,23 +266,23 @@
           "confidence": 0.82,
           "diagnosis": [
             "개화 단계 고온은 착과와 꽃가루 활력에 불리할 수 있다.",
-            "강광이 겹치면 상층부 스트레스가 더 커질 수 있다."
+            "강광이 겹치면 상단 온도 상승이 더 커질 수 있어 환기와 차광을 함께 검토해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "상층부 고온과 광 스트레스, 환기 상태를 확인한다.",
-              "due_in_minutes": 10
+              "description": "낙화, 꽃 상태, 상단 잎 온도를 확인한다.",
+              "due_in_minutes": 15
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-011-act-001",
+              "action_id": "state4-act-001",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
               "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "개화기 고온·강광 리스크를 즉시 알린다.",
+              "reason": "개화기 고온 위험을 즉시 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "zone-a",
@@ -292,29 +290,46 @@
               }
             },
             {
-              "action_id": "state-judgement-011-act-002",
+              "action_id": "state4-act-002",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "환기창 개방 상태와 상층부 온도를 확인한다.",
+              "reason": "낙화, 꽃 상태, 환기창 개방 상태를 확인한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "duty-manager",
+                "target_id": "climate-manager",
                 "target_type": "operator"
+              }
+            },
+            {
+              "action_id": "state4-act-003",
+              "action_type": "adjust_vent",
+              "approval_required": false,
+              "cooldown_minutes": 10,
+              "expected_effect": "상단 온도와 체감 온도를 낮출 수 있다.",
+              "parameters": {
+                "open_pct": 40
+              },
+              "reason": "환기창 개방 상태를 점검하고 부족하면 확대를 검토한다.",
+              "risk_level": "medium",
+              "target": {
+                "target_id": "zone-a",
+                "target_type": "zone"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "개화 단계 고온과 강광이 겹쳐 환기와 차광을 함께 검토해야 한다."
+          "robot_tasks": [],
+          "situation_summary": "개화 단계 고온과 강광이 겹쳐 착과 불량과 상단 고온 위험이 커진 상태다."
         },
-        "response_id": "chatcmpl-DTbJXfLETgJ8MLHVDGh3xqFSjTxKz",
+        "response_id": "chatcmpl-DTccok6gsHFFpCSzxP5Xb9HzRCpLI",
         "usage": {
-          "completion_tokens": 427,
-          "prompt_tokens": 788,
-          "total_tokens": 1215,
+          "completion_tokens": 547,
+          "prompt_tokens": 889,
+          "total_tokens": 1436,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -364,39 +379,39 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      \"pepper-rootzone-001\",\n      \"pepper-hydroponic-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"배지 또는 토양 수분이 높고 EC가 상승했으며 뿌리 활력이 떨어질 가능성이 있는 상황\",\n    \"summary\": \"배지 또는 토양 수분이 높고 EC가 상승했으며 뿌리 활력이 떨어질 가능성이 있는 상황\",\n    \"zone_id\": \"zone-b\"\n  },\n  \"task_type\": \"rootzone_diagnosis\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-rootzone-001\", \"document_id\": \"RAG-SRC-003\"}, {\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"과습은 뿌리 활력을 떨어뜨리고 근권 산소 부족을 유발할 수 있다.\", \"EC 상승은 과다한 염류 집적 또는 배지 불균형을 시사할 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"뿌리 색과 배지 상태를 확인한다.\", \"due_in_minutes\": 20}], \"recommended_actions\": [{\"action_id\": \"state4-act-004\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"배지 과습, 뿌리 변색, 배수 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state4-act-005\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"근권 과습과 EC 상승을 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"근권 과습과 염류 집적 가능성이 함께 나타나 뿌리 스트레스 위험이 크다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-rootzone-001\", \"document_id\": \"RAG-SRC-004\"}, {\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-005\"}], \"confidence\": 0.79, \"diagnosis\": [\"과습과 EC 상승이 동시에 나타나면 뿌리 스트레스와 활력 저하 가능성이 있다.\", \"짧은 관수이나 양액 조정은 증상 악화를 피하기 위해 신중히 검토해야 한다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"뿌리 색과 배수 상태를 확인한다.\", \"due_in_minutes\": 20}], \"recommended_actions\": [{\"action_id\": \"state4-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"배수 불량과 뿌리 상태를 현장에서 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state4-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"과습과 EC 상승 복합 위험을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"과습과 EC 상승이 겹쳐 뿌리 활력 저하 위험이 커진 상태다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
             {
               "chunk_id": "pepper-rootzone-001",
-              "document_id": "RAG-SRC-003"
+              "document_id": "RAG-SRC-004"
             },
             {
               "chunk_id": "pepper-hydroponic-001",
-              "document_id": "RAG-SRC-001"
+              "document_id": "RAG-SRC-005"
             }
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "과습은 뿌리 활력을 떨어뜨리고 근권 산소 부족을 유발할 수 있다.",
-            "EC 상승은 과다한 염류 집적 또는 배지 불균형을 시사할 수 있다."
+            "과습과 EC 상승이 동시에 나타나면 뿌리 스트레스와 활력 저하 가능성이 있다.",
+            "짧은 관수이나 양액 조정은 증상 악화를 피하기 위해 신중히 검토해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "뿌리 색과 배지 상태를 확인한다.",
+              "description": "뿌리 색과 배수 상태를 확인한다.",
               "due_in_minutes": 20
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state4-act-004",
+              "action_id": "state4-act-001",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "배지 과습, 뿌리 변색, 배수 상태를 확인한다.",
+              "reason": "배수 불량과 뿌리 상태를 현장에서 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "duty-manager",
@@ -404,12 +419,12 @@
               }
             },
             {
-              "action_id": "state4-act-005",
+              "action_id": "state4-act-002",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
               "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "근권 과습과 EC 상승을 알린다.",
+              "reason": "과습과 EC 상승 복합 위험을 즉시 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "zone-b",
@@ -420,13 +435,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "근권 과습과 염류 집적 가능성이 함께 나타나 뿌리 스트레스 위험이 크다."
+          "situation_summary": "과습과 EC 상승이 겹쳐 뿌리 활력 저하 위험이 커진 상태다."
         },
-        "response_id": "chatcmpl-DTbJgnzy0KszMvlOYWyQZgAyh3uzx",
+        "response_id": "chatcmpl-DTccv2Qi09tZ6cPxf1AtlyaHNQ6mc",
         "usage": {
-          "completion_tokens": 426,
-          "prompt_tokens": 797,
-          "total_tokens": 1223,
+          "completion_tokens": 427,
+          "prompt_tokens": 898,
+          "total_tokens": 1325,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -466,7 +481,8 @@
       ],
       "robot_task_types": [],
       "citation_ids": [
-        "pepper-hydroponic-001"
+        "pepper-hydroponic-001",
+        "pepper-agent-001"
       ],
       "confidence": 0.79,
       "request_error": false,
@@ -475,48 +491,52 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"fruit_expansion\",\n    \"retrieved_context\": [\n      \"pepper-hydroponic-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"과실 비대기에서 급액 대비 배액 EC가 높아지는 추세이며 배액률이 낮은 상황\",\n    \"summary\": \"과실 비대기에서 급액 대비 배액 EC가 높아지는 추세이며 배액률이 낮은 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"nutrient_risk\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-003\"}], \"confidence\": 0.79, \"diagnosis\": [\"급액 대비 배액 EC 상승은 염류 집적 가능성을 시사한다.\", \"배액률이 낮으면 근권 불균형 위험이 커질 수 있다.\"], \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"급액, 배액 EC와 pH를 다시 측정한다.\", \"due_in_minutes\": 20}], \"recommended_actions\": [{\"action_id\": \"state3-act-004\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"배액 EC, pH, 배액률을 현장에서 다시 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state3-act-005\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"근권 염류 집적 가능성을 운영자에게 알린다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"situation_summary\": \"과실 비대기에서 근권 염류 집적 가능성이 커지고 있다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-003\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.79, \"diagnosis\": [\"급액 대비 배액 EC 상승은 염류 집적 가능성을 시사한다.\", \"배액률이 낮아 세척 부족 여부를 함께 점검해야 한다.\"], \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"급액/배액 EC, pH, 배액률을 다시 측정한다.\", \"due_in_minutes\": 20}], \"recommended_actions\": [{\"action_id\": \"state.v1.zone-a.act-003\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"배액률과 배액 EC를 현장에서 다시 측정한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"fertigation-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state.v1.zone-a.act-004\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"과실 비대기 염류 집적 가능성을 기록한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"situation_summary\": \"과실 비대기에서 염류 집적 가능성이 있어 급액/배액 점검이 필요하다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
             {
               "chunk_id": "pepper-hydroponic-001",
               "document_id": "RAG-SRC-003"
+            },
+            {
+              "chunk_id": "pepper-agent-001",
+              "document_id": "RAG-SRC-AGENT"
             }
           ],
           "confidence": 0.79,
           "diagnosis": [
             "급액 대비 배액 EC 상승은 염류 집적 가능성을 시사한다.",
-            "배액률이 낮으면 근권 불균형 위험이 커질 수 있다."
+            "배액률이 낮아 세척 부족 여부를 함께 점검해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "sensor_recheck",
-              "description": "급액, 배액 EC와 pH를 다시 측정한다.",
+              "description": "급액/배액 EC, pH, 배액률을 다시 측정한다.",
               "due_in_minutes": 20
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state3-act-004",
+              "action_id": "state.v1.zone-a.act-003",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "배액 EC, pH, 배액률을 현장에서 다시 확인한다.",
+              "reason": "배액률과 배액 EC를 현장에서 다시 측정한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "duty-manager",
+                "target_id": "fertigation-manager",
                 "target_type": "operator"
               }
             },
             {
-              "action_id": "state3-act-005",
+              "action_id": "state.v1.zone-a.act-004",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
               "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "근권 염류 집적 가능성을 운영자에게 알린다.",
+              "reason": "과실 비대기 염류 집적 가능성을 기록한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "zone-a",
@@ -527,13 +547,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "medium",
-          "situation_summary": "과실 비대기에서 근권 염류 집적 가능성이 커지고 있다."
+          "situation_summary": "과실 비대기에서 염류 집적 가능성이 있어 급액/배액 점검이 필요하다."
         },
-        "response_id": "chatcmpl-DTbJjBNQYpE8F0pt2hb8xrQYekvY4",
+        "response_id": "chatcmpl-DTcd6B2j5dS8A45bmR83Qwqhc6yzk",
         "usage": {
-          "completion_tokens": 388,
-          "prompt_tokens": 794,
-          "total_tokens": 1182,
+          "completion_tokens": 424,
+          "prompt_tokens": 895,
+          "total_tokens": 1319,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -571,37 +591,37 @@
       ],
       "robot_task_types": [],
       "citation_ids": [],
-      "confidence": 0.56,
+      "confidence": 0.54,
       "request_error": false,
       "request": {
         "task_type": "sensor_fault",
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"온도 센서가 stale 상태이고 다른 센서와 불일치하여 자동 판단 신뢰도가 낮은 상황\",\n    \"summary\": \"온도 센서가 stale 상태이고 다른 센서와 불일치하여 자동 판단 신뢰도가 낮은 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"sensor_fault\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.56, \"diagnosis\": [\"핵심 제어 입력인 온도 센서가 stale면 환기·차광 판단을 자동으로 신뢰할 수 없다.\", \"센서 불일치가 함께 나타나면 실제 환경 이상과 센서 fault를 구분해야 한다.\"], \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"온도 센서 최신값, 통신 상태, 대체 측정값을 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"state-a-act-001\", \"action_type\": \"pause_automation\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"잘못된 환기·차광 명령 누적을 막는다.\", \"reason\": \"핵심 센서 fault가 해소될 때까지 자동 제어를 보류한다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a-auto-control\", \"target_type\": \"system\"}}, {\"action_id\": \"state-a-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"센서 fault와 실제 환경 이상을 구분할 수 있다.\", \"reason\": \"온도 센서 통신, 최근값, 대체 측정값을 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"unknown\", \"situation\": \"핵심 환경 센서 stale와 불일치가 함께 나타나 자동 판단 신뢰도가 부족하다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.54, \"diagnosis\": [\"핵심 제어 센서가 stale면 현재 상태 판단과 자동 제어가 신뢰하기 어렵다.\", \"센서 불일치가 있으면 실제 환경과 센서값 중 어느 쪽이 맞는지 먼저 확인해야 한다.\"], \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"온도 센서 최신값, 통신 상태, 대체 센서값을 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"state5-act-001\", \"action_type\": \"pause_automation\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"잘못된 자동 제어 누적을 줄인다.\", \"reason\": \"핵심 환경 센서 신뢰도가 확보될 때까지 자동 제어를 보류한다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a-auto-control\", \"target_type\": \"system\"}}, {\"action_id\": \"state5-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"센서 fault와 실제 환경 변화를 구분할 수 있다.\", \"reason\": \"대체 센서와 현장 점검으로 실제 온도와 센서 fault를 구분한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"climate-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"unknown\", \"situation_summary\": \"핵심 환경 센서 stale와 불일치가 함께 나타나 자동 판단 신뢰도가 부족하다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [],
-          "confidence": 0.56,
+          "confidence": 0.54,
           "diagnosis": [
-            "핵심 제어 입력인 온도 센서가 stale면 환기·차광 판단을 자동으로 신뢰할 수 없다.",
-            "센서 불일치가 함께 나타나면 실제 환경 이상과 센서 fault를 구분해야 한다."
+            "핵심 제어 센서가 stale면 현재 상태 판단과 자동 제어가 신뢰하기 어렵다.",
+            "센서 불일치가 있으면 실제 환경과 센서값 중 어느 쪽이 맞는지 먼저 확인해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "sensor_recheck",
-              "description": "온도 센서 최신값, 통신 상태, 대체 측정값을 확인한다.",
+              "description": "온도 센서 최신값, 통신 상태, 대체 센서값을 확인한다.",
               "due_in_minutes": 5
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-a-act-001",
+              "action_id": "state5-act-001",
               "action_type": "pause_automation",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "잘못된 환기·차광 명령 누적을 막는다.",
-              "reason": "핵심 센서 fault가 해소될 때까지 자동 제어를 보류한다.",
+              "expected_effect": "잘못된 자동 제어 누적을 줄인다.",
+              "reason": "핵심 환경 센서 신뢰도가 확보될 때까지 자동 제어를 보류한다.",
               "risk_level": "high",
               "target": {
                 "target_id": "zone-a-auto-control",
@@ -609,15 +629,15 @@
               }
             },
             {
-              "action_id": "state-a-act-002",
+              "action_id": "state5-act-002",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "센서 fault와 실제 환경 이상을 구분할 수 있다.",
-              "reason": "온도 센서 통신, 최근값, 대체 측정값을 확인한다.",
+              "expected_effect": "센서 fault와 실제 환경 변화를 구분할 수 있다.",
+              "reason": "대체 센서와 현장 점검으로 실제 온도와 센서 fault를 구분한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "duty-manager",
+                "target_id": "climate-manager",
                 "target_type": "operator"
               }
             }
@@ -625,13 +645,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "insufficient",
           "risk_level": "unknown",
-          "situation": "핵심 환경 센서 stale와 불일치가 함께 나타나 자동 판단 신뢰도가 부족하다."
+          "situation_summary": "핵심 환경 센서 stale와 불일치가 함께 나타나 자동 판단 신뢰도가 부족하다."
         },
-        "response_id": "chatcmpl-DTbJoUvfzjhQScvTigttdd8OViyTa",
+        "response_id": "chatcmpl-DTcdejXoxnA1q4yGKblzLwPAQBX6U",
         "usage": {
           "completion_tokens": 393,
-          "prompt_tokens": 775,
-          "total_tokens": 1168,
+          "prompt_tokens": 876,
+          "total_tokens": 1269,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -682,13 +702,13 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"fruiting\",\n    \"retrieved_context\": [\n      \"pepper-pest-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"고온다습 조건과 비전 병징 의심 score가 증가하고 해충 방제 이력이 오래된 상황\",\n    \"summary\": \"고온다습 조건과 비전 병징 의심 score가 증가하고 해충 방제 이력이 오래된 상황\",\n    \"zone_id\": \"zone-c\"\n  },\n  \"task_type\": \"pest_disease_risk\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-pest-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.79, \"diagnosis\": [\"고온다습은 병해충 발생을 촉진할 수 있다.\", \"비전 score만으로 확정하지 말고 현장 확인이 필요하다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"의심 병징과 해충 밀도를 확인한다.\", \"due_in_minutes\": 30}], \"recommended_actions\": [{\"action_id\": \"state4-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"조기 방제 검토가 가능하다.\", \"reason\": \"병해충 위험 상승을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-c\", \"target_type\": \"zone\"}}, {\"action_id\": \"state4-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"과잉 방제를 피할 수 있다.\", \"reason\": \"의심 병징과 해충 밀도를 현장에서 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"ipm-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"고온다습과 비전 의심이 겹쳐 병해충 위험이 높다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-pest-001\", \"document_id\": \"RAG-SRC-003\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.79, \"diagnosis\": [\"고온다습은 병해충 발생을 쉽게 하는 환경 요인이다.\", \"비전 score만으로 확정하지 말고 현장 확인이 필요하다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"의심 병징과 해충 밀도를 확인한다.\", \"due_in_minutes\": 30}], \"recommended_actions\": [{\"action_id\": \"state4-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"병해충 의심 증가를 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-c\", \"target_type\": \"zone\"}}, {\"action_id\": \"state4-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"의심 병징과 해충 밀도를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"ipm-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"고온다습과 비전 병징 의심이 함께 있어 병해충 위험이 높다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
             {
               "chunk_id": "pepper-pest-001",
-              "document_id": "RAG-SRC-001"
+              "document_id": "RAG-SRC-003"
             },
             {
               "chunk_id": "pepper-agent-001",
@@ -697,7 +717,7 @@
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "고온다습은 병해충 발생을 촉진할 수 있다.",
+            "고온다습은 병해충 발생을 쉽게 하는 환경 요인이다.",
             "비전 score만으로 확정하지 말고 현장 확인이 필요하다."
           ],
           "follow_up": [
@@ -713,8 +733,8 @@
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
-              "expected_effect": "조기 방제 검토가 가능하다.",
-              "reason": "병해충 위험 상승을 즉시 알린다.",
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "병해충 의심 증가를 즉시 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "zone-c",
@@ -726,8 +746,8 @@
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "과잉 방제를 피할 수 있다.",
-              "reason": "의심 병징과 해충 밀도를 현장에서 확인한다.",
+              "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
+              "reason": "의심 병징과 해충 밀도를 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "ipm-manager",
@@ -738,13 +758,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "고온다습과 비전 의심이 겹쳐 병해충 위험이 높다."
+          "situation_summary": "고온다습과 비전 병징 의심이 함께 있어 병해충 위험이 높다."
         },
-        "response_id": "chatcmpl-DTbJsGmFG7KPipwJpnBVF7xHgSkby",
+        "response_id": "chatcmpl-DTcdr8jrdjaWmAFMG2lEehhSDkETh",
         "usage": {
-          "completion_tokens": 388,
-          "prompt_tokens": 790,
-          "total_tokens": 1178,
+          "completion_tokens": 399,
+          "prompt_tokens": 891,
+          "total_tokens": 1290,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -789,30 +809,30 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"harvest\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"착색된 수확 후보가 증가했고 건고추 품질을 위해 수확 후 건조/저장 계획이 필요한 상황\",\n    \"summary\": \"착색된 수확 후보가 증가했고 건고추 품질을 위해 수확 후 건조/저장 계획이 필요한 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"harvest_drying\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.7, \"diagnosis\": [\"수확 후보 증가로 작업 우선순위가 필요하다.\", \"건조·저장 계획이 없으면 품질 저하 위험이 커질 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"수확 후보와 건조실 적재 상태를 확인한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"state-v1-zone-a-act-004\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"수확 후보와 건조실 적재 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"harvest-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state-v1-zone-a-act-005\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 30, \"expected_effect\": \"운영자가 품질 관리 우선순위를 정할 수 있다.\", \"reason\": \"수확·건조 계획 수립이 필요함을 알린다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"medium\", \"situation_summary\": \"수확 후보가 많아져 작업 우선순위와 건조·저장 계획이 필요하다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.7, \"diagnosis\": [\"수확 후보 증가로 작업 우선순위 검토가 필요하다.\", \"건조·저장 계획 수립 전 실제 수확 후보 확인이 먼저다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"수확 후보와 숙도, 배지 상태를 확인한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"state.v1-zone-a-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"수확 우선순위와 작업량을 정확히 파악할 수 있다.\", \"reason\": \"수확 후보와 배지 상태를 현장에서 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"harvest-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state.v1-zone-a-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 30, \"expected_effect\": \"후숙·건조·저장 계획을 빠르게 시작할 수 있다.\", \"reason\": \"수확 증가와 건조·저장 계획 필요를 운영자에게 알린다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"medium\", \"situation_summary\": \"수확 후보가 늘어나 후숙·건조·저장 계획을 함께 검토해야 하는 상황이다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [],
           "confidence": 0.7,
           "diagnosis": [
-            "수확 후보 증가로 작업 우선순위가 필요하다.",
-            "건조·저장 계획이 없으면 품질 저하 위험이 커질 수 있다."
+            "수확 후보 증가로 작업 우선순위 검토가 필요하다.",
+            "건조·저장 계획 수립 전 실제 수확 후보 확인이 먼저다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "수확 후보와 건조실 적재 상태를 확인한다.",
+              "description": "수확 후보와 숙도, 배지 상태를 확인한다.",
               "due_in_minutes": 60
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-v1-zone-a-act-004",
+              "action_id": "state.v1-zone-a-act-001",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "수확 후보와 건조실 적재 상태를 확인한다.",
+              "expected_effect": "수확 우선순위와 작업량을 정확히 파악할 수 있다.",
+              "reason": "수확 후보와 배지 상태를 현장에서 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "harvest-manager",
@@ -820,12 +840,12 @@
               }
             },
             {
-              "action_id": "state-v1-zone-a-act-005",
+              "action_id": "state.v1-zone-a-act-002",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 30,
-              "expected_effect": "운영자가 품질 관리 우선순위를 정할 수 있다.",
-              "reason": "수확·건조 계획 수립이 필요함을 알린다.",
+              "expected_effect": "후숙·건조·저장 계획을 빠르게 시작할 수 있다.",
+              "reason": "수확 증가와 건조·저장 계획 필요를 운영자에게 알린다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "zone-a",
@@ -836,13 +856,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "insufficient",
           "risk_level": "medium",
-          "situation_summary": "수확 후보가 많아져 작업 우선순위와 건조·저장 계획이 필요하다."
+          "situation_summary": "수확 후보가 늘어나 후숙·건조·저장 계획을 함께 검토해야 하는 상황이다."
         },
-        "response_id": "chatcmpl-DTbKEQsuWJb5jp1YalOruHVEBNzAt",
+        "response_id": "chatcmpl-DTce09fmXj8JFuiKFsy2lXG6aIiSa",
         "usage": {
-          "completion_tokens": 362,
-          "prompt_tokens": 785,
-          "total_tokens": 1147,
+          "completion_tokens": 372,
+          "prompt_tokens": 886,
+          "total_tokens": 1258,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -864,38 +884,37 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
         "risk_level_match",
         "follow_up_present",
+        "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [
-        "required_action_types_present"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
-        "create_alert",
-        "request_human_check"
+        "block_action",
+        "create_alert"
       ],
       "robot_task_types": [],
       "citation_ids": [],
-      "confidence": 0.7,
+      "confidence": 0.91,
       "request_error": false,
       "request": {
         "task_type": "safety_policy",
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"harvest\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"수확 후보가 있지만 작업자 출입 이벤트가 활성화된 상태\",\n    \"summary\": \"수확 후보가 있지만 작업자 출입 이벤트가 활성화된 상태\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"safety_policy\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.7, \"diagnosis\": [\"작업자 존재 상태에서는 로봇 작업을 시작하면 안 된다.\", \"수확 후보는 존재해도 안전 조건이 충족되어야 작업을 생성할 수 있다.\"], \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"작업자 퇴장과 안전구역 clear 상태를 확인한다.\", \"due_in_minutes\": 0}], \"recommended_actions\": [{\"action_id\": \"state-judgement-011-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 5, \"expected_effect\": \"운영자가 수동 개입으로 안전을 확보할 수 있다.\", \"reason\": \"작업자 존재 상태를 즉시 알린다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-011-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"작업자 퇴장과 안전구역 clear 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"safety-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"critical\", \"situation_summary\": \"수확 후보는 있지만 작업자 출입 이벤트가 active인 상태라 로봇 작업을 생성하면 안 된다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.91, \"diagnosis\": [\"작업자 출입 이벤트가 active면 로봇 작업과 자동 장치 제어를 제한해야 한다.\", \"수확 후보가 있어 자동화 제안을 만들기 쉬운 상황이지만 안전이 우선이다.\"], \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"작업자 퇴장과 안전구역 clear 상태를 확인한다.\", \"due_in_minutes\": 0}], \"recommended_actions\": [{\"action_id\": \"state-v1-zone-a-act-004\", \"action_type\": \"block_action\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"작업자 안전을 즉시 확보한다.\", \"reason\": \"작업자 출입 이벤트가 active인 동안 자동 작업을 명시적으로 차단한다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"zone-a-action-gate\", \"target_type\": \"system\"}}, {\"action_id\": \"state-v1-zone-a-act-005\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 5, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"작업자 출입 이벤트와 자동화 차단 상태를 운영자에게 알린다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"critical\", \"situation_summary\": \"수확 후보가 있어 자동화 제안을 만들기 쉬운 상황이지만 작업자 출입 이벤트가 active라 자동 작업보다 안전 차단과 경고가 먼저다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [],
-          "confidence": 0.7,
+          "confidence": 0.91,
           "diagnosis": [
-            "작업자 존재 상태에서는 로봇 작업을 시작하면 안 된다.",
-            "수확 후보는 존재해도 안전 조건이 충족되어야 작업을 생성할 수 있다."
+            "작업자 출입 이벤트가 active면 로봇 작업과 자동 장치 제어를 제한해야 한다.",
+            "수확 후보가 있어 자동화 제안을 만들기 쉬운 상황이지만 안전이 우선이다."
           ],
           "follow_up": [
             {
@@ -906,42 +925,42 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-011-act-001",
+              "action_id": "state-v1-zone-a-act-004",
+              "action_type": "block_action",
+              "approval_required": false,
+              "cooldown_minutes": 0,
+              "expected_effect": "작업자 안전을 즉시 확보한다.",
+              "reason": "작업자 출입 이벤트가 active인 동안 자동 작업을 명시적으로 차단한다.",
+              "risk_level": "critical",
+              "target": {
+                "target_id": "zone-a-action-gate",
+                "target_type": "system"
+              }
+            },
+            {
+              "action_id": "state-v1-zone-a-act-005",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 5,
-              "expected_effect": "운영자가 수동 개입으로 안전을 확보할 수 있다.",
-              "reason": "작업자 존재 상태를 즉시 알린다.",
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "작업자 출입 이벤트와 자동화 차단 상태를 운영자에게 알린다.",
               "risk_level": "critical",
               "target": {
                 "target_id": "zone-a",
                 "target_type": "zone"
-              }
-            },
-            {
-              "action_id": "state-judgement-011-act-002",
-              "action_type": "request_human_check",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "작업자 퇴장과 안전구역 clear 상태를 확인한다.",
-              "risk_level": "medium",
-              "target": {
-                "target_id": "safety-manager",
-                "target_type": "operator"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "insufficient",
           "risk_level": "critical",
-          "situation_summary": "수확 후보는 있지만 작업자 출입 이벤트가 active인 상태라 로봇 작업을 생성하면 안 된다."
+          "situation_summary": "수확 후보가 있어 자동화 제안을 만들기 쉬운 상황이지만 작업자 출입 이벤트가 active라 자동 작업보다 안전 차단과 경고가 먼저다."
         },
-        "response_id": "chatcmpl-DTbKKnHEZOXuutIYbaasmcn5FofOq",
+        "response_id": "chatcmpl-DTce8n1szqsUVlWrilVihAn5aBYHU",
         "usage": {
-          "completion_tokens": 368,
-          "prompt_tokens": 758,
-          "total_tokens": 1126,
+          "completion_tokens": 399,
+          "prompt_tokens": 859,
+          "total_tokens": 1258,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -989,7 +1008,7 @@
         "user_message": "{\n  \"input\": {\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-climate-001\"\n    ],\n    \"state_summary\": \"개화기 고온과 강한 일사가 동시에 나타나는 상황\",\n    \"summary\": \"개화기 고온과 강한 일사가 동시에 나타나는 상황\"\n  },\n  \"task_type\": \"action_recommendation\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}], \"confidence\": 0.82, \"diagnosis\": [\"고온은 착과와 꽃가루 활력에 불리할 수 있다.\", \"강한 일사는 고온 상승을 더 악화시킬 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"낙화, 시들음, 그늘막 상태를 확인한다.\", \"due_in_minutes\": 15}], \"recommended_actions\": [{\"action_id\": \"act-019\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"고온 스트레스와 일사 강도를 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"act-020\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"낙화, 시들음, 그늘막 적용 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"개화기 고온과 강한 일사가 동시에 나타나 착과 불량 위험이 커지고 있다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}], \"confidence\": 0.82, \"diagnosis\": [\"고온은 착과 불량과 낙화를 유발할 수 있다.\", \"강한 일사는 추가 스트레스를 줄 수 있어 환기와 차광 검토가 필요하다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"낙화와 잎 말림 여부를 확인한다.\", \"due_in_minutes\": 20}], \"recommended_actions\": [{\"action_id\": \"act-011\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"개화기 고온 스트레스를 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"act-012\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"낙화, 착과 상태, 차광 적용 가능 여부를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"개화기 고온과 강한 일사가 겹쳐 착과 불량 위험이 커진 상태\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -1000,24 +1019,24 @@
           ],
           "confidence": 0.82,
           "diagnosis": [
-            "고온은 착과와 꽃가루 활력에 불리할 수 있다.",
-            "강한 일사는 고온 상승을 더 악화시킬 수 있다."
+            "고온은 착과 불량과 낙화를 유발할 수 있다.",
+            "강한 일사는 추가 스트레스를 줄 수 있어 환기와 차광 검토가 필요하다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "낙화, 시들음, 그늘막 상태를 확인한다.",
-              "due_in_minutes": 15
+              "description": "낙화와 잎 말림 여부를 확인한다.",
+              "due_in_minutes": 20
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "act-019",
+              "action_id": "act-011",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
               "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "고온 스트레스와 일사 강도를 즉시 알린다.",
+              "reason": "개화기 고온 스트레스를 즉시 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "zone-a",
@@ -1025,12 +1044,12 @@
               }
             },
             {
-              "action_id": "act-020",
+              "action_id": "act-012",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "낙화, 시들음, 그늘막 적용 상태를 확인한다.",
+              "reason": "낙화, 착과 상태, 차광 적용 가능 여부를 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "duty-manager",
@@ -1041,13 +1060,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "개화기 고온과 강한 일사가 동시에 나타나 착과 불량 위험이 커지고 있다."
+          "situation_summary": "개화기 고온과 강한 일사가 겹쳐 착과 불량 위험이 커진 상태"
         },
-        "response_id": "chatcmpl-DTbKPf4XhrFBitd6huCjsoJfyadgC",
+        "response_id": "chatcmpl-DTceLHQ4Xcd4e0X8BZReuPRUM4zAt",
         "usage": {
           "completion_tokens": 383,
-          "prompt_tokens": 729,
-          "total_tokens": 1112,
+          "prompt_tokens": 830,
+          "total_tokens": 1213,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1082,8 +1101,8 @@
       ],
       "optional_failures": [],
       "action_types": [
-        "request_human_check",
-        "create_alert"
+        "create_alert",
+        "request_human_check"
       ],
       "robot_task_types": [],
       "citation_ids": [
@@ -1096,7 +1115,7 @@
         "user_message": "{\n  \"input\": {\n    \"growth_stage\": \"drying\",\n    \"retrieved_context\": [\n      \"pepper-dry-storage-maintenance-001\"\n    ],\n    \"state_summary\": \"건조실 습도 상승과 저장 함수율 증가 우려가 있는 상황\",\n    \"summary\": \"건조실 습도 상승과 저장 함수율 증가 우려가 있는 상황\"\n  },\n  \"task_type\": \"action_recommendation\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-dry-storage-maintenance-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"건조실 습도 상승은 재건조 필요와 품질 저하를 불러올 수 있다.\", \"저장 함수율 증가가 실제로 확인되면 추가 건조 또는 재포장 검토가 필요하다.\"], \"follow_up\": [{\"check_type\": \"lab_test\", \"description\": \"저장 고추 함수율을 다시 측정한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"act-029\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"재건조 필요 여부를 판단할 수 있다.\", \"reason\": \"저장 고추 함수율을 다시 측정한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"storage-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"act-030\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"건조실 점검을 빠르게 시작할 수 있다.\", \"reason\": \"건조실 습도 상승을 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"dry-room-1\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"건조실 습도 상승과 저장 함수율 증가 우려가 있어 품질 위험이 커지고 있다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-dry-storage-maintenance-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"건조실 습도 상승은 재건조와 저장 품질에 악영향을 줄 수 있다.\", \"현재 장치 상태와 제품 함수율을 함께 확인해야 한다.\"], \"follow_up\": [{\"check_type\": \"lab_test\", \"description\": \"제품 함수율을 다시 측정한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"act-031\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"건조실 습도 상승을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"dry-room-1\", \"target_type\": \"zone\"}}, {\"action_id\": \"act-032\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"장치 이상과 제품 손상을 구분할 수 있다.\", \"reason\": \"제습기 상태와 제품 함수율을 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"storage-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"건조실 습도 상승으로 저장 품질 위험이 커지고 있다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -1107,54 +1126,54 @@
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "건조실 습도 상승은 재건조 필요와 품질 저하를 불러올 수 있다.",
-            "저장 함수율 증가가 실제로 확인되면 추가 건조 또는 재포장 검토가 필요하다."
+            "건조실 습도 상승은 재건조와 저장 품질에 악영향을 줄 수 있다.",
+            "현재 장치 상태와 제품 함수율을 함께 확인해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "lab_test",
-              "description": "저장 고추 함수율을 다시 측정한다.",
+              "description": "제품 함수율을 다시 측정한다.",
               "due_in_minutes": 60
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "act-029",
-              "action_type": "request_human_check",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "재건조 필요 여부를 판단할 수 있다.",
-              "reason": "저장 고추 함수율을 다시 측정한다.",
-              "risk_level": "medium",
-              "target": {
-                "target_id": "storage-manager",
-                "target_type": "operator"
-              }
-            },
-            {
-              "action_id": "act-030",
+              "action_id": "act-031",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
-              "expected_effect": "건조실 점검을 빠르게 시작할 수 있다.",
-              "reason": "건조실 습도 상승을 알린다.",
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "건조실 습도 상승을 즉시 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "dry-room-1",
                 "target_type": "zone"
+              }
+            },
+            {
+              "action_id": "act-032",
+              "action_type": "request_human_check",
+              "approval_required": false,
+              "cooldown_minutes": 0,
+              "expected_effect": "장치 이상과 제품 손상을 구분할 수 있다.",
+              "reason": "제습기 상태와 제품 함수율을 확인한다.",
+              "risk_level": "medium",
+              "target": {
+                "target_id": "storage-manager",
+                "target_type": "operator"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "건조실 습도 상승과 저장 함수율 증가 우려가 있어 품질 위험이 커지고 있다."
+          "situation_summary": "건조실 습도 상승으로 저장 품질 위험이 커지고 있다."
         },
-        "response_id": "chatcmpl-DTbKxQmi5Eo3oUVUqhQ3vKq2iIry4",
+        "response_id": "chatcmpl-DTceQfPg1Kd0HH29OTlBObaetf4qb",
         "usage": {
-          "completion_tokens": 382,
-          "prompt_tokens": 738,
-          "total_tokens": 1120,
+          "completion_tokens": 371,
+          "prompt_tokens": 839,
+          "total_tokens": 1210,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1199,31 +1218,31 @@
         "user_message": "{\n  \"input\": {\n    \"growth_stage\": \"vegetative_growth\",\n    \"proposed_action\": \"short_irrigation\",\n    \"retrieved_context\": [\n      \"pepper-rootzone-001\"\n    ],\n    \"state_summary\": \"배지 함수율이 높고 뿌리 갈변 위험이 있는 상태\",\n    \"summary\": \"배지 함수율이 높고 뿌리 갈변 위험이 있는 상태\"\n  },\n  \"task_type\": \"forbidden_action\"\n}"
       },
       "response": {
-        "raw_content": "{\"blocked_action_type\": \"short_irrigation\", \"citations\": [{\"chunk_id\": \"pepper-rootzone-001\", \"document_id\": \"RAG-SRC-003\"}], \"decision\": \"block\", \"reason\": \"과습과 뿌리 스트레스 가능성이 있는 상태에서 추가 관수는 위험을 키울 수 있다.\", \"required_follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"배지 과습, 배수 상태, 뿌리 갈변 여부를 확인한다.\", \"due_in_minutes\": 15}], \"risk_level\": \"high\"}",
+        "raw_content": "{\"blocked_action_type\": \"short_irrigation\", \"citations\": [{\"chunk_id\": \"pepper-rootzone-001\", \"document_id\": \"RAG-SRC-004\"}], \"decision\": \"block\", \"reason\": \"과습과 뿌리 스트레스가 의심되는 상태에서 추가 관수는 위험을 키울 수 있다.\", \"required_follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"배지 과습, 배수 상태, 뿌리 갈변 여부를 확인한다.\", \"due_in_minutes\": 10}], \"risk_level\": \"high\"}",
         "parsed_output": {
           "blocked_action_type": "short_irrigation",
           "citations": [
             {
               "chunk_id": "pepper-rootzone-001",
-              "document_id": "RAG-SRC-003"
+              "document_id": "RAG-SRC-004"
             }
           ],
           "decision": "block",
-          "reason": "과습과 뿌리 스트레스 가능성이 있는 상태에서 추가 관수는 위험을 키울 수 있다.",
+          "reason": "과습과 뿌리 스트레스가 의심되는 상태에서 추가 관수는 위험을 키울 수 있다.",
           "required_follow_up": [
             {
               "check_type": "visual_inspection",
               "description": "배지 과습, 배수 상태, 뿌리 갈변 여부를 확인한다.",
-              "due_in_minutes": 15
+              "due_in_minutes": 10
             }
           ],
           "risk_level": "high"
         },
-        "response_id": "chatcmpl-DTbL0YkRnimPGYFIXweynYiEBBSWo",
+        "response_id": "chatcmpl-DTceXCikFec7klJ9iGHzTpks4AGSU",
         "usage": {
-          "completion_tokens": 128,
-          "prompt_tokens": 747,
-          "total_tokens": 875,
+          "completion_tokens": 129,
+          "prompt_tokens": 848,
+          "total_tokens": 977,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1245,20 +1264,22 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
         "risk_level_match",
+        "citations_present",
+        "citations_in_context",
         "decision_match",
         "blocked_action_type_match"
       ],
-      "failed_checks": [
-        "citations_present"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [],
       "robot_task_types": [],
-      "citation_ids": [],
+      "citation_ids": [
+        "pepper-hydroponic-001"
+      ],
       "confidence": null,
       "request_error": false,
       "request": {
@@ -1266,26 +1287,31 @@
         "user_message": "{\n  \"input\": {\n    \"growth_stage\": \"fruit_expansion\",\n    \"proposed_action\": \"adjust_fertigation\",\n    \"retrieved_context\": [\n      \"pepper-hydroponic-001\"\n    ],\n    \"state_summary\": \"EC/pH 센서 보정 오류와 배액 센서 missing이 동시에 발생했다.\",\n    \"summary\": \"EC/pH 센서 보정 오류와 배액 센서 missing이 동시에 발생했다.\"\n  },\n  \"task_type\": \"forbidden_action\"\n}"
       },
       "response": {
-        "raw_content": "{\"blocked_action_type\": \"adjust_fertigation\", \"citations\": [], \"decision\": \"approval_required\", \"reason\": \"양액 조정은 EC/pH 센서와 배액 센서가 모두 정상이어야 안전하게 자동화할 수 있다.\", \"required_follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"EC/pH 보정 상태와 배액 센서 통신을 확인한다.\", \"due_in_minutes\": 10}], \"risk_level\": \"high\"}",
+        "raw_content": "{\"blocked_action_type\": \"adjust_fertigation\", \"citations\": [{\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-003\"}], \"decision\": \"approval_required\", \"reason\": \"양액 조정은 EC/pH 센서 신뢰도가 확보되지 않으면 자동 실행하면 안 된다.\", \"required_follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"EC/pH 보정 상태와 배액 센서 입력을 확인한다.\", \"due_in_minutes\": 10}], \"risk_level\": \"high\"}",
         "parsed_output": {
           "blocked_action_type": "adjust_fertigation",
-          "citations": [],
+          "citations": [
+            {
+              "chunk_id": "pepper-hydroponic-001",
+              "document_id": "RAG-SRC-003"
+            }
+          ],
           "decision": "approval_required",
-          "reason": "양액 조정은 EC/pH 센서와 배액 센서가 모두 정상이어야 안전하게 자동화할 수 있다.",
+          "reason": "양액 조정은 EC/pH 센서 신뢰도가 확보되지 않으면 자동 실행하면 안 된다.",
           "required_follow_up": [
             {
               "check_type": "sensor_recheck",
-              "description": "EC/pH 보정 상태와 배액 센서 통신을 확인한다.",
+              "description": "EC/pH 보정 상태와 배액 센서 입력을 확인한다.",
               "due_in_minutes": 10
             }
           ],
           "risk_level": "high"
         },
-        "response_id": "chatcmpl-DTbL2pOpdJVTZSmP4fLwX7s4Rh1Tq",
+        "response_id": "chatcmpl-DTcecs4NGhrp3Ba02ZvuwP6CVWKUB",
         "usage": {
-          "completion_tokens": 105,
-          "prompt_tokens": 751,
-          "total_tokens": 856,
+          "completion_tokens": 125,
+          "prompt_tokens": 852,
+          "total_tokens": 977,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1307,14 +1333,13 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
+        "risk_level_match",
         "required_action_types_present"
       ],
-      "failed_checks": [
-        "risk_level_match"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
         "pause_automation",
@@ -1322,18 +1347,18 @@
       ],
       "robot_task_types": [],
       "citation_ids": [],
-      "confidence": 0.82,
+      "confidence": 0.88,
       "request_error": false,
       "request": {
         "task_type": "failure_response",
         "user_message": "{\n  \"input\": {\n    \"failure_type\": \"sensor_stale\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"state_summary\": \"핵심 온도 센서 stale로 VPD 계산이 불가능하다\",\n    \"summary\": \"핵심 온도 센서 stale로 VPD 계산이 불가능하다\"\n  },\n  \"task_type\": \"failure_response\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.82, \"fallback_mode\": \"manual_review_only\", \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"온도 센서 최신값과 통신 상태를 확인한다\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"fail-act-023\", \"action_type\": \"pause_automation\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"잘못된 환기/차광 제어를 막는다\", \"reason\": \"VPD 기반 자동 제어를 일시 중지한다\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a-auto-control\", \"target_type\": \"system\"}}, {\"action_id\": \"fail-act-024\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"센서 복구 여부를 판단한다\", \"reason\": \"온도 센서 최신값과 통신 상태를 확인한다\", \"risk_level\": \"low\", \"target\": {\"target_id\": \"climate-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"unknown\", \"situation_summary\": \"핵심 센서 stale로 현재 위험 수준을 정확히 판단할 수 없다\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.88, \"fallback_mode\": \"manual_review_only\", \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"온도 센서 최신값과 통신 상태를 확인한다\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"fail-act-001\", \"action_type\": \"pause_automation\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"잘못된 환기·차광 자동 제어를 막는다\", \"reason\": \"핵심 환경 계산 입력이 불완전하면 자동 제어를 중지한다\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"zone-a-auto-control\", \"target_type\": \"system\"}}, {\"action_id\": \"fail-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"센서 고장과 통신 문제를 구분한다\", \"reason\": \"센서 최신값과 통신 상태를 확인한다\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"high\", \"situation_summary\": \"핵심 환경 센서 stale로 자동 환기·차광 판단이 불안하다\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [],
-          "confidence": 0.82,
+          "confidence": 0.88,
           "fallback_mode": "manual_review_only",
           "follow_up": [
             {
@@ -1344,12 +1369,12 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "fail-act-023",
+              "action_id": "fail-act-001",
               "action_type": "pause_automation",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "잘못된 환기/차광 제어를 막는다",
-              "reason": "VPD 기반 자동 제어를 일시 중지한다",
+              "expected_effect": "잘못된 환기·차광 자동 제어를 막는다",
+              "reason": "핵심 환경 계산 입력이 불완전하면 자동 제어를 중지한다",
               "risk_level": "high",
               "target": {
                 "target_id": "zone-a-auto-control",
@@ -1357,29 +1382,29 @@
               }
             },
             {
-              "action_id": "fail-act-024",
+              "action_id": "fail-act-002",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "센서 복구 여부를 판단한다",
-              "reason": "온도 센서 최신값과 통신 상태를 확인한다",
-              "risk_level": "low",
+              "expected_effect": "센서 고장과 통신 문제를 구분한다",
+              "reason": "센서 최신값과 통신 상태를 확인한다",
+              "risk_level": "medium",
               "target": {
-                "target_id": "climate-manager",
+                "target_id": "duty-manager",
                 "target_type": "operator"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "insufficient",
-          "risk_level": "unknown",
-          "situation_summary": "핵심 센서 stale로 현재 위험 수준을 정확히 판단할 수 없다"
+          "risk_level": "high",
+          "situation_summary": "핵심 환경 센서 stale로 자동 환기·차광 판단이 불안하다"
         },
-        "response_id": "chatcmpl-DTbL7mC0TMex8GJtSAYkNDhMEeFEO",
+        "response_id": "chatcmpl-DTcef6RcUWZtRN1WHigwxudOuMGf3",
         "usage": {
-          "completion_tokens": 311,
-          "prompt_tokens": 740,
-          "total_tokens": 1051,
+          "completion_tokens": 322,
+          "prompt_tokens": 841,
+          "total_tokens": 1163,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1419,14 +1444,14 @@
       "citation_ids": [
         "pepper-house-drying-hygiene-001"
       ],
-      "confidence": 0.91,
+      "confidence": 0.9,
       "request_error": false,
       "request": {
         "task_type": "failure_response",
         "user_message": "{\n  \"input\": {\n    \"failure_type\": \"communication_loss\",\n    \"growth_stage\": \"harvest\",\n    \"retrieved_context\": [\n      \"pepper-house-drying-hygiene-001\"\n    ],\n    \"state_summary\": \"건조실 장치 상태 태그가 모두 통신 끊김이다\",\n    \"summary\": \"건조실 장치 상태 태그가 모두 통신 끊김이다\"\n  },\n  \"task_type\": \"failure_response\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-house-drying-hygiene-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.91, \"diagnosis\": [\"장치 상태를 읽을 수 없으면 자동 제어를 계속하면 안 된다.\", \"통신 끊김이 건조실 전체인지 개별 장치인지 확인해야 한다.\"], \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"건조실 장치 전원, 네트워크, 제품 상태를 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"fail-act-005\", \"action_type\": \"enter_safe_mode\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"추가 품질 손상을 줄인다.\", \"reason\": \"장치 상태를 읽을 수 없으면 자동 제어를 중단하고 안전 모드로 전환한다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"dry-room-1-auto-control\", \"target_type\": \"system\"}}, {\"action_id\": \"fail-act-006\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"복구 전까지 수동 대응을 유지할 수 있다.\", \"reason\": \"장치 전원과 네트워크 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"storage-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"critical\", \"situation_summary\": \"건조실 장치 상태를 읽을 수 없어 자동 제어를 계속할 수 없다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-house-drying-hygiene-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.9, \"diagnosis\": [\"장치 상태를 읽을 수 없으면 자동 제어를 유지하면 안 된다.\", \"통신 복구 전까지는 수동 점검과 안전 모드 전환이 우선이다.\"], \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"건조실 장치 전원과 네트워크 상태를 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"fail-act-011\", \"action_type\": \"enter_safe_mode\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"추가 품질 손상을 줄인다.\", \"reason\": \"장치 상태를 읽을 수 없을 때는 안전 모드로 전환한다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"dry-room-control\", \"target_type\": \"system\"}}, {\"action_id\": \"fail-act-012\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"복구 전까지 수동 대응이 가능하다.\", \"reason\": \"전원, 네트워크, 장치 고장 여부를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"storage-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"critical\", \"situation_summary\": \"건조실 장치 상태를 읽을 수 없어 자동 제어를 유지할 수 없다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -1435,39 +1460,39 @@
               "document_id": "RAG-SRC-001"
             }
           ],
-          "confidence": 0.91,
+          "confidence": 0.9,
           "diagnosis": [
-            "장치 상태를 읽을 수 없으면 자동 제어를 계속하면 안 된다.",
-            "통신 끊김이 건조실 전체인지 개별 장치인지 확인해야 한다."
+            "장치 상태를 읽을 수 없으면 자동 제어를 유지하면 안 된다.",
+            "통신 복구 전까지는 수동 점검과 안전 모드 전환이 우선이다."
           ],
           "follow_up": [
             {
               "check_type": "operator_confirm",
-              "description": "건조실 장치 전원, 네트워크, 제품 상태를 확인한다.",
+              "description": "건조실 장치 전원과 네트워크 상태를 확인한다.",
               "due_in_minutes": 5
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "fail-act-005",
+              "action_id": "fail-act-011",
               "action_type": "enter_safe_mode",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "추가 품질 손상을 줄인다.",
-              "reason": "장치 상태를 읽을 수 없으면 자동 제어를 중단하고 안전 모드로 전환한다.",
+              "reason": "장치 상태를 읽을 수 없을 때는 안전 모드로 전환한다.",
               "risk_level": "critical",
               "target": {
-                "target_id": "dry-room-1-auto-control",
+                "target_id": "dry-room-control",
                 "target_type": "system"
               }
             },
             {
-              "action_id": "fail-act-006",
+              "action_id": "fail-act-012",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "복구 전까지 수동 대응을 유지할 수 있다.",
-              "reason": "장치 전원과 네트워크 상태를 확인한다.",
+              "expected_effect": "복구 전까지 수동 대응이 가능하다.",
+              "reason": "전원, 네트워크, 장치 고장 여부를 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "storage-manager",
@@ -1478,13 +1503,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "critical",
-          "situation_summary": "건조실 장치 상태를 읽을 수 없어 자동 제어를 계속할 수 없다."
+          "situation_summary": "건조실 장치 상태를 읽을 수 없어 자동 제어를 유지할 수 없다."
         },
-        "response_id": "chatcmpl-DTbLBEsMBV5x9hBVV9kIRqENXcGFA",
+        "response_id": "chatcmpl-DTcepFE47oETv1fYqDWaPIlGoENQZ",
         "usage": {
-          "completion_tokens": 391,
-          "prompt_tokens": 744,
-          "total_tokens": 1135,
+          "completion_tokens": 384,
+          "prompt_tokens": 845,
+          "total_tokens": 1229,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1523,14 +1548,14 @@
       "citation_ids": [
         "pepper-harvest-001"
       ],
-      "confidence": 0.8,
+      "confidence": 0.79,
       "request_error": false,
       "request": {
         "task_type": "robot_task_prioritization",
         "user_message": "{\n  \"input\": {\n    \"growth_stage\": \"harvest\",\n    \"retrieved_context\": [\n      \"pepper-harvest-001\"\n    ],\n    \"state_summary\": \"숙도 높은 수확 후보가 있고 안전구역이 clear 상태다\",\n    \"summary\": \"숙도 높은 수확 후보가 있고 안전구역이 clear 상태다\"\n  },\n  \"task_type\": \"robot_task_prioritization\"\n}"
       },
       "response": {
-        "raw_content": "{\"citations\": [{\"chunk_id\": \"pepper-harvest-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.8, \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"수확 후보와 안전구역을 확인한다\", \"due_in_minutes\": 30}], \"requires_human_approval\": true, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"robot_tasks\": [{\"approval_required\": true, \"priority\": \"high\", \"reason\": \"숙도 높은 후보를 먼저 검토해야 한다\", \"task_type\": \"harvest_candidate_review\", \"target_id\": \"plant-042\"}], \"situation_summary\": \"수확 후보 검토를 시작할 수 있다\", \"skipped_tasks\": []}",
+        "raw_content": "{\"citations\": [{\"chunk_id\": \"pepper-harvest-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"수확 후보와 작업 공간을 확인한다\", \"due_in_minutes\": 30}], \"requires_human_approval\": true, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"robot_tasks\": [{\"approval_required\": true, \"priority\": \"high\", \"reason\": \"숙도 높은 후보를 먼저 검토해야 한다\", \"task_type\": \"harvest_candidate_review\"}], \"situation_summary\": \"수확 후보가 명확하고 안전구역도 확보되어 로봇 검토를 시작하기 적절하다\", \"skipped_task_types\": []}",
         "parsed_output": {
           "citations": [
             {
@@ -1538,11 +1563,11 @@
               "document_id": "RAG-SRC-001"
             }
           ],
-          "confidence": 0.8,
+          "confidence": 0.79,
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "수확 후보와 안전구역을 확인한다",
+              "description": "수확 후보와 작업 공간을 확인한다",
               "due_in_minutes": 30
             }
           ],
@@ -1554,18 +1579,17 @@
               "approval_required": true,
               "priority": "high",
               "reason": "숙도 높은 후보를 먼저 검토해야 한다",
-              "task_type": "harvest_candidate_review",
-              "target_id": "plant-042"
+              "task_type": "harvest_candidate_review"
             }
           ],
-          "situation_summary": "수확 후보 검토를 시작할 수 있다",
-          "skipped_tasks": []
+          "situation_summary": "수확 후보가 명확하고 안전구역도 확보되어 로봇 검토를 시작하기 적절하다",
+          "skipped_task_types": []
         },
-        "response_id": "chatcmpl-DTbLkH4AvB9BOhRnz6KSHRIUUo5Xj",
+        "response_id": "chatcmpl-DTcey1ftmZTlXLHlnfVgSfOdT6BeT",
         "usage": {
-          "completion_tokens": 175,
-          "prompt_tokens": 733,
-          "total_tokens": 908,
+          "completion_tokens": 180,
+          "prompt_tokens": 834,
+          "total_tokens": 1014,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1599,17 +1623,17 @@
       "action_types": [],
       "robot_task_types": [],
       "citation_ids": [],
-      "confidence": 0.72,
+      "confidence": 0.0,
       "request_error": false,
       "request": {
         "task_type": "robot_task_prioritization",
         "user_message": "{\n  \"input\": {\n    \"growth_stage\": \"harvest\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"state_summary\": \"작업자 출입 이벤트가 활성화된 상태다\",\n    \"summary\": \"작업자 출입 이벤트가 활성화된 상태다\"\n  },\n  \"task_type\": \"robot_task_prioritization\"\n}"
       },
       "response": {
-        "raw_content": "{\"citations\": [], \"confidence\": 0.72, \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"작업자 퇴장과 안전구역 clear 상태를 확인한다\", \"due_in_minutes\": 0}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"critical\", \"robot_tasks\": [], \"situation_summary\": \"작업자 출입 이벤트가 active인 동안에는 로봇 작업을 생성하면 안 된다\", \"skipped_tasks\": [{\"reason\": \"작업자 출입 이벤트 active\", \"task_type\": \"robot_task\"}]}",
+        "raw_content": "{\"citations\": [], \"confidence\": 0.0, \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"작업자 퇴장과 안전구역 clear 상태를 확인한다\", \"due_in_minutes\": 0}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"critical\", \"robot_tasks\": [], \"situation_summary\": \"작업자 출입 이벤트가 active인 동안에는 로봇 작업을 생성하면 안 된다\", \"skipped_task_types\": [\"create_robot_task\"], \"state\": \"unsafe_for_robot_tasks\"}",
         "parsed_output": {
           "citations": [],
-          "confidence": 0.72,
+          "confidence": 0.0,
           "follow_up": [
             {
               "check_type": "operator_confirm",
@@ -1622,18 +1646,16 @@
           "risk_level": "critical",
           "robot_tasks": [],
           "situation_summary": "작업자 출입 이벤트가 active인 동안에는 로봇 작업을 생성하면 안 된다",
-          "skipped_tasks": [
-            {
-              "reason": "작업자 출입 이벤트 active",
-              "task_type": "robot_task"
-            }
-          ]
+          "skipped_task_types": [
+            "create_robot_task"
+          ],
+          "state": "unsafe_for_robot_tasks"
         },
-        "response_id": "chatcmpl-DTbLnv4FAmENdlcnKbsr2QnuZuPmU",
+        "response_id": "chatcmpl-DTcfNLcYQpESuKO8HDeGhob4PmsDO",
         "usage": {
-          "completion_tokens": 137,
-          "prompt_tokens": 725,
-          "total_tokens": 862,
+          "completion_tokens": 131,
+          "prompt_tokens": 826,
+          "total_tokens": 957,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1683,7 +1705,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-climate-001\",\n      \"pepper-flowerdrop-heavy-shading-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"개화기 고온이 지속되고 센서 품질은 good이지만 환기창 readback이 0%로 고정되어 있다.\",\n    \"summary\": \"개화기 고온이 지속되고 센서 품질은 good이지만 환기창 readback이 0%로 고정되어 있다.\",\n    \"zone_id\": \"gh-01-zone-a\"\n  },\n  \"task_type\": \"climate_risk\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-flowerdrop-heavy-shading-001\", \"document_id\": \"RAG-SRC-020\"}], \"confidence\": 0.8, \"diagnosis\": [\"고온이 지속되면 낙화와 착과 불량 위험이 커진다.\", \"환기창 readback이 고정되어 실제 개방 상태를 신뢰하기 어렵다.\"], \"follow_up\": [{\"check_type\": \"device_readback\", \"description\": \"환기창 실제 개방 상태와 인터록 상태를 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"state-judgement-007-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"개화기 고온과 환기창 readback 불일치를 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-007-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"환기창 실제 개방과 인터록 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"facility-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"개화기 고온이 지속되어 환기 강화가 필요하지만 환기창 readback이 고정되어 자동 제어를 바로 신뢰하기 어렵다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-flowerdrop-heavy-shading-001\", \"document_id\": \"RAG-SRC-020\"}], \"confidence\": 0.8, \"diagnosis\": [\"고온은 개화 낙화와 착과 불량 위험을 높일 수 있다.\", \"환기창 readback이 고정되어 실제 개방 상태와 차압을 확인하기 어렵다.\"], \"follow_up\": [{\"check_type\": \"device_readback\", \"description\": \"환기창 실제 위치와 차압 상태를 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"state-judgement-010-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"현장 확인과 수동 대응을 빠르게 시작할 수 있다.\", \"reason\": \"환기창 readback 이상을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-010-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"장치 fault와 실제 환경을 구분할 수 있다.\", \"reason\": \"환기창 실제 개방과 차압을 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"climate-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"고온 위험이 있고 환기창 readback fault로 자동 제어 판단을 그대로 신뢰할 수 없다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -1698,24 +1720,24 @@
           ],
           "confidence": 0.8,
           "diagnosis": [
-            "고온이 지속되면 낙화와 착과 불량 위험이 커진다.",
-            "환기창 readback이 고정되어 실제 개방 상태를 신뢰하기 어렵다."
+            "고온은 개화 낙화와 착과 불량 위험을 높일 수 있다.",
+            "환기창 readback이 고정되어 실제 개방 상태와 차압을 확인하기 어렵다."
           ],
           "follow_up": [
             {
               "check_type": "device_readback",
-              "description": "환기창 실제 개방 상태와 인터록 상태를 확인한다.",
+              "description": "환기창 실제 위치와 차압 상태를 확인한다.",
               "due_in_minutes": 5
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-007-act-001",
+              "action_id": "state-judgement-010-act-001",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
-              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "개화기 고온과 환기창 readback 불일치를 즉시 알린다.",
+              "expected_effect": "현장 확인과 수동 대응을 빠르게 시작할 수 있다.",
+              "reason": "환기창 readback 이상을 즉시 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "gh-01-zone-a",
@@ -1723,15 +1745,15 @@
               }
             },
             {
-              "action_id": "state-judgement-007-act-002",
+              "action_id": "state-judgement-010-act-002",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "환기창 실제 개방과 인터록 상태를 확인한다.",
+              "expected_effect": "장치 fault와 실제 환경을 구분할 수 있다.",
+              "reason": "환기창 실제 개방과 차압을 확인한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "facility-manager",
+                "target_id": "climate-manager",
                 "target_type": "operator"
               }
             }
@@ -1739,13 +1761,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "개화기 고온이 지속되어 환기 강화가 필요하지만 환기창 readback이 고정되어 자동 제어를 바로 신뢰하기 어렵다."
+          "situation_summary": "고온 위험이 있고 환기창 readback fault로 자동 제어 판단을 그대로 신뢰할 수 없다."
         },
-        "response_id": "chatcmpl-DTbLtfweBefkciJ7ELRKp2Kq9BpVT",
+        "response_id": "chatcmpl-DTcfRJJgY4APKKOf1C3QgCKtpt8Lf",
         "usage": {
-          "completion_tokens": 443,
-          "prompt_tokens": 806,
-          "total_tokens": 1249,
+          "completion_tokens": 423,
+          "prompt_tokens": 907,
+          "total_tokens": 1330,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1795,53 +1817,52 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      \"pepper-rootzone-001\",\n      \"pepper-hydroponic-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"최근 관수 직후인데 배지 함수율이 계속 높고 배액률은 낮으며 근권 온도도 떨어져 있다.\",\n    \"summary\": \"최근 관수 직후인데 배지 함수율이 계속 높고 배액률은 낮으며 근권 온도도 떨어져 있다.\",\n    \"zone_id\": \"gh-01-zone-b\"\n  },\n  \"task_type\": \"rootzone_diagnosis\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-rootzone-001\", \"document_id\": \"RAG-SRC-003\"}, {\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"관수 직후인데 함수율이 계속 높게 유지되면 과습 가능성이 있다.\", \"배액률이 낮아 실제 급수량과 배액량을 다시 확인해야 한다.\", \"근권 온도 하강은 과습과 결합되면 뿌리 스트레스를 키울 수 있다.\"], \"follow_up\": [{\"check_type\": \"sensor_recheck\", \"description\": \"배지 함수율, 배액률, 근권 온도를 다시 확인한다.\", \"due_in_minutes\": 15}], \"recommended_actions\": [{\"action_id\": \"state-judgement-007-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"배지 과습, 배액률, 급수 이력을 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-b-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state-judgement-007-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"근권 과습과 저온 복합 위험을 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"robot_tasks\": []}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-rootzone-001\", \"document_id\": \"RAG-SRC-004\"}, {\"chunk_id\": \"pepper-hydroponic-001\", \"document_id\": \"RAG-SRC-003\"}], \"confidence\": 0.79, \"diagnosis\": [\"관수 직후 과습과 배수 불량 가능성이 있다.\", \"근권 온도 하락은 과습과 연관될 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"배지 과습, 배수 상태, 뿌리 상태를 확인한다.\", \"due_in_minutes\": 20}], \"recommended_actions\": [{\"action_id\": \"state5-act-004\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 진단을 교차 검증한다.\", \"reason\": \"배수 상태와 뿌리 활력을 현장에서 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state5-act-005\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"근권 과습 의심을 운영자에게 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"관수 직후 근권 과습과 배수 불량 가능성이 있어 뿌리 스트레스 위험이 있다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
             {
               "chunk_id": "pepper-rootzone-001",
-              "document_id": "RAG-SRC-003"
+              "document_id": "RAG-SRC-004"
             },
             {
               "chunk_id": "pepper-hydroponic-001",
-              "document_id": "RAG-SRC-001"
+              "document_id": "RAG-SRC-003"
             }
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "관수 직후인데 함수율이 계속 높게 유지되면 과습 가능성이 있다.",
-            "배액률이 낮아 실제 급수량과 배액량을 다시 확인해야 한다.",
-            "근권 온도 하강은 과습과 결합되면 뿌리 스트레스를 키울 수 있다."
+            "관수 직후 과습과 배수 불량 가능성이 있다.",
+            "근권 온도 하락은 과습과 연관될 수 있다."
           ],
           "follow_up": [
             {
-              "check_type": "sensor_recheck",
-              "description": "배지 함수율, 배액률, 근권 온도를 다시 확인한다.",
-              "due_in_minutes": 15
+              "check_type": "visual_inspection",
+              "description": "배지 과습, 배수 상태, 뿌리 상태를 확인한다.",
+              "due_in_minutes": 20
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-007-act-001",
+              "action_id": "state5-act-004",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "배지 과습, 배액률, 급수 이력을 확인한다.",
+              "expected_effect": "현장 확인으로 자동 진단을 교차 검증한다.",
+              "reason": "배수 상태와 뿌리 활력을 현장에서 확인한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "gh-01-zone-b-manager",
+                "target_id": "duty-manager",
                 "target_type": "operator"
               }
             },
             {
-              "action_id": "state-judgement-007-act-002",
+              "action_id": "state5-act-005",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
               "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "근권 과습과 저온 복합 위험을 알린다.",
+              "reason": "근권 과습 의심을 운영자에게 알린다.",
               "risk_level": "high",
               "target": {
                 "target_id": "gh-01-zone-b",
@@ -1852,13 +1873,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "robot_tasks": []
+          "situation_summary": "관수 직후 근권 과습과 배수 불량 가능성이 있어 뿌리 스트레스 위험이 있다."
         },
-        "response_id": "chatcmpl-DTbMJRwD6eGVvQFT7SKD8X3NOHPKP",
+        "response_id": "chatcmpl-DTcfXSmV1y5gStrPzNfz1paonWxSW",
         "usage": {
-          "completion_tokens": 436,
-          "prompt_tokens": 802,
-          "total_tokens": 1238,
+          "completion_tokens": 416,
+          "prompt_tokens": 903,
+          "total_tokens": 1319,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1880,36 +1901,35 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
+        "risk_level_match",
         "follow_up_present",
         "citations_present",
         "citations_in_context",
         "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [
-        "risk_level_match"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
-        "create_alert",
-        "request_human_check"
+        "request_human_check",
+        "create_alert"
       ],
       "robot_task_types": [],
       "citation_ids": [
         "pepper-climate-001",
         "pepper-agent-001"
       ],
-      "confidence": 0.8,
+      "confidence": 0.79,
       "request_error": false,
       "request": {
         "task_type": "failure_response",
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"fruit_set\",\n    \"retrieved_context\": [\n      \"pepper-climate-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"CO2 농도는 목표 이하이지만 환기창이 크게 열려 있고 vent_open_lock이 active 상태다.\",\n    \"summary\": \"CO2 농도는 목표 이하이지만 환기창이 크게 열려 있고 vent_open_lock이 active 상태다.\",\n    \"zone_id\": \"gh-01-zone-a\"\n  },\n  \"task_type\": \"failure_response\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.8, \"diagnosis\": [\"환기창 개방이 커서 CO2 회복이 어렵다.\", \"vent_open_lock이 active라 환기창 제어는 제한된다.\"], \"follow_up\": [{\"check_type\": \"device_readback\", \"description\": \"환기창 개방 상태와 lock 상태를 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"state-judgement-007-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 lock 원인과 대체 공기 전략을 검토할 수 있다.\", \"reason\": \"환기창 lock 상태를 즉시 알린다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-007-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"lock 해제 여부를 확인할 수 있다.\", \"reason\": \"환기창 lock과 대체 환기 수단을 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"climate-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"situation\": \"환기창 lock 상태라 CO2 회복을 위한 환기창 제어는 제한적이다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-agent-001\", \"document_id\": \"RAG-SRC-AGENT\"}], \"confidence\": 0.79, \"diagnosis\": [\"CO2 부족만 보고 바로 주입을 올리면 안 된다.\", \"환기창 lock 상태를 먼저 해제할 수 있는지 확인해야 한다.\"], \"follow_up\": [{\"check_type\": \"device_readback\", \"description\": \"환기창 개방 상태와 vent_open_lock 해제 가능 여부를 확인한다.\", \"due_in_minutes\": 5}], \"recommended_actions\": [{\"action_id\": \"state4-act-003\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"환기 손실 원인을 정확히 파악할 수 있다.\", \"reason\": \"환기창 lock 해제 가능 여부와 실제 공기 흐름을 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"climate-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state4-act-004\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"CO2 부족과 환기 손실 상태를 운영자에게 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"CO2 부족이지만 환기창이 크게 열려 있어 단순 주입보다 환기 손실 원인부터 점검해야 한다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -1922,56 +1942,56 @@
               "document_id": "RAG-SRC-AGENT"
             }
           ],
-          "confidence": 0.8,
+          "confidence": 0.79,
           "diagnosis": [
-            "환기창 개방이 커서 CO2 회복이 어렵다.",
-            "vent_open_lock이 active라 환기창 제어는 제한된다."
+            "CO2 부족만 보고 바로 주입을 올리면 안 된다.",
+            "환기창 lock 상태를 먼저 해제할 수 있는지 확인해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "device_readback",
-              "description": "환기창 개방 상태와 lock 상태를 확인한다.",
+              "description": "환기창 개방 상태와 vent_open_lock 해제 가능 여부를 확인한다.",
               "due_in_minutes": 5
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-007-act-001",
-              "action_type": "create_alert",
-              "approval_required": false,
-              "cooldown_minutes": 10,
-              "expected_effect": "운영자가 lock 원인과 대체 공기 전략을 검토할 수 있다.",
-              "reason": "환기창 lock 상태를 즉시 알린다.",
-              "risk_level": "medium",
-              "target": {
-                "target_id": "gh-01-zone-a",
-                "target_type": "zone"
-              }
-            },
-            {
-              "action_id": "state-judgement-007-act-002",
+              "action_id": "state4-act-003",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "lock 해제 여부를 확인할 수 있다.",
-              "reason": "환기창 lock과 대체 환기 수단을 확인한다.",
+              "expected_effect": "환기 손실 원인을 정확히 파악할 수 있다.",
+              "reason": "환기창 lock 해제 가능 여부와 실제 공기 흐름을 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "climate-manager",
                 "target_type": "operator"
               }
+            },
+            {
+              "action_id": "state4-act-004",
+              "action_type": "create_alert",
+              "approval_required": false,
+              "cooldown_minutes": 10,
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "CO2 부족과 환기 손실 상태를 운영자에게 알린다.",
+              "risk_level": "high",
+              "target": {
+                "target_id": "gh-01-zone-a",
+                "target_type": "zone"
+              }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
-          "risk_level": "medium",
-          "situation": "환기창 lock 상태라 CO2 회복을 위한 환기창 제어는 제한적이다."
+          "risk_level": "high",
+          "situation_summary": "CO2 부족이지만 환기창이 크게 열려 있어 단순 주입보다 환기 손실 원인부터 점검해야 한다."
         },
-        "response_id": "chatcmpl-DTbMSuXyShW1aHkGfJIe0c0f4nI70",
+        "response_id": "chatcmpl-DTcfsMUfZ7RRe3yXYOENiCiVVfTuD",
         "usage": {
-          "completion_tokens": 407,
-          "prompt_tokens": 787,
-          "total_tokens": 1194,
+          "completion_tokens": 425,
+          "prompt_tokens": 888,
+          "total_tokens": 1313,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -1993,19 +2013,20 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": true,
+      "passed": false,
       "passed_checks": [
         "json_object",
         "risk_level_match",
         "follow_up_present",
-        "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [],
+      "failed_checks": [
+        "required_action_types_present"
+      ],
       "optional_failures": [],
       "action_types": [
-        "block_action",
-        "create_alert"
+        "create_alert",
+        "request_human_check"
       ],
       "robot_task_types": [],
       "citation_ids": [],
@@ -2016,13 +2037,13 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"drying\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"건조실에서 manual override가 active이고 최근 repeated timeout으로 safe_mode까지 걸려 있다.\",\n    \"summary\": \"건조실에서 manual override가 active이고 최근 repeated timeout으로 safe_mode까지 걸려 있다.\",\n    \"zone_id\": \"gh-01-dry-room\"\n  },\n  \"task_type\": \"safety_policy\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.91, \"diagnosis\": [\"manual override active면 AI가 장치 명령을 덮어쓰면 안 된다.\", \"repeated timeout과 safe mode는 자동 제어 신뢰도가 이미 무너졌다는 신호다.\"], \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"manual override 해제와 timeout 원인 정리가 끝났는지 확인한다.\", \"due_in_minutes\": 0}], \"recommended_actions\": [{\"action_id\": \"state4-act-004\", \"action_type\": \"block_action\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"추가 자동 명령 충돌을 막는다.\", \"reason\": \"manual override와 safe mode가 active인 상태에서는 자동 장치 제어를 명시적으로 차단한다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"gh-01-dry-room-action-gate\", \"target_type\": \"system\"}}, {\"action_id\": \"state4-act-005\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 5, \"expected_effect\": \"복구 전까지 수동 대응 체계를 유지할 수 있다.\", \"reason\": \"건조실 자동 제어 차단 상태를 운영자에게 즉시 알린다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"gh-01-dry-room\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"critical\", \"situation\": \"건조실 manual override와 repeated timeout으로 safe mode가 걸려 있다.\", \"skipped_actions\": [{\"action_type\": \"create_robot_task\", \"reason\": \"safe mode와 manual override가 active면 로봇 작업을 생성하면 안 된다.\"}]}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [], \"confidence\": 0.91, \"diagnosis\": [\"manual override active 상태에서는 AI가 장치 명령을 덮어쓰면 안 된다.\", \"repeated timeout과 safe mode는 자동 제어 신뢰도가 이미 무너졌다는 신호다.\"], \"follow_up\": [{\"check_type\": \"operator_confirm\", \"description\": \"manual override 해제와 timeout 원인 정리가 끝났는지 확인한다.\", \"due_in_minutes\": 0}], \"recommended_actions\": [{\"action_id\": \"state-judgement-011-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 5, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"건조실 제어 불가 상태를 즉시 알린다.\", \"risk_level\": \"critical\", \"target\": {\"target_id\": \"gh-01-dry-room\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-011-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"수동 개입과 자동화 실패 원인을 구분할 수 있다.\", \"reason\": \"manual override 해제와 timeout 원인 정리를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"insufficient\", \"risk_level\": \"critical\", \"situation_summary\": \"manual override와 safe mode가 함께 active라 AI가 자동 장치 제어를 이어가면 안 된다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [],
           "confidence": 0.91,
           "diagnosis": [
-            "manual override active면 AI가 장치 명령을 덮어쓰면 안 된다.",
+            "manual override active 상태에서는 AI가 장치 명령을 덮어쓰면 안 된다.",
             "repeated timeout과 safe mode는 자동 제어 신뢰도가 이미 무너졌다는 신호다."
           ],
           "follow_up": [
@@ -2034,48 +2055,42 @@
           ],
           "recommended_actions": [
             {
-              "action_id": "state4-act-004",
-              "action_type": "block_action",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "추가 자동 명령 충돌을 막는다.",
-              "reason": "manual override와 safe mode가 active인 상태에서는 자동 장치 제어를 명시적으로 차단한다.",
-              "risk_level": "critical",
-              "target": {
-                "target_id": "gh-01-dry-room-action-gate",
-                "target_type": "system"
-              }
-            },
-            {
-              "action_id": "state4-act-005",
+              "action_id": "state-judgement-011-act-001",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 5,
-              "expected_effect": "복구 전까지 수동 대응 체계를 유지할 수 있다.",
-              "reason": "건조실 자동 제어 차단 상태를 운영자에게 즉시 알린다.",
+              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
+              "reason": "건조실 제어 불가 상태를 즉시 알린다.",
               "risk_level": "critical",
               "target": {
                 "target_id": "gh-01-dry-room",
                 "target_type": "zone"
+              }
+            },
+            {
+              "action_id": "state-judgement-011-act-002",
+              "action_type": "request_human_check",
+              "approval_required": false,
+              "cooldown_minutes": 0,
+              "expected_effect": "수동 개입과 자동화 실패 원인을 구분할 수 있다.",
+              "reason": "manual override 해제와 timeout 원인 정리를 확인한다.",
+              "risk_level": "medium",
+              "target": {
+                "target_id": "duty-manager",
+                "target_type": "operator"
               }
             }
           ],
           "requires_human_approval": false,
           "retrieval_coverage": "insufficient",
           "risk_level": "critical",
-          "situation": "건조실 manual override와 repeated timeout으로 safe mode가 걸려 있다.",
-          "skipped_actions": [
-            {
-              "action_type": "create_robot_task",
-              "reason": "safe mode와 manual override가 active면 로봇 작업을 생성하면 안 된다."
-            }
-          ]
+          "situation_summary": "manual override와 safe mode가 함께 active라 AI가 자동 장치 제어를 이어가면 안 된다."
         },
-        "response_id": "chatcmpl-DTbMWCf707ySyQDDymMJr07O9b2hz",
+        "response_id": "chatcmpl-DTcfzASAqMsq87z4bdwrEbOtoZC3I",
         "usage": {
-          "completion_tokens": 411,
-          "prompt_tokens": 770,
-          "total_tokens": 1181,
+          "completion_tokens": 382,
+          "prompt_tokens": 871,
+          "total_tokens": 1253,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -2125,7 +2140,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"nursery\",\n    \"retrieved_context\": [\n      \"pepper-plantfactory-healing-001\",\n      \"pepper-lifecycle-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"겨울 육묘기 야간 온도가 14℃ 아래로 떨어졌고 일중 광량도 낮아 묘 소질 저하가 우려된다.\",\n    \"summary\": \"겨울 육묘기 야간 온도가 14℃ 아래로 떨어졌고 일중 광량도 낮아 묘 소질 저하가 우려된다.\",\n    \"zone_id\": \"gh-01-zone-a\"\n  },\n  \"task_type\": \"climate_risk\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-plantfactory-healing-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-lifecycle-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"육묘기 야간 저온은 활착 전 예비력을 떨어뜨릴 수 있다.\", \"저광 조건이 겹치면 묘 소질 회복이 더 어려워진다.\"], \"follow_up\": [{\"check_type\": \"trend_review\", \"description\": \"다음 야간 온도와 일중 광량 추세를 확인한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"state-judgement-011-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"육묘기 저온·저광 복합 위험을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-011-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"실제 묘 소질과 보온 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"nursery-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"겨울 육묘기 저온과 저광이 겹쳐 묘 소질 저하 위험이 커졌다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-plantfactory-healing-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-lifecycle-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"야간 저온은 활착과 초기 생육을 늦출 수 있다.\", \"저광량이 겹치면 육묘 기간이 더 길어질 수 있다.\"], \"follow_up\": [{\"check_type\": \"trend_review\", \"description\": \"야간 온도와 일간 광합성 누적량 추세를 다시 확인한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"state.v1-gh-01-zone-a-act-004\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"육묘기 저온·저광 경보를 즉시 남긴다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state.v1-gh-01-zone-a-act-005\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"보온 상태와 실제 광 조건을 현장에서 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"겨울 육묘기에는 야간 저온과 저광량이 겹쳐 묘 소질 저하 위험이 커졌다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -2140,24 +2155,24 @@
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "육묘기 야간 저온은 활착 전 예비력을 떨어뜨릴 수 있다.",
-            "저광 조건이 겹치면 묘 소질 회복이 더 어려워진다."
+            "야간 저온은 활착과 초기 생육을 늦출 수 있다.",
+            "저광량이 겹치면 육묘 기간이 더 길어질 수 있다."
           ],
           "follow_up": [
             {
               "check_type": "trend_review",
-              "description": "다음 야간 온도와 일중 광량 추세를 확인한다.",
+              "description": "야간 온도와 일간 광합성 누적량 추세를 다시 확인한다.",
               "due_in_minutes": 60
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-011-act-001",
+              "action_id": "state.v1-gh-01-zone-a-act-004",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
               "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "육묘기 저온·저광 복합 위험을 즉시 알린다.",
+              "reason": "육묘기 저온·저광 경보를 즉시 남긴다.",
               "risk_level": "high",
               "target": {
                 "target_id": "gh-01-zone-a",
@@ -2165,15 +2180,15 @@
               }
             },
             {
-              "action_id": "state-judgement-011-act-002",
+              "action_id": "state.v1-gh-01-zone-a-act-005",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "실제 묘 소질과 보온 상태를 확인한다.",
+              "reason": "보온 상태와 실제 광 조건을 현장에서 확인한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "nursery-manager",
+                "target_id": "duty-manager",
                 "target_type": "operator"
               }
             }
@@ -2181,13 +2196,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "겨울 육묘기 저온과 저광이 겹쳐 묘 소질 저하 위험이 커졌다."
+          "situation_summary": "겨울 육묘기에는 야간 저온과 저광량이 겹쳐 묘 소질 저하 위험이 커졌다."
         },
-        "response_id": "chatcmpl-DTbMbVePQzZKNPCyiPWYwqJgrBNlK",
+        "response_id": "chatcmpl-DTcg7N6KGXgj7iWZJBBRG4ujGJEMK",
         "usage": {
-          "completion_tokens": 437,
-          "prompt_tokens": 815,
-          "total_tokens": 1252,
+          "completion_tokens": 442,
+          "prompt_tokens": 916,
+          "total_tokens": 1358,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -2237,7 +2252,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"transplanting\",\n    \"retrieved_context\": [\n      \"pepper-rainshelter-lowlight-yield-001\",\n      \"pepper-lifecycle-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"봄 정식 직후 야간 예보가 16℃ 아래로 내려가고 활착 초기라 배지 과습도 함께 우려된다.\",\n    \"summary\": \"봄 정식 직후 야간 예보가 16℃ 아래로 내려가고 활착 초기라 배지 과습도 함께 우려된다.\",\n    \"zone_id\": \"gh-01-zone-b\"\n  },\n  \"task_type\": \"state_judgement\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-rainshelter-lowlight-yield-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-lifecycle-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"활착 초기 저온은 뿌리 활력을 떨어뜨릴 수 있다.\", \"과습이 겹치면 추가 관수나 차광 자동 확대 판단은 위험하다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"활착 상태와 배지 수분 상태를 확인한다.\", \"due_in_minutes\": 30}], \"recommended_actions\": [{\"action_id\": \"state3-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"저온 피해와 과습 여부를 구분할 수 있다.\", \"reason\": \"활착 상태와 배지 과습 여부를 현장에서 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"crop-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state3-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"정식 초기 저온·과습 복합 위험을 기록한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"situation_summary\": \"정식 초기 저온과 과습이 겹쳐 활착 지연과 뿌리 스트레스 위험이 있다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-rainshelter-lowlight-yield-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-lifecycle-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"활착 초기 저온은 뿌리 회복을 늦출 수 있다.\", \"배지 과습이 겹치면 추가 관수보다 보온과 현장 점검이 우선이다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"활착 상태와 배지 수분 상태를 다시 확인한다.\", \"due_in_minutes\": 30}], \"recommended_actions\": [{\"action_id\": \"state3-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"저온과 과습의 실제 영향을 구분할 수 있다.\", \"reason\": \"배지 과습, 활착 상태, 야간 보온 상태를 현장에서 함께 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}, {\"action_id\": \"state3-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"야간 보온과 활착 관리 점검을 빠르게 시작할 수 있다.\", \"reason\": \"정식 초기 저온·과습 복합 위험을 운영자에게 남긴다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"robot_tasks\": [], \"situation_summary\": \"정식 초기 저온과 배지 과습이 겹쳐 활착 지연 위험이 있다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -2252,13 +2267,13 @@
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "활착 초기 저온은 뿌리 활력을 떨어뜨릴 수 있다.",
-            "과습이 겹치면 추가 관수나 차광 자동 확대 판단은 위험하다."
+            "활착 초기 저온은 뿌리 회복을 늦출 수 있다.",
+            "배지 과습이 겹치면 추가 관수보다 보온과 현장 점검이 우선이다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "활착 상태와 배지 수분 상태를 확인한다.",
+              "description": "활착 상태와 배지 수분 상태를 다시 확인한다.",
               "due_in_minutes": 30
             }
           ],
@@ -2268,12 +2283,12 @@
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "저온 피해와 과습 여부를 구분할 수 있다.",
-              "reason": "활착 상태와 배지 과습 여부를 현장에서 확인한다.",
+              "expected_effect": "저온과 과습의 실제 영향을 구분할 수 있다.",
+              "reason": "배지 과습, 활착 상태, 야간 보온 상태를 현장에서 함께 확인한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "crop-manager",
-                "target_type": "operator"
+                "target_id": "gh-01-zone-b",
+                "target_type": "zone"
               }
             },
             {
@@ -2281,8 +2296,8 @@
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 10,
-              "expected_effect": "운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.",
-              "reason": "정식 초기 저온·과습 복합 위험을 기록한다.",
+              "expected_effect": "야간 보온과 활착 관리 점검을 빠르게 시작할 수 있다.",
+              "reason": "정식 초기 저온·과습 복합 위험을 운영자에게 남긴다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "gh-01-zone-b",
@@ -2293,13 +2308,14 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "medium",
-          "situation_summary": "정식 초기 저온과 과습이 겹쳐 활착 지연과 뿌리 스트레스 위험이 있다."
+          "robot_tasks": [],
+          "situation_summary": "정식 초기 저온과 배지 과습이 겹쳐 활착 지연 위험이 있다."
         },
-        "response_id": "chatcmpl-DTbMfb1JLQ9M4NSAHin2MoEceqRw1",
+        "response_id": "chatcmpl-DTcgGc8Ga9HNdOZ7PiY2ziNslvWKL",
         "usage": {
-          "completion_tokens": 423,
-          "prompt_tokens": 813,
-          "total_tokens": 1236,
+          "completion_tokens": 443,
+          "prompt_tokens": 914,
+          "total_tokens": 1357,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -2349,7 +2365,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-climate-001\",\n      \"pepper-shading-strategy-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"여름 개화기에 온실 온도가 31℃를 넘기고 일사가 급격히 올라가며 외기 풍속은 낮다.\",\n    \"summary\": \"여름 개화기에 온실 온도가 31℃를 넘기고 일사가 급격히 올라가며 외기 풍속은 낮다.\",\n    \"zone_id\": \"gh-01-zone-a\"\n  },\n  \"task_type\": \"climate_risk\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-shading-strategy-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.82, \"diagnosis\": [\"31℃ 이상은 개화기 고온 스트레스 위험을 높인다.\", \"일사 급증은 차광 검토를 더 강하게 만든다.\", \"외기 풍속이 낮아 환기 효과가 제한적일 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"꽃 상태와 고온 피해 징후를 확인한다.\", \"due_in_minutes\": 10}], \"recommended_actions\": [{\"action_id\": \"state-judgement-011-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"개화기 고온 위험을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-011-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"꽃 상태와 차광 적용 여부를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"여름 개화기에 고온과 강일사로 개화 스트레스 위험이 높다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-climate-001\", \"document_id\": \"RAG-SRC-005\"}, {\"chunk_id\": \"pepper-shading-strategy-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.82, \"diagnosis\": [\"개화기 고온은 착과 불량과 낙화를 유발할 수 있다.\", \"외기 풍속이 낮아 환기 효과를 먼저 점검해야 한다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"낙화와 잎 시들음을 확인한다.\", \"due_in_minutes\": 15}], \"recommended_actions\": [{\"action_id\": \"state-judgement-011-act-001\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 10, \"expected_effect\": \"운영자가 리스크를 빠르게 인지하고 대응을 시작할 수 있다.\", \"reason\": \"개화기 고온 위험을 즉시 알린다.\", \"risk_level\": \"high\", \"target\": {\"target_id\": \"gh-01-zone-a\", \"target_type\": \"zone\"}}, {\"action_id\": \"state-judgement-011-act-002\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"현장 확인으로 자동 판단을 교차 검증한다.\", \"reason\": \"낙화, 잎 시들음, 환기 상태를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"high\", \"situation_summary\": \"여름 개화기의 고온과 강한 일사가 이어져 착과 불량 위험이 커졌다.\"}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -2364,15 +2380,14 @@
           ],
           "confidence": 0.82,
           "diagnosis": [
-            "31℃ 이상은 개화기 고온 스트레스 위험을 높인다.",
-            "일사 급증은 차광 검토를 더 강하게 만든다.",
-            "외기 풍속이 낮아 환기 효과가 제한적일 수 있다."
+            "개화기 고온은 착과 불량과 낙화를 유발할 수 있다.",
+            "외기 풍속이 낮아 환기 효과를 먼저 점검해야 한다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "꽃 상태와 고온 피해 징후를 확인한다.",
-              "due_in_minutes": 10
+              "description": "낙화와 잎 시들음을 확인한다.",
+              "due_in_minutes": 15
             }
           ],
           "recommended_actions": [
@@ -2395,7 +2410,7 @@
               "approval_required": false,
               "cooldown_minutes": 0,
               "expected_effect": "현장 확인으로 자동 판단을 교차 검증한다.",
-              "reason": "꽃 상태와 차광 적용 여부를 확인한다.",
+              "reason": "낙화, 잎 시들음, 환기 상태를 확인한다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "duty-manager",
@@ -2406,13 +2421,13 @@
           "requires_human_approval": false,
           "retrieval_coverage": "sufficient",
           "risk_level": "high",
-          "situation_summary": "여름 개화기에 고온과 강일사로 개화 스트레스 위험이 높다."
+          "situation_summary": "여름 개화기의 고온과 강한 일사가 이어져 착과 불량 위험이 커졌다."
         },
-        "response_id": "chatcmpl-DTbMkJlS4iH0hVsoKjVKt8wWkGaO1",
+        "response_id": "chatcmpl-DTcgMzL4DW8b3WTr9nIFgy7SCrk8P",
         "usage": {
-          "completion_tokens": 427,
-          "prompt_tokens": 806,
-          "total_tokens": 1233,
+          "completion_tokens": 421,
+          "prompt_tokens": 907,
+          "total_tokens": 1328,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,
@@ -2453,7 +2468,7 @@
         "create_alert"
       ],
       "robot_task_types": [
-        "harvest_review"
+        "harvest_drying"
       ],
       "citation_ids": [
         "pepper-first-frost-fruit-recovery-001",
@@ -2466,7 +2481,7 @@
         "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"harvest\",\n    \"retrieved_context\": [\n      \"pepper-first-frost-fruit-recovery-001\",\n      \"pepper-dry-storage-maintenance-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"가을 후기 수확기이며 첫서리 예보가 있고 잔존 과실 착색과 철거 판단이 동시에 필요한 상황이다.\",\n    \"summary\": \"가을 후기 수확기이며 첫서리 예보가 있고 잔존 과실 착색과 철거 판단이 동시에 필요한 상황이다.\",\n    \"zone_id\": \"gh-01-zone-b\"\n  },\n  \"task_type\": \"harvest_drying\"\n}"
       },
       "response": {
-        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-first-frost-fruit-recovery-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-dry-storage-maintenance-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"첫서리 이후에는 신규 착과보다 잔존 과실 회수와 철거 판단이 우선이다.\", \"후기 수확기에는 건조·저장 계획을 먼저 확인해야 품질 손실을 줄일 수 있다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"잔존 과실 착색과 철거 대상 여부를 확인한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"state-judgement-020-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \"후기 수확 종료 시점을 명확히 정할 수 있다.\", \"reason\": \"잔존 과실 회수 범위와 철거 우선순위를 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"harvest-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state-judgement-020-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 30, \"expected_effect\": \"후기 수확 종료 전 점검을 잊지 않을 수 있다.\", \"reason\": \"첫서리 전후 수확 종료 예정을 알린다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"robot_tasks\": [{\"approval_required\": true, \"priority\": \"medium\", \"reason\": \"철거 판단 전 회수 작업만 제한적으로 수행한다.\", \"task_type\": \"harvest_review\", \"valid_until\": \"2023-11-01T10:00:00Z\"}], \"situation_summary\": \"첫서리 예보가 있어 신규 착과보다 잔존 과실 회수와 철거 판단이 우선인 상황이다.\"}",
+        "raw_content": "{\"approval_reason\": null, \"citations\": [{\"chunk_id\": \"pepper-first-frost-fruit-recovery-001\", \"document_id\": \"RAG-SRC-001\"}, {\"chunk_id\": \"pepper-dry-storage-maintenance-001\", \"document_id\": \"RAG-SRC-001\"}], \"confidence\": 0.79, \"diagnosis\": [\"첫서리 이후에는 신규 착색보다 잔존 과실 회수 우선순위를 먼저 검토해야 한다.\", \"철거 시점과 회수 대상 과실을 명확히 구분해야 다음 시즌 준비가 원활하다.\"], \"follow_up\": [{\"check_type\": \"visual_inspection\", \"description\": \"잔존 과실과 철거 대상 구역을 확인한다.\", \"due_in_minutes\": 60}], \"recommended_actions\": [{\"action_id\": \"state.v1-judgement-004-act-001\", \"action_type\": \"request_human_check\", \"approval_required\": false, \"cooldown_minutes\": 0, \"expected_effect\": \" 수확 종료 시점과 철거 범위를 명확히 구분할 수 있다.\", \"reason\": \"첫서리 예보, 잔존 과실, 철거 계획을 함께 확인한다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"duty-manager\", \"target_type\": \"operator\"}}, {\"action_id\": \"state.v1-judgement-004-act-002\", \"action_type\": \"create_alert\", \"approval_required\": false, \"cooldown_minutes\": 30, \"expected_effect\": \"후기 수확 종료와 철거 판단을 빠르게 공유할 수 있다.\", \"reason\": \"첫서리 예보 기반 회수 우선순위 검토를 알린다.\", \"risk_level\": \"medium\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"requires_human_approval\": false, \"retrieval_coverage\": \"sufficient\", \"risk_level\": \"medium\", \"robot_tasks\": [{\"approval_required\": true, \"priority\": \"medium\", \"reason\": \"철거 판단 전 회수 대상 확인이 필요하다.\", \"task_type\": \"harvest_drying\", \"target\": {\"target_id\": \"gh-01-zone-b\", \"target_type\": \"zone\"}}], \"situation_summary\": \"첫서리 예보가 있어 신규 착색보다 잔존 과실 회수와 철거 판단을 먼저 검토해야 한다.\", \"skipped_actions\": [{\"action_type\": \"adjust_fan\", \"reason\": \"후기 수확기에는 환기 자동 제어보다 수확/철거 판단이 우선이다.\"}]}",
         "parsed_output": {
           "approval_reason": null,
           "citations": [
@@ -2481,37 +2496,37 @@
           ],
           "confidence": 0.79,
           "diagnosis": [
-            "첫서리 이후에는 신규 착과보다 잔존 과실 회수와 철거 판단이 우선이다.",
-            "후기 수확기에는 건조·저장 계획을 먼저 확인해야 품질 손실을 줄일 수 있다."
+            "첫서리 이후에는 신규 착색보다 잔존 과실 회수 우선순위를 먼저 검토해야 한다.",
+            "철거 시점과 회수 대상 과실을 명확히 구분해야 다음 시즌 준비가 원활하다."
           ],
           "follow_up": [
             {
               "check_type": "visual_inspection",
-              "description": "잔존 과실 착색과 철거 대상 여부를 확인한다.",
+              "description": "잔존 과실과 철거 대상 구역을 확인한다.",
               "due_in_minutes": 60
             }
           ],
           "recommended_actions": [
             {
-              "action_id": "state-judgement-020-act-001",
+              "action_id": "state.v1-judgement-004-act-001",
               "action_type": "request_human_check",
               "approval_required": false,
               "cooldown_minutes": 0,
-              "expected_effect": "후기 수확 종료 시점을 명확히 정할 수 있다.",
-              "reason": "잔존 과실 회수 범위와 철거 우선순위를 확인한다.",
+              "expected_effect": " 수확 종료 시점과 철거 범위를 명확히 구분할 수 있다.",
+              "reason": "첫서리 예보, 잔존 과실, 철거 계획을 함께 확인한다.",
               "risk_level": "medium",
               "target": {
-                "target_id": "harvest-manager",
+                "target_id": "duty-manager",
                 "target_type": "operator"
               }
             },
             {
-              "action_id": "state-judgement-020-act-002",
+              "action_id": "state.v1-judgement-004-act-002",
               "action_type": "create_alert",
               "approval_required": false,
               "cooldown_minutes": 30,
-              "expected_effect": "후기 수확 종료 전 점검을 잊지 않을 수 있다.",
-              "reason": "첫서리 전후 수확 종료 예정을 알린다.",
+              "expected_effect": "후기 수확 종료와 철거 판단을 빠르게 공유할 수 있다.",
+              "reason": "첫서리 예보 기반 회수 우선순위 검토를 알린다.",
               "risk_level": "medium",
               "target": {
                 "target_id": "gh-01-zone-b",
@@ -2526,18 +2541,27 @@
             {
               "approval_required": true,
               "priority": "medium",
-              "reason": "철거 판단 전 회수 작업만 제한적으로 수행한다.",
-              "task_type": "harvest_review",
-              "valid_until": "2023-11-01T10:00:00Z"
+              "reason": "철거 판단 전 회수 대상 확인이 필요하다.",
+              "task_type": "harvest_drying",
+              "target": {
+                "target_id": "gh-01-zone-b",
+                "target_type": "zone"
+              }
             }
           ],
-          "situation_summary": "첫서리 예보가 있어 신규 착과보다 잔존 과실 회수와 철거 판단이 우선인 상황이다."
+          "situation_summary": "첫서리 예보가 있어 신규 착색보다 잔존 과실 회수와 철거 판단을 먼저 검토해야 한다.",
+          "skipped_actions": [
+            {
+              "action_type": "adjust_fan",
+              "reason": "후기 수확기에는 환기 자동 제어보다 수확/철거 판단이 우선이다."
+            }
+          ]
         },
-        "response_id": "chatcmpl-DTbMpDBhUqCcwsid36C3c4UU1v53r",
+        "response_id": "chatcmpl-DTcgSlrupjMoriEaaH5PswvZXtSm9",
         "usage": {
-          "completion_tokens": 514,
-          "prompt_tokens": 810,
-          "total_tokens": 1324,
+          "completion_tokens": 573,
+          "prompt_tokens": 911,
+          "total_tokens": 1484,
           "completion_tokens_details": {
             "accepted_prediction_tokens": 0,
             "audio_tokens": 0,

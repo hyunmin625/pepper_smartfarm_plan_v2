@@ -4,6 +4,97 @@
 
 ## 2026-04-12
 
+### ds_v8 / prompt_v5_rebase eval 완료
+- `ftjob-od4Gz2SDkPBQfdoabiFz61UZ`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v8-prompt-v5-rebase-eval-v1-20260412-120132:DTfbN2GM`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTfbN2GM --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v8_prompt_v5_rebase`로 eval `24건`을 재실행했다.
+- 결과는 `pass_rate 0.8333`, `strict_json_rate 1.0`이며 champion `0.875`를 넘지 못했다.
+- 남은 실패는 `pepper-eval-004`, `pepper-eval-005`, `forbidden-eval-002`, `edge-eval-004` 4건으로, rebase run도 회귀를 막지 못했다.
+
+### ds_v8 / prompt_v5_rebase challenger 제출
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.7.0 --dataset-version ds_v8 --prompt-version prompt_v5_rebase --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_rebase.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_rebase.jsonl --notes "rebase on sft_v5 prompt with batch7 and batch8 corrective samples"`로 rebase fine-tuning job `ftjob-od4Gz2SDkPBQfdoabiFz61UZ`를 제출했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132.json`에 저장했다.
+- `prompt_v5_rebase` dataset 검증 결과는 train `161`, validation `14`, format error `0`이었다.
+
+### ds_v7 / prompt_v7 eval 완료
+- `ftjob-v8oFS0ZvHlWsxB6u7VAky2Bp`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v7-prompt-v7-eval-v1-20260412-103159:DTeLtzn8`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v7 --model ...:DTeLtzn8 --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v7_prompt_v7`로 eval `24건`을 재실행했다.
+- 결과는 `pass_rate 0.8333`, `strict_json_rate 1.0`이며 champion `0.875`를 넘지 못했다.
+- 남은 실패는 `pepper-eval-004`, `pepper-eval-005`, `action-eval-002`, `edge-eval-004` 4건이다.
+
+### ds_v7 / prompt_v7 challenger 제출
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.6.0 --dataset-version ds_v7 --prompt-version prompt_v7 --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl --notes "batch8 exact corrective samples and prompt_v7 risk-level calibration"`로 새 fine-tuning job `ftjob-v8oFS0ZvHlWsxB6u7VAky2Bp`를 제출했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v7-prompt_v7-eval_v1-20260412-103159.json`에 저장했다.
+- submit 직후 현재 상태는 `validating_files`다.
+
+### ds_v6 / prompt_v6 eval 완료와 batch8 / prompt_v7 보강
+- `ftjob-etLIrpngO2P9RMI545Od6u1N`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v6-prompt-v6-eval-v1-20260412-094328:DTdST10S`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v6 --model ...:DTdST10S --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v6_prompt_v6`로 eval `24건`을 재실행했다.
+- 결과는 `pass_rate 0.875`, `strict_json_rate 1.0`이며, 남은 실패는 `pepper-eval-005`, `action-eval-002`, `edge-eval-003` 3건이다.
+- 실패 원인은 모두 `risk_level_match`로 좁혀졌다.
+- `docs/fine_tuning_objectives.md`에 `prompt_v7` 초안을 추가해 다음 규칙을 명시했다.
+  - 핵심 센서 stale/inconsistent는 `pause_automation`이 들어가도 전체 `risk_level=unknown`
+  - 건조실 고습·함수율 증가 watch 상황은 알림을 내더라도 전체 `risk_level=medium`
+  - `CO2 low + vent_open_lock`은 제어 경로가 막혀 있으므로 전체 `risk_level=high`
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V7_SYSTEM_PROMPT`를 추가했고, `scripts/evaluate_fine_tuned_model.py`도 `sft_v7` 선택을 지원하도록 맞췄다.
+- corrective seed를 추가했다.
+  - `data/examples/state_judgement_samples_batch8.jsonl`
+  - `data/examples/action_recommendation_samples_batch8.jsonl`
+  - `data/examples/failure_response_samples_batch7.jsonl`
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 30`, `sample_rows 175`, `sample_errors 0`
+  - `python3 scripts/audit_training_data_consistency.py` 기준 `duplicate_rows 0`, `potential_contradictions 0`
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 175`
+  - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v7 ...` 기준 `train_rows 161`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl` 기준 `rows 175`, `errors 0`
+
+### ds_v6 / prompt_v6 challenger 제출
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.5.0 --dataset-version ds_v6 --prompt-version prompt_v6 --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v6.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v6.jsonl --notes "batch7 direct corrective samples and prompt_v6 overall risk calibration"`로 새 fine-tuning job `ftjob-etLIrpngO2P9RMI545Od6u1N`를 제출했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v6-prompt_v6-eval_v1-20260412-094328.json`에 저장했다.
+- submit 직후 sync 기준 현재 상태는 `validating_files`이며, events 경로는 `artifacts/fine_tuning/events/ftjob-etLIrpngO2P9RMI545Od6u1N.jsonl`이다.
+- `python3 scripts/render_fine_tuning_comparison_table.py`를 다시 실행해 비교표에 ds_v6 challenger run을 반영했다.
+
+### ds_v5 / prompt_v5 eval 완료와 batch7 / prompt_v6 보강
+- `ftjob-Ykc0SNX3nPnJYiuSopT571XA`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTbkkFBo --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v5_prompt_v5`로 eval `24건`을 재실행했다.
+- 결과는 `pass_rate 0.875`, `strict_json_rate 1.0`이며, 남은 실패는 `pepper-eval-006`, `action-eval-002`, `edge-eval-004` 3건이다.
+- 실패 원인은 `risk_level_match 2건`, `required_action_types_present 1건`으로 좁혀졌다.
+- `action-rec-014`의 건조실 고습 케이스가 eval 기대와 충돌하는 `risk_level=high` 라벨을 유지하고 있어, 해당 sample을 `medium`으로 바로잡았다.
+- `docs/fine_tuning_objectives.md`에 `prompt_v6` 초안을 추가해 다음 규칙을 명시했다.
+  - 전체 `risk_level`은 상황 확정 위험도이며 `create_alert`를 냈다는 이유만으로 `high`로 올리지 않는다.
+  - 병해충 의심 단계는 현장 확진, 트랩 카운트 증가 확정, 빠른 확산, 실물 피해가 없으면 `medium`을 유지한다.
+  - 건조실/저장실 고습·재흡습 watch 상황은 결로, 곰팡이, 실측 손상 확정 전까지 `medium`을 유지한다.
+  - `manual_override + safe_mode`는 `block_action + create_alert`가 필수이며 `request_human_check`가 이를 대체하면 안 된다.
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V6_SYSTEM_PROMPT`를 추가했고, `scripts/evaluate_fine_tuned_model.py`도 `sft_v6` 선택을 지원하도록 맞췄다.
+- corrective seed `batch7`를 추가했다.
+  - `data/examples/state_judgement_samples_batch7.jsonl`
+  - `data/examples/action_recommendation_samples_batch7.jsonl`
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_files 27`, `sample_rows 172`, `sample_errors 0`
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 172`
+  - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v6 ...` 기준 `train_rows 158`, `validation_rows 14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v6.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v6.jsonl` 기준 `rows 172`, `errors 0`
+
+### ds_v5 / prompt_v5 challenger 제출
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.4.0 --dataset-version ds_v5 --prompt-version prompt_v5 --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5.jsonl --notes "batch6 corrective seed and prompt_v5 risk calibration"`로 새 fine-tuning job `ftjob-Ykc0SNX3nPnJYiuSopT571XA`를 제출했다.
+- 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v5-prompt_v5-eval_v1-20260412-075506.json`에 저장했다.
+- 제출 직후 sync 기준 현재 상태는 `validating_files`이며, events 경로는 `artifacts/fine_tuning/events/ftjob-Ykc0SNX3nPnJYiuSopT571XA.jsonl`이다.
+- `python3 scripts/render_fine_tuning_comparison_table.py`를 다시 실행해 비교표에 ds_v5 challenger run을 반영했다.
+
+### ds_v4 잔여 실패 5건 기준 risk_level/action 규칙 추가 보강
+- ds_v4 / prompt_v4 eval 뒤에도 남은 실패 5건(`pepper-eval-006`, `pepper-eval-008`, `action-eval-002`, `edge-eval-003`, `seasonal-eval-002`)을 다시 사람 검토로 분해했다.
+- 실패 원인을 `risk_level` 과상향 4건과 `worker_present` 상황에서 `block_action` 누락 1건으로 좁혔다.
+- `docs/fine_tuning_objectives.md`에 `prompt_v5` 초안을 추가해 다음 규칙을 명시했다.
+  - 병해충 의심 단계는 현장 확진 전까지 `risk_level=medium`
+  - `worker_present`는 `critical` + `block_action + create_alert` 강제
+  - 건조실/저장실 고습·재흡습 우려는 손상 확정 전까지 `medium`
+  - `CO2 low + vent_open_lock`은 `high` + `request_human_check` 필수, `adjust_co2` 금지
+  - 봄 정식 직후 저온·과습/Grodan slab 과습은 기본 `medium`, `request_human_check` 필수, `short_irrigation` 금지
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V5_SYSTEM_PROMPT`를 추가했고, `scripts/evaluate_fine_tuned_model.py`도 `sft_v5` 선택을 지원하도록 맞췄다.
+- corrective seed `batch6`를 추가했다.
+  - `data/examples/state_judgement_samples_batch6.jsonl`
+  - `data/examples/action_recommendation_samples_batch6.jsonl`
+  - `data/examples/failure_response_samples_batch6.jsonl`
+
 ### ds_v4 / prompt_v4 challenger 제출
 - `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model-version pepper-ops-sft-v1.3.0 --dataset-version ds_v4 --prompt-version prompt_v4 --eval-version eval_v1 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl`로 새 fine-tuning job `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k`를 제출했다.
 - 새 run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v4-prompt_v4-eval_v1-20260412-070051.json`에 저장했다.

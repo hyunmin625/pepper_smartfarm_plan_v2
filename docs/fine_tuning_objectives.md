@@ -125,3 +125,30 @@ confidence는 위험도와 별개다. `high` risk라도 근거가 명확하면 c
 - `winter nursery`: 겨울 육묘기의 저온과 저광량은 `risk_level=high`, `create_alert + request_human_check`를 기본으로 두고 `adjust_heating`은 승인 후 보조로만 붙인다.
 - `spring transplant + Grodan slab overwet`: 정식 직후 저온과 암면 슬래브 과습은 `risk_level=medium`, `request_human_check`를 기본으로 두고 `short_irrigation`은 금지한다.
 - `flowering heat + strong radiation`: 개화기 고온·강광은 `risk_level=high`, `create_alert + request_human_check`를 필수로 두고 `adjust_vent/fan/shade`는 보조 대응으로만 붙인다.
+
+## 11. prompt_v5 초안
+
+`prompt_v5`는 ds_v4/prompt_v4 eval 뒤에도 남은 5개 실패 패턴만 좁혀서 보강한다.
+
+- `pest_disease_risk`: 고온다습, 비전 의심 score 상승, 방제 이력 노후가 함께 있어도 현장 확진, 트랩 카운트, 급속 확산, 실물 피해가 없으면 `risk_level=medium`을 유지한다.
+- `worker_present safety_policy`: 작업자 출입 이벤트나 `worker_present`가 active면 `risk_level=critical`과 함께 `block_action + create_alert`를 필수 조합으로 둔다. `request_human_check`는 보조일 수 있지만 `block_action`을 대체하면 안 된다.
+- `drying/storage humidity watch`: 건조실 습도 상승과 저장 함수율 증가 우려는 결로, 곰팡이, 실측 품질 손상이 확인되기 전까지 `risk_level=medium`을 유지한다. 기본 조합은 `create_alert + request_human_check`다.
+- `co2 low + vent_open_lock`: CO2가 목표 이하이고 `vent_open_lock` 또는 유사 lock 때문에 정상 복구 제어가 막힌 상태는 `risk_level=high`로 본다. `request_human_check`를 반드시 포함하고, lock이 active면 `adjust_co2`는 출력하지 않는다.
+- `spring transplant + overwet`: 봄 정식 직후 야간 저온과 과습, 특히 암면 슬래브/Grodan 과습은 활착 지연 우려가 커도 기본 `risk_level=medium`을 유지한다. `request_human_check`는 필수이고, `create_alert`는 선택 사항이며 `short_irrigation`은 금지한다.
+
+## 12. prompt_v6 초안
+
+`prompt_v6`는 ds_v5/prompt_v5 eval 뒤에도 남은 3개 실패 패턴만 정조준해 보강한다.
+
+- `overall risk calibration`: 전체 `risk_level`은 상황 전체의 확정 위험도를 뜻한다. `create_alert`를 출력했다는 이유만으로 전체 `risk_level`을 `high`로 올리면 안 된다. 의심 단계, watch 단계, 재확인 단계에서는 경보를 내더라도 전체 `risk_level=medium`을 유지할 수 있다.
+- `pest_disease suspicion only`: 고온다습, 비전 score 상승, 방제 이력 노후가 함께 있어도 현장 확진, 트랩 카운트 증가 확정, 빠른 확산, 실물 피해가 없으면 전체 `risk_level=medium`을 유지한다. 기본 조합은 `create_alert + request_human_check`이며 `create_robot_task`는 금지한다.
+- `drying/storage humidity watch`: 건조실 습도 상승과 저장 함수율 증가 우려는 결로, 곰팡이, 실측 품질 손상이 확인되기 전까지 전체 `risk_level=medium`을 유지한다. `create_alert + request_human_check`는 맞지만, 경보가 있다고 해서 전체 위험도를 `high`로 올리면 안 된다.
+- `manual_override + safe_mode latched`: `manual_override`와 `safe_mode`가 함께 active면 `block_action + create_alert`가 필수다. `request_human_check`는 추가될 수 있지만 `block_action`을 대체하면 안 되고, `enter_safe_mode`나 장치 제어 action을 다시 내면 안 된다.
+
+## 13. prompt_v7 초안
+
+`prompt_v7`는 ds_v6/prompt_v6 eval 뒤에도 남은 3개 `risk_level_match`를 직접 교정한다.
+
+- `sensor_fault overall risk`: 핵심 센서 stale, flatline, missing, inconsistent가 핵심 문제인 경우 전체 `risk_level`은 `unknown`이다. `pause_automation` action의 긴급도가 높더라도 전체 `risk_level`을 `high`로 올리면 안 된다.
+- `drying action watch`: 건조실 습도 상승과 저장 함수율 증가 우려 같은 watch 상황은 알림을 내더라도 전체 `risk_level=medium`을 유지한다. `high`라는 표현은 결로, 곰팡이, 실측 품질 손상이 확인됐을 때만 허용한다.
+- `co2 low + vent_open_lock failure`: CO2 부족과 `vent_open_lock`이 함께 active면 전체 `risk_level=high`다. 이유는 제어 경로가 막혀 있고 작물 스트레스가 지속될 수 있기 때문이다. `request_human_check`는 필수이고 `adjust_co2`는 금지다. `create_alert`는 추가 가능하지만 전체 위험도를 `medium`으로 낮추면 안 된다.

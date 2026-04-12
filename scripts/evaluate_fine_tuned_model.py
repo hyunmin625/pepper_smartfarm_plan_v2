@@ -33,6 +33,9 @@ from build_openai_sft_datasets import (
     SFT_V2_SYSTEM_PROMPT,
     SFT_V3_SYSTEM_PROMPT,
     SFT_V4_SYSTEM_PROMPT,
+    SFT_V5_SYSTEM_PROMPT,
+    SFT_V6_SYSTEM_PROMPT,
+    SFT_V7_SYSTEM_PROMPT,
 )
 
 
@@ -92,6 +95,9 @@ SYSTEM_PROMPT_BY_VERSION = {
     "sft_v2": SFT_V2_SYSTEM_PROMPT,
     "sft_v3": SFT_V3_SYSTEM_PROMPT,
     "sft_v4": SFT_V4_SYSTEM_PROMPT,
+    "sft_v5": SFT_V5_SYSTEM_PROMPT,
+    "sft_v6": SFT_V6_SYSTEM_PROMPT,
+    "sft_v7": SFT_V7_SYSTEM_PROMPT,
 }
 
 

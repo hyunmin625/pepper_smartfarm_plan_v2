@@ -140,12 +140,12 @@
 - 학습/eval 합본 생성과 통계 리포트 완료: `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`, `scripts/report_training_sample_stats.py`, `docs/training_sample_manual_review.md`
 - 파인튜닝 runbook 1차 완료: `docs/fine_tuning_runbook.md`
 - OpenAI SFT 실행 경로와 실제 submit 검증 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정 후 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`, `batch3 + prompt_v2` 기준 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3` 기준 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`까지 모두 `succeeded`
-- 최신 fine-tuned model 확보 완료: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v3-prompt-v3-eval-v1-20260412-033726:DTXjV3Hg`
-- 최신 fine-tuned model eval 완료: eval `24건` 기준 pass rate `0.6667`, strict JSON rate `1.0`, top failure는 `risk_level_match 5건`, `required_action_types_present 5건`
-- baseline 보관 완료: v1 legacy baseline `0.5417`은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관했고, ds_v3/prompt_v3 결과는 baseline 대비 `+0.1250`, 직전 champion 대비 `+0.0417` 개선됐다.
-- 다음 라운드 초안 준비 완료: `batch5`로 남은 8개 실패 케이스를 직접 보강했고 `prompt_v4` draft를 추가했다.
-- `prompt_v4` 전용 OpenAI SFT draft 파일 생성 완료: train `150`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v4.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v4.jsonl`)
-- 4차 개선 challenger submit 완료: `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` (`ft-sft-gpt41mini-ds_v4-prompt_v4-eval_v1-20260412-070051`)는 현재 `validating_files` 상태다.
+- 최신 champion model 유지: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
+- 최신 champion eval: eval `24건` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
+- baseline 보관 완료: v1 legacy baseline `0.5417`은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관했고, ds_v5/prompt_v5 결과는 baseline 대비 `+0.3333`, 직전 champion ds_v4/prompt_v4 대비 `+0.0833` 개선됐다.
+- 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
+- `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
+- rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
 - 다음 라운드용 SFT 보강 완료: `scripts/build_openai_sft_datasets.py`가 action/failure/robot 계열 출력에 `retrieval_coverage`, `confidence`, `citations`, 정규 action object를 강제하도록 정규화되었고, eval 실패 패턴을 반영한 `batch3` seed 7건이 추가됐다.
 - prompt 버전 분리 완료: 현재 모델 검증용 `legacy` prompt와 다음 재학습용 `sft_v2` prompt를 분리했다. 현재 모델에 `sft_v2` prompt를 바로 적용하면 eval `24건` pass rate가 `0.1667`로 떨어져, prompt 교체는 재학습과 함께 진행해야 한다.
 - 2차 개선 run 완료: `ftjob-ULBuPHoPBbAMah5rPdd2i334` (`ft-sft-gpt41mini-ds_v2-prompt_v2-eval_v1-20260412-021539`)는 `succeeded`로 종료됐고 결과 모델은 `DTWRpIbI`다.
@@ -153,8 +153,17 @@
 - 새 run 기준 학습 파일 규모는 train `142`, validation `14`이며, 비교표와 최신 eval 결과는 `artifacts/fine_tuning/fine_tuning_comparison_table.md`, `artifacts/reports/fine_tuned_model_eval_latest.*`에 반영됐다.
 - `batch4` 실패 보강 9건과 `prompt_v3` draft를 추가했다. 대상은 `sensor_fault`, `pest_disease_risk`, `harvest_drying`, `safety_policy`, `action_recommendation`, `forbidden_action`의 남은 실패 패턴이다.
 - `batch5` 실패 보강 8건과 `prompt_v4` draft를 추가했다. 대상은 `sensor_fault`, `pest_disease_risk`, `safety_policy`, `failure_response`, `seasonal`의 잔여 실패 패턴이다.
-- `batch5` 반영 후 내부 검증 기준 sample `164건`, `prompt_v4` OpenAI SFT draft 파일은 train `150`, validation `14`, format error `0`이다.
-- ds_v3/prompt_v3 run 완료: `ftjob-MiiLGncQBHRXL2NZoBYWxMcc` (`ft-sft-gpt41mini-ds_v3-prompt_v3-eval_v1-20260412-033726`)는 `succeeded`로 종료됐고 새 champion candidate가 아니라 champion으로 승격됐다.
+- `batch6` 실패 보강 5건과 `prompt_v5` draft를 추가했다. 대상은 `pest_disease_risk`, `safety_policy`, `action_recommendation`, `failure_response`, `seasonal`의 잔여 실패 패턴이다.
+- `batch6` 반영 후 내부 검증 기준 sample `169건`, `prompt_v5` OpenAI SFT draft 파일은 train `155`, validation `14`, format error `0`이다.
+- `batch7` 실패 보강 3건과 `prompt_v6` draft를 추가했다. 대상은 `pest_disease_risk`, `action_recommendation`, `safety_policy`의 잔여 실패 패턴이다.
+- `batch7` 반영 후 내부 검증 기준 sample `172건`, `prompt_v6` OpenAI SFT draft 파일은 train `158`, validation `14`, format error `0`이다.
+- `batch8` 실패 보강 3건과 `prompt_v7` draft를 추가했다. 대상은 `sensor_fault`, `action_recommendation`, `failure_response`의 잔여 실패 패턴이다.
+- `batch8` 반영 후 내부 검증 기준 sample `175건`, `prompt_v7` OpenAI SFT draft 파일은 train `161`, validation `14`, format error `0`이다.
+- ds_v4/prompt_v4 run 완료: `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` (`ft-sft-gpt41mini-ds_v4-prompt_v4-eval_v1-20260412-070051`)는 `succeeded`로 종료됐고 pass rate `0.7917`을 기록했다.
+- ds_v5/prompt_v5 run 완료: `ftjob-Ykc0SNX3nPnJYiuSopT571XA` (`ft-sft-gpt41mini-ds_v5-prompt_v5-eval_v1-20260412-075506`)는 `succeeded`로 종료됐고 현재 최고 pass rate `0.875`를 기록했다.
+- ds_v6/prompt_v6 run 완료: `ftjob-etLIrpngO2P9RMI545Od6u1N` (`ft-sft-gpt41mini-ds_v6-prompt_v6-eval_v1-20260412-094328`)는 `succeeded`로 종료됐지만 pass rate `0.875`로 최고 기록을 갱신하지 못했다.
+- ds_v7/prompt_v7 run 완료: `ftjob-v8oFS0ZvHlWsxB6u7VAky2Bp` (`ft-sft-gpt41mini-ds_v7-prompt_v7-eval_v1-20260412-103159`)는 `succeeded`로 종료됐지만 pass rate `0.8333`으로 회귀했다.
+- ds_v8/prompt_v5_rebase run 완료: `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)는 `succeeded`로 종료됐지만 pass rate `0.8333`으로 최고 기록을 갱신하지 못했다.
 - edge case/계절별 평가셋 추가 완료: `evals/edge_case_eval_set.jsonl`, `evals/seasonal_eval_set.jsonl`, 전체 eval row 24건 검증 완료
 - 센서 수집 계획 상세화 완료: `docs/sensor_collection_plan.md`, `schemas/sensor_catalog_schema.json`, `data/examples/sensor_catalog_seed.json`
 - 센서 현장형 인벤토리 초안 완료: `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`에 설치 수량 가정, protocol, calibration, model_profile 반영
@@ -214,8 +223,8 @@
 
 ## 다음 우선순위
 
-1. `ftjob-xVzFf0yIJIeo5M9Nnnn2N81k` 상태를 sync해 `succeeded` 여부를 확인하고, 완료 즉시 eval `24건`을 다시 실행해 champion(`0.6667`) 대비 개선 여부를 확인
-2. 검색 근거 부족 시 불확실성 표현과 hallucination 사례를 사람 검토로 정리
+1. ds_v7/prompt_v7와 ds_v8/prompt_v5_rebase의 회귀 원인을 비교해 `sensor_fault`, `drying watch`, `manual_override + safe_mode`, `nutrient_risk` 중 어떤 축이 prompt 회귀를 유발했는지 먼저 분리
+2. 현재 champion인 ds_v5/prompt_v5를 기준으로 필요한 corrective seed만 얹는 방향으로 다음 실험 범위를 다시 축소
 3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
 4. offline runner/state-estimator MVP 착수 범위를 확정
 

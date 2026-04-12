@@ -1,0 +1,34 @@
+{
+  "schema_version": "fine_tuning_run.v1",
+  "experiment_name": "ft-sft-gpt41mini-ds_v6-prompt_v6-eval_v1-20260412-094328",
+  "mode": "submit",
+  "status": "succeeded",
+  "created_at": "2026-04-12T00:43:28+00:00",
+  "base_model": "gpt-4.1-mini-2025-04-14",
+  "model_version": "pepper-ops-sft-v1.5.0",
+  "dataset_version": "ds_v6",
+  "prompt_version": "prompt_v6",
+  "eval_version": "eval_v1",
+  "training_file_path": "artifacts/fine_tuning/openai_sft_train_prompt_v6.jsonl",
+  "validation_file_path": "artifacts/fine_tuning/openai_sft_validation_prompt_v6.jsonl",
+  "training_rows": 158,
+  "validation_rows": 14,
+  "suffix": "ft-sft-gpt41mini-ds_v6-prompt_v6-eval_v1-20260412-094328",
+  "job_id": "ftjob-etLIrpngO2P9RMI545Od6u1N",
+  "training_file_id": "file-Bek8xyuzcGTghdscRsfFfD",
+  "validation_file_id": "file-JgtbiVnTFMo3o7aSCHvX9m",
+  "fine_tuned_model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v6-prompt-v6-eval-v1-20260412-094328:DTdST10S",
+  "result_files": [
+    "file-Uer25WnkcSWsgmh9qixbfB"
+  ],
+  "error": {
+    "code": null,
+    "message": null,
+    "param": null
+  },
+  "notes": "batch7 direct corrective samples and prompt_v6 overall risk calibration",
+  "latest_synced_at": "2026-04-12T01:14:17+00:00",
+  "estimated_finish": null,
+  "finished_at": 1775955559,
+  "events_path": "artifacts/fine_tuning/events/ftjob-etLIrpngO2P9RMI545Od6u1N.jsonl"
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": "fine_tuning_run.v1",
+  "experiment_name": "ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132",
+  "mode": "submit",
+  "status": "succeeded",
+  "created_at": "2026-04-12T03:01:32+00:00",
+  "base_model": "gpt-4.1-mini-2025-04-14",
+  "model_version": "pepper-ops-sft-v1.7.0",
+  "dataset_version": "ds_v8",
+  "prompt_version": "prompt_v5_rebase",
+  "eval_version": "eval_v1",
+  "training_file_path": "artifacts/fine_tuning/openai_sft_train_prompt_v5_rebase.jsonl",
+  "validation_file_path": "artifacts/fine_tuning/openai_sft_validation_prompt_v5_rebase.jsonl",
+  "training_rows": 161,
+  "validation_rows": 14,
+  "suffix": "ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132",
+  "job_id": "ftjob-od4Gz2SDkPBQfdoabiFz61UZ",
+  "training_file_id": "file-YNVgzck84SBfwUgtofnCJ7",
+  "validation_file_id": "file-25un6GmVkAGB2xE2qVsFYo",
+  "fine_tuned_model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v8-prompt-v5-rebase-eval-v1-20260412-120132:DTfbN2GM",
+  "result_files": [
+    "file-UH1V37ZXYcPLxy9b37riLG"
+  ],
+  "error": {
+    "code": null,
+    "message": null,
+    "param": null
+  },
+  "notes": "rebase on sft_v5 prompt with batch7 and batch8 corrective samples",
+  "latest_synced_at": "2026-04-12T03:31:47+00:00",
+  "estimated_finish": null,
+  "finished_at": 1775963799,
+  "events_path": "artifacts/fine_tuning/events/ftjob-od4Gz2SDkPBQfdoabiFz61UZ.jsonl"
+}
