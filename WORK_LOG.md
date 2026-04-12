@@ -4,6 +4,14 @@
 
 ## 2026-04-13
 
+### ds_v11 / prompt_v5_methodfix_batch14 실제 제출 시작
+- `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline`, `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`를 다시 실행했고 모두 통과했다.
+- submit 직전 기준은 sample `288`, eval `250`, duplicate `0`, contradiction `0`, eval overlap `0`, `extended160` promotion baseline `pass`, SFT format error `0`이었다.
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --model gpt-4.1-mini-2025-04-14 --model-version pepper-ops-sft-v1.8.0 --dataset-version ds_v11 --prompt-version prompt_v5_methodfix_batch14 --eval-version eval_v2 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl --notes "batch14 residual fix with spread validation 50; single controlled submit"`로 실제 challenger를 한 번만 제출했다.
+- 제출 결과 experiment는 `ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407`, job id는 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`이다.
+- `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`를 다시 실행한 최신 sync 기준 현재 상태는 `queued`, events 경로는 `artifacts/fine_tuning/events/ftjob-dTfcY631bh5HJJKJnI5Xi0ML.jsonl`이다.
+- 결론은 그대로다. 이 run이 batch14 residual `12건`을 frozen gate에서 실제로 줄이는지 먼저 확인하고, 평가가 끝나기 전에는 후속 submit을 만들지 않는다.
+
 ### batch14 challenger dry-run package 고정
 - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`로 batch14 기반 challenger draft를 생성했다.
 - 결과는 source training `288`, train `238`, validation `50`, eval overlap `0`이었다.

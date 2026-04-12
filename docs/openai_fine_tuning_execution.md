@@ -38,8 +38,9 @@
 2. OpenAI SFT용 train/validation JSONL 생성
 3. format 검증
 4. dry-run manifest 생성
-5. 사용자 승인 시에만 `--submit`
-6. sync 후 같은 frozen gate로 평가
+5. 사용자 승인 후 `--submit`
+6. sync로 active run 상태 기록
+7. 같은 frozen gate로 평가
 
 ## 4. 현재 권장 명령
 
@@ -119,6 +120,14 @@ python3 scripts/run_openai_fine_tuning_job.py \
   --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl
 ```
 
+현재 제출 상태:
+
+- experiment: `ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407`
+- job_id: `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`
+- submit manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`
+- latest sync status: `queued`
+- events_path: `artifacts/fine_tuning/events/ftjob-dTfcY631bh5HJJKJnI5Xi0ML.jsonl`
+
 ## 5. 평가 원칙
 
 submit 후 평가는 아래 gate를 모두 남겨야 한다.
@@ -140,3 +149,4 @@ submit 후 평가는 아래 gate를 모두 남겨야 한다.
 - validation은 반드시 `spread` 기반 `50건`을 유지한다.
 - 기본 경로 사용 시 `scripts/build_openai_sft_datasets.py`는 stale 합본이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다.
 - submit 전에는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_gate_baseline.md:1)와 [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1)를 함께 확인한다.
+- submit 후에는 manifest sync와 frozen gate 평가가 끝나기 전까지 후속 challenger를 만들지 않는다.

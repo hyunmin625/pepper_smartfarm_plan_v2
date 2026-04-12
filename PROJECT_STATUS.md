@@ -22,7 +22,7 @@
 - `scripts/report_validator_residual_failures.py` 기준 blind50 validator 잔여 `12건`은 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉜다.
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 training slice로 직접 역투영했다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 `training_sample_files()`를 직접 읽는다.
-- 다음 challenger는 아직 submit하지 않았고, batch14 기준 dry-run package만 준비했다. 현재 후보는 `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2 / train 238 / validation 50`이다.
+- 다음 challenger `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 1회만 실제 submit했다. 현재 run은 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `queued`, train `238`, validation `50`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`로 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 자동 집계할 수 있다.
 
 ## 핵심 시스템 방향
@@ -277,7 +277,7 @@
 3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
 4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `238`, validation `50`이다.
 5. 사용자 요구 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`
-6. training targeted 보강과 `extended200`, blind holdout `50` 확보는 완료됐다. 남은 우선순위는 batch14 dry-run challenger를 승인 후 한 번만 submit해 재검증하고, 이어서 shadow mode를 기록하는 일이다.
+6. training targeted 보강과 `extended200`, blind holdout `50` 확보는 완료됐다. batch14 challenger 제출도 시작됐다. 남은 우선순위는 이 run을 frozen gate로 재평가하고, 이어서 shadow mode를 기록하는 일이다.
 7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, offline/runtime skeleton도 구현했다. 다음 단계는 runtime wiring과 shadow mode 기록이다.
 8. `blind-edge-003`, `blind-edge-005`는 validator 우선순위/trigger 보정으로 회복됐다. 다음 보강은 batch14로 옮긴 blind50 잔여 `12건`의 `risk_level`/`required_action_types`/`robot_task` 경계가 challenger에서 실제로 줄어드는지 확인하는 일이다.
 9. batch13과 batch14로 `gt_master_dryback_high`, `nursery_cold_humid_high`, `robot contract`를 training에 고정했고 audit slice로도 잡히게 유지한다.

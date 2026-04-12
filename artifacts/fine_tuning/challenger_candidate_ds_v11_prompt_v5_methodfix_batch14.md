@@ -34,11 +34,14 @@
   - rows: `288`
   - errors: `0`
 
-## Dry-run Manifest
+## Run State
 
-- manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`
-- status: `prepared`
-- mode: `dry_run`
+- dry_run_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`
+- dry_run_status: `prepared`
+- submit_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`
+- job_id: `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`
+- current_status: `queued`
+- events_path: `artifacts/fine_tuning/events/ftjob-dTfcY631bh5HJJKJnI5Xi0ML.jsonl`
 
 ## Why This Candidate Only
 

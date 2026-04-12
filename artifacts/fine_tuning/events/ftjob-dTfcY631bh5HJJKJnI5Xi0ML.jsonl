@@ -1,0 +1,3 @@
+{"id": "ftevent-XWy9MU9QPB0RF5Q6lQUrheQu", "created_at": 1776006953, "level": "info", "message": "Files validated, moving job to queued state", "object": "fine_tuning.job.event", "data": {}, "type": "message"}
+{"id": "ftevent-OfHBPDMTzSAbJsT4FefgGP2i", "created_at": 1776006854, "level": "info", "message": "Validating training file: file-VYYNWzY8XaBymSveUc1QST and validation file: file-JVHtCXrJD1ecWFyDCu91Lf", "object": "fine_tuning.job.event", "data": {}, "type": "message"}
+{"id": "ftevent-p1pkfZ27nsnNdkOyT2Q7SYnQ", "created_at": 1776006854, "level": "info", "message": "Created fine-tuning job: ftjob-dTfcY631bh5HJJKJnI5Xi0ML", "object": "fine_tuning.job.event", "data": {}, "type": "message"}

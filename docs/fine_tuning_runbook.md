@@ -47,7 +47,7 @@ baseline 수치는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-pla
 3. `python3 scripts/report_risk_slice_coverage.py`
 4. `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline`
 5. `python3 scripts/validate_openai_sft_dataset.py ...batch14...`
-6. dry-run manifest 생성 완료
+6. dry-run manifest 생성 완료 또는 동일 내용으로 실제 submit 시작
 
 ## 5. 비용 규칙
 
@@ -56,12 +56,15 @@ baseline 수치는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-pla
 - `blind_holdout50` validator-applied pass rate가 baseline `0.76`을 넘지 못하면 추가 submit보다 데이터/루브릭 보정으로 되돌린다.
 - shadow mode 없이 제품 승격 주장 금지다.
 
-## 6. 현재 draft 상태
+## 6. 현재 run 상태
 
 - training source rows: `288`
 - train rows: `238`
 - validation rows: `50`
 - dry-run manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`
+- submit manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-001407.json`
+- active job_id: `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`
+- current status: `queued`
 
 ## 7. 금지 사항
 
