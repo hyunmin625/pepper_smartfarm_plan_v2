@@ -143,6 +143,10 @@
 - 최신 champion model 유지: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`
 - 최신 champion eval: eval `24건` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
 - baseline 보관 완료: v1 legacy baseline `0.5417`은 `artifacts/reports/fine_tuned_model_eval_legacy_prompt.*`로 보관했고, ds_v5/prompt_v5 결과는 baseline 대비 `+0.3333`, 직전 champion ds_v4/prompt_v4 대비 `+0.0833` 개선됐다.
+- 파인튜닝 plateau 원인 수정 완료: `scripts/build_openai_sft_datasets.py`를 task-level split으로 바꾸고, validation은 각 task의 earliest holdout만 사용하도록 조정했으며, exact train/eval overlap filtering을 추가했다.
+- train/eval overlap 원본 정리 완료: `action-rec-025`를 eval과 동일 입력에서 분리된 저장 구역 watch 사례로 재작성했고, `scripts/audit_training_data_consistency.py`에 eval overlap 검사까지 추가했다.
+- 방법론 수정 후 사전검증 완료: `sample_rows 175`, duplicate `0`, contradiction `0`, eval overlap `0`, cleaned SFT dataset은 train `161`, validation `14`, format error `0`이다.
+- 방법론 수정 challenger 제출 완료: `ftjob-Mz4HYCUsC7ohp2OW01rpBTud` (`ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755`)를 제출했고 현재 상태는 `validating_files`다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -223,10 +227,11 @@
 
 ## 다음 우선순위
 
-1. ds_v7/prompt_v7와 ds_v8/prompt_v5_rebase의 회귀 원인을 비교해 `sensor_fault`, `drying watch`, `manual_override + safe_mode`, `nutrient_risk` 중 어떤 축이 prompt 회귀를 유발했는지 먼저 분리
-2. 현재 champion인 ds_v5/prompt_v5를 기준으로 필요한 corrective seed만 얹는 방향으로 다음 실험 범위를 다시 축소
-3. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
-4. offline runner/state-estimator MVP 착수 범위를 확정
+1. `ftjob-Mz4HYCUsC7ohp2OW01rpBTud`를 sync해 `ds_v9/prompt_v5_methodfix`가 `succeeded`로 끝나는 즉시 eval `24건`을 다시 실행
+2. `ds_v9`가 champion `0.875`를 넘기면 `fine_tuned_model_eval_latest.*`와 비교표를 새 champion 기준으로 승격
+3. 방법론 수정 이후에도 남는 실패가 무엇인지 `risk_level_match`와 `required_action_types_present` 기준으로 다시 좁혀 corrective seed를 설계
+4. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+5. offline runner/state-estimator MVP 착수 범위를 확정
 
 ## 주의할 점
 

@@ -4,6 +4,23 @@
 
 ## 2026-04-12
 
+### ds_v9 / prompt_v5_methodfix 원인 수정과 challenger 제출
+- 반복 회귀의 직접 원인을 다시 점검한 결과, 최근 corrective sample이 `sample_id` 기준 split 때문에 validation으로 빠지고 있었고 일부 corrective sample은 eval과 exact overlap 위험이 있었다.
+- `scripts/build_openai_sft_datasets.py`를 수정해 family bucket을 task-level bucket으로 세분화했고, validation은 각 task에서 earliest eligible sample만 holdout 하도록 변경했다.
+- 같은 스크립트에 exact train/eval overlap filtering을 추가했고, `DEFAULT_EVAL_FILES` 기준 task/input signature를 비교해 학습 전 오염 샘플을 걸러내도록 했다.
+- `data/examples/action_recommendation_samples_batch8.jsonl`의 `action-rec-025`는 eval과 동일 입력이어서 저장 대기 구역 watch 사례로 재작성했다.
+- `scripts/audit_training_data_consistency.py`에 eval overlap 검사까지 추가해 duplicate, contradiction뿐 아니라 exact task/input overlap도 실패로 잡히게 했다.
+- 수정 후 처음부터 다시 검증했다.
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 175`
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_rows 175`, `sample_errors 0`
+  - `python3 scripts/audit_training_data_consistency.py` 기준 `duplicate_rows 0`, `potential_contradictions 0`, `eval_overlap_rows 0`
+  - split 재확인 기준 `excluded_overlap_rows 0`, train `161`, validation `14`
+  - corrective target `action-rec-024`, `action-rec-025`, `failure-response-024`, `failure-response-025`, `state-judgement-042`, `state-judgement-043`가 모두 train에 남는 것을 확인했다.
+- `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix.jsonl`로 cleaned dataset을 생성했고 결과는 train `161`, validation `14`였다.
+- `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix.jsonl` 기준 `rows 175`, `errors 0`을 확인했다.
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --dataset-version ds_v9 --prompt-version prompt_v5_methodfix --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix.jsonl ...`로 새 challenger job `ftjob-Mz4HYCUsC7ohp2OW01rpBTud`를 제출했다.
+- run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755.json`에 저장했고, submit 직후 sync 기준 상태는 `validating_files`다.
+
 ### ds_v8 / prompt_v5_rebase eval 완료
 - `ftjob-od4Gz2SDkPBQfdoabiFz61UZ`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v8-prompt-v5-rebase-eval-v1-20260412-120132:DTfbN2GM`다.
 - `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTfbN2GM --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v8_prompt_v5_rebase`로 eval `24건`을 재실행했다.

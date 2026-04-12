@@ -14,6 +14,15 @@ from typing import Any
 DEFAULT_INPUT = Path("artifacts/training/combined_training_samples.jsonl")
 DEFAULT_TRAIN_OUTPUT = Path("artifacts/fine_tuning/openai_sft_train.jsonl")
 DEFAULT_VALIDATION_OUTPUT = Path("artifacts/fine_tuning/openai_sft_validation.jsonl")
+DEFAULT_EVAL_FILES = (
+    Path("evals/expert_judgement_eval_set.jsonl"),
+    Path("evals/action_recommendation_eval_set.jsonl"),
+    Path("evals/forbidden_action_eval_set.jsonl"),
+    Path("evals/failure_response_eval_set.jsonl"),
+    Path("evals/robot_task_eval_set.jsonl"),
+    Path("evals/edge_case_eval_set.jsonl"),
+    Path("evals/seasonal_eval_set.jsonl"),
+)
 
 LEGACY_SYSTEM_PROMPT = (
     "You are pepper-ops, an agricultural decision assistant for red pepper greenhouse operations. "
@@ -319,21 +328,7 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def family_for_task(task_type: str) -> str:
-    if task_type in STATE_FAMILY_TASKS:
-        return "state_family"
-    if task_type == "qa_reference":
-        return "qa_reference"
-    if task_type == "action_recommendation":
-        return "action_recommendation"
-    if task_type == "forbidden_action":
-        return "forbidden_action"
-    if task_type == "failure_response":
-        return "failure_response"
-    if task_type == "robot_task_prioritization":
-        return "robot_task_prioritization"
-    if task_type == "alert_report":
-        return "alert_report"
-    return "other"
+    return task_type
 
 
 def user_message_for_sample(sample: dict[str, Any]) -> str:
@@ -537,6 +532,81 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def normalize_structure(value: Any) -> Any:
+    if isinstance(value, dict):
+        normalized: dict[str, Any] = {}
+        for key in sorted(value):
+            normalized[key] = normalize_structure(value[key])
+        return normalized
+    if isinstance(value, list):
+        return [normalize_structure(item) for item in value]
+    return value
+
+
+def canonical_input_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = copy.deepcopy(payload)
+    if "summary" in normalized:
+        normalized["state_summary"] = normalized.pop("summary")
+    return normalize_structure(normalized)
+
+
+def eval_input_payload(case: dict[str, Any]) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    input_state = case.get("input_state")
+    if isinstance(input_state, dict):
+        payload.update(input_state)
+    for field in (
+        "retrieved_context",
+        "proposed_action",
+        "failure_type",
+        "active_faults",
+        "last_action",
+        "candidates",
+        "safety_context",
+        "active_constraints",
+        "alert_context",
+        "decision_summary",
+    ):
+        if field in case:
+            payload[field] = case[field]
+    return payload
+
+
+def signature_for_task_input(task_type: str, payload: dict[str, Any]) -> tuple[str, str]:
+    canonical_payload = canonical_input_payload(payload)
+    return task_type, json.dumps(canonical_payload, ensure_ascii=False, sort_keys=True)
+
+
+def load_eval_signatures(paths: list[Path]) -> set[tuple[str, str]]:
+    signatures: set[tuple[str, str]] = set()
+    for path in paths:
+        for row in load_jsonl(path):
+            task_type = str(row.get("task_type") or row.get("category") or "unknown")
+            signatures.add(signature_for_task_input(task_type, eval_input_payload(row)))
+    return signatures
+
+
+def filter_eval_overlap(
+    samples: list[dict[str, Any]],
+    *,
+    eval_signatures: set[tuple[str, str]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    kept: list[dict[str, Any]] = []
+    filtered: list[dict[str, Any]] = []
+    for sample in samples:
+        task_type = str(sample.get("task_type") or "unknown")
+        input_payload = sample.get("input")
+        if not isinstance(input_payload, dict):
+            kept.append(sample)
+            continue
+        signature = signature_for_task_input(task_type, input_payload)
+        if signature in eval_signatures:
+            filtered.append(sample)
+            continue
+        kept.append(sample)
+    return kept, filtered
+
+
 def split_samples(samples: list[dict[str, Any]], validation_per_family: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for sample in sorted(samples, key=lambda item: str(item["sample_id"])):
@@ -546,11 +616,13 @@ def split_samples(samples: list[dict[str, Any]], validation_per_family: int) -> 
     validation_rows: list[dict[str, Any]] = []
     for family in sorted(grouped):
         family_rows = grouped[family]
-        take = min(validation_per_family, max(1, len(family_rows) // 10))
-        if len(family_rows) <= take:
-            take = 1 if len(family_rows) > 1 else 0
-        validation_slice = family_rows[-take:] if take else []
-        train_slice = family_rows[:-take] if take else family_rows
+        eligible_rows = [row for row in family_rows if row.get("validation_eligible", True)]
+        take = min(validation_per_family, len(eligible_rows))
+        if len(family_rows) - take < 1:
+            take = max(0, len(family_rows) - 1)
+        validation_ids = {str(row["sample_id"]) for row in eligible_rows[:take]}
+        validation_slice = [row for row in family_rows if str(row["sample_id"]) in validation_ids]
+        train_slice = [row for row in family_rows if str(row["sample_id"]) not in validation_ids]
         validation_rows.extend(validation_slice)
         train_rows.extend(train_slice)
     return train_rows, validation_rows
@@ -561,11 +633,15 @@ def main() -> None:
     parser.add_argument("--input", default=str(DEFAULT_INPUT))
     parser.add_argument("--train-output", default=str(DEFAULT_TRAIN_OUTPUT))
     parser.add_argument("--validation-output", default=str(DEFAULT_VALIDATION_OUTPUT))
-    parser.add_argument("--validation-per-family", type=int, default=2)
+    parser.add_argument("--validation-per-family", type=int, default=1)
+    parser.add_argument("--eval-files", nargs="*", default=[str(path) for path in DEFAULT_EVAL_FILES])
     parser.add_argument("--system-prompt-version", choices=sorted(SYSTEM_PROMPT_BY_VERSION), default=DEFAULT_SYSTEM_PROMPT_VERSION)
     args = parser.parse_args()
 
     samples = load_jsonl(Path(args.input))
+    eval_signatures = load_eval_signatures([Path(path) for path in args.eval_files])
+    filtered_samples, excluded_overlap_samples = filter_eval_overlap(samples, eval_signatures=eval_signatures)
+    samples = filtered_samples
     train_samples, validation_samples = split_samples(samples, args.validation_per_family)
     system_prompt = SYSTEM_PROMPT_BY_VERSION[args.system_prompt_version]
 
@@ -575,7 +651,8 @@ def main() -> None:
     write_jsonl(Path(args.train_output), train_rows)
     write_jsonl(Path(args.validation_output), validation_rows)
 
-    print(f"input_rows: {len(samples)}")
+    print(f"input_rows: {len(filtered_samples) + len(excluded_overlap_samples)}")
+    print(f"excluded_eval_overlap_rows: {len(excluded_overlap_samples)}")
     print(f"train_rows: {len(train_rows)}")
     print(f"validation_rows: {len(validation_rows)}")
     print(f"system_prompt_version: {args.system_prompt_version}")

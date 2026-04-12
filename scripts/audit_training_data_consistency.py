@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from build_openai_sft_datasets import DEFAULT_EVAL_FILES, load_eval_signatures, signature_for_task_input
 from training_data_config import training_sample_files
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -40,6 +41,13 @@ def stable_hash(value: Any) -> str:
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def canonical_training_input(input_payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = json.loads(canonical_json(input_payload))
+    if "summary" in normalized and "state_summary" not in normalized:
+        normalized["state_summary"] = normalized.pop("summary")
+    return normalized
+
+
 def output_signature(task_type: str, preferred_output: dict[str, Any]) -> dict[str, Any]:
     signature: dict[str, Any] = {"task_type": task_type}
     if task_type == "forbidden_action":
@@ -61,17 +69,25 @@ def output_signature(task_type: str, preferred_output: dict[str, Any]) -> dict[s
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="*", default=[str(path) for path in DEFAULT_FILES])
+    parser.add_argument(
+        "--eval-files",
+        nargs="*",
+        default=[str(path) for path in DEFAULT_EVAL_FILES],
+        help="Eval JSONL files used to detect exact task/input overlap with training samples.",
+    )
     args = parser.parse_args()
 
     rows: list[dict[str, Any]] = []
     for file_name in args.files:
         rows.extend(load_jsonl(Path(file_name)))
+    eval_signatures = load_eval_signatures([Path(file_name) for file_name in args.eval_files])
 
     errors: list[str] = []
     seen_sample_ids: set[str] = set()
     duplicate_rows: list[str] = []
     exact_rows: dict[str, tuple[str, int, str]] = {}
     by_input_signature: dict[str, list[tuple[str, int, str, str]]] = {}
+    overlap_rows: list[str] = []
 
     for row in rows:
         sample_id = row.get("sample_id")
@@ -105,6 +121,9 @@ def main() -> None:
         input_signature = stable_hash({"task_type": task_type, "input": input_value})
         signature_text = canonical_json(output_signature(task_type, preferred_output))
         by_input_signature.setdefault(input_signature, []).append((source_path, source_line, sample_id, signature_text))
+        eval_signature = signature_for_task_input(task_type, canonical_training_input(input_value))
+        if eval_signature in eval_signatures:
+            overlap_rows.append(f"{source_path}:{source_line}({sample_id}) overlaps an eval task/input pair")
 
     contradiction_rows: list[str] = []
     for matches in by_input_signature.values():
@@ -113,15 +132,16 @@ def main() -> None:
             locations = ", ".join(f"{path}:{line}({sample_id})" for path, line, sample_id, _ in matches)
             contradiction_rows.append(f"potential contradiction across {locations}")
 
-    for message in errors + duplicate_rows + contradiction_rows:
+    for message in errors + duplicate_rows + contradiction_rows + overlap_rows:
         print(f"ERROR {message}", file=sys.stderr)
 
     print(f"files: {len(args.files)}")
     print(f"rows: {len(rows)}")
     print(f"duplicate_rows: {len(duplicate_rows)}")
     print(f"potential_contradictions: {len(contradiction_rows)}")
+    print(f"eval_overlap_rows: {len(overlap_rows)}")
     print(f"errors: {len(errors)}")
-    raise SystemExit(1 if errors or duplicate_rows or contradiction_rows else 0)
+    raise SystemExit(1 if errors or duplicate_rows or contradiction_rows or overlap_rows else 0)
 
 
 if __name__ == "__main__":
