@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### ds_v13 batch18 hard-case challenger dry-run package 준비
+- `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --oversample-task-type safety_policy=5 --oversample-task-type failure_response=5 --oversample-task-type sensor_fault=5 --oversample-task-type robot_task_prioritization=3 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl`로 batch18 live head 기준 `ds_v13` dry-run package를 생성했다.
+- 결과는 source training `344`, train `822`, validation `60`, eval overlap `0`이다. oversample summary는 `safety_policy 47 -> 235`, `failure_response 42 -> 210`, `sensor_fault 23 -> 115`, `robot_task_prioritization 45 -> 135`다.
+- `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl` 기준 files `2`, rows `882`, errors `0`을 확인했다.
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --model gpt-4.1-mini-2025-04-14 --model-version pepper-ops-sft-v1.10.0 --dataset-version ds_v13 --prompt-version prompt_v5_methodfix_batch18_hardcase --eval-version eval_v4 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl --notes "batch18 synthetic shadow day0 residual plus hard-case oversampling dry-run only; blocked until runtime shadow improves"`를 `--submit` 없이 실행해 dry-run manifest `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json`를 생성했다.
+- 해석은 분명하다. `ds_v12`는 frozen snapshot으로 유지하고, `ds_v13`은 batch18이 실제로 필요한지 검증하기 위한 next-only dry-run candidate로만 관리한다.
+
 ### synthetic shadow day0 residual report와 batch18 `8건` 추가
 - `scripts/report_shadow_mode_seed_residuals.py`를 추가해 `artifacts/runtime/llm_orchestrator/shadow_mode_ds_v11_day0_seed.jsonl` 기준 synthetic shadow `day0` 잔여 drift를 owner와 cause로 재분류했다.
 - 결과 리포트 `artifacts/reports/shadow_mode_residuals_ds_v11_day0_seed.md` 기준 residual `4건`은 `data_and_model 3`, `robot_contract_and_model 1`이고, 원인은 `alert_missing_before_fertigation_review 3`, `inspect_crop_enum_drift 1`이다.

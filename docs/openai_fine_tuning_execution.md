@@ -23,16 +23,13 @@
 
 ## 2. 다음 challenger 원칙
 
-- 다음 challenger는 broad prompt 수정이 아니라 `batch16 + batch17 + hard-case oversampling` 효과만 본다.
-- 현재 next candidate는 dry-run으로만 고정한다.
-  - `dataset_version=ds_v12`
-  - `prompt_version=prompt_v5_methodfix_batch17_hardcase`
-  - `eval_version=eval_v3`
-  - `system_prompt_version=sft_v5`
-  - `model_version=pepper-ops-sft-v1.9.0`
-- 실제 submit은 아직 보류한다. 이유는 `synthetic shadow day0 hold`, blind50 validator 기준선 `0.9` 미초과, 실제 shadow mode 부재다.
+- 다음 challenger는 broad prompt 수정이 아니라 `batch16 + batch17 + batch18 + hard-case oversampling` 효과만 본다.
+- 비교 축은 두 개로 분리한다.
+  - frozen snapshot: `ds_v12 / prompt_v5_methodfix_batch17_hardcase / eval_v3`
+  - live-head candidate: `ds_v13 / prompt_v5_methodfix_batch18_hardcase / eval_v4`
+- 실제 submit은 둘 다 아직 보류한다. 이유는 `synthetic shadow day0 hold`, blind50 validator 기준선 `0.9` 미초과, 실제 shadow mode 부재다.
 
-세부 package는 [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1)에 정리한다.
+세부 package는 [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1)와 [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)에 정리한다.
 
 ## 3. 실행 순서
 
@@ -55,7 +52,7 @@ python3 scripts/report_risk_slice_coverage.py
 python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline
 ```
 
-### 4.2 ds_v12 hard-case challenger draft 생성
+### 4.2 ds_v13 hard-case challenger draft 생성
 
 ```bash
 python3 scripts/build_openai_sft_datasets.py \
@@ -67,29 +64,29 @@ python3 scripts/build_openai_sft_datasets.py \
   --oversample-task-type failure_response=5 \
   --oversample-task-type sensor_fault=5 \
   --oversample-task-type robot_task_prioritization=3 \
-  --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl \
-  --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl
+  --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl \
+  --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl
 ```
 
 현재 결과:
 
-- source training rows: `336`
-- train rows: `815`
-- validation rows: `57`
+- source training rows: `344`
+- train rows: `822`
+- validation rows: `60`
 - eval overlap: `0`
 
 ### 4.3 format 검증
 
 ```bash
 python3 scripts/validate_openai_sft_dataset.py \
-  artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl \
-  artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl
+  artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl \
+  artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl
 ```
 
 현재 결과:
 
 - files: `2`
-- rows: `872`
+- rows: `882`
 - errors: `0`
 
 ### 4.4 dry-run manifest 생성
@@ -97,18 +94,18 @@ python3 scripts/validate_openai_sft_dataset.py \
 ```bash
 python3 scripts/run_openai_fine_tuning_job.py \
   --model gpt-4.1-mini-2025-04-14 \
-  --model-version pepper-ops-sft-v1.9.0 \
-  --dataset-version ds_v12 \
-  --prompt-version prompt_v5_methodfix_batch17_hardcase \
-  --eval-version eval_v3 \
-  --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl \
-  --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl \
-  --notes "batch16+batch17+hard-case oversampling dry-run only; blocked until synthetic shadow day0 improves"
+  --model-version pepper-ops-sft-v1.10.0 \
+  --dataset-version ds_v13 \
+  --prompt-version prompt_v5_methodfix_batch18_hardcase \
+  --eval-version eval_v4 \
+  --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl \
+  --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl \
+  --notes "batch18 synthetic shadow day0 residual plus hard-case oversampling dry-run only; blocked until runtime shadow improves"
 ```
 
 현재 dry-run manifest:
 
-- `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json`
+- `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json`
 
 ### 4.5 실제 submit
 
@@ -136,7 +133,7 @@ submit 후 평가는 아래 gate를 모두 남겨야 한다.
 
 - `--submit` 없는 실행은 dry-run이다.
 - `OPENAI_API_KEY`가 없으면 submit 금지다.
-- validation은 반드시 `spread` 기반 `57건`을 유지한다.
+- validation은 반드시 `spread` 기반 `60건`을 유지한다.
 - 기본 경로 사용 시 `scripts/build_openai_sft_datasets.py`는 stale 합본이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다.
-- submit 전에는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_gate_baseline.md:1)와 [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1)를 함께 확인한다.
+- submit 전에는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_gate_baseline.md:1), [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1), [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)를 함께 확인한다.
 - `synthetic shadow day0`가 `hold`인 동안은 후속 challenger를 dry-run까지만 허용한다.
