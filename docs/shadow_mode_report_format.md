@@ -43,6 +43,9 @@
 - `forbidden_action`은 일반 `recommended_actions` 비교가 아니라 `decision`과 `blocked_action_type`를 우선 계약으로 본다.
 - 따라서 shadow audit와 offline replay는 `forbidden_action`에서 `operator_decision`, `operator_blocked_action_type`, `ai_decision_after`, `ai_blocked_action_type_after`를 함께 기록해야 한다.
 - `enter_safe_mode` 같은 validator 내부 보정 action이 붙어도 `decision=block`과 `blocked_action_type`이 맞으면 `forbidden_action` 계약 위반으로 간주하지 않는다.
+- `robot_task_prioritization`은 일반 `recommended_actions` 비교가 아니라 `robot_tasks[].task_type`의 exact enum과 `candidate_id` 또는 `target` 계약을 우선 본다.
+- 따라서 shadow audit는 `robot_task_prioritization`에서 `ai_robot_task_types_after`, `operator_robot_task_types`를 함께 기록해야 한다.
+- low-confidence hotspot, aisle safety, blocked candidate 같은 케이스는 `inspect_crop`, `skip_area`, `manual_review` exact enum drift를 별도 disagreement로 집계한다.
 
 ## 예시 JSON 요약 필드
 

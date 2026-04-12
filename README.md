@@ -63,6 +63,7 @@
 - `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay도 생성했다. 최근에는 `forbidden_action`을 `decision + blocked_action_type` 계약으로 재정렬하고 replay heuristic을 다듬어 `decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`까지 올렸다.
 - 이 offline shadow replay는 `shadow_mode pass` 대체가 아니라, 실제 현장 shadow 전에 남은 의미 실패를 압축해 보는 사전 기준선이다.
 - 현재 offline shadow의 실제 corrective backlog는 [shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md:1)로 고정했고, 남은 drift `4건`은 [docs/offline_shadow_residual_batch17_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/offline_shadow_residual_batch17_plan.md:1)와 batch17 sample `8건`으로 직접 역투영했다.
+- `robot_task`까지 포함한 synthetic shadow `day0` seed pack도 추가했다. [shadow_mode_ds_v11_day0_seed.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_ds_v11_day0_seed.md:1) 기준 `decision_count 12`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`다.
 - `ds_v9/prompt_v5_methodfix`는 이제 frozen historical baseline으로 유지한다. raw `extended200 0.51`, `blind_holdout50 0.32`였고, validator 적용 후에도 `blind_holdout50 0.76`에 그쳤다.
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
 - `extended200` 실패군 재분류 완료: 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였고, 새 tranche 실패 `25건`은 `edge/seasonal`의 unseen generalization 문제를 더 선명하게 드러냈다.
@@ -81,6 +82,7 @@
 - `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2` run `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`는 `succeeded`로 종료됐다. training `238`, validation `50`이며 결과 model은 `DTryNJg3`다.
 - `batch15` hard-case `10건`, batch16 safety reinforcement `30건`, batch17 offline shadow residual `8건`을 추가해 이후 challenger에서 `safety_policy/failure_response/sensor_fault/robot_task`와 blind residual drift를 train-only oversampling과 함께 증폭할 준비를 마쳤다. dry-run 기준 권장 가중치 적용 시 train `803`, validation `57`, SFT format error `0`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 shadow report 요약과 승격 판단(`promote / hold / rollback`)을 자동 생성할 수 있다.
+- shadow runtime은 이제 `forbidden_action`뿐 아니라 `robot_task_prioritization`도 task-specific 계약으로 비교한다. `ai_robot_task_types_after`와 `operator_robot_task_types`를 함께 남겨 `inspect_crop / skip_area / manual_review` exact enum drift를 shadow report에서 직접 볼 수 있다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
@@ -100,7 +102,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 batch16 + batch17 + next-only oversampling challenger가 정당한지 판단하는 일이다.
+- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, synthetic shadow day0 `hold -> pass` 축소, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 batch16 + batch17 + next-only oversampling challenger가 정당한지 판단하는 일이다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료

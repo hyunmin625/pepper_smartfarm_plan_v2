@@ -102,9 +102,11 @@ def build_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "zone_id": row.get("zone_id"),
                 "critical_disagreement": bool(row.get("critical_disagreement")),
                 "ai_action_types_after": row.get("ai_action_types_after", []),
+                "ai_robot_task_types_after": row.get("ai_robot_task_types_after", []),
                 "ai_decision_after": row.get("ai_decision_after"),
                 "ai_blocked_action_type_after": row.get("ai_blocked_action_type_after"),
                 "operator_action_types": row.get("operator_action_types", []),
+                "operator_robot_task_types": row.get("operator_robot_task_types", []),
                 "operator_decision": row.get("operator_decision"),
                 "operator_blocked_action_type": row.get("operator_blocked_action_type"),
                 "validator_reason_codes": row.get("validator_reason_codes", []),
@@ -165,10 +167,16 @@ def render_markdown(summary: dict[str, Any]) -> str:
                     f" ai_blocked={item.get('ai_blocked_action_type_after')}"
                     f" operator_blocked={item.get('operator_blocked_action_type')}"
                 )
+            robot_suffix = ""
+            if item.get("ai_robot_task_types_after") or item.get("operator_robot_task_types"):
+                robot_suffix = (
+                    f" ai_robot={item.get('ai_robot_task_types_after')}"
+                    f" operator_robot={item.get('operator_robot_task_types')}"
+                )
             lines.append(
                 f"- `{item['request_id']}` `{item['task_type']}` critical={item['critical_disagreement']}"
                 f" ai={item['ai_action_types_after']} operator={item['operator_action_types']}"
-                f"{decision_suffix}{blocked_suffix} validator={item['validator_reason_codes']}"
+                f"{decision_suffix}{blocked_suffix}{robot_suffix} validator={item['validator_reason_codes']}"
             )
     else:
         lines.append("- 없음")

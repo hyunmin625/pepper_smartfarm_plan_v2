@@ -82,6 +82,7 @@ class ShadowModeMetadata:
 @dataclass(frozen=True)
 class ShadowModeObservedOutcome:
     operator_action_types: list[str]
+    operator_robot_task_types: list[str]
     operator_agreement: bool | None = None
     operator_decision: str | None = None
     operator_blocked_action_type: str | None = None
@@ -96,9 +97,15 @@ class ShadowModeObservedOutcome:
             for action_type in raw.get("operator_action_types", [])
             if isinstance(action_type, str) and action_type.strip()
         ]
+        operator_robot_task_types = [
+            str(task_type)
+            for task_type in raw.get("operator_robot_task_types", [])
+            if isinstance(task_type, str) and task_type.strip()
+        ]
         operator_agreement_raw = raw.get("operator_agreement")
         return cls(
             operator_action_types=operator_action_types,
+            operator_robot_task_types=operator_robot_task_types,
             operator_agreement=operator_agreement_raw if isinstance(operator_agreement_raw, bool) else None,
             operator_decision=str(raw.get("operator_decision") or "").strip() or None,
             operator_blocked_action_type=str(raw.get("operator_blocked_action_type") or "").strip() or None,
@@ -128,9 +135,11 @@ class ShadowModeAuditRecord:
     validator_reason_codes: list[str]
     ai_action_types_before: list[str]
     ai_action_types_after: list[str]
+    ai_robot_task_types_after: list[str]
     ai_decision_after: str | None
     ai_blocked_action_type_after: str | None
     operator_action_types: list[str]
+    operator_robot_task_types: list[str]
     operator_decision: str | None
     operator_blocked_action_type: str | None
     operator_agreement: bool
@@ -160,9 +169,11 @@ class ShadowModeAuditRecord:
             "validator_reason_codes": self.validator_reason_codes,
             "ai_action_types_before": self.ai_action_types_before,
             "ai_action_types_after": self.ai_action_types_after,
+            "ai_robot_task_types_after": self.ai_robot_task_types_after,
             "ai_decision_after": self.ai_decision_after,
             "ai_blocked_action_type_after": self.ai_blocked_action_type_after,
             "operator_action_types": self.operator_action_types,
+            "operator_robot_task_types": self.operator_robot_task_types,
             "operator_decision": self.operator_decision,
             "operator_blocked_action_type": self.operator_blocked_action_type,
             "operator_agreement": self.operator_agreement,
@@ -199,11 +210,31 @@ def _action_types(task_type: str, payload: dict[str, Any]) -> list[str]:
     ]
 
 
-def _schema_pass(payload: dict[str, Any]) -> bool:
+def _robot_task_types(payload: dict[str, Any]) -> list[str]:
+    return [
+        str(task.get("task_type"))
+        for task in payload.get("robot_tasks", [])
+        if isinstance(task, dict) and task.get("task_type")
+    ]
+
+
+def _schema_pass(task_type: str, payload: dict[str, Any]) -> bool:
     if not isinstance(payload, dict):
         return False
     if not payload.get("risk_level"):
         return False
+    if task_type == "forbidden_action":
+        return bool(payload.get("decision") and payload.get("blocked_action_type"))
+    if task_type == "robot_task_prioritization":
+        tasks = payload.get("robot_tasks")
+        if not isinstance(tasks, list):
+            return False
+        return all(
+            isinstance(task, dict)
+            and task.get("task_type")
+            and (task.get("candidate_id") or task.get("target"))
+            for task in tasks
+        )
     actions = payload.get("recommended_actions")
     if not isinstance(actions, list):
         return False
@@ -234,6 +265,8 @@ def _operator_agreement(
         if observed.operator_decision == "block" and observed.operator_blocked_action_type:
             return str(payload.get("blocked_action_type") or "") == observed.operator_blocked_action_type
         return True
+    if task_type == "robot_task_prioritization" and observed.operator_robot_task_types:
+        return sorted(_robot_task_types(payload)) == sorted(observed.operator_robot_task_types)
     return sorted(ai_action_types) == sorted(observed.operator_action_types)
 
 
@@ -293,6 +326,7 @@ def run_shadow_mode_capture(
 ) -> tuple[dict[str, Any], ValidationAuditRecord, ShadowModeAuditRecord, Path]:
     validated_output, validator_audit, _ = run_output_validator(envelope)
     ai_action_types_after = _action_types(envelope.task_type, validated_output)
+    ai_robot_task_types_after = _robot_task_types(validated_output)
     shadow_record = ShadowModeAuditRecord(
         request_id=envelope.request_id,
         model_id=metadata.model_id,
@@ -303,7 +337,7 @@ def run_shadow_mode_capture(
         task_type=envelope.task_type,
         zone_id=envelope.context.zone_id,
         growth_stage=observed.growth_stage,
-        schema_pass=_schema_pass(validated_output),
+        schema_pass=_schema_pass(envelope.task_type, validated_output),
         citation_required=envelope.context.requires_citations,
         citation_present=_citation_present(validated_output),
         retrieval_hit=_retrieval_hit(validated_output),
@@ -312,9 +346,11 @@ def run_shadow_mode_capture(
         validator_reason_codes=validator_audit.validator_reason_codes,
         ai_action_types_before=validator_audit.action_types_before,
         ai_action_types_after=ai_action_types_after,
+        ai_robot_task_types_after=ai_robot_task_types_after,
         ai_decision_after=str(validated_output.get("decision") or "").strip() or None,
         ai_blocked_action_type_after=str(validated_output.get("blocked_action_type") or "").strip() or None,
         operator_action_types=observed.operator_action_types,
+        operator_robot_task_types=observed.operator_robot_task_types,
         operator_decision=observed.operator_decision,
         operator_blocked_action_type=observed.operator_blocked_action_type,
         operator_agreement=_operator_agreement(envelope.task_type, validated_output, ai_action_types_after, observed),

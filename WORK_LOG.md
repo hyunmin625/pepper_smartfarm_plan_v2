@@ -4,6 +4,14 @@
 
 ## 2026-04-13
 
+### synthetic shadow day0 seed pack 추가
+- `llm-orchestrator/llm_orchestrator/runtime.py`를 보강해 `robot_task_prioritization`도 shadow agreement에 반영되도록 했다. 이제 `ai_robot_task_types_after`와 `operator_robot_task_types`를 함께 기록하고 `inspect_crop / skip_area / manual_review` exact enum drift를 직접 잡는다.
+- `scripts/build_shadow_mode_report.py`와 `docs/shadow_mode_report_format.md`도 같은 계약으로 갱신했다.
+- `scripts/generate_shadow_mode_day0_seed_pack.py`를 추가해 synthetic shadow day0 seed case `12건`을 생성했다. `worker_present`, `sensor stale`, `irrigation readback mismatch`, `rootzone sensor conflict`, `robot aisle safety` 같은 aligned case와 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` residual case를 같이 넣었다.
+- `scripts/run_shadow_mode_seed_pack.py`로 seed pack을 runtime capture -> summary report 경로에 연결했고, `scripts/validate_shadow_mode_seed_pack.py`로 baseline 값까지 고정했다.
+- `python3 scripts/run_shadow_mode_seed_pack.py --cases-file data/examples/shadow_mode_runtime_day0_seed_cases.jsonl --audit-log artifacts/runtime/llm_orchestrator/shadow_mode_ds_v11_day0_seed.jsonl --validator-audit-log artifacts/runtime/llm_orchestrator/output_validator_ds_v11_day0_seed.jsonl --output-prefix artifacts/reports/shadow_mode_ds_v11_day0_seed` 결과 synthetic shadow baseline은 `decision_count 12`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`였다.
+- 해석은 분명하다. offline replay는 heuristic 정렬 후 `promote`까지 올라갔지만, runtime-shaped shadow seed에서는 아직 residual drift가 그대로 남는다. 다음 corrective challenger는 이 synthetic shadow baseline을 먼저 끌어올릴 수 있을 때만 검토한다.
+
 ### batch17 offline shadow residual 8건 추가
 - `scripts/generate_batch17_shadow_residual_samples.py`를 추가해 offline shadow replay 잔여 drift `4건`을 batch17 sample `8건`으로 직접 옮겼다.
 - 생성 파일은 `data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl` `2건`, `data/examples/state_judgement_samples_batch17_shadow_residual.jsonl` `4건`, `data/examples/robot_task_samples_batch6_shadow_residual.jsonl` `2건`이다.

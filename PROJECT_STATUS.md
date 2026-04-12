@@ -22,6 +22,7 @@
 - `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay를 만들었다. `forbidden_action` 계약 정렬, runtime `HSV-09` 반영, replay heuristic 보정 뒤 현재 기준선은 `decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`다.
 - 다만 이건 어디까지나 offline replay 기준선이다. 실제 corrective backlog는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며 owner는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌다. 이 네 건은 `docs/offline_shadow_residual_batch17_plan.md`와 batch17 sample `8건`으로 직접 역투영했다.
 - offline shadow replay는 실운영 shadow mode 대체가 아니다. 다만 현재 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 빠르게 압축하는 사전 기준선으로는 유효하다.
+- `robot_task`까지 포함한 synthetic shadow `day0` seed pack도 추가했다. `artifacts/reports/shadow_mode_ds_v11_day0_seed.md` 기준 `decision_count 12`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`다. 즉 runtime envelope 기준의 남은 drift는 아직 실제로 줄여야 한다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
@@ -293,7 +294,8 @@
 6. blind50 validator 잔여 `5건`을 먼저 줄인다. 이 중 offline shadow residual `4건`은 batch17 sample `8건`으로 이미 직접 보강했고, 남은 raw-only failure owner는 validator residual 리포트 기준으로 다시 관리한다.
 7. extended200 validator 잔여 `42건`을 `risk_rubric_and_data`, `required_action_types`, `robot contract` 기준으로 다시 줄인다.
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
-9. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + batch17 + next-only oversampling challenger는 그 다음에만 검토한다.
+9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. 다음 corrective challenger는 이 baseline을 먼저 올릴 수 있을 때만 검토한다.
+10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + batch17 + next-only oversampling challenger는 그 다음에만 검토한다.
 
 ## 주의할 점
 
