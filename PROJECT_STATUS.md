@@ -12,7 +12,7 @@
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
 - 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로 유지한다.
-- `extended120` 최소 benchmark는 달성했다. 현재 분포는 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`이며, 다음 운영 게이트는 `core24 + extended120` 재평가와 `extended160` 확장이다.
+- `extended120` 최소 benchmark는 달성했다. 현재 분포는 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`이다. 다만 제품 수준 재평가 기준으로는 `extended160`을 넘어 `extended200 + blind_holdout50`까지 계획을 올려야 한다.
 
 ## 핵심 시스템 방향
 
@@ -85,6 +85,7 @@
 - `docs/offline_agent_runner_spec.md`: 실측 데이터 없이 Agent 판단을 검증하는 offline runner 요구사항
 - `docs/mlops_registry_design.md`: dataset/prompt/model/eval/retrieval profile 버전 관리 규칙
 - `docs/shadow_mode_report_format.md`: shadow mode 승격 판단 리포트 형식
+- `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 fine-tuning 재개 조건
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준
 - `WORK_LOG.md`: 진행한 작업, 커밋, 조사 근거 기록
 - `AGENTS.md`: 기여자와 AI 에이전트 작업 규칙
@@ -158,13 +159,14 @@
 - 방법론 수정 run 완료: `ftjob-Mz4HYCUsC7ohp2OW01rpBTud` (`ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755`)는 `succeeded`로 종료됐다.
 - `ds_v9/prompt_v5_methodfix` eval 완료: pass rate `0.875`, strict JSON rate `1.0`으로 기존 champion과 동률이며, 실패 케이스는 `pepper-eval-003`, `failure-eval-001`, `edge-eval-004`다.
 - 방법론 수정 효과 확인: 기존 champion에서 실패하던 `pepper-eval-006`과 `action-eval-002`는 해결됐지만, `rootzone_diagnosis`와 `failure_response` 한 케이스가 새로 회귀해 최고 기록은 아직 `ds_v5/prompt_v5`가 유지된다.
-- `ds_v10/prompt_v8` corrective round 제출 완료: `ftjob-LXWpGudJCeyqsH7WMorGHAT2` (`ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205`)를 제출했다. train `165`, validation `14`, submit 직후 상태는 `validating_files`다.
-- `ds_v10/prompt_v8`의 최근 sync 기준 상태는 `queued`다.
+- `ds_v10/prompt_v8` corrective round 제출 이력은 남아 있지만, 로컬 manifest 기준 최근 상태는 `cancelled`다.
 - eval scale-up minimum 달성: `docs/eval_scaleup_plan.md`, `scripts/report_eval_set_coverage.py`, `scripts/build_eval_jsonl.py`, `scripts/generate_extended_eval_sets.py` 기준으로 `core24 + extended120/160` 운영 기준을 고정했고, 현재 minimum gate는 통과했다.
 - `ds_v10` 입력은 `batch9` corrective sample 4건과 `prompt_v8` 규칙 3개로 구성했다. 대상은 `rootzone_diagnosis high-risk`, `failure_response sensor_stale high`, `manual_override + safe_mode -> block_action + create_alert`다.
 - 다음 corrective draft 로컬 복구 완료: `state_judgement batch10 6건`, `failure_response batch10 3건`, `forbidden_action batch5 2건`, `robot_task batch3 4건`을 추가해 combined training을 `194건`으로 재생성했다.
 - `prompt_v9` draft build 완료: `scripts/build_openai_sft_datasets.py --system-prompt-version sft_v9` 기준 train `180`, validation `14`, eval overlap `0`이며 산출물은 `artifacts/fine_tuning/openai_sft_train_prompt_v9.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v9.jsonl`이다.
 - 기본 validation 범위는 extended eval `120건`과 blind holdout `24건`을 함께 포함한 총 `144건`이다.
+- 제품 수준 재평가 결론: 현재 병목은 base model보다는 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트에 있다.
+- 로컬 툴 보강: `scripts/build_openai_sft_datasets.py`는 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하고, `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검한다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -245,12 +247,12 @@
 
 ## 다음 우선순위
 
-1. `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 sync해 `ds_v10/prompt_v8`이 `succeeded`로 끝나는 즉시 `core24 + extended120` 기준 eval을 다시 실행
-2. 현재 고정된 champion baseline `ds_v5/prompt_v5 extended120 pass_rate 0.5417`과 ds_v10 결과를 비교
-3. ds_v10이 blind holdout / safety invariant를 못 넘기면 준비된 `prompt_v9` draft(train `180` / validation `14`)를 다음 challenger 후보로 전환
-4. `Tranche 3`로 hardest slice를 추가해 `extended160` 권장 게이트까지 확장
-5. `scripts/report_eval_set_coverage.py --enforce-minimums`를 계속 유지하고, fine-tuning 비교는 `core24` 단독이 아니라 `core24 + extended120` 기준으로 기록
-6. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화하고 offline runner/state-estimator MVP 착수 범위를 확정
+1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화`, `policy/output validator`, `eval200` 계획을 먼저 고정
+2. 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 다시 정리하고, 후속 challenger가 생기면 같은 조건으로만 비교
+3. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 검토
+4. `Tranche 3`로 `extended160`, 이후 `extended200`과 blind holdout `50`까지 확장
+5. hard block 정책 10개와 approval 정책 10개를 정책 JSON 및 output validator로 구체화
+6. 그 다음에만 critical slice 중심 training `+42` 내외 보강과 다음 challenger 제출 여부를 결정
 
 ## 주의할 점
 

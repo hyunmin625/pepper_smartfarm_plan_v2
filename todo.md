@@ -46,6 +46,18 @@
 
 ---
 
+# 제품 수준 재평가 우선 작업
+
+- [ ] `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit freeze 상태 유지
+- [ ] `scripts/build_openai_sft_datasets.py`로 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread` split 시뮬레이션과 결과 기록
+- [ ] hard safety rule 10개를 policy/output validator 요구사항으로 분리 문서화
+- [ ] `extended160` 확장 tranche 작성
+- [ ] `extended200` 최종 분포와 blind holdout `50` 확장 tranche 작성
+- [ ] `safety_policy`, `failure_response`, `sensor_fault`, `robot_task_prioritization`, `rootzone_diagnosis/state_judgement` 중심 training `+42` 샘플 보강 계획 확정
+- [ ] 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 재평가할 실행 순서 고정
+
+---
+
 # 0. 프로젝트 관리 초기화
 
 ## 0.0 온실 공사중 전제 반영

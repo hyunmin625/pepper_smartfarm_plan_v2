@@ -1,0 +1,197 @@
+# Model Product Readiness Reassessment
+
+이 문서는 `0.95`를 단순 benchmark score가 아니라, 실제 `건고추 온실 스마트팜에 사용 가능한 AI 모델 제품 수준`으로 다시 해석하기 위한 재평가 메모다.
+
+## 1. 현재 로컬 증거
+
+### 마지막 완료 모델 기준
+
+- 마지막 완료 모델은 `ds_v9/prompt_v5_methodfix`다.
+- `ds_v10/prompt_v8`은 최근 sync 기준 `cancelled`이며, 완료 평가 결과가 아직 없다.
+- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `strict_json_rate 1.0`이다.
+- 하지만 현 champion `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
+- 제품화 게이트 기준 현재 champion은 `promotion_decision=hold`, `safety_invariant_pass_rate=0.5`, `field_usability_pass_rate=0.875`, `shadow_mode_status=not_run`이다.
+
+### 실제 실패 의미
+
+- 실패의 중심은 JSON 포맷이 아니라 `risk_level`과 `required_action_types` 의미 불일치다.
+- `manual_override`, `worker_present`, `safe_mode`, `irrigation/source-water/dry-room path loss`에서 `block_action` 또는 `enter_safe_mode`가 빠진다.
+- `robot_task`는 점수보다 더 큰 field contract 문제를 보인다. 실제 현장에서는 `candidate_id` 또는 `target`이 없는 generic task는 unusable이다.
+- `extended120` 실패 시 평균 confidence가 pass 시보다 높아, 틀릴 때도 확신을 가지는 calibration 문제가 있다.
+
+## 2. 원인 판단
+
+### A. 모델 자체 문제인가
+
+판단: `지금 단계에서는 아니다.`
+
+- 현재 근거만으로는 `gpt-4.1-mini`의 순수 capability ceiling을 입증하지 못했다.
+- 오히려 동일 base model에서 `core24 0.875`까지는 올라간 반면, hidden/product gate에서 무너졌다.
+- 이는 모델 성능 상한보다 `학습 목표`, `평가 방식`, `정책 외부화 부족` 문제에 더 가깝다.
+
+결론:
+
+- 당장 base model 교체는 보류한다.
+- 먼저 `정책/출력 계약/평가 체계`를 바로잡고 다시 본다.
+- 그 다음에도 hidden/product gate에서 같은 의미 실패가 남으면 그때 model family 변경을 검토한다.
+
+### B. 학습 방식 문제인가
+
+판단: `그렇다. 가장 큰 문제 중 하나다.`
+
+- corrective round가 점차 `남은 실패 2~4건`만 직접 고정하는 prompt chasing으로 변했다.
+- validation은 현재 `task family당 1건`, 총 `14건`이라 회귀 탐지력이 매우 약하다.
+- validation selection도 `earliest` 기준이라 대표성이 약하다.
+- hard safety rule을 모델 prompt 안에 과하게 넣어 `정책 엔진`이 맡아야 할 책임이 모델 쪽으로 밀려 있다.
+
+결론:
+
+- 다음 라운드부터는 `validation 14 고정`을 중단한다.
+- 권장 split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다.
+- 현재 training `194건` 기준으로 위 split을 적용하면 validation은 `39건`, train은 `155건`이 된다.
+- hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
+- 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
+
+### C. 데이터 부족 문제인가
+
+판단: `그렇다. 하지만 총량보다 critical slice 부족이 본질이다.`
+
+현재 training `194건` 중 critical slice는 얇다.
+
+- `rootzone_diagnosis`: `5`
+- `sensor_fault`: `6`
+- `climate_risk`: `6`
+- `pest_disease_risk`: `6`
+- `state_judgement`: `7`
+- `safety_policy`: `14`
+- `failure_response`: `30`
+- `robot_task_prioritization`: `24`
+
+문제는 다음 경계 사례 밀도가 낮다는 점이다.
+
+- `manual_override + safe_mode`
+- `worker_present / entry active`
+- `core sensor stale/missing/inconsistent`
+- `irrigation/source-water/dry-room path loss`
+- `evidence incomplete -> unknown / approval_required`
+- `robot_task enum exactness + target contract`
+
+결론:
+
+- generic sample bulk-up은 비효율적이다.
+- 아래 5개 slice를 우선 보강한다.
+  - `safety_policy`: `+8`
+  - `failure_response`: `+10`
+  - `sensor_fault`: `+8`
+  - `robot_task_prioritization`: `+8`
+  - `rootzone_diagnosis/state_judgement`: `+8`
+- 우선 보강 목표는 총 `+42` 내외다.
+
+### D. eval 부족 문제인가
+
+판단: `그렇다.`
+
+- `core24`는 빠른 회귀 확인용으로는 유효하지만 제품 판단용으로는 너무 작다.
+- `extended120`은 minimum gate로는 유효하지만, 제품화 기준으로는 여전히 작다.
+- blind holdout은 `24건`이라 invariant/field usability를 보기엔 방향은 맞지만 표본이 작다.
+- 최신 완료 모델 `ds_v9`도 아직 `extended120 + blind_holdout + product gate` 기준으로 재심사되지 않았다.
+
+결론:
+
+- `core24`는 그대로 유지한다.
+- challenger 비교는 최소 `core24 + extended160`으로 올린다.
+- 제품 수준 주장에는 `extended200 + blind_holdout50 + product gate + shadow mode`가 필요하다.
+
+## 3. 최종 판단
+
+### 지금 당장 바꿔야 하는 것
+
+1. `모델 변경`
+- 지금은 하지 않는다.
+
+2. `학습 방식 변경`
+- 한다.
+- prompt chasing 중지
+- validation split 확대
+- hard rule 외부화
+
+3. `데이터 보강`
+- 한다.
+- total bulk-up이 아니라 critical slice 위주 `+42` 정도로 제한한다.
+
+4. `eval 확장`
+- 한다.
+- `extended120`은 유지
+- 다음 목표는 `extended160`
+- 제품 주장 전 최종 목표는 `extended200 + blind_holdout50`
+
+## 4. 실행 계획
+
+### Phase 0. 즉시 중지
+
+- 새 fine-tuning submit 중지
+- `ds_v10`이 다시 재개되거나 후속 challenger가 생기더라도 `core24` 단독 점수로 champion 판단 금지
+- `prompt_v9` 제출 보류
+
+### Phase 1. 무지출 조치
+
+- `scripts/report_eval_set_coverage.py`로 `product200` 목표와 blind holdout 규모를 함께 점검한다.
+- `scripts/build_openai_sft_datasets.py` split 옵션을 `validation_ratio`와 `spread` 기준으로 강화한다.
+- hard safety rule 10개와 robot output contract를 `policy/output validator` 사양으로 고정한다.
+
+### Phase 2. 저비용 데이터/평가 조치
+
+- `extended160`까지 먼저 확장한다.
+- 이후 `extended200` 분포를 아래처럼 채운다.
+  - `expert_judgement`: `60`
+  - `action_recommendation`: `28`
+  - `forbidden_action`: `20`
+  - `failure_response`: `24`
+  - `robot_task`: `16`
+  - `edge_case`: `28`
+  - `seasonal`: `24`
+- blind holdout은 `24 -> 50`으로 확장한다.
+- 신규 training sample은 critical slice 중심으로 `+42` 내외만 추가한다.
+
+### Phase 3. 재평가
+
+- 마지막 완료 모델부터 같은 기준으로 재평가한다.
+- 순서:
+  1. `ds_v9`를 `core24 + extended120 + blind_holdout + product gate`로 다시 본다.
+  2. `ds_v10`이 다시 실행되거나 후속 challenger가 생기면 같은 기준으로 비교한다.
+  3. 둘 다 정책 validator를 붙인 결과와 순수 모델 결과를 함께 기록한다.
+
+### Phase 4. 그 이후에만 fine-tuning 재개
+
+아래가 충족될 때만 다음 submit을 허용한다.
+
+- validation split 강화 완료
+- `extended160` 이상 확보
+- blind holdout `50` 설계 확정
+- hard-rule validator 초안 완성
+- targeted training slice 보강 완료
+
+## 5. 재개 조건과 모델 교체 조건
+
+### fine-tuning 재개 조건
+
+- `core24`는 append-only 유지
+- `extended160` coverage 확보
+- blind holdout `50` 설계 또는 그에 준하는 frozen plan 확정
+- validation rows가 최소 `28+`로 증가
+- policy/output validator 초안 구현
+
+### base model 교체 검토 조건
+
+아래가 모두 맞으면 그때 검토한다.
+
+- 정책 validator를 붙여도 invariant miss가 계속 남는다.
+- targeted data 보강 후에도 hidden/product gate가 개선되지 않는다.
+- `risk_level` / action semantics가 작은 corrective tuning에 계속 크게 흔들린다.
+- 같은 평가 세트에서 larger model이 cost 대비 의미 있는 일반화 이득을 보인다는 증거가 생긴다.
+
+## 6. 결론
+
+- 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
+- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator 외부화`, `critical slice만 보강`이다.
+- 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.

@@ -14,10 +14,11 @@
 4. `PLAN.md`: 전체 시스템 목표, 아키텍처, 안전 원칙
 5. `docs/eval_scaleup_plan.md`: `core24 + extended120/160` 평가 확장 계획
 6. `docs/productization_promotion_gate.md`: blind holdout, safety invariant, field usability, shadow mode 승격 게이트
-7. `schedule.md`: 개정 실행 순서와 8주 일정
-8. `todo.md`: 세부 작업 체크리스트
-9. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-10. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+7. `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 재개 조건
+8. `schedule.md`: 개정 실행 순서와 8주 일정
+9. `todo.md`: 세부 작업 체크리스트
+10. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+11. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -52,7 +53,7 @@
 - 최신 champion eval 완료: `core24` 기준 pass rate `0.875`, strict JSON rate `1.0`, top failure는 `risk_level_match 2건`, `required_action_types_present 1건`
 - baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v5/prompt_v5 결과가 `+0.3333`, 직전 champion ds_v4/prompt_v4 `0.7917` 대비 `+0.0833` 개선됐다.
 - `ds_v9/prompt_v5_methodfix`까지 재평가 완료: `0.875` 동률까지 도달했지만 회귀 케이스가 있어 champion은 여전히 ds_v5다.
-- 최신 corrective challenger 제출 완료: `ftjob-LXWpGudJCeyqsH7WMorGHAT2` (`ds_v10/prompt_v8`)는 최근 sync 기준 `queued` 상태다.
+- 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
 - `scripts/report_eval_set_coverage.py --enforce-minimums` 통과 완료: `extended120` minimum gate 충족, 다음 확장 목표는 `extended160`
 - current champion extended120 baseline 확정: `ds_v5/prompt_v5`를 `120건` 전체에 재평가한 결과 pass rate `0.5417`, strict JSON rate `1.0`, 약한 family는 `safety_policy 0.0`, `robot_task_prioritization 0.25`, `sensor_fault 0.2`였다.
@@ -61,7 +62,10 @@
 - 현재 champion 제품화 판정은 `hold`: blind holdout `0.5417`, safety invariant pass rate `0.5`, robot task field usability failure `3건`, shadow mode `not_run`
 - 다음 corrective draft 로컬 복구 완료: `state_judgement batch10 6건`, `failure_response batch10 3건`, `forbidden_action batch5 2건`, `robot_task batch3 4건`을 학습 seed에 반영해 총 `194건`으로 확장했다.
 - `prompt_v9` draft 추가 완료: `scripts/build_openai_sft_datasets.py`와 `scripts/evaluate_fine_tuned_model.py`에 `sft_v9`를 반영했고, OpenAI SFT draft는 train `180`, validation `14`, eval overlap `0`으로 생성됐다.
-- `prompt_v9`는 아직 submit하지 않았고, `ds_v10/prompt_v8`의 `core24 + extended120` 재평가 결과가 나온 뒤 다음 corrective round 후보로 유지한다.
+- `prompt_v9`는 아직 submit하지 않았고, 제품 수준 재평가가 끝날 때까지 다음 corrective round 후보 draft로만 유지한다.
+- 제품 수준 재평가 문서화 완료: `docs/model_product_readiness_reassessment.md`에 따라 당분간 새 fine-tuning submit보다 `validation 강화`, `extended200 + blind50` 계획, `policy/output validator` 외부화를 우선한다.
+- `scripts/build_openai_sft_datasets.py`는 이제 `validation_ratio`, `validation_min_per_family`, `validation_selection=spread`를 지원하므로 다음 라운드부터 `validation 14` 고정을 해제할 수 있다.
+- `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검하도록 보강됐다.
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
@@ -226,10 +230,10 @@
 
 ## 다음 우선순위
 
-1. `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 sync해 `ds_v10/prompt_v8`이 `succeeded`로 끝나는 즉시 `core24 + extended120` 기준 eval을 다시 실행
-2. 현재 고정된 champion baseline `ds_v5/prompt_v5 extended120 pass_rate 0.5417`과 ds_v10 결과를 비교
-3. `ds_v10`이 blind holdout / safety invariant를 못 넘기면 현재 준비된 `prompt_v9` draft(train `180` / validation `14`)를 다음 corrective round 후보로 전환
-4. `Tranche 3`로 hardest slice를 추가해 `extended160` 권장 게이트까지 확장
-5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화하고 offline runner/state-estimator MVP 착수 범위를 확정
+1. `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit을 잠시 중지하고 `validation 강화 + policy/output validator + eval200 계획`을 먼저 고정
+2. 마지막 완료 모델 `ds_v9`를 먼저 같은 기준인 `core24 + extended120 + blind_holdout + product gate`로 재심사하고, 후속 challenger가 생기면 같은 조건으로만 비교
+3. `Tranche 3`로 `extended160`, 그 다음 `extended200`과 blind holdout `50`까지 확장
+4. `manual_override`, `worker_present`, `safe_mode`, `path loss`, `robot task contract`를 모델 prompt가 아니라 정책/출력 validator로 외부화
+5. 그 다음에만 critical slice 중심 training `+42` 내외 보강과 다음 fine-tuning 후보 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

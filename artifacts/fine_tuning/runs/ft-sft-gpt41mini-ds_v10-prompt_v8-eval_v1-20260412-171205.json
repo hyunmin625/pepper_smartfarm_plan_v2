@@ -2,7 +2,7 @@
   "schema_version": "fine_tuning_run.v1",
   "experiment_name": "ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205",
   "mode": "submit",
-  "status": "queued",
+  "status": "cancelled",
   "created_at": "2026-04-12T08:12:05+00:00",
   "base_model": "gpt-4.1-mini-2025-04-14",
   "model_version": "pepper-ops-sft-v1.0.0",
@@ -25,7 +25,7 @@
     "param": null
   },
   "notes": "Post-methodfix corrective round: rootzone high-risk, failure_response sensor-stale high, manual_override+safe_mode block_action.",
-  "latest_synced_at": "2026-04-12T08:26:25+00:00",
+  "latest_synced_at": "2026-04-12T11:08:01+00:00",
   "estimated_finish": null,
   "finished_at": null,
   "events_path": "artifacts/fine_tuning/events/ftjob-LXWpGudJCeyqsH7WMorGHAT2.jsonl"

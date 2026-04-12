@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -699,25 +700,80 @@ def filter_eval_overlap(
     return kept, filtered
 
 
-def split_samples(samples: list[dict[str, Any]], validation_per_family: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def select_validation_slice(
+    eligible_rows: list[dict[str, Any]],
+    take: int,
+    *,
+    selection: str,
+) -> list[dict[str, Any]]:
+    if take <= 0:
+        return []
+    if take >= len(eligible_rows):
+        return eligible_rows[:]
+    if selection == "latest":
+        return eligible_rows[-take:]
+    if selection == "spread":
+        if take == 1:
+            return [eligible_rows[0]]
+        last_index = len(eligible_rows) - 1
+        chosen_indices = {
+            min(last_index, round(step * last_index / (take - 1)))
+            for step in range(take)
+        }
+        selected = [eligible_rows[index] for index in sorted(chosen_indices)]
+        for row in eligible_rows:
+            if len(selected) >= take:
+                break
+            if row not in selected:
+                selected.append(row)
+        return selected[:take]
+    return eligible_rows[:take]
+
+
+def split_samples(
+    samples: list[dict[str, Any]],
+    validation_per_family: int,
+    *,
+    validation_min_per_family: int,
+    validation_ratio: float,
+    validation_selection: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for sample in sorted(samples, key=lambda item: str(item["sample_id"])):
         grouped[family_for_task(sample["task_type"])].append(sample)
 
     train_rows: list[dict[str, Any]] = []
     validation_rows: list[dict[str, Any]] = []
+    family_summary: list[dict[str, Any]] = []
     for family in sorted(grouped):
         family_rows = grouped[family]
         eligible_rows = [row for row in family_rows if row.get("validation_eligible", True)]
-        take = min(validation_per_family, len(eligible_rows))
+        take = max(validation_per_family, validation_min_per_family)
+        if validation_ratio > 0:
+            take = max(take, math.ceil(len(eligible_rows) * validation_ratio))
+        take = min(take, len(eligible_rows))
         if len(family_rows) - take < 1:
             take = max(0, len(family_rows) - 1)
-        validation_ids = {str(row["sample_id"]) for row in eligible_rows[:take]}
+        validation_slice = select_validation_slice(
+            eligible_rows,
+            take,
+            selection=validation_selection,
+        )
+        validation_ids = {str(row["sample_id"]) for row in validation_slice}
         validation_slice = [row for row in family_rows if str(row["sample_id"]) in validation_ids]
         train_slice = [row for row in family_rows if str(row["sample_id"]) not in validation_ids]
         validation_rows.extend(validation_slice)
         train_rows.extend(train_slice)
-    return train_rows, validation_rows
+        family_summary.append(
+            {
+                "family": family,
+                "total_rows": len(family_rows),
+                "eligible_rows": len(eligible_rows),
+                "train_rows": len(train_slice),
+                "validation_rows": len(validation_slice),
+            }
+        )
+    return train_rows, validation_rows, family_summary
 
 
 def main() -> None:
@@ -726,6 +782,29 @@ def main() -> None:
     parser.add_argument("--train-output", default=str(DEFAULT_TRAIN_OUTPUT))
     parser.add_argument("--validation-output", default=str(DEFAULT_VALIDATION_OUTPUT))
     parser.add_argument("--validation-per-family", type=int, default=1)
+    parser.add_argument(
+        "--validation-min-per-family",
+        type=int,
+        default=1,
+        help="Minimum validation rows to reserve per task family.",
+    )
+    parser.add_argument(
+        "--validation-ratio",
+        type=float,
+        default=0.0,
+        help="Optional validation ratio per task family. 0 keeps explicit per-family counts only.",
+    )
+    parser.add_argument(
+        "--validation-selection",
+        choices=("earliest", "latest", "spread"),
+        default="earliest",
+        help="How to choose validation rows within each task family.",
+    )
+    parser.add_argument(
+        "--print-family-summary",
+        action="store_true",
+        help="Print per-family train/validation counts after splitting.",
+    )
     parser.add_argument("--eval-files", nargs="*", default=[str(path) for path in DEFAULT_EVAL_FILES])
     parser.add_argument("--system-prompt-version", choices=sorted(SYSTEM_PROMPT_BY_VERSION), default=DEFAULT_SYSTEM_PROMPT_VERSION)
     args = parser.parse_args()
@@ -734,7 +813,13 @@ def main() -> None:
     eval_signatures = load_eval_signatures([Path(path) for path in args.eval_files])
     filtered_samples, excluded_overlap_samples = filter_eval_overlap(samples, eval_signatures=eval_signatures)
     samples = filtered_samples
-    train_samples, validation_samples = split_samples(samples, args.validation_per_family)
+    train_samples, validation_samples, family_summary = split_samples(
+        samples,
+        args.validation_per_family,
+        validation_min_per_family=args.validation_min_per_family,
+        validation_ratio=args.validation_ratio,
+        validation_selection=args.validation_selection,
+    )
     system_prompt = SYSTEM_PROMPT_BY_VERSION[args.system_prompt_version]
 
     train_rows = [to_openai_record(sample, system_prompt) for sample in train_samples]
@@ -747,9 +832,20 @@ def main() -> None:
     print(f"excluded_eval_overlap_rows: {len(excluded_overlap_samples)}")
     print(f"train_rows: {len(train_rows)}")
     print(f"validation_rows: {len(validation_rows)}")
+    print(f"validation_per_family: {args.validation_per_family}")
+    print(f"validation_min_per_family: {args.validation_min_per_family}")
+    print(f"validation_ratio: {args.validation_ratio}")
+    print(f"validation_selection: {args.validation_selection}")
     print(f"system_prompt_version: {args.system_prompt_version}")
     print(f"train_output: {Path(args.train_output).as_posix()}")
     print(f"validation_output: {Path(args.validation_output).as_posix()}")
+    if args.print_family_summary:
+        print("family,total_rows,eligible_rows,train_rows,validation_rows")
+        for item in family_summary:
+            print(
+                f"{item['family']},{item['total_rows']},{item['eligible_rows']},"
+                f"{item['train_rows']},{item['validation_rows']}"
+            )
 
 
 if __name__ == "__main__":

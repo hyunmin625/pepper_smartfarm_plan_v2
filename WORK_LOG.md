@@ -4,6 +4,18 @@
 
 ## 2026-04-12
 
+### 제품 수준 재평가와 무지출 우선순위 재정렬
+- `docs/model_product_readiness_reassessment.md`를 추가해 현재 병목을 `모델 자체`보다 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트로 재정리했다.
+- 로컬 run manifest 기준 `ds_v10/prompt_v8` 상태가 `queued`가 아니라 `cancelled`로 정리된 것을 확인했고, 현재 재평가 기준은 마지막 완료 모델 `ds_v9`부터 다시 보는 것으로 바꿨다.
+- 결론은 다음과 같이 고정했다.
+  - base model 교체는 보류
+  - 새 fine-tuning submit은 잠시 중지
+  - 다음 라운드 전 `validation 강화`, `extended200 + blind_holdout50` 계획, `policy/output validator` 외부화를 먼저 수행
+  - 신규 training sample은 generic bulk-up이 아니라 critical slice `+42` 내외만 보강
+- `scripts/report_eval_set_coverage.py`를 보강해 `product_total 200`과 blind holdout `50` 목표를 함께 점검할 수 있게 했다.
+- `scripts/build_openai_sft_datasets.py`를 보강해 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하도록 바꿨다. 현재 training `194건` 기준으로 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 적용하면 train `155`, validation `39`가 된다.
+- `README.md`, `PROJECT_STATUS.md`, `AI_MLOPS_PLAN.md`, `docs/eval_scaleup_plan.md`, `docs/productization_promotion_gate.md`에 위 재평가 기준과 fine-tuning 재개 조건을 반영했다.
+
 ### batch10 / prompt_v9 corrective draft 복구
 - 작업트리 기준 최신 corrective seed로 `data/examples/state_judgement_samples_batch10.jsonl`, `data/examples/failure_response_samples_batch10.jsonl`, `data/examples/forbidden_action_samples_batch5.jsonl`, `data/examples/robot_task_samples_batch3.jsonl`이 남아 있는 것을 확인하고 학습 합본에 다시 반영했다.
 - 새 corrective 묶음은 `rootzone/nutrient evidence incomplete -> risk_level unknown + pause_automation + request_human_check`, `irrigation/source-water/dry-room path loss -> enter_safe_mode + request_human_check`, `worker_present/manual_override/safe_mode latched -> block_action + create_alert`, `robot_task enum exactness`, `fertigation evidence incomplete -> approval_required`를 직접 겨냥한다.

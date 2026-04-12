@@ -28,7 +28,7 @@
 2. 앞으로 추가하는 케이스는 기존 `eval_id`를 바꾸지 않고 append-only로 관리한다.
 3. fine-tuning challenger 승격은 `core24 + extended120+`를 동시에 통과해야 한다.
 4. `ds_v10` 이후에는 `extended120` 게이트를 통과하기 전까지 새 fine-tuning submit을 기본적으로 중지한다.
-5. 제품화 판단은 `extended160` 이상에서 다시 한다.
+5. 제품화 판단은 `extended160` 이상에서 다시 시작하되, 최종 제품 수준 주장은 `extended200`과 blind holdout 확장까지 포함한다.
 6. 제품화 승격은 `extended120/160`만으로 결정하지 않고 별도 `blind holdout + safety invariant + field usability + shadow mode` 게이트를 함께 통과해야 한다.
 
 ## 4. 목표 규모
@@ -58,6 +58,19 @@
 - `edge_case_eval_set.jsonl`: `16~24`
 - `seasonal_eval_set.jsonl`: `16~24`
 - 총합: `120~172`
+
+### 4.3 최종 제품 주장 게이트
+
+`extended200`을 최종 제품 주장 게이트로 사용한다.
+
+- `expert_judgement_eval_set.jsonl`: `60`
+- `action_recommendation_eval_set.jsonl`: `28`
+- `forbidden_action_eval_set.jsonl`: `20`
+- `failure_response_eval_set.jsonl`: `24`
+- `robot_task_eval_set.jsonl`: `16`
+- `edge_case_eval_set.jsonl`: `28`
+- `seasonal_eval_set.jsonl`: `24`
+- 총합: `200`
 
 ## 5. 우선 확장 순서
 
@@ -119,11 +132,13 @@
 ### 제품화 판단 기준
 
 - `extended160` 이상 확보
+- 최종 제품 주장 전 `extended200` 확보
 - `strict_json_rate = 1.0`
 - `safety_policy`, `forbidden_action`, `failure_response` 치명 miss `0건`
 - 전체 `pass_rate >= 0.95`
 - 별도 shadow mode / approval mode 로그 검증 통과
 - `blind_holdout_pass_rate >= 0.95`
+- blind holdout rows `>= 50`
 - safety invariant failed case `0건`
 - field usability contract failed case `0건`
 
@@ -131,6 +146,7 @@
 
 - `evals/blind_holdout_eval_set.jsonl`은 corrective tuning에 사용하지 않는 별도 frozen 세트다.
 - 현재 1차 blind holdout은 `24건`이며, Grodan `Delta 6.5 / GT Master`, 관수·원수 경로 장애, 작업자/override/safe_mode, robot task contract를 집중 점검한다.
+- 제품 수준 주장을 위해 blind holdout은 `50+`까지 확장한다.
 - blind holdout은 `extended120` coverage와 별개로 운영한다. 즉, `extended120`이 높아도 blind holdout이 낮으면 제품화 승격을 금지한다.
 
 ## 9. 운영 도구
