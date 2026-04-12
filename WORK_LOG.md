@@ -2,6 +2,16 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
+## 2026-04-13
+
+### batch14 challenger dry-run package 고정
+- `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`로 batch14 기반 challenger draft를 생성했다.
+- 결과는 source training `288`, train `238`, validation `50`, eval overlap `0`이었다.
+- `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl` 기준 files `2`, rows `288`, errors `0`을 확인했다.
+- `python3 scripts/run_openai_fine_tuning_job.py --model-version pepper-ops-sft-v1.8.0 --dataset-version ds_v11 --prompt-version prompt_v5_methodfix_batch14 --eval-version eval_v2 ...`를 `--submit` 없이 실행해 dry-run manifest `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`를 생성했다.
+- `docs/openai_fine_tuning_execution.md`, `docs/fine_tuning_runbook.md`, `artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md`를 현재 기준으로 갱신했다.
+- 결론은 명확하다. 다음 실제 비용 지출은 `ds_v11/prompt_v5_methodfix_batch14` 한 번만 허용하고, 평가 게이트는 그대로 `core24 + extended160 + extended200 + blind_holdout50 + raw/validator gate`로 고정한다.
+
 ## 2026-04-12
 
 ### batch14 잔여 실패 보강과 stale combined input 제거

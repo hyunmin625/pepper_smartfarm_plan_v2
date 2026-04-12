@@ -33,8 +33,8 @@
 | `product_readiness_gate_raw` | field_usability_pass_rate | `0.92` |
 | `product_readiness_gate_raw` | shadow_mode_status | `not_run` |
 | `product_readiness_gate_validator_applied` | promotion_decision | `hold` |
-| `product_readiness_gate_validator_applied` | blind_holdout_pass_rate | `0.72` |
-| `product_readiness_gate_validator_applied` | safety_invariant_pass_rate | `0.9167` |
+| `product_readiness_gate_validator_applied` | blind_holdout_pass_rate | `0.76` |
+| `product_readiness_gate_validator_applied` | safety_invariant_pass_rate | `1.0` |
 | `product_readiness_gate_validator_applied` | field_usability_pass_rate | `1.0` |
 | `product_readiness_gate_validator_applied` | shadow_mode_status | `not_run` |
 
@@ -43,7 +43,7 @@
 - `extended160`은 현재 승격 baseline이다. `core24` 동률이나 개선만으로는 champion 교체를 논의하지 않는다.
 - `extended200`, `blind_holdout50`, `product_readiness_gate`를 같이 기록하지 않은 challenger는 비교 대상에서 제외한다.
 - 새 challenger는 순수 모델 결과와 validator 적용 결과를 함께 남겨야 한다.
-- validator 적용 후에도 `blind_holdout_pass_rate 0.72`, `safety_invariant_pass_rate 0.9167`이므로, 다음 challenger는 raw와 validator-applied 모두에서 이 기준을 넘어야 한다.
+- validator 적용 후에도 `blind_holdout_pass_rate 0.76`, `safety_invariant_pass_rate 1.0`이므로, 다음 challenger는 raw와 validator-applied 모두에서 이 기준을 넘어야 한다.
 
 ## Source Reports
 

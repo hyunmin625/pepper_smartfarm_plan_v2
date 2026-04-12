@@ -67,6 +67,8 @@
 - [x] shadow mode audit -> summary report 경로 추가 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`)
 - [x] blind50 validator 잔여 `12건`을 batch14 sample `12건`으로 직접 역투영 (`docs/blind50_residual_batch14_plan.md`, `scripts/generate_batch14_residual_samples.py`)
 - [x] `scripts/build_openai_sft_datasets.py`, `scripts/report_risk_slice_coverage.py`가 stale `combined_training_samples.jsonl` 대신 현재 `training_sample_files()`를 직접 읽도록 보강
+- [x] batch14 기반 challenger draft 생성과 format 검증 (`artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch14.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch14.jsonl`)
+- [x] 다음 submit용 dry-run manifest 생성 (`artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`)
 
 ---
 
@@ -253,7 +255,7 @@
 - [x] 현재 `24건`을 `core regression set`으로 동결하고 append-only 운영 기준 명시 (`docs/eval_scaleup_plan.md`)
 - [x] `Tranche 1`: eval 총량 `60+`까지 확장
 - [x] `Tranche 2`: eval 총량 `120`까지 확장
-- [ ] `Tranche 3`: eval 총량 `160`까지 확장
+- [x] `Tranche 3`: eval 총량 `160`까지 확장
 - [x] `expert_judgement_eval_set.jsonl`를 `40` 이상으로 확장
 - [x] `action_recommendation_eval_set.jsonl`를 `16` 이상으로 확장
 - [x] `forbidden_action_eval_set.jsonl`를 `12` 이상으로 확장
@@ -266,8 +268,9 @@
 - [x] champion `ds_v5/prompt_v5`를 `core24 + extended120` benchmark baseline으로 고정
 - [x] corrective seed `batch10` + robot/forbidden 보강을 반영해 combined training `194건`으로 재생성
 - [x] `prompt_v9` SFT draft(train `180`, validation `14`, eval overlap `0`) 생성
-- [ ] challenger `ds_v10/prompt_v8`를 같은 benchmark로 재평가하고 champion과 비교
-- [ ] `ds_v10` 결과와 blind holdout / 제품화 게이트를 보고 `prompt_v9`를 `ds_v11`로 submit할지 결정
+- [x] 마지막 완료 모델 `ds_v9/prompt_v5_methodfix`를 `extended200 + blind_holdout50 + raw/validator gate` 기준으로 재평가
+- [x] batch14 residual 보강을 반영한 다음 challenger `ds_v11/prompt_v5_methodfix_batch14` dry-run package 준비
+- [ ] `ds_v11/prompt_v5_methodfix_batch14`를 1회만 submit하고 frozen gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 재평가
 
 ## 2.6 RAG 지식베이스 구축 [완료]
 - [x] RAG 적용 문서 범위 정의 (`docs/rag_source_inventory.md`)

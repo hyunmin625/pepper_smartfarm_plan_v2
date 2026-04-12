@@ -1,82 +1,71 @@
 # Fine-tuning Runbook
 
-이 문서는 `3.3 학습 실행`의 기준 문서다. 목적은 현재 seed/eval 상태에서 사용할 base model, 내부 버전 규칙, 실험명 규칙을 고정하는 것이다.
+이 문서는 현재 시점에서 어떤 fine-tuning만 허용할지 고정한다. 목표는 `의미 없이 돈만 쓰는 반복 submit`을 막는 것이다.
 
-## 1. 현재 선택
+## 1. 현재 판단
 
-### 1.1 파인튜닝 방식
+- 기본 방식은 계속 `SFT`다.
+- 기본 base model은 `gpt-4.1-mini-2025-04-14`다.
+- 지금 병목은 base model capability보다 `risk_rubric`, `required_action_types`, `robot contract`, `validator ownership` 쪽이다.
+- 따라서 다음 submit은 model family 변경 실험이 아니라 `batch14 residual fix` 반영 여부를 확인하는 단일 challenger만 허용한다.
 
-- 현재 단계의 기본 방식은 `SFT`다.
-- 이유:
-  - 목표가 structured JSON 출력 안정화, 허용 `action_type` 제한, 안전 거절, `follow_up` 일관화에 있기 때문이다.
-  - 아직 운영자 선호/거절 로그가 충분하지 않아 `DPO`는 다음 단계로 미룬다.
-  - 현재 과제는 고난도 reasoning 보강보다 운영형 출력 교정이 중심이므로 `RFT` 대상이 아니다.
+## 2. 현재 공식 baseline
 
-### 1.2 base model 결정
+- baseline model: `ds_v9/prompt_v5_methodfix`
+- fine_tuned_model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v9-prompt-v5-methodfix-eval-v1-20260412-1257:DTgUbJHJ`
+- 비교 게이트:
+  - `core24`
+  - `extended120`
+  - `extended160`
+  - `extended200`
+  - `blind_holdout50`
+  - `product_readiness_gate_raw`
+  - `product_readiness_gate_validator_applied`
 
-- 주력 SFT base model: `gpt-4.1-mini-2025-04-14`
-- 비교용 challenger base model: `gpt-4.1-2025-04-14`
-- 비용 점검용 exploratory base model: `gpt-4.1-nano-2025-04-14`
+baseline 수치는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_gate_baseline.md:1)를 기준으로 한다.
 
-선정 이유:
+## 3. 다음 candidate
 
-- OpenAI 공식 문서 기준으로 위 세 모델이 현재 `SFT`를 지원한다.
-- `gpt-4.1-mini-2025-04-14`는 구조화 출력 안정화와 반복 zone 평가를 함께 고려할 때 현재 저장소 목적에 가장 현실적인 기본값이다.
-- `gpt-4.1-2025-04-14`는 더 높은 품질이 필요한 비교 기준으로 유지한다.
-- `gpt-4.1-nano-2025-04-14`는 저비용 후보이지만, 실제 승격은 eval 통과 전까지 금지한다.
+- model_version: `pepper-ops-sft-v1.8.0`
+- dataset_version: `ds_v11`
+- prompt_version: `prompt_v5_methodfix_batch14`
+- eval_version: `eval_v2`
+- system_prompt_version: `sft_v5`
 
-## 2. 내부 모델 버전 규칙
+이 candidate는 broad prompt 변경이 아니라 다음 세 가지 차이만 가진다.
 
-- 형식: `pepper-ops-sft-v{major}.{minor}.{patch}`
-- 예:
-  - `pepper-ops-sft-v1.0.0`
-  - `pepper-ops-sft-v1.1.0`
-  - `pepper-ops-sft-v2.0.0`
-
-증분 기준:
-
-- `major`: 출력 계약, 허용 `action_type`, 정책 연동 방식이 바뀔 때
-- `minor`: dataset/eval/prompt 보강으로 성능이 개선될 때
-- `patch`: 데이터 정제, 로그 수정, 메타데이터 수정처럼 동작 의미가 바뀌지 않을 때
-
-## 3. 실험명 규칙
-
-- 형식:
-  - `ft-sft-{base_model_short}-{dataset_version}-{prompt_version}-{eval_version}-{yyyymmdd}`
-- 예:
-  - `ft-sft-gpt41mini-ds_v1-prompt_v1-eval_v1-20260411`
-  - `ft-sft-gpt41-ds_v2-prompt_v1-eval_v2-20260418`
-
-권장 약어:
-
-- `gpt-4.1-mini-2025-04-14` -> `gpt41mini`
-- `gpt-4.1-2025-04-14` -> `gpt41`
-- `gpt-4.1-nano-2025-04-14` -> `gpt41nano`
+1. blind50 validator 잔여 `12건`을 batch14 sample `12건`으로 training에 직접 반영
+2. validation split을 `14`에서 `50`으로 확대
+3. stale `combined_training_samples.jsonl` 누락 문제 제거
 
 ## 4. 실행 전 게이트
 
-- `artifacts/training/combined_training_samples.jsonl` 생성 완료
-- `artifacts/training/combined_eval_cases.jsonl` 생성 완료
-- `artifacts/reports/training_sample_stats.json` 검토 완료
-- `docs/training_sample_manual_review.md` 검토 완료
-- `schemas/action_schema.json` 필수 필드와 `docs/fine_tuning_objectives.md`가 일치해야 함
+아래가 모두 통과해야 submit을 검토한다.
 
-## 5. 현재까지 완료된 항목
+1. `python3 scripts/validate_training_examples.py`
+2. `python3 scripts/audit_training_data_consistency.py`
+3. `python3 scripts/report_risk_slice_coverage.py`
+4. `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline`
+5. `python3 scripts/validate_openai_sft_dataset.py ...batch14...`
+6. dry-run manifest 생성 완료
 
-- 실제 fine-tuning job 실행 완료
-- run log 보관 완료
-- 실패 케이스 기록 완료
-- 결과 비교표 작성 완료
+## 5. 비용 규칙
 
-현재 champion은 `ds_v3/prompt_v3` 조합이며, 다음 제출 전에는 challenger 데이터셋과 prompt draft만 다시 고정하면 된다.
+- 동시에 여러 challenger를 submit하지 않는다.
+- `ds_v11/prompt_v5_methodfix_batch14`를 평가하기 전에는 후속 submit 금지다.
+- `blind_holdout50` validator-applied pass rate가 baseline `0.76`을 넘지 못하면 추가 submit보다 데이터/루브릭 보정으로 되돌린다.
+- shadow mode 없이 제품 승격 주장 금지다.
 
-## 6. 다음 candidate
+## 6. 현재 draft 상태
 
-- 다음 후보 버전은 `pepper-ops-sft-v1.3.0`로 둔다.
-- 기준 조합:
-  - `dataset_version=ds_v4`
-  - `prompt_version=prompt_v4`
-  - `eval_version=eval_v1`
-- `ds_v4`에는 batch5 실패 보강 8건을 포함한다.
-- 현재 seed 총량은 `164건`이고, `prompt_v4` 전용 OpenAI SFT draft 파일은 train `150`, validation `14`다.
-- `prompt_v4`는 ds_v3/prompt_v3 eval에서 남은 `risk_level_match 5건`, `required_action_types_present 5건`을 직접 겨냥한 draft다.
+- training source rows: `288`
+- train rows: `238`
+- validation rows: `50`
+- dry-run manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v11-prompt_v5_methodfix_batch14-eval_v2-20260413-000731.json`
+
+## 7. 금지 사항
+
+- `core24`만 보고 champion 판단 금지
+- 남은 실패 2~3건만 prompt에 직접 박는 corrective prompt chasing 금지
+- batch 추가 후 `combined_training_samples.jsonl`만 믿고 submit하는 방식 금지
+- raw/validator 결과 둘 중 하나만 남기는 비교 금지

@@ -68,6 +68,7 @@
 - `scripts/report_validator_residual_failures.py`로 blind50 validator 잔여 실패를 owner 기준으로 다시 분류했다. 현재 잔여 `12건`은 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`이다.
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 직접 학습 보강 대상으로 옮겼다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다. 새 batch 누락을 조용히 통과시키지 않도록 파이프라인을 고쳤다.
+- 다음 challenger는 아직 submit하지 않았고, batch14 기반 dry-run package만 준비했다. 기준은 `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2 / train 238 / validation 50`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 shadow report 요약과 승격 판단(`promote / hold / rollback`)을 자동 생성할 수 있다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
@@ -89,6 +90,7 @@
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
 - 현재 남은 주요 부족분은 blind50 validator 적용 후 잔여 실패 `12건`이 challenger에서 실제로 줄어드는지 검증하는 일과 shadow mode 로그 확보다.
+- 실제 비용 지출 전 참고 package: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
