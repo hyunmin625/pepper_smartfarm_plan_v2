@@ -25,7 +25,8 @@
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 reject한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
-- `scripts/build_openai_sft_datasets.py`는 이제 `--oversample-task-type task_type=factor`를 지원한다. next-only dry-run 기준 권장 가중치를 적용하면 train `678`, validation `52`, SFT format error `0`이다.
+- batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
+- `scripts/build_openai_sft_datasets.py`는 이제 `--oversample-task-type task_type=factor`를 지원한다. next-only dry-run 기준 권장 가중치를 적용하면 train `803`, validation `57`, SFT format error `0`이다.
 - 다음 challenger `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 1회만 실제 submit했다. 현재 run은 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `queued`, train `238`, validation `50`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`로 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 자동 집계할 수 있다.
 
@@ -187,8 +188,8 @@
 - 제품 수준 재평가 결론: 현재 병목은 base model보다는 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트에 있다.
 - 로컬 툴 보강: `scripts/build_openai_sft_datasets.py`는 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하고 기본 경로 사용 시 현재 sample 파일 집합을 직접 읽는다. `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검한다.
 - `risk_level` 정규화 기준 고정: `docs/risk_level_rubric.md`에 `critical > unknown > high > medium > low` 우선순위와 task family별 기준을 정리했다.
-- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 34`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 20`, `robot_contract 50`, `gt_master_dryback_high 6`, `nursery_cold_humid_high 3`이며 training rule failure는 현재 `none`이다.
-- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `298건`, class imbalance ratio `12.50`, action 분포는 `request_human_check 143`, `create_alert 101`, `pause_automation 48`, `block_action 35`, `enter_safe_mode 20`이다.
+- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 54`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 30`, `robot_contract 50`, `gt_master_dryback_high 6`, `nursery_cold_humid_high 3`이며 training rule failure는 현재 `none`이다.
+- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `328건`, class imbalance ratio `14.00`, action 분포는 `request_human_check 153`, `create_alert 121`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`이다.
 - 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `extended200 0.51`, `blind_holdout50 0.32`, `strict_json_rate 1.0`이다.
 - `scripts/report_eval_failure_clusters.py`와 `artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`로 `extended160` 실패 `68건`을 root cause로 재분류했다.
 - top root cause는 `low_friction_action_bias_over_interlock 25`, `citations_missing_in_actionable_output 20`, `sensor_or_evidence_gap_not_marked_unknown 17`, `critical_hazard_undercalled 14`다.
@@ -280,7 +281,7 @@
 1. `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`가 끝나면 frozen gate(`core24 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 즉시 재평가한다.
 2. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
 3. 다음 dataset split 기본값은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다. 현재 추천 split은 train `238`, validation `50`이다.
-4. 사용자 요구 보강은 완료했다: `safety_policy 36`, `sensor_fault 28`, `robot_task_prioritization 50`
+4. 사용자 요구 보강은 완료했다: `safety_policy 56`, `sensor_fault 28`, `robot_task_prioritization 50`, `failure_response 50`
 5. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, execution-gateway hard guard와 state-estimator MVP도 추가됐다.
 6. blind50 validator 적용 후 남는 `12건`이 `ds_v11`에서 실제로 줄어드는지 먼저 본다.
 7. shadow mode 로그를 실제 운영 시나리오 형식으로 쌓고 `operator_agreement_rate`, `critical_disagreement_count`를 본다.

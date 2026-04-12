@@ -20,6 +20,8 @@
 - `data/examples/state_judgement_samples_batch15_hard_cases.jsonl`
 - `data/examples/failure_response_samples_batch15_hard_cases.jsonl`
 - `data/examples/robot_task_samples_batch6_hard_cases.jsonl`
+- `data/examples/state_judgement_samples_batch16_safety_reinforcement.jsonl`
+- `data/examples/failure_response_samples_batch16_safety_reinforcement.jsonl`
 
 핵심 시나리오:
 
@@ -27,6 +29,9 @@
 - `sensor jump + flatline`, `rootzone evidence incomplete`
 - `irrigation/source-water/dry-room/reboot recovery` failure safe-mode
 - `worker_present` / `estop_active` 아래 robot task 차단
+- `worker_present`는 모두 `risk_level=critical`, `block_action + create_alert`
+- `manual_override / safe_mode`는 자동 제어 재시도를 모두 `block_action`으로 차단
+- 핵심 readback / communication loss는 모두 `risk_level=critical`, `enter_safe_mode + request_human_check`
 
 ## oversampling 규칙
 
@@ -58,3 +63,4 @@ python3 scripts/build_openai_sft_datasets.py \
 - oversampling은 `next-only`다. 현재 제출된 `ds_v11`에는 소급 적용하지 않는다.
 - oversampling을 써도 frozen gate는 그대로 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`다.
 - score가 오르더라도 blind/generalization이 개선되지 않으면 prompt chasing으로 돌아가지 않는다.
+- batch16까지 반영한 현재 training은 `328건`이다. 권장 가중치 dry-run 기준 train `803`, validation `57`, SFT format error `0`을 확인했다.

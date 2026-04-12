@@ -47,10 +47,10 @@
 - 핵심 센서 1차 상용 모델 shortlist 완료: `HMP110`, `GMP252`, `SQ-522-SS`, `TEROS 12`, `Guardian Inline Wi-Fi`, `WXT536`
 - 장치별 최소/최대 setpoint 범위 고정 완료: fan/vent/shade/irrigation/heater/CO2/fertigation/dehumidifier/dry-fan
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광 우선순위, 관수 펄스 원칙, CO2/난방/건조실 운전 SOP 반영
-- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `298건`
-- 학습 seed 중복/모순 감사 자동화 완료: `298개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
+- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `328건`
+- 학습 seed 중복/모순 감사 자동화 완료: `328개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
 - 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
-- 학습/eval 합본 생성과 통계 리포트 완료: training `298건`, extended eval `200건`, blind holdout `50건`, 기본 validation 기준 eval 총 `250건`, longest sample 수동 검토 완료
+- 학습/eval 합본 생성과 통계 리포트 완료: training `328건`, extended eval `200건`, blind holdout `50건`, 기본 validation 기준 eval 총 `250건`, longest sample 수동 검토 완료
 - `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 현재 승격 baseline은 `extended160`이고, 최종 제품 주장 baseline은 `extended200 + blind_holdout50`이다.
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
@@ -65,6 +65,7 @@
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 연결했다.
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 차단한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
+- batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10`이며, 모두 safety/failure 오판을 직접 겨냥한다.
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 1.0`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.
 - 다만 validator를 붙여도 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
 - blind50 validator 적용 후에도 남는 실패는 `12건`이며, 중심은 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다. 즉 hard safety 외부화만으로는 제품 수준에 도달하지 못한다.
@@ -72,7 +73,7 @@
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 직접 학습 보강 대상으로 옮겼다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다. 새 batch 누락을 조용히 통과시키지 않도록 파이프라인을 고쳤다.
 - 다음 challenger `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 1회만 실제 submit했다. 현재 run은 `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`, status `queued`, train `238`, validation `50`이다.
-- `batch15` hard-case `10건`을 추가해 이후 challenger에서 `safety_policy/failure_response/sensor_fault/robot_task`를 train-only oversampling으로 증폭할 준비를 마쳤다. dry-run 기준 권장 가중치 적용 시 train `678`, validation `52`, SFT format error `0`이다.
+- `batch15` hard-case `10건`과 batch16 safety reinforcement `30건`을 추가해 이후 challenger에서 `safety_policy/failure_response/sensor_fault/robot_task`를 train-only oversampling으로 증폭할 준비를 마쳤다. dry-run 기준 권장 가중치 적용 시 train `803`, validation `57`, SFT format error `0`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 shadow report 요약과 승격 판단(`promote / hold / rollback`)을 자동 생성할 수 있다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
@@ -83,8 +84,8 @@
 - 최신 완료 모델 blind 재평가 완료: `ds_v9/prompt_v5_methodfix`는 blind holdout `0.5`, safety invariant pass rate `0.3333`, field usability pass rate `0.9583`이다. 즉 robot contract는 일부 개선했지만 안전 invariant는 더 악화됐다.
 - 제품화 게이트 재정의 완료: 승격은 이제 `extended120/160`만이 아니라 `blind holdout >= 0.95`, `safety invariant failed = 0`, `field usability failed = 0`, `shadow mode pass`를 동시에 만족해야 한다.
 - 현재 champion 제품화 판정은 `hold`: blind holdout `0.5417`, safety invariant pass rate `0.5`, robot task field usability failure `3건`, shadow mode `not_run`
-- 최신 training 통계 재확인 완료: sample `298건`, class imbalance ratio `12.50`, `request_human_check 143`, `create_alert 101`, `pause_automation 48`, `block_action 35`, `enter_safe_mode 20`이다.
-- 최신 targeted augmentation 완료: `state_judgement batch11 40건`, `robot_task batch4 20건`, `failure_response batch11 6건`, `state_judgement batch12 8건`, `batch13 gap fix 8건`, `batch14 residual fix 12건`, `batch15 hard-case 10건`을 추가해 총 `298건`으로 확장했다.
+- 최신 training 통계 재확인 완료: sample `328건`, class imbalance ratio `14.00`, `request_human_check 153`, `create_alert 121`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`이다.
+- 최신 targeted augmentation 완료: `state_judgement batch11 40건`, `robot_task batch4 20건`, `failure_response batch11 6건`, `state_judgement batch12 8건`, `batch13 gap fix 8건`, `batch14 residual fix 12건`, `batch15 hard-case 10건`, `batch16 safety reinforcement 30건`을 추가해 총 `328건`으로 확장했다.
 - `prompt_v9` draft 추가 완료: `scripts/build_openai_sft_datasets.py`와 `scripts/evaluate_fine_tuned_model.py`에 `sft_v9`를 반영했고, OpenAI SFT draft는 train `180`, validation `14`, eval overlap `0`으로 생성됐다.
 - `prompt_v9`는 아직 submit하지 않았고, 제품 수준 재평가가 끝날 때까지 다음 corrective round 후보 draft로만 유지한다.
 - 제품 수준 재평가 문서화 완료: `docs/model_product_readiness_reassessment.md`에 따라 당분간 새 fine-tuning submit보다 `validation 강화`, `extended200 + blind50` frozen gate, `policy/output validator` 외부화, `failure/safety/sensor` slice 보강을 우선한다.
@@ -228,7 +229,7 @@
 - `scripts/sync_openai_fine_tuning_job.py`: fine-tuning job status/events sync
 - `scripts/render_fine_tuning_comparison_table.py`: run manifest 기반 비교표 생성
 - `scripts/evaluate_fine_tuned_model.py`: fine-tuned model 기준 eval JSONL 실행과 요약 리포트 생성
-- `artifacts/training/combined_training_samples.jsonl`: 학습 seed 298건 합본
+- `artifacts/training/combined_training_samples.jsonl`: 학습 seed 328건 합본
 - `artifacts/training/combined_eval_cases.jsonl`: extended eval 200건 합본
 - `artifacts/training/blind_holdout_eval_cases.jsonl`: blind holdout 50건 합본
 - `artifacts/reports/training_sample_stats.json`: sample 분포/길이 통계 리포트

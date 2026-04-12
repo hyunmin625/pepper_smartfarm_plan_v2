@@ -12,25 +12,25 @@
 
 로컬 합본 기준:
 
-- training rows: `298`
+- training rows: `328`
 - extended eval rows: `200`
 - blind holdout rows: `50`
 
 현재 training slice 관측치:
 
-- `safety_policy_hard_block`: `34`
+- `safety_policy_hard_block`: `54`
 - `sensor_fault_unknown`: `28`
 - `evidence_incomplete_unknown`: `11`
-- `failure_safe_mode`: `20`
+- `failure_safe_mode`: `30`
 - `robot_task_prioritization`: `50`
 - `gt_master_dryback_high`: `6`
 - `nursery_cold_humid_high`: `3`
 - action imbalance:
-  - `request_human_check`: `143`
-  - `create_alert`: `101`
+  - `request_human_check`: `153`
+  - `create_alert`: `121`
   - `pause_automation`: `48`
-  - `block_action`: `35`
-  - `enter_safe_mode`: `20`
+  - `block_action`: `55`
+  - `enter_safe_mode`: `30`
 
 현재 eval/holdout 관측치:
 
@@ -176,7 +176,7 @@
 
 총 추가량 가이드:
 
-- 현재 training critical slice와 남은 blind 의미 gap 보강 목표는 모두 채웠고, batch14로 blind50 validator residual `12건`을 직접 training sample로 역투영했다. 추가로 batch15 hard-case `10건`과 next-only oversampling 준비까지 마쳤다.
+- 현재 training critical slice와 남은 blind 의미 gap 보강 목표는 모두 채웠고, batch14로 blind50 validator residual `12건`을 직접 training sample로 역투영했다. 추가로 batch15 hard-case `10건`, batch16 safety reinforcement `30건`, next-only oversampling 준비까지 마쳤다.
 
 ## 5. eval 확장과 함께 가야 하는 항목
 
@@ -200,7 +200,7 @@ sample만 늘리면 안 된다. 아래 eval도 같이 늘린다.
 
 `python3 scripts/report_risk_slice_coverage.py` 기준 training 쪽 rule failure는 현재 `none`이다.
 
-즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 현재 `queued`인 `ds_v11`가 batch14 residual `12건`을 실제로 줄이는지 확인하는 일이다.
+즉, 기존 training label mismatch 정리와 training critical slice 보강은 완료됐다. 남은 병목은 `blind_holdout50`, `extended200`, `policy/output validator`, 그리고 현재 `queued`인 `ds_v11`가 batch14 residual `12건`을 실제로 줄이는지 확인하는 일이다. batch16은 그 다음 challenger에서 safety/failure 오판을 더 강하게 누르는 준비물이다.
 
 ## 7. 제출 전 체크
 

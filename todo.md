@@ -74,6 +74,7 @@
 - [x] state-estimator MVP 추가: `sensor_quality bad -> risk_level unknown` 기본 경로 구현 (`state-estimator/state_estimator/estimator.py`, `scripts/validate_state_estimator_mvp.py`)
 - [x] batch15 hard-case `10건` 추가와 next-only oversampling 규칙 고정 (`scripts/generate_batch15_hard_cases.py`, `docs/hard_case_oversampling_plan.md`)
 - [x] `scripts/build_openai_sft_datasets.py`에 train-only `--oversample-task-type` 지원 추가 및 dry-run format 검증 완료
+- [x] batch16 safety reinforcement `30건` 추가: `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10` (`scripts/generate_batch16_safety_reinforcement.py`)
 
 ---
 

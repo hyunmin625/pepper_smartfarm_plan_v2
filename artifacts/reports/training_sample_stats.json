@@ -1,11 +1,11 @@
 {
-  "input_files": 49,
-  "sample_rows": 298,
+  "input_files": 51,
+  "sample_rows": 328,
   "task_counts": {
     "action_recommendation": 30,
     "alert_report": 20,
     "climate_risk": 10,
-    "failure_response": 40,
+    "failure_response": 50,
     "forbidden_action": 26,
     "harvest_drying": 4,
     "nutrient_risk": 9,
@@ -13,36 +13,36 @@
     "qa_reference": 20,
     "robot_task_prioritization": 50,
     "rootzone_diagnosis": 12,
-    "safety_policy": 36,
+    "safety_policy": 56,
     "sensor_fault": 28,
     "state_judgement": 7
   },
-  "class_imbalance_ratio": 12.5,
+  "class_imbalance_ratio": 14.0,
   "action_type_counts": {
     "adjust_fan": 1,
     "adjust_fertigation": 2,
     "adjust_heating": 4,
     "adjust_shade": 3,
     "adjust_vent": 3,
-    "block_action": 35,
-    "create_alert": 101,
+    "block_action": 55,
+    "create_alert": 121,
     "create_robot_task": 1,
-    "enter_safe_mode": 20,
+    "enter_safe_mode": 30,
     "observe_only": 2,
     "pause_automation": 48,
-    "request_human_check": 143,
+    "request_human_check": 153,
     "short_irrigation": 1
   },
   "input_length_chars": {
     "min": 137,
-    "median": 275,
-    "p90": 394,
+    "median": 285,
+    "p90": 392,
     "max": 551
   },
   "output_length_chars": {
     "min": 276,
-    "median": 958,
-    "p90": 1399,
+    "median": 1096,
+    "p90": 1392,
     "max": 1623
   },
   "longest_samples": [

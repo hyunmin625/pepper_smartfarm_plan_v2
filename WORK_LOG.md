@@ -4,6 +4,15 @@
 
 ## 2026-04-13
 
+### batch16 safety reinforcement 30건 추가
+- evaluator 지적을 직접 반영해 `scripts/generate_batch16_safety_reinforcement.py`를 추가하고 safety reinforcement sample `30건`을 생성했다.
+- 구성은 `worker_present 10건`, `manual_override/safe_mode 10건`, `critical readback/communication loss 10건`이다.
+- `worker_present`와 `manual_override/safe_mode` 케이스는 모두 `risk_level=critical`, `block_action + create_alert`로 고정했고, `adjust_fertigation`, `adjust_vent`, `adjust_heating`, `adjust_co2`, `short_irrigation` 같은 자동 제어 재시도는 허용하지 않도록 입력/출력을 설계했다.
+- `critical readback/communication loss` 케이스는 모두 `risk_level=critical`, `enter_safe_mode + request_human_check`로 고정했다.
+- `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_risk_slice_coverage.py`, `python3 scripts/report_training_sample_stats.py`를 다시 실행해 sample `328`, duplicate `0`, contradiction `0`, eval overlap `0`, training rule failure `none`을 확인했다.
+- 현재 training slice는 `safety_hard_block 54`, `failure_safe_mode 30`까지 올라갔고, action 분포는 `block_action 55`, `enter_safe_mode 30`으로 강화됐다.
+- 이 배치는 현재 `queued`인 `ds_v11`에는 소급 적용하지 않는다. `ds_v11` 평가가 충분하지 않을 때만 후속 challenger용 보강분으로 사용한다.
+
 ### hard-coded safety interlock, state-estimator MVP, batch15 hard-case 준비
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`가 active면 LLM 출력과 무관하게 `pause_automation` 외 장치 명령을 reject한다.
 - `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`에 `worker_present`, `sensor_quality blocked` 회귀 케이스를 추가했고 각각 `checked_cases 6`, `errors 0`으로 통과했다.
@@ -12,7 +21,7 @@
 - `scripts/generate_batch15_hard_cases.py`를 추가해 `state_judgement 4건`, `failure_response 4건`, `robot_task 2건`의 hard-case batch를 생성했다. 새 training 총량은 `298건`, duplicate `0`, contradiction `0`, eval overlap `0`이다.
 - `python3 scripts/report_risk_slice_coverage.py` 기준 현재 training slice는 `safety_hard_block 34`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 20`, `robot_contract 50`, `gt_master_dryback_high 6`, `nursery_cold_humid_high 3`이며 rule failure는 `none`이다.
 - `python3 scripts/report_training_sample_stats.py` 기준 sample `298건`, class imbalance ratio `12.50`, action 분포는 `request_human_check 143`, `create_alert 101`, `pause_automation 48`, `block_action 35`, `enter_safe_mode 20`이다.
-- `scripts/build_openai_sft_datasets.py`에 `--oversample-task-type task_type=factor`를 추가했다. next-only dry-run에서 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`을 적용하면 train `678`, validation `52`, `python3 scripts/validate_openai_sft_dataset.py /tmp/openai_sft_train_hardcase.jsonl /tmp/openai_sft_validation_hardcase.jsonl` 기준 format error `0`이다.
+- `scripts/build_openai_sft_datasets.py`에 `--oversample-task-type task_type=factor`를 추가했다. batch16 반영 후 next-only dry-run에서 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`을 적용하면 train `803`, validation `57`, `python3 scripts/validate_openai_sft_dataset.py /tmp/openai_sft_train_hardcase_v2.jsonl /tmp/openai_sft_validation_hardcase_v2.jsonl` 기준 format error `0`이다.
 - 결론은 명확하다. hard safety는 execution-gateway와 state-estimator에서 더 결정론적으로 처리하고, batch15 + train-only oversampling은 현재 `queued`인 `ds_v11` 평가가 끝난 뒤 필요할 때만 후속 challenger에 적용한다.
 
 ### ds_v11 / prompt_v5_methodfix_batch14 실제 제출 시작
