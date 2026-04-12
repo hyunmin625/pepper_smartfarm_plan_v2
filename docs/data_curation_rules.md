@@ -19,6 +19,7 @@
 - 생육 단계: `schemas/state_schema.json`의 enum만 사용
 - 위험도: `low`, `medium`, `high`, `critical`, `unknown`
 - follow_up check_type: `sensor_recheck`, `visual_inspection`, `device_readback`, `operator_confirm`, `trend_review`, `lab_test`, `other`
+- `risk_level`의 상세 의미와 우선순위는 `docs/risk_level_rubric.md`를 따른다.
 
 ## 3. 서술 스타일
 
@@ -40,4 +41,4 @@
 - `data/examples/*.jsonl`
 - `evals/*_eval_set.jsonl`
 
-검증은 `scripts/validate_training_examples.py`로 수행한다.
+검증은 `scripts/validate_training_examples.py`와 `scripts/report_risk_slice_coverage.py`로 수행한다.

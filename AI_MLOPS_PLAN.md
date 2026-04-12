@@ -41,9 +41,11 @@
 - 다음 단계의 중심은 문서 설계가 아니라 `core24 + extended120` 기준 모델 재평가, `extended160` 확장, `offline runner 구현`, `policy JSON 작성`이다.
 - `24건` eval만으로는 challenger 승격과 제품화 판단을 하기 어렵다고 재판정했고, 현재는 `core24`를 유지하면서 `extended120` minimum benchmark를 이미 달성했다.
 - `extended120`만으로도 제품화 판단이 부족하다고 재판정했고, blind holdout / safety invariant / field usability / shadow mode를 별도 승격 게이트로 추가했다.
+- `risk_level` 기준은 `docs/risk_level_rubric.md`로 분리했고, critical slice 감사는 `python3 scripts/report_risk_slice_coverage.py`로 수행한다.
 - 현재 in-flight fine-tuning job은 없다. 최근 corrective challenger `ds_v10 / prompt_v8` (`ftjob-LXWpGudJCeyqsH7WMorGHAT2`)는 로컬 manifest 기준 `cancelled`다.
 - 다음 corrective draft `prompt_v9`는 로컬에서 준비됐고, sample `194건`, train `180`, validation `14`, eval overlap `0` 기준으로 submit 대기 상태다.
 - 다음 재평가 게이트는 마지막 완료 모델 `ds_v9`부터 `core24 + extended120 + blind_holdout + 제품화 게이트` 기준으로 다시 비교하는 것이다. 후속 challenger가 생기더라도 같은 조건을 유지한다.
+- 다음 데이터 보강은 `docs/critical_slice_augmentation_plan.md` 기준으로 `safety_policy`, `sensor_fault`, `failure_response`, `rootzone/nutrient`, `robot contract` 중심으로만 진행한다.
 
 ## 개정 개발 순서
 

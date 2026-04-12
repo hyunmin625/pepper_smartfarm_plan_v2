@@ -7,6 +7,10 @@
 ### 제품 수준 재평가와 무지출 우선순위 재정렬
 - `docs/model_product_readiness_reassessment.md`를 추가해 현재 병목을 `모델 자체`보다 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트로 재정리했다.
 - 로컬 run manifest 기준 `ds_v10/prompt_v8` 상태가 `queued`가 아니라 `cancelled`로 정리된 것을 확인했고, 현재 재평가 기준은 마지막 완료 모델 `ds_v9`부터 다시 보는 것으로 바꿨다.
+- `docs/risk_level_rubric.md`를 추가해 `critical > unknown > high > medium > low` 우선순위와 task family별 위험도 기준을 고정했다.
+- `docs/critical_slice_augmentation_plan.md`를 추가해 다음 fine-tuning 전 보강해야 할 slice와 최소 추가량을 정리했다.
+- `scripts/report_risk_slice_coverage.py`를 추가해 training/extended_eval/blind_holdout의 `risk_level` 분포와 critical slice 커버리지를 한 번에 감사할 수 있게 했다.
+- 현재 training 감사 기준 slice는 `safety_hard_block 12`, `sensor_unknown 6`, `evidence_incomplete_unknown 2`, `failure_safe_mode 11`, `robot_contract 24`이고, 남은 라벨 mismatch는 `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1`이다.
 - 결론은 다음과 같이 고정했다.
   - base model 교체는 보류
   - 새 fine-tuning submit은 잠시 중지

@@ -194,4 +194,5 @@
 
 - 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
 - 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator 외부화`, `critical slice만 보강`이다.
+- 세부 기준은 `docs/risk_level_rubric.md`, `docs/critical_slice_augmentation_plan.md`, `scripts/report_risk_slice_coverage.py`에 고정한다.
 - 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.

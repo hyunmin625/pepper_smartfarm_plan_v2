@@ -50,9 +50,12 @@
 
 - [ ] `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit freeze 상태 유지
 - [ ] `scripts/build_openai_sft_datasets.py`로 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread` split 시뮬레이션과 결과 기록
+- [ ] `docs/risk_level_rubric.md` 기준으로 기존 training/eval의 `risk_level` 전수 점검
+- [ ] `python3 scripts/report_risk_slice_coverage.py` 기준 mismatch `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1` 정리
 - [ ] hard safety rule 10개를 policy/output validator 요구사항으로 분리 문서화
 - [ ] `extended160` 확장 tranche 작성
 - [ ] `extended200` 최종 분포와 blind holdout `50` 확장 tranche 작성
+- [ ] `docs/critical_slice_augmentation_plan.md` 기준 `safety_policy_hard_block 12 -> 20+`, `sensor_fault_unknown 6 -> 20+`, `evidence_incomplete_unknown 2 -> 10+`, `failure_safe_mode 11 -> 16+` 보강
 - [ ] `safety_policy`, `failure_response`, `sensor_fault`, `robot_task_prioritization`, `rootzone_diagnosis/state_judgement` 중심 training `+42` 샘플 보강 계획 확정
 - [ ] 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 재평가할 실행 순서 고정
 

@@ -15,10 +15,12 @@
 5. `docs/eval_scaleup_plan.md`: `core24 + extended120/160` 평가 확장 계획
 6. `docs/productization_promotion_gate.md`: blind holdout, safety invariant, field usability, shadow mode 승격 게이트
 7. `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 재개 조건
-8. `schedule.md`: 개정 실행 순서와 8주 일정
-9. `todo.md`: 세부 작업 체크리스트
-10. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-11. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+8. `docs/risk_level_rubric.md`: `risk_level` 정의와 우선순위 기준
+9. `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 slice와 수량
+10. `schedule.md`: 개정 실행 순서와 8주 일정
+11. `todo.md`: 세부 작업 체크리스트
+12. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+13. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -66,6 +68,8 @@
 - 제품 수준 재평가 문서화 완료: `docs/model_product_readiness_reassessment.md`에 따라 당분간 새 fine-tuning submit보다 `validation 강화`, `extended200 + blind50` 계획, `policy/output validator` 외부화를 우선한다.
 - `scripts/build_openai_sft_datasets.py`는 이제 `validation_ratio`, `validation_min_per_family`, `validation_selection=spread`를 지원하므로 다음 라운드부터 `validation 14` 고정을 해제할 수 있다.
 - `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검하도록 보강됐다.
+- `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
+- `docs/critical_slice_augmentation_plan.md`에 따라 현재 training의 주요 부족분은 `safety hard block 12`, `sensor_fault unknown 6`, `evidence incomplete unknown 2`, `failure safe_mode 11`이고, 다음 라운드는 이 갭을 메우는 방식으로만 보강한다.
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
