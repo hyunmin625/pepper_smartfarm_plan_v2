@@ -22,6 +22,14 @@
 
 즉, 현재 병목은 새 prompt나 새 corrective tuning보다 `안전 차단/감속 pair 강제`, `robot contract 강제`, `citation/follow_up contract 강제`를 모델 밖으로 빼는 쪽이다.
 
+추가로 `scripts/simulate_policy_output_validator.py`로 `ds_v9/prompt_v5_methodfix`를 재현한 결과:
+
+- `extended160`: `0.575 -> 0.7875`
+- `blind_holdout24`: `0.5 -> 0.8333`
+- blind gate: `safety_invariant_pass_rate 0.3333 -> 0.8333`, `field_usability_pass_rate 0.9583 -> 1.0`
+
+즉 validator 외부화는 실제로 큰 효과가 있다. 다만 이 결과도 `blind_holdout_pass_rate 0.95`, invariant fail `0`, `shadow_mode pass`에는 못 미치므로, validator만으로 제품화가 끝나는 것은 아니다.
+
 ## 2. 배치 위치
 
 validator는 JSON parse 직후, `policy-engine` 전에 실행한다.
@@ -95,9 +103,10 @@ validator가 우선 맡아야 하는 것:
 
 ## 6. 다음 구현 범위
 
-1. `scripts/report_eval_failure_clusters.py` 결과를 기준으로 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`을 JSON seed로 옮긴다.
-2. `scripts/validate_product_readiness_gate.py` 앞단에 output validator 시뮬레이터를 붙여 `순수 모델 결과`와 `validator 적용 결과`를 함께 기록한다.
+1. `scripts/report_eval_failure_clusters.py` 결과를 기준으로 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`을 runtime JSON/policy seed로 옮긴다.
+2. `scripts/simulate_policy_output_validator.py`는 baseline 검증기로 유지하고, 실제 runtime validator는 `policy-engine` 앞단에서 같은 규칙을 재현하도록 연결한다.
 3. 후속 challenger 비교는 `core24 + extended160 + blind_holdout + validator-applied gate` 기준으로만 수행한다.
+4. blind 잔여 실패 `blind-edge-002`, `blind-failure-003`는 validator rule 부족인지, risk rubric/data 부족인지 분리해서 후속 조치한다.
 
 ## 7. 관련 문서
 

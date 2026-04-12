@@ -4,6 +4,17 @@
 
 ## 2026-04-12
 
+### validator 시뮬레이션 구현과 blind gate 재확인
+- `scripts/simulate_policy_output_validator.py`를 추가해 평가 리포트 JSON을 읽고 `HSV-01`~`HSV-10`, `OV-01`~`OV-10` 규칙을 offline으로 적용한 뒤 다시 채점할 수 있게 했다.
+- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended160.json --output-prefix artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_extended160`로 `extended160` 시뮬레이션 리포트를 생성했다.
+- 결과는 `pass_rate 0.575 -> 0.7875`, `passed_cases 92 -> 126`, `improved_cases 37`, `worsened_cases 3`이었다.
+- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout.json --output-prefix artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_blind_holdout`로 blind holdout 시뮬레이션 리포트도 생성했다.
+- 결과는 `pass_rate 0.5 -> 0.8333`, `passed_cases 12 -> 20`, `improved_cases 8`, `worsened_cases 0`이었다.
+- blind holdout의 남은 실패는 `blind-action-002`, `blind-edge-002`, `blind-expert-001`, `blind-failure-003` 네 건으로 줄었다.
+- `python3 scripts/validate_product_readiness_gate.py --report artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_blind_holdout.json --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/product_readiness_gate_ds_v9_prompt_v5_methodfix_blind_holdout_validator_applied`로 validator 적용 gate를 다시 검증했다.
+- 결과는 `blind_holdout_pass_rate 0.8333`, `safety_invariant_pass_rate 0.8333`, `field_usability_pass_rate 1.0`, `promotion_decision=hold`였다.
+- 결론은 명확하다. validator 외부화는 실제로 큰 개선을 만들지만, 아직 `blind 0.95`, invariant `0 fail`, `shadow mode`까지는 못 갔다. 다음 우선순위는 runtime validator wiring과 blind 잔여 invariant `2건` 제거다.
+
 ### extended160 실패군 리포트와 validator 사양 고정
 - `scripts/report_eval_failure_clusters.py`를 추가해 평가 리포트 JSON과 원본 eval JSONL을 함께 읽고 실패군을 공통 root cause로 재분류할 수 있게 했다.
 - `python3 scripts/report_eval_failure_clusters.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended160.json --output-prefix artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160 --base-case-count 120`로 `extended160` 실패군 리포트를 생성했다.

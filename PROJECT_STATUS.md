@@ -14,6 +14,8 @@
 - 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로만 유지한다.
 - `extended160` promotion baseline은 확보했다. 현재 분포는 `expert 48 / action 20 / forbidden 16 / failure 16 / robot 12 / edge 24 / seasonal 24`이다. 다만 제품 수준 재평가 기준으로는 `extended200 + blind_holdout50`까지 계획을 올려야 한다.
 - `ds_v9` `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 validator 외부화 우선 대상으로 묶였다.
+- `scripts/simulate_policy_output_validator.py`로 offline validator 시뮬레이터를 구현했고, `ds_v9` 기준 `extended160 0.575 -> 0.7875`, `blind_holdout24 0.5 -> 0.8333`까지 개선 효과를 확인했다.
+- validator 적용 후 blind gate 결과는 `safety_invariant_pass_rate 0.8333`, `field_usability_pass_rate 1.0`이지만, `blind_holdout_pass_rate 0.8333 < 0.95`, 남은 invariant 실패 `2건`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`다.
 
 ## 핵심 시스템 방향
 
@@ -267,9 +269,10 @@
 3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
 4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `220`, validation `48`이다.
 5. 사용자 요구 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`
-6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, policy/output validator 구현, 새 tranche 일반화 원인 분석이다.
-7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`로 고정됐고, 다음 단계는 정책 JSON 및 validator 시뮬레이터 구현이다.
-8. 그 다음에만 다음 challenger 제출 여부를 결정
+6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, runtime policy/output validator 연결, 새 tranche 일반화 원인 분석이다.
+7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`로 고정됐고, offline validator 시뮬레이터도 구현했다. 다음 단계는 runtime validator JSON/policy wiring과 shadow mode 기록이다.
+8. validator 적용 후에도 남는 blind invariant 실패 `blind-edge-002`, `blind-failure-003`를 데이터/rubric/validator ownership 관점에서 다시 분해한다.
+9. 그 다음에만 다음 challenger 제출 여부를 결정
 
 ## 주의할 점
 

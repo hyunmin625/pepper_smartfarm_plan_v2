@@ -57,7 +57,9 @@
 - baseline 비교 보관 완료: v1 legacy baseline `0.5417` 대비 ds_v5/prompt_v5 결과가 `+0.3333`, 직전 champion ds_v4/prompt_v4 `0.7917` 대비 `+0.0833` 개선됐다.
 - `ds_v9/prompt_v5_methodfix` 재평가 완료: `core24 0.875`, `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다. 공개 benchmark 총량을 늘리자 다시 무너졌고, 공식 승격은 계속 보류한다.
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
-- `docs/policy_output_validator_spec.md`에 hard safety `10개`, approval/output contract `10개`를 고정했다. 다음 단계는 새 FT가 아니라 validator 시뮬레이터 구현이다.
+- `docs/policy_output_validator_spec.md`에 hard safety `10개`, approval/output contract `10개`를 고정했고, `scripts/simulate_policy_output_validator.py`로 오프라인 시뮬레이터도 구현했다.
+- validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended160 0.575 -> 0.7875`, `blind_holdout24 0.5 -> 0.8333`, `safety_invariant_pass_rate 0.3333 -> 0.8333`, `field_usability_pass_rate 0.9583 -> 1.0`까지 개선됐다.
+- 다만 validator를 붙여도 `blind_holdout_pass_rate 0.8333 < 0.95`, safety invariant 실패 `2건`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
@@ -77,7 +79,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 `blind_holdout50`, `extended200`, `policy/output validator 구현`, 그리고 새 tranche 일반화 실패다.
+- 현재 남은 주요 부족분은 `blind_holdout50`, `extended200`, runtime `policy/output validator` 연결, 그리고 validator 적용 후에도 남는 safety invariant `2건` 정리다.
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
 - `sensor-ingestor` 설정 포맷 초안: poller profile, connection, binding group, publish target, health config 반영 완료
