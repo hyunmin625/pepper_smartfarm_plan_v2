@@ -1,18 +1,18 @@
 {
-  "input_files": 51,
-  "sample_rows": 328,
+  "input_files": 54,
+  "sample_rows": 336,
   "task_counts": {
-    "action_recommendation": 30,
+    "action_recommendation": 32,
     "alert_report": 20,
     "climate_risk": 10,
     "failure_response": 50,
     "forbidden_action": 26,
     "harvest_drying": 4,
-    "nutrient_risk": 9,
+    "nutrient_risk": 11,
     "pest_disease_risk": 6,
     "qa_reference": 20,
-    "robot_task_prioritization": 50,
-    "rootzone_diagnosis": 12,
+    "robot_task_prioritization": 52,
+    "rootzone_diagnosis": 14,
     "safety_policy": 56,
     "sensor_fault": 28,
     "state_judgement": 7
@@ -25,24 +25,24 @@
     "adjust_shade": 3,
     "adjust_vent": 3,
     "block_action": 55,
-    "create_alert": 121,
+    "create_alert": 127,
     "create_robot_task": 1,
     "enter_safe_mode": 30,
     "observe_only": 2,
     "pause_automation": 48,
-    "request_human_check": 153,
+    "request_human_check": 159,
     "short_irrigation": 1
   },
   "input_length_chars": {
     "min": 137,
-    "median": 285,
-    "p90": 392,
+    "median": 286,
+    "p90": 394,
     "max": 551
   },
   "output_length_chars": {
     "min": 276,
-    "median": 1096,
-    "p90": 1392,
+    "median": 1116,
+    "p90": 1403,
     "max": 1623
   },
   "longest_samples": [
@@ -50,6 +50,11 @@
       "sample_id": "action-rec-026",
       "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch9.jsonl",
       "combined_chars": 1967
+    },
+    {
+      "sample_id": "action-rec-031",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl",
+      "combined_chars": 1934
     },
     {
       "sample_id": "state-judgement-045",
@@ -62,14 +67,9 @@
       "combined_chars": 1898
     },
     {
-      "sample_id": "state-judgement-037",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch5.jsonl",
-      "combined_chars": 1843
-    },
-    {
-      "sample_id": "state-judgement-066",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch11.jsonl",
-      "combined_chars": 1839
+      "sample_id": "action-rec-032",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl",
+      "combined_chars": 1855
     }
   ]
 }

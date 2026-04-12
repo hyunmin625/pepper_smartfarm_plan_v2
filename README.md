@@ -20,10 +20,11 @@
 10. `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 slice와 수량
 11. `docs/hard_case_oversampling_plan.md`: 후속 challenger에서만 적용할 hard-case oversampling 기준
 12. `docs/blind50_residual_batch14_plan.md`: blind50 validator 잔여 `12건`을 batch14 sample로 옮긴 매핑
-13. `schedule.md`: 개정 실행 순서와 8주 일정
-14. `todo.md`: 세부 작업 체크리스트
-15. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-16. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+13. `docs/offline_shadow_residual_batch17_plan.md`: offline shadow 잔여 `4건`을 batch17 sample로 옮긴 매핑
+14. `schedule.md`: 개정 실행 순서와 8주 일정
+15. `todo.md`: 세부 작업 체크리스트
+16. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+17. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -47,10 +48,10 @@
 - 핵심 센서 1차 상용 모델 shortlist 완료: `HMP110`, `GMP252`, `SQ-522-SS`, `TEROS 12`, `Guardian Inline Wi-Fi`, `WXT536`
 - 장치별 최소/최대 setpoint 범위 고정 완료: fan/vent/shade/irrigation/heater/CO2/fertigation/dehumidifier/dry-fan
 - 장치 운전 경험 규칙 정리 완료: 환기-팬-차광 우선순위, 관수 펄스 원칙, CO2/난방/건조실 운전 SOP 반영
-- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `328건`
-- 학습 seed 중복/모순 감사 자동화 완료: `328개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
+- 학습 seed 확장 완료: 7개 task family(`qa_reference`, `state_judgement`, `action_recommendation`, `forbidden_action`, `failure_response`, `robot_task_prioritization`, `alert_report`) 기준 총 `336건`
+- 학습 seed 중복/모순 감사 자동화 완료: `336개` sample 기준 duplicate `0`, contradiction `0`, eval overlap `0`
 - 파인튜닝 목표 재정의 완료: RAG/파인튜닝 역할 분리, 허용 `action_type`, `confidence`, `follow_up`, `retrieval_coverage` 요구 고정
-- 학습/eval 합본 생성과 통계 리포트 완료: training `328건`, extended eval `200건`, blind holdout `50건`, 기본 validation 기준 eval 총 `250건`, longest sample 수동 검토 완료
+- 학습/eval 합본 생성과 통계 리포트 완료: training `336건`, extended eval `200건`, blind holdout `50건`, 기본 validation 기준 eval 총 `250건`, longest sample 수동 검토 완료
 - `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 현재 승격 baseline은 `extended160`이고, 최종 제품 주장 baseline은 `extended200 + blind_holdout50`이다.
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
@@ -61,7 +62,7 @@
 - `ds_v11` validator 적용 후 잔여 실패는 blind50 `5건`, extended200 `42건`이다. 중심 owner는 blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`, extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`다.
 - `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay도 생성했다. 최근에는 `forbidden_action`을 `decision + blocked_action_type` 계약으로 재정렬하고 replay heuristic을 다듬어 `decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`까지 올렸다.
 - 이 offline shadow replay는 `shadow_mode pass` 대체가 아니라, 실제 현장 shadow 전에 남은 의미 실패를 압축해 보는 사전 기준선이다.
-- 현재 offline shadow의 실제 corrective backlog는 [shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md:1)로 고정했고, 남은 drift는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이다.
+- 현재 offline shadow의 실제 corrective backlog는 [shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md:1)로 고정했고, 남은 drift `4건`은 [docs/offline_shadow_residual_batch17_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/offline_shadow_residual_batch17_plan.md:1)와 batch17 sample `8건`으로 직접 역투영했다.
 - `ds_v9/prompt_v5_methodfix`는 이제 frozen historical baseline으로 유지한다. raw `extended200 0.51`, `blind_holdout50 0.32`였고, validator 적용 후에도 `blind_holdout50 0.76`에 그쳤다.
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
 - `extended200` 실패군 재분류 완료: 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였고, 새 tranche 실패 `25건`은 `edge/seasonal`의 unseen generalization 문제를 더 선명하게 드러냈다.
@@ -78,7 +79,7 @@
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 직접 학습 보강 대상으로 옮겼다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다. 새 batch 누락을 조용히 통과시키지 않도록 파이프라인을 고쳤다.
 - `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2` run `ftjob-dTfcY631bh5HJJKJnI5Xi0ML`는 `succeeded`로 종료됐다. training `238`, validation `50`이며 결과 model은 `DTryNJg3`다.
-- `batch15` hard-case `10건`과 batch16 safety reinforcement `30건`을 추가해 이후 challenger에서 `safety_policy/failure_response/sensor_fault/robot_task`를 train-only oversampling으로 증폭할 준비를 마쳤다. dry-run 기준 권장 가중치 적용 시 train `803`, validation `57`, SFT format error `0`이다.
+- `batch15` hard-case `10건`, batch16 safety reinforcement `30건`, batch17 offline shadow residual `8건`을 추가해 이후 challenger에서 `safety_policy/failure_response/sensor_fault/robot_task`와 blind residual drift를 train-only oversampling과 함께 증폭할 준비를 마쳤다. dry-run 기준 권장 가중치 적용 시 train `803`, validation `57`, SFT format error `0`이다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 shadow report 요약과 승격 판단(`promote / hold / rollback`)을 자동 생성할 수 있다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
@@ -89,8 +90,8 @@
 - 최신 완료 모델 blind 재평가 완료: `ds_v9/prompt_v5_methodfix`는 blind holdout `0.5`, safety invariant pass rate `0.3333`, field usability pass rate `0.9583`이다. 즉 robot contract는 일부 개선했지만 안전 invariant는 더 악화됐다.
 - 제품화 게이트 재정의 완료: 승격은 이제 `extended120/160`만이 아니라 `blind holdout >= 0.95`, `safety invariant failed = 0`, `field usability failed = 0`, `shadow mode pass`를 동시에 만족해야 한다.
 - 현재 champion 제품화 판정은 `hold`: blind holdout `0.5417`, safety invariant pass rate `0.5`, robot task field usability failure `3건`, shadow mode `not_run`
-- 최신 training 통계 재확인 완료: sample `328건`, class imbalance ratio `14.00`, `request_human_check 153`, `create_alert 121`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`이다.
-- 최신 targeted augmentation 완료: `state_judgement batch11 40건`, `robot_task batch4 20건`, `failure_response batch11 6건`, `state_judgement batch12 8건`, `batch13 gap fix 8건`, `batch14 residual fix 12건`, `batch15 hard-case 10건`, `batch16 safety reinforcement 30건`을 추가해 총 `328건`으로 확장했다.
+- 최신 training 통계 재확인 완료: sample `336건`, class imbalance ratio `14.00`, `request_human_check 159`, `create_alert 127`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`이다.
+- 최신 targeted augmentation 완료: `state_judgement batch11 40건`, `robot_task batch4 20건`, `failure_response batch11 6건`, `state_judgement batch12 8건`, `batch13 gap fix 8건`, `batch14 residual fix 12건`, `batch15 hard-case 10건`, `batch16 safety reinforcement 30건`, `batch17 offline shadow residual 8건`을 추가해 총 `336건`으로 확장했다.
 - `prompt_v9` draft 추가 완료: `scripts/build_openai_sft_datasets.py`와 `scripts/evaluate_fine_tuned_model.py`에 `sft_v9`를 반영했고, OpenAI SFT draft는 train `180`, validation `14`, eval overlap `0`으로 생성됐다.
 - `prompt_v9`는 아직 submit하지 않았고, 제품 수준 재평가가 끝날 때까지 다음 corrective round 후보 draft로만 유지한다.
 - 제품 수준 재평가 문서화 완료: `docs/model_product_readiness_reassessment.md`에 따라 당분간 새 fine-tuning submit보다 `validation 강화`, `extended200 + blind50` frozen gate, `policy/output validator` 외부화, `failure/safety/sensor` slice 보강을 우선한다.
@@ -99,7 +100,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 batch16 + next-only oversampling challenger가 정당한지 판단하는 일이다.
+- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 batch16 + batch17 + next-only oversampling challenger가 정당한지 판단하는 일이다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
@@ -234,7 +235,7 @@
 - `scripts/sync_openai_fine_tuning_job.py`: fine-tuning job status/events sync
 - `scripts/render_fine_tuning_comparison_table.py`: run manifest 기반 비교표 생성
 - `scripts/evaluate_fine_tuned_model.py`: fine-tuned model 기준 eval JSONL 실행과 요약 리포트 생성
-- `artifacts/training/combined_training_samples.jsonl`: 학습 seed 328건 합본
+- `artifacts/training/combined_training_samples.jsonl`: 학습 seed 336건 합본
 - `artifacts/training/combined_eval_cases.jsonl`: extended eval 200건 합본
 - `artifacts/training/blind_holdout_eval_cases.jsonl`: blind holdout 50건 합본
 - `artifacts/reports/training_sample_stats.json`: sample 분포/길이 통계 리포트
@@ -270,6 +271,6 @@
 3. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
 4. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
 5. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
-6. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + next-only oversampling challenger 제출 여부를 결정
+6. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + batch17 + next-only oversampling challenger 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

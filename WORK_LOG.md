@@ -4,6 +4,16 @@
 
 ## 2026-04-13
 
+### batch17 offline shadow residual 8건 추가
+- `scripts/generate_batch17_shadow_residual_samples.py`를 추가해 offline shadow replay 잔여 drift `4건`을 batch17 sample `8건`으로 직접 옮겼다.
+- 생성 파일은 `data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl` `2건`, `data/examples/state_judgement_samples_batch17_shadow_residual.jsonl` `4건`, `data/examples/robot_task_samples_batch6_shadow_residual.jsonl` `2건`이다.
+- 매핑 기준은 `docs/offline_shadow_residual_batch17_plan.md`에 고정했다. `blind-action-004`는 GT Master action sample로, `blind-expert-003`와 `blind-expert-010`은 nutrient/rootzone sample로, `blind-robot-005`는 `inspect_crop` exact enum contract sample로 다시 넣었다.
+- `python3 scripts/build_training_jsonl.py`, `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_risk_slice_coverage.py`, `python3 scripts/report_training_sample_stats.py`를 다시 실행했다.
+- 결과는 training `336건`, eval `250건`, duplicate `0`, contradiction `0`, eval overlap `0`, training rule failure `none`이다.
+- 최신 training critical slice는 `safety_hard_block 54`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 30`, `robot_contract 52`, `gt_master_dryback_high 10`, `nursery_cold_humid_high 3`이다.
+- 최신 training 통계는 class imbalance ratio `14.00`, action 분포 `request_human_check 159`, `create_alert 127`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`으로 재고정했다.
+- 권장 split도 다시 계산했다. `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread` 기준 현재 추천 split은 train `279`, validation `57`이다.
+
 ### offline shadow replay 계약 정렬과 runtime `HSV-09` 반영
 - `llm-orchestrator/llm_orchestrator/runtime.py`와 `scripts/build_shadow_mode_replay_from_eval.py`를 수정해 `forbidden_action`을 일반 `recommended_actions`가 아니라 `decision + blocked_action_type` 계약으로 비교하도록 바꿨다.
 - `scripts/build_shadow_mode_report.py`와 `docs/shadow_mode_report_format.md`도 함께 갱신해 shadow report가 `ai_decision_after`, `operator_decision`, `ai_blocked_action_type_after`, `operator_blocked_action_type`를 기록하도록 맞췄다.

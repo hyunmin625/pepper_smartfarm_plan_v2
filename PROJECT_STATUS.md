@@ -20,7 +20,7 @@
 - `scripts/report_eval_failure_clusters.py`와 `scripts/report_validator_residual_failures.py` 기준 `ds_v11`의 extended200 잔여 실패는 `42건`, blind50 validator 잔여 실패는 `5건`이다.
 - 현재 남은 중심 owner는 extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`, blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`다.
 - `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay를 만들었다. `forbidden_action` 계약 정렬, runtime `HSV-09` 반영, replay heuristic 보정 뒤 현재 기준선은 `decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`다.
-- 다만 이건 어디까지나 offline replay 기준선이다. 실제 corrective backlog는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며 owner는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌다.
+- 다만 이건 어디까지나 offline replay 기준선이다. 실제 corrective backlog는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며 owner는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌다. 이 네 건은 `docs/offline_shadow_residual_batch17_plan.md`와 batch17 sample `8건`으로 직접 역투영했다.
 - offline shadow replay는 실운영 shadow mode 대체가 아니다. 다만 현재 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 빠르게 압축하는 사전 기준선으로는 유효하다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
@@ -32,6 +32,7 @@
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
+- batch17 offline shadow residual `8건`을 추가했다. 대상은 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`이며 `create_alert` 누락, `adjust_fertigation` reflex, `inspect_crop` exact enum drift를 직접 겨냥한다.
 - `scripts/build_openai_sft_datasets.py`는 이제 `--oversample-task-type task_type=factor`를 지원한다. next-only dry-run 기준 권장 가중치를 적용하면 train `803`, validation `57`, SFT format error `0`이다.
 - `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 이미 완료 평가까지 끝났다. train `238`, validation `50`, 결과 model `DTryNJg3`, frozen gate 기준 새 comparison baseline으로 고정한다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`로 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 자동 집계할 수 있다.
@@ -194,8 +195,8 @@
 - 제품 수준 재평가 결론: 현재 병목은 base model보다는 `validation 14`, prompt chasing, hard-rule 미외부화, `extended120/blind24`의 불충분한 제품 게이트에 있다.
 - 로컬 툴 보강: `scripts/build_openai_sft_datasets.py`는 `validation_ratio`, `validation_min_per_family`, `validation_selection`을 지원하고 기본 경로 사용 시 현재 sample 파일 집합을 직접 읽는다. `scripts/report_eval_set_coverage.py`는 `product_total 200`과 blind holdout `50` 목표를 함께 점검한다.
 - `risk_level` 정규화 기준 고정: `docs/risk_level_rubric.md`에 `critical > unknown > high > medium > low` 우선순위와 task family별 기준을 정리했다.
-- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 54`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 30`, `robot_contract 50`, `gt_master_dryback_high 6`, `nursery_cold_humid_high 3`이며 training rule failure는 현재 `none`이다.
-- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `328건`, class imbalance ratio `14.00`, action 분포는 `request_human_check 153`, `create_alert 121`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`이다.
+- critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 54`, `sensor_unknown 28`, `evidence_incomplete_unknown 11`, `failure_safe_mode 30`, `robot_contract 52`, `gt_master_dryback_high 10`, `nursery_cold_humid_high 3`이며 training rule failure는 현재 `none`이다.
+- 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `336건`, class imbalance ratio `14.00`, action 분포는 `request_human_check 159`, `create_alert 127`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`이다.
 - 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `extended200 0.51`, `blind_holdout50 0.32`, `strict_json_rate 1.0`이다.
 - `scripts/report_eval_failure_clusters.py`와 `artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`로 `extended160` 실패 `68건`을 root cause로 재분류했다.
 - top root cause는 `low_friction_action_bias_over_interlock 25`, `citations_missing_in_actionable_output 20`, `sensor_or_evidence_gap_not_marked_unknown 17`, `critical_hazard_undercalled 14`다.
@@ -286,13 +287,13 @@
 
 1. `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2` 결과를 새 frozen baseline으로 유지하고, 후속 challenger는 같은 gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)에서만 비교한다.
 2. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
-3. 다음 dataset split 기본값은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다. 현재 추천 split은 train `238`, validation `50`이다.
-4. 사용자 요구 보강은 완료했다: `safety_policy 56`, `sensor_fault 28`, `robot_task_prioritization 50`, `failure_response 50`
+3. 다음 dataset split 기본값은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다. 현재 추천 split은 train `279`, validation `57`이다.
+4. 사용자 요구 보강은 완료했다: `safety_policy 56`, `sensor_fault 28`, `robot_task_prioritization 52`, `failure_response 50`
 5. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, execution-gateway hard guard와 state-estimator MVP도 추가됐다.
-6. blind50 validator 잔여 `5건`을 먼저 줄인다. 대상은 `blind-action-004`, `blind-expert-001`, `blind-expert-003`, `blind-expert-010`, `blind-robot-004`다.
+6. blind50 validator 잔여 `5건`을 먼저 줄인다. 이 중 offline shadow residual `4건`은 batch17 sample `8건`으로 이미 직접 보강했고, 남은 raw-only failure owner는 validator residual 리포트 기준으로 다시 관리한다.
 7. extended200 validator 잔여 `42건`을 `risk_rubric_and_data`, `required_action_types`, `robot contract` 기준으로 다시 줄인다.
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
-9. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + next-only oversampling challenger는 그 다음에만 검토한다.
+9. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + batch17 + next-only oversampling challenger는 그 다음에만 검토한다.
 
 ## 주의할 점
 
