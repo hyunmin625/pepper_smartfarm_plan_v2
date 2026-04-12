@@ -13,8 +13,11 @@
 - blind50 기준 offline shadow replay도 추가로 만들었다. 초기에는 `forbidden_action` 계약과 replay heuristic이 어긋나 `operator_agreement_rate 0.8`, `critical_disagreement_count 1`, `promotion_decision rollback`이었지만, `forbidden_action = decision + blocked_action_type` 계약 정렬, runtime `HSV-09` 반영, `worker_present/dry_room_path_degraded` heuristic 보정 뒤 현재 기준선은 `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`다.
 - 다만 runtime envelope 기준 synthetic shadow `day0` seed pack은 아직 `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`다. 이는 `robot_task` exact enum drift와 `create_alert` 누락 같은 runtime-shaped backlog가 아직 남아 있음을 보여준다.
 - 다만 offline replay는 여전히 실운영 shadow mode를 대체하지 않는다. 현재 남은 의미 drift는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며, 이는 [shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md:1)에 정리했다. 이 네 건은 [docs/offline_shadow_residual_batch17_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/offline_shadow_residual_batch17_plan.md:1)와 batch17 sample `8건`으로 직접 역투영했다.
+- synthetic shadow `day0` residual owner report도 따로 남겼다. [shadow_mode_residuals_ds_v11_day0_seed.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_residuals_ds_v11_day0_seed.md:1) 기준 잔여 `4건`은 `data_and_model 3`, `robot_contract_and_model 1`이고, 원인은 `alert_missing_before_fertigation_review 3`, `inspect_crop_enum_drift 1`이다.
+- 이 residual `4건`은 [docs/synthetic_shadow_day0_batch18_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/synthetic_shadow_day0_batch18_plan.md:1)와 batch18 sample `8건`으로 live head에 직접 역투영했다. 다만 `ds_v12` dry-run snapshot은 그대로 유지하고, batch18은 그 다음 corrective 후보 근거로만 추가했다.
 - 이 replay는 `real field shadow mode`를 대체하지 않는다. 다만 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 실제 shadow 형식으로 압축해 다음 batch 우선순위를 잡는 데는 유효하다.
 - `batch16 + batch17 + hard-case oversampling`을 묶은 `ds_v12 / prompt_v5_methodfix_batch17_hardcase` dry-run package는 준비했다. 현재 draft는 train `815`, validation `57`, format error `0`, manifest `ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151`이다.
+- batch18까지 반영한 현재 live head 기준 추천 split은 train `284`, validation `60`이고, 같은 hard-case oversampling 규칙을 다시 적용한 next-only dry-run은 train `822`, validation `60`, format error `0`이다.
 - 따라서 현재 결론은 `다음 submit`이 아니라 `shadow mode`, `risk rubric/data 경계 수정`, `required_action_types` 보강, 그리고 `ds_v12`는 dry-run 상태로만 유지하는 것이다.
 
 ## 1. 현재 로컬 증거
@@ -73,7 +76,7 @@
 
 - 다음 라운드부터는 `validation 14 고정`을 중단한다.
 - 권장 split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다.
-- 현재 training `336건` 기준으로 위 split을 적용하면 validation은 `57건`, train은 `279건`이 된다.
+- 현재 live head training `344건` 기준으로 위 split을 적용하면 validation은 `60건`, train은 `284건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
 - 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 2건 제거` 순서로 간다.
@@ -83,7 +86,7 @@
 
 판단: `그렇다. 하지만 총량보다 critical slice 부족이 본질이다.`
 
-기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `336건`으로 늘렸다.
+기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `344건`으로 늘렸다.
 
 전체 action 분포도 치우쳐 있다.
 

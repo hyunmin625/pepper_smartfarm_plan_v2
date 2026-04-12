@@ -1,0 +1,189 @@
+{
+  "schema_version": "shadow_seed_residual_report.v1",
+  "decision_count": 12,
+  "residual_case_count": 4,
+  "remaining_by_owner": [
+    {
+      "owner": "data_and_model",
+      "cases": 3,
+      "next_action": "create_alert + request_human_check 우선 패턴과 adjust_fertigation reflex 차단 slice를 training batch로 다시 넣는다."
+    },
+    {
+      "owner": "robot_contract_and_model",
+      "cases": 1,
+      "next_action": "low-confidence hotspot에서 inspect_crop exact enum과 candidate_id/target 계약을 더 강하게 고정한다."
+    }
+  ],
+  "remaining_by_cause": [
+    [
+      "alert_missing_before_fertigation_review",
+      3
+    ],
+    [
+      "inspect_crop_enum_drift",
+      1
+    ]
+  ],
+  "remaining_by_task_type": [
+    [
+      "action_recommendation",
+      1
+    ],
+    [
+      "nutrient_risk",
+      1
+    ],
+    [
+      "rootzone_diagnosis",
+      1
+    ],
+    [
+      "robot_task_prioritization",
+      1
+    ]
+  ],
+  "remaining_cases": [
+    {
+      "request_id": "blind-action-004",
+      "task_type": "action_recommendation",
+      "cause": "alert_missing_before_fertigation_review",
+      "owner": "data_and_model",
+      "ai_action_types_after": [
+        "request_human_check",
+        "adjust_fertigation"
+      ],
+      "operator_action_types": [
+        "create_alert",
+        "request_human_check"
+      ],
+      "ai_robot_task_types_after": [],
+      "operator_robot_task_types": [],
+      "validator_reason_codes": []
+    },
+    {
+      "request_id": "blind-expert-003",
+      "task_type": "nutrient_risk",
+      "cause": "alert_missing_before_fertigation_review",
+      "owner": "data_and_model",
+      "ai_action_types_after": [
+        "request_human_check",
+        "adjust_fertigation"
+      ],
+      "operator_action_types": [
+        "create_alert",
+        "request_human_check"
+      ],
+      "ai_robot_task_types_after": [],
+      "operator_robot_task_types": [],
+      "validator_reason_codes": []
+    },
+    {
+      "request_id": "blind-robot-005",
+      "task_type": "robot_task_prioritization",
+      "cause": "inspect_crop_enum_drift",
+      "owner": "robot_contract_and_model",
+      "ai_action_types_after": [],
+      "operator_action_types": [],
+      "ai_robot_task_types_after": [
+        "manual_review"
+      ],
+      "operator_robot_task_types": [
+        "inspect_crop"
+      ],
+      "validator_reason_codes": [
+        "OV-02"
+      ]
+    },
+    {
+      "request_id": "blind-expert-010",
+      "task_type": "rootzone_diagnosis",
+      "cause": "alert_missing_before_fertigation_review",
+      "owner": "data_and_model",
+      "ai_action_types_after": [
+        "request_human_check",
+        "adjust_fertigation"
+      ],
+      "operator_action_types": [
+        "create_alert",
+        "request_human_check"
+      ],
+      "ai_robot_task_types_after": [],
+      "operator_robot_task_types": [],
+      "validator_reason_codes": []
+    }
+  ],
+  "owner_case_map": {
+    "data_and_model": [
+      {
+        "request_id": "blind-action-004",
+        "task_type": "action_recommendation",
+        "cause": "alert_missing_before_fertigation_review",
+        "owner": "data_and_model",
+        "ai_action_types_after": [
+          "request_human_check",
+          "adjust_fertigation"
+        ],
+        "operator_action_types": [
+          "create_alert",
+          "request_human_check"
+        ],
+        "ai_robot_task_types_after": [],
+        "operator_robot_task_types": [],
+        "validator_reason_codes": []
+      },
+      {
+        "request_id": "blind-expert-003",
+        "task_type": "nutrient_risk",
+        "cause": "alert_missing_before_fertigation_review",
+        "owner": "data_and_model",
+        "ai_action_types_after": [
+          "request_human_check",
+          "adjust_fertigation"
+        ],
+        "operator_action_types": [
+          "create_alert",
+          "request_human_check"
+        ],
+        "ai_robot_task_types_after": [],
+        "operator_robot_task_types": [],
+        "validator_reason_codes": []
+      },
+      {
+        "request_id": "blind-expert-010",
+        "task_type": "rootzone_diagnosis",
+        "cause": "alert_missing_before_fertigation_review",
+        "owner": "data_and_model",
+        "ai_action_types_after": [
+          "request_human_check",
+          "adjust_fertigation"
+        ],
+        "operator_action_types": [
+          "create_alert",
+          "request_human_check"
+        ],
+        "ai_robot_task_types_after": [],
+        "operator_robot_task_types": [],
+        "validator_reason_codes": []
+      }
+    ],
+    "robot_contract_and_model": [
+      {
+        "request_id": "blind-robot-005",
+        "task_type": "robot_task_prioritization",
+        "cause": "inspect_crop_enum_drift",
+        "owner": "robot_contract_and_model",
+        "ai_action_types_after": [],
+        "operator_action_types": [],
+        "ai_robot_task_types_after": [
+          "manual_review"
+        ],
+        "operator_robot_task_types": [
+          "inspect_crop"
+        ],
+        "validator_reason_codes": [
+          "OV-02"
+        ]
+      }
+    ]
+  }
+}

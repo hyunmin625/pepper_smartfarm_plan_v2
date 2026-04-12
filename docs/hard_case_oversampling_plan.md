@@ -26,6 +26,9 @@
 - `data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl`
 - `data/examples/state_judgement_samples_batch17_shadow_residual.jsonl`
 - `data/examples/robot_task_samples_batch6_shadow_residual.jsonl`
+- `data/examples/action_recommendation_samples_batch12_shadow_day0.jsonl`
+- `data/examples/state_judgement_samples_batch18_shadow_day0.jsonl`
+- `data/examples/robot_task_samples_batch7_shadow_day0.jsonl`
 
 핵심 시나리오:
 
@@ -33,6 +36,8 @@
 - `sensor jump + flatline`, `rootzone evidence incomplete`
 - `irrigation/source-water/dry-room/reboot recovery` failure safe-mode
 - `worker_present` / `estop_active` 아래 robot task 차단
+- `GT Master` dry-back + 낮은 dawn `WC` + 반복 잎 처짐에서 `create_alert + request_human_check` 우선
+- `low-confidence hotspot`에서 `inspect_crop` exact enum + `candidate_id/target` 계약 고정
 - `worker_present`는 모두 `risk_level=critical`, `block_action + create_alert`
 - `manual_override / safe_mode`는 자동 제어 재시도를 모두 `block_action`으로 차단
 - 핵심 readback / communication loss는 모두 `risk_level=critical`, `enter_safe_mode + request_human_check`
@@ -67,4 +72,5 @@ python3 scripts/build_openai_sft_datasets.py \
 - oversampling은 `next-only`다. 현재 제출된 `ds_v11`에는 소급 적용하지 않는다.
 - oversampling을 써도 frozen gate는 그대로 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`다.
 - score가 오르더라도 blind/generalization이 개선되지 않으면 prompt chasing으로 돌아가지 않는다.
-- batch17까지 반영한 현재 training은 `336건`이다. 권장 가중치 dry-run 기준 train `815`, validation `57`, SFT format error `0`을 확인했다.
+- `ds_v12` frozen snapshot은 batch17 기준 training `336건`, train `815`, validation `57`, SFT format error `0`이다.
+- batch18까지 반영한 현재 live head는 training `344건`이고, 같은 권장 가중치 dry-run 기준 train `822`, validation `60`, SFT format error `0`을 확인했다.

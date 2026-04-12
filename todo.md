@@ -75,13 +75,15 @@
 - [x] `ds_v11` blind50 기준 offline shadow replay 생성 및 계약/heuristic 정렬 (`decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`)
 - [ ] `ds_v11` shadow mode audit sample을 누적하고 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 실제 운영 로그 형식으로 검증
 - [x] synthetic shadow `day0` seed pack `12건` 추가와 baseline 리포트 생성 (`scripts/generate_shadow_mode_day0_seed_pack.py`, `scripts/run_shadow_mode_seed_pack.py`, `scripts/validate_shadow_mode_seed_pack.py`)
+- [x] synthetic shadow `day0` residual owner/cause 리포트 생성 (`scripts/report_shadow_mode_seed_residuals.py`, `artifacts/reports/shadow_mode_residuals_ds_v11_day0_seed.md`)
 - [x] offline shadow replay false critical disagreement(`blind-forbidden-007`) 해소 및 runtime `HSV-09` 정렬
 - [x] offline shadow replay false drift(`blind-action-003`, `blind-robot-001`, `blind-failure-008`)를 replay contract/heuristic 수정으로 제거
 - [x] offline shadow replay 잔여 drift(`blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`)의 owner별 fix를 batch17 sample `8건`으로 설계 확정 (`docs/offline_shadow_residual_batch17_plan.md`, `scripts/generate_batch17_shadow_residual_samples.py`)
 - [x] `batch16 + batch17 + hard-case oversampling` 기준 `ds_v12/prompt_v5_methodfix_batch17_hardcase` dry-run package 생성 (`artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl`, manifest `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json`)
+- [x] synthetic shadow `day0` residual `4건`을 batch18 sample `8건`으로 직접 역투영 (`docs/synthetic_shadow_day0_batch18_plan.md`, `scripts/generate_batch18_shadow_day0_residual_samples.py`)
 - [ ] blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data / data_and_model` 기준 targeted fix 여부를 확정
 - [ ] extended200 validator 잔여 `42건` 중 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`의 우선순위 batch를 설계
-- [ ] `synthetic shadow day0 hold`를 해소하고 `ds_v12` dry-run package를 실제 submit 후보로 승격할지 결정
+- [ ] `synthetic shadow day0 hold`를 해소하고 `ds_v12` frozen dry-run package 또는 batch18 포함 next challenger를 실제 submit 후보로 승격할지 결정
 - [x] execution-gateway hard-coded safety interlock 추가 (`execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
 - [x] state-estimator MVP 추가: `sensor_quality bad -> risk_level unknown` 기본 경로 구현 (`state-estimator/state_estimator/estimator.py`, `scripts/validate_state_estimator_mvp.py`)
 - [x] batch15 hard-case `10건` 추가와 next-only oversampling 규칙 고정 (`scripts/generate_batch15_hard_cases.py`, `docs/hard_case_oversampling_plan.md`)

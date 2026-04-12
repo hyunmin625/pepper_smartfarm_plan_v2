@@ -4,6 +4,18 @@
 
 ## 2026-04-13
 
+### synthetic shadow day0 residual report와 batch18 `8건` 추가
+- `scripts/report_shadow_mode_seed_residuals.py`를 추가해 `artifacts/runtime/llm_orchestrator/shadow_mode_ds_v11_day0_seed.jsonl` 기준 synthetic shadow `day0` 잔여 drift를 owner와 cause로 재분류했다.
+- 결과 리포트 `artifacts/reports/shadow_mode_residuals_ds_v11_day0_seed.md` 기준 residual `4건`은 `data_and_model 3`, `robot_contract_and_model 1`이고, 원인은 `alert_missing_before_fertigation_review 3`, `inspect_crop_enum_drift 1`이다.
+- `scripts/generate_batch18_shadow_day0_residual_samples.py`와 `docs/synthetic_shadow_day0_batch18_plan.md`를 추가해 이 `4건`을 batch18 sample `8건`으로 직접 옮겼다.
+- 생성 파일은 `data/examples/action_recommendation_samples_batch12_shadow_day0.jsonl` `2건`, `data/examples/state_judgement_samples_batch18_shadow_day0.jsonl` `4건`, `data/examples/robot_task_samples_batch7_shadow_day0.jsonl` `2건`이다.
+- `python3 scripts/build_training_jsonl.py --include-source-file`, `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_risk_slice_coverage.py`, `python3 scripts/report_training_sample_stats.py`를 다시 실행했다.
+- 결과는 training `344건`, eval `250건`, duplicate `0`, contradiction `0`, eval overlap `0`, training rule failure `none`이다.
+- 최신 training 통계는 class imbalance ratio `14.00`, action 분포 `request_human_check 165`, `create_alert 133`, `pause_automation 48`, `block_action 55`, `enter_safe_mode 30`으로 재고정했다.
+- `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --train-output /tmp/openai_sft_train_batch18.jsonl --validation-output /tmp/openai_sft_validation_batch18.jsonl` 기준 current live head 추천 split은 train `284`, validation `60`이다.
+- 같은 규칙으로 `--oversample-task-type safety_policy=5 --oversample-task-type failure_response=5 --oversample-task-type sensor_fault=5 --oversample-task-type robot_task_prioritization=3`를 적용한 next-only dry-run은 train `822`, validation `60`이고, `python3 scripts/validate_openai_sft_dataset.py /tmp/openai_sft_train_batch18_hardcase.jsonl /tmp/openai_sft_validation_batch18_hardcase.jsonl` 기준 files `2`, rows `882`, errors `0`을 확인했다.
+- 해석은 분명하다. `ds_v12` dry-run snapshot은 그대로 유지하고, batch18은 synthetic shadow `day0` 잔여 `4건`을 줄이기 위한 그 다음 corrective 후보의 live head에만 반영한다.
+
 ### ds_v12 hard-case challenger dry-run package 준비
 - `./.venv/bin/python scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --oversample-task-type safety_policy=5 --oversample-task-type failure_response=5 --oversample-task-type sensor_fault=5 --oversample-task-type robot_task_prioritization=3 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl`로 `ds_v12` dry-run package를 생성했다.
 - 결과는 source training `336`, train `815`, validation `57`, eval overlap `0`이다. oversample summary는 `safety_policy 47 -> 235`, `failure_response 42 -> 210`, `sensor_fault 23 -> 115`, `robot_task_prioritization 44 -> 132`다.
