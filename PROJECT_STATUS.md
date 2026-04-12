@@ -12,13 +12,13 @@
 - 현재까지의 작업은 모두 Markdown 문서 중심으로 진행되었다.
 - 프로젝트 관리 초기화 기준 문서와 템플릿이 정리되어 `0. 프로젝트 관리 초기화` 단계는 완료 상태다.
 - 현재 fine-tuning `core24` benchmark는 append-only 회귀셋으로만 유지한다.
-- `extended160` promotion baseline은 확보했다. 현재 분포는 `expert 48 / action 20 / forbidden 16 / failure 16 / robot 12 / edge 24 / seasonal 24`이다. 다만 제품 수준 재평가 기준으로는 `extended200 + blind_holdout50`까지 계획을 올려야 한다.
-- `ds_v9` `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 validator 외부화 우선 대상으로 묶였다.
-- `scripts/simulate_policy_output_validator.py`로 offline validator 시뮬레이터를 구현했고, `ds_v9` 기준 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.9167`까지 개선 효과를 확인했다.
+- `extended200`과 blind holdout `50` frozen coverage를 확보했다. 현재 분포는 `expert 60 / action 28 / forbidden 20 / failure 24 / robot 16 / edge 28 / seasonal 24`, blind holdout은 `50건`이다.
+- `ds_v9` `extended200` 실패군 재분류 결과 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였다.
+- `scripts/simulate_policy_output_validator.py`로 offline validator 시뮬레이터를 구현했고, `ds_v9` 기준 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.72`까지 개선 효과를 확인했다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
-- validator 적용 후 blind gate 결과는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`이지만, `blind_holdout_pass_rate 0.9167 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`다.
-- 남은 blind 실패 `2건`은 `docs/remaining_blind_gap_root_cause.md`로 다시 분해했고, 둘 다 `validator`가 아니라 `data + rubric` ownership으로 고정했다.
+- validator 적용 후 blind50 gate 결과는 `safety_invariant_pass_rate 0.9167`, `field_usability_pass_rate 1.0`이지만, `blind_holdout_pass_rate 0.72 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`다.
+- blind50 validator 적용 후에도 실패 `14건`이 남고, 그중 safety invariant 실패 `2건`은 `blind-edge-003`, `blind-edge-005`다. 즉 hard safety 외부화만으로는 제품 수준을 주장할 수 없다.
 
 ## 핵심 시스템 방향
 
@@ -179,14 +179,14 @@
 - `risk_level` 정규화 기준 고정: `docs/risk_level_rubric.md`에 `critical > unknown > high > medium > low` 우선순위와 task family별 기준을 정리했다.
 - critical slice 감사 도구 추가: `scripts/report_risk_slice_coverage.py` 기준 현재 training은 `safety_hard_block 32`, `sensor_unknown 26`, `evidence_incomplete_unknown 10`, `failure_safe_mode 16`, `robot_contract 44`, `gt_master_dryback_high 4`, `nursery_cold_humid_high 2`이며 training rule failure는 현재 `none`이다.
 - 최신 training 통계 재확인: `scripts/report_training_sample_stats.py` 기준 sample `276건`, class imbalance ratio `11.00`, action 분포는 `request_human_check 129`, `create_alert 93`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
-- 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, `strict_json_rate 1.0`이다.
+- 마지막 완료 모델 재평가 완료: `ds_v9/prompt_v5_methodfix`는 `extended120 0.7083`, `extended160 0.575`, `extended200 0.51`, `blind_holdout50 0.32`, `strict_json_rate 1.0`이다.
 - `scripts/report_eval_failure_clusters.py`와 `artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`로 `extended160` 실패 `68건`을 root cause로 재분류했다.
 - top root cause는 `low_friction_action_bias_over_interlock 25`, `citations_missing_in_actionable_output 20`, `sensor_or_evidence_gap_not_marked_unknown 17`, `critical_hazard_undercalled 14`다.
 - validator 외부화 우선 대상은 `pause_automation_missing_on_degraded_control_signal 13`, `block_action_missing_on_safety_lock 11`, `safe_mode_pair_missing_on_path_or_comms_loss 7`, `robot_task_enum_drift 3`이다.
 - hard safety `10개`, approval/output contract `10개`를 `docs/policy_output_validator_spec.md`에 고정했다.
-- `artifacts/fine_tuning/challenger_gate_baseline.md`에 `ds_v9`의 `core24 + extended120 + extended160 + blind_holdout24 + product gate` 기준선을 고정했다.
-- `ds_v9` 재평가 세부 판단: `extended120`에서는 `ds_v5` 대비 개선됐지만, blind holdout 제품화 게이트는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`으로 여전히 막혔다.
-- 비교 해석: `ds_v9`는 robot field contract 실패를 `3 -> 1`로 줄였지만, blind safety invariant는 `0.5 -> 0.3333`으로 악화됐다. 따라서 현재 문제를 `robot raw count 부족`보다 `failure/safety 의미 계약과 risk/action 경계 문제`로 보는 쪽이 더 정확하다.
+- `artifacts/fine_tuning/challenger_gate_baseline.md`에 `ds_v9`의 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + product gate(raw/validator)` 기준선을 고정했다.
+- `ds_v9` 재평가 세부 판단: `extended120`에서는 `ds_v5` 대비 개선됐지만, `extended200`과 `blind50`에서는 각각 `0.51`, `0.32`까지 떨어졌다. blind50 제품화 게이트는 raw `safety_invariant_pass_rate=0.25`, validator 적용 후에도 `0.9167`, `promotion_decision=hold`, `shadow_mode_status=not_run`으로 여전히 막혔다.
+- 비교 해석: `ds_v9`는 robot field contract 일부를 개선했지만, eval 총량을 제품 수준으로 올리자 `failure/safety/edge` 일반화가 크게 무너졌다. 따라서 현재 문제를 `robot raw count 부족`보다 `failure/safety 의미 계약과 risk/action 경계 문제`로 보는 쪽이 더 정확하다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -268,14 +268,14 @@
 ## 다음 우선순위
 
 1. `policy-engine/policy_engine/output_validator.py`를 실제 LLM 출력 경로에 연결하고 `validator_reason_codes`, `validator_decision`을 runtime audit log로 남긴다.
-2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended160 + blind_holdout + product gate` 조건으로만 비교한다.
+2. `ds_v9` 재평가 결과를 최신 baseline으로 고정하고, 후속 challenger가 생기면 같은 `core24 + extended160 + extended200 + blind_holdout50 + product gate` 조건으로만 비교한다.
 3. 승격 기본 지표는 `core24`가 아니라 `extended160`으로 고정한다. `scripts/report_eval_set_coverage.py --promotion-baseline extended160` 기준 현재 coverage gate는 통과했다.
 4. 다음 dataset split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`를 기본 후보로 사용한다. 현재 추천 split은 train `227`, validation `49`다.
 5. 사용자 요구 보강은 완료했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`
-6. training targeted 보강은 완료됐고, 남은 우선순위는 `extended200`, blind holdout `50`, runtime policy/output validator 연결, blind 잔여 실패 `2건` 원인 분석이다.
+6. training targeted 보강과 `extended200`, blind holdout `50` 확보는 완료됐다. 남은 우선순위는 runtime policy/output validator 연결, blind50 validator 잔여 실패 `14건` 원인 분석, safety invariant 잔여 `2건` 제거다.
 7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, offline/runtime skeleton도 구현했다. 다음 단계는 runtime wiring과 shadow mode 기록이다.
-8. 남은 blind 실패 `blind-action-002`, `blind-expert-001`를 데이터/rubric ownership 관점에서 다시 분해한다.
-9. batch13으로 `gt_master_dryback_high`, `nursery_cold_humid_high`를 training에 고정하고 audit slice로도 잡히게 유지한다.
+8. blind50 validator 적용 후 남은 `blind-edge-003`, `blind-edge-005` invariant 실패를 데이터/rubric ownership 관점에서 다시 분해한다.
+9. batch13으로 `gt_master_dryback_high`, `nursery_cold_humid_high`를 training에 고정했고 audit slice로도 잡히게 유지한다. 다음 보강은 blind50 잔여 `14건`과 연결된 `risk_level`/`required_action_types` 경계 중심으로 제한한다.
 10. 그 다음에만 다음 challenger 제출 여부를 결정
 
 ## 주의할 점

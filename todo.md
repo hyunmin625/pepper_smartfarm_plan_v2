@@ -54,7 +54,7 @@
 - [x] `python3 scripts/report_risk_slice_coverage.py` 기준 mismatch `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1` 정리
 - [x] hard safety rule 10개를 policy/output validator 요구사항으로 분리 문서화 (`docs/policy_output_validator_spec.md`)
 - [x] `extended160` 확장 tranche 작성
-- [ ] `extended200` 최종 분포와 blind holdout `50` 확장 tranche 작성
+- [x] `extended200` 최종 분포와 blind holdout `50` 확장 tranche 작성
 - [x] `docs/critical_slice_augmentation_plan.md` 기준 `evidence_incomplete_unknown 2 -> 10+`, `failure_safe_mode 10 -> 16+` 보강
 - [x] `blind-action-002`, `blind-expert-001`를 `docs/remaining_blind_gap_root_cause.md`로 분해하고 batch13 `8건`으로 `data + rubric` 보강
 - [x] `safety_policy`, `sensor_fault`, `robot_task_prioritization` 각 `20+` 보강 완료
@@ -62,6 +62,8 @@
 - [x] `scripts/report_eval_failure_clusters.py`로 `extended160` 실패군 재분류와 validator 외부화 우선순위 정리 (`artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended160.md`)
 - [x] 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 재평가하고 결과 문서화
 - [x] `ds_v9` 재평가 결과를 baseline으로 고정하고 후속 challenger 비교표/문서에 같은 게이트를 강제 (`artifacts/fine_tuning/challenger_gate_baseline.md`)
+- [ ] blind50 validator 적용 후 잔여 실패 `14건`을 `risk_level`, `required_action_types`, `required_task_types` ownership으로 재분류
+- [ ] `blind-edge-003`, `blind-edge-005` invariant 실패를 runtime wiring 전제에서 다시 검토
 
 ---
 

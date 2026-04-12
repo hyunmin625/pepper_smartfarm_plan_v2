@@ -2,6 +2,13 @@
 
 이 문서는 적고추 스마트팜 운영 전문가 AI Agent의 fine-tuning / champion 승격 / 제품화 판단에 사용할 평가셋을 `24건`에서 `100~200건` 규모로 확장하는 기준을 고정한다.
 
+## 현재 상태
+
+- `2026-04-12` 기준 extended eval은 `200건`, blind holdout은 `50건`까지 확장됐다.
+- coverage gate는 통과했지만, 마지막 완료 모델 `ds_v9/prompt_v5_methodfix`의 raw 성능은 `extended200 0.51`, `blind_holdout50 0.32`다.
+- validator 적용 시뮬레이션은 `extended200 0.755`, `blind_holdout50 0.72`까지 회복되지만 제품 승격 기준에는 여전히 못 미친다.
+- 따라서 이 문서는 더 이상 “확장 계획”만이 아니라, 후속 challenger가 반드시 따라야 할 frozen eval 총량 기준으로도 사용한다.
+
 ## 1. 왜 지금 필요한가
 
 - 현재 운영형 fine-tuning benchmark는 총 `24건`이다.

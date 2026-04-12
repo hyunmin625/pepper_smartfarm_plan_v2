@@ -4,6 +4,21 @@
 
 ## 2026-04-12
 
+### extended200/blind50 확장과 마지막 완료 모델 재재평가
+- `scripts/generate_extended_eval_tranche4.py`를 추가해 extended eval을 최종 제품 주장 기준 `200건`까지 확장했다. 현재 분포는 `expert 60 / action 28 / forbidden 20 / failure 24 / robot 16 / edge 28 / seasonal 24`다.
+- `scripts/generate_blind_holdout_tranche2.py`를 추가해 blind holdout을 `24 -> 50`으로 확장했고, `evals/blind_holdout_eval_set.jsonl`, `artifacts/training/blind_holdout_eval_cases.jsonl`을 함께 갱신했다.
+- `python3 scripts/build_eval_jsonl.py`, `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_eval_set_coverage.py --promotion-baseline extended160 --enforce-promotion-baseline`, `python3 scripts/report_risk_slice_coverage.py`를 다시 실행해 eval 총량 `200`, blind holdout `50`, duplicate `0`, contradiction `0`, eval overlap `0`, risk slice rule failure `none`을 확인했다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTgUbJHJ --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended200`로 `ds_v9`를 `extended200`에 재평가했다.
+- 결과는 `pass_rate 0.51`, `strict_json_rate 1.0`이었다. family별 약점은 `edge_case 0.25`, `failure_response 0.3846`, `robot_task_prioritization 0.1875`, `safety_policy 0.4444`, `sensor_fault 0.3333`, `seasonal 0.5833`였다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTgUbJHJ --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout50`로 blind50도 다시 평가했다.
+- 결과는 `pass_rate 0.32`, `strict_json_rate 1.0`이었다. family별 약점은 `climate_risk 0.0`, `nutrient_risk 0.0`, `edge_case 0.1667`, `failure_response 0.125`, `robot_task_prioritization 0.1429`, `safety_policy 0.3333`다.
+- `python3 scripts/report_eval_failure_clusters.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended200.json --output-prefix artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_extended200 --base-case-count 160` 결과 `extended200` 실패는 `98건`, validator 우선 실패는 `50건`, 새 tranche 실패는 `25건`이었다.
+- `python3 scripts/report_eval_failure_clusters.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout50.json --output-prefix artifacts/reports/eval_failure_clusters_ds_v9_prompt_v5_methodfix_blind_holdout50 --base-case-count 24` 결과 blind50 실패는 `34건`, validator 우선 실패는 `10건`, 새 tranche 실패는 `19건`이었다.
+- `python3 scripts/simulate_policy_output_validator.py`로 validator 적용 전후를 다시 계산했고, `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.72`를 확인했다.
+- `python3 scripts/validate_product_readiness_gate.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout50.json --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/product_readiness_gate_ds_v9_prompt_v5_methodfix_blind_holdout50` 결과 raw gate는 `blind_holdout_pass_rate 0.32`, `safety_invariant_pass_rate 0.25`, `field_usability_pass_rate 0.92`, `promotion_decision=hold`였다.
+- validator 적용 gate는 `blind_holdout_pass_rate 0.72`, `safety_invariant_pass_rate 0.9167`, `field_usability_pass_rate 1.0`, `promotion_decision=hold`였다.
+- 결론은 더 선명해졌다. hard safety 외부화는 효과가 크지만, 제품 블라인드 `50건` 기준에서는 여전히 `risk_level`, `required_action_types`, `required_task_types`가 핵심 병목이다. 다음 우선순위는 runtime wiring, blind50 잔여 실패 `14건`, invariant 잔여 `2건`, shadow mode다.
+
 ### runtime validator skeleton 추가와 blind gate 재상향
 - `policy-engine/policy_engine/output_validator.py`를 추가해 worker/manual override lock, path loss, rootzone conflict, climate degraded, robot clearance, approval/citation contract를 runtime 형태로 강제할 수 있게 했다.
 - `schemas/policy_output_validator_rules_schema.json`, `data/examples/policy_output_validator_rules_seed.json`로 validator rule catalog schema와 seed를 추가했다.

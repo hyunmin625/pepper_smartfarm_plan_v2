@@ -8,15 +8,15 @@
 
 - 마지막 완료 모델은 `ds_v9/prompt_v5_methodfix`다.
 - `ds_v10/prompt_v8`은 최근 sync 기준 `cancelled`이며, 완료 평가 결과가 아직 없다.
-- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `extended120`에서 `0.7083`, `extended160`에서 `0.575`, `blind_holdout24`에서 `0.5`, `strict_json_rate 1.0`이다.
+- `ds_v9`는 `core24`에서 `pass_rate 0.875`, `extended120`에서 `0.7083`, `extended160`에서 `0.575`, `extended200`에서 `0.51`, `blind_holdout50`에서 `0.32`, `strict_json_rate 1.0`이다.
 - 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
-- blind holdout 제품화 게이트 기준 `ds_v9`는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`이다.
-- 즉 `ds_v9`는 공개 benchmark와 robot field contract는 개선했지만, blind safety invariant는 오히려 악화됐다.
-- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.9167`까지 회복된다.
-- validator 적용 blind gate는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라간다.
-- 그래도 `blind_holdout_pass_rate 0.9167 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
-- 남은 blind 실패는 `blind-action-002`, `blind-expert-001` 두 건으로 좁혀졌다.
-- 두 실패는 모두 `validator`보다 `data + rubric` ownership으로 분류했고, 동형 training gap을 batch13으로 보강했다.
+- blind50 제품화 게이트 기준 raw `ds_v9`는 `promotion_decision=hold`, `blind_holdout_pass_rate=0.32`, `safety_invariant_pass_rate=0.25`, `field_usability_pass_rate=0.92`, `shadow_mode_status=not_run`이다.
+- 즉 `ds_v9`는 공개 benchmark 일부와 robot field contract 일부를 개선했지만, 제품 블라인드 세트로 가면 `failure/safety/edge` 일반화가 크게 무너진다.
+- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.72`까지 회복된다.
+- validator 적용 blind50 gate는 `safety_invariant_pass_rate 0.9167`, `field_usability_pass_rate 1.0`까지 올라간다.
+- 그래도 `blind_holdout_pass_rate 0.72 < 0.95`, `safety_invariant_failed_cases 2`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
+- blind50 validator 적용 후에도 실패 `14건`이 남는다. 중심은 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다.
+- 즉 `validator`만으로는 충분하지 않고, `data + rubric + runtime wiring`이 함께 필요하다.
 
 ### 실제 실패 의미
 
@@ -117,16 +117,15 @@
 
 - `core24`는 빠른 회귀 확인용으로는 유효하지만 제품 판단용으로는 너무 작다.
 - `extended120`은 minimum gate로는 유효하지만, 제품화 기준으로는 여전히 작다.
-- blind holdout은 `24건`이라 invariant/field usability를 보기엔 방향은 맞지만 표본이 작다.
-- 최신 완료 모델 `ds_v9`를 같은 기준으로 재심사한 결과, `extended120`은 개선됐지만 blind/product gate는 여전히 막혔다.
-- `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 외부화 우선 대상으로 묶였다.
-- 실제 시뮬레이션에서도 그 방향이 맞았다. `extended160`은 `127/160`, `blind_holdout24`는 `21/24`까지 회복됐다.
+- `extended200`과 blind holdout `50`을 확보한 뒤 재심사한 결과, `ds_v9`는 raw 기준 `0.51`, `0.32`까지 내려갔다.
+- `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 외부화 우선 대상으로 묶였고, `extended200`에서는 그 수가 `50건`까지 늘었다.
+- 실제 시뮬레이션에서도 그 방향은 유효했다. `extended200`은 `151/200`, `blind_holdout50`은 `36/50`까지 회복됐다. 하지만 여전히 제품 승격 기준에는 못 미친다.
 
 결론:
 
 - `core24`는 그대로 유지한다.
-- challenger 비교는 최소 `core24 + extended160`으로 올린다.
-- 실제 재평가 결과 `ds_v9`는 `extended160 0.575`로 떨어졌고, 새 tranche 40건만 보면 pass rate `0.1`이었다.
+- challenger 비교는 최소 `core24 + extended160 + extended200 + blind_holdout50`으로 올린다.
+- 실제 재평가 결과 `ds_v9`는 `extended160 0.575`, `extended200 0.51`, `blind_holdout50 0.32`다.
 - 제품 수준 주장에는 `extended200 + blind_holdout50 + product gate + shadow mode`가 필요하다.
 
 ## 3. 최종 판단
@@ -174,8 +173,8 @@
 
 ### Phase 2. 저비용 데이터/평가 조치
 
-- `extended160`까지 확장했고, 현재 총량 게이트는 통과했다.
-- 이후 `extended200` 분포를 아래처럼 채운다.
+- `extended200`과 blind holdout `50`까지 확장했고, 현재 총량 게이트는 통과했다.
+- 현재 분포는 아래와 같다.
   - `expert_judgement`: `60`
   - `action_recommendation`: `28`
   - `forbidden_action`: `20`
@@ -183,12 +182,12 @@
   - `robot_task`: `16`
   - `edge_case`: `28`
   - `seasonal`: `24`
-- blind holdout은 `24 -> 50`으로 확장한다.
+- blind holdout은 `50`까지 확장 완료했다.
 - 신규 training sample은 critical slice 중심으로 `+42` 내외만 추가한다.
-- blind holdout `24`의 남은 실패 `2건`은 별도 ownership으로 분리한다.
+- blind50 validator 적용 후 남는 실패 `14건`은 별도 ownership으로 분리한다.
   - validator로 줄일 수 없는 `risk_level` 경계 문제
-  - validator가 강제해야 할 pair/contract 누락 문제
-- `remaining_blind_gap_root_cause.md` 기준 두 잔여 실패는 모두 `data + rubric` ownership으로 고정했다.
+  - validator를 붙여도 남는 `required_action_types`/`required_task_types` 문제
+  - shadow mode 전까지 제품 승격을 막는 invariant `2건`
 
 ### Phase 3. 재평가
 
@@ -204,8 +203,8 @@
 아래가 충족될 때만 다음 submit을 허용한다.
 
 - validation split 강화 완료
-- `extended160` 이상 확보
-- blind holdout `50` 설계 확정
+- `extended200` 확보
+- blind holdout `50` 확보
 - hard-rule validator 초안 완성
 - targeted training slice 보강 완료
 - runtime validator skeleton과 JSON/policy seed 초안 완료
@@ -215,8 +214,8 @@
 ### fine-tuning 재개 조건
 
 - `core24`는 append-only 유지
-- `extended160` coverage 확보
-- blind holdout `50` 설계 또는 그에 준하는 frozen plan 확정
+- `extended200` coverage 확보
+- blind holdout `50` frozen set 확정
 - validation rows가 최소 `28+`로 증가
 - policy/output validator 초안 구현
 - runtime validator skeleton과 JSON/policy seed 초안 완료
@@ -234,6 +233,6 @@
 
 - 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
 - validator 시뮬레이션과 runtime skeleton은 실제로 큰 개선을 만들었지만, 그 자체로 `0.95`와 `shadow mode pass`까지는 못 갔다.
-- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator runtime 연결`, `blind 잔여 2건 제거`, `critical slice만 보강`이다.
+- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `extended200/blind50 baseline 고정`, `policy/output validator runtime 연결`, `blind50 validator 잔여 14건 제거`, `safety invariant 잔여 2건 제거`, `critical slice만 보강`이다.
 - 세부 기준은 `docs/risk_level_rubric.md`, `docs/critical_slice_augmentation_plan.md`, `scripts/report_risk_slice_coverage.py`에 고정한다.
 - 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.
