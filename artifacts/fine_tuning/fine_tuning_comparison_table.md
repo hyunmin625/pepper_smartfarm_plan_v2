@@ -2,6 +2,7 @@
 
 | experiment_name | status | base_model | model_version | dataset_version | prompt_version | eval_version | training_rows | validation_rows | job_id | fine_tuned_model |
 |---|---|---|---|---|---|---|---:|---:|---|---|
+| ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755 | succeeded | gpt-4.1-mini-2025-04-14 | pepper-ops-sft-v1.0.0 | ds_v9 | prompt_v5_methodfix | eval_v1 | 161 | 14 | ftjob-Mz4HYCUsC7ohp2OW01rpBTud | ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v9-prompt-v5-methodfix-eval-v1-20260412-1257:DTgUbJHJ |
 | ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132 | succeeded | gpt-4.1-mini-2025-04-14 | pepper-ops-sft-v1.7.0 | ds_v8 | prompt_v5_rebase | eval_v1 | 161 | 14 | ftjob-od4Gz2SDkPBQfdoabiFz61UZ | ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v8-prompt-v5-rebase-eval-v1-20260412-120132:DTfbN2GM |
 | ft-sft-gpt41mini-ds_v7-prompt_v7-eval_v1-20260412-103159 | succeeded | gpt-4.1-mini-2025-04-14 | pepper-ops-sft-v1.6.0 | ds_v7 | prompt_v7 | eval_v1 | 161 | 14 | ftjob-v8oFS0ZvHlWsxB6u7VAky2Bp | ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v7-prompt-v7-eval-v1-20260412-103159:DTeLtzn8 |
 | ft-sft-gpt41mini-ds_v6-prompt_v6-eval_v1-20260412-094328 | succeeded | gpt-4.1-mini-2025-04-14 | pepper-ops-sft-v1.5.0 | ds_v6 | prompt_v6 | eval_v1 | 158 | 14 | ftjob-etLIrpngO2P9RMI545Od6u1N | ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v6-prompt-v6-eval-v1-20260412-094328:DTdST10S |

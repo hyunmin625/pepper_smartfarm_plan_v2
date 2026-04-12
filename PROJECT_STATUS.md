@@ -146,7 +146,9 @@
 - 파인튜닝 plateau 원인 수정 완료: `scripts/build_openai_sft_datasets.py`를 task-level split으로 바꾸고, validation은 각 task의 earliest holdout만 사용하도록 조정했으며, exact train/eval overlap filtering을 추가했다.
 - train/eval overlap 원본 정리 완료: `action-rec-025`를 eval과 동일 입력에서 분리된 저장 구역 watch 사례로 재작성했고, `scripts/audit_training_data_consistency.py`에 eval overlap 검사까지 추가했다.
 - 방법론 수정 후 사전검증 완료: `sample_rows 175`, duplicate `0`, contradiction `0`, eval overlap `0`, cleaned SFT dataset은 train `161`, validation `14`, format error `0`이다.
-- 방법론 수정 challenger 제출 완료: `ftjob-Mz4HYCUsC7ohp2OW01rpBTud` (`ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755`)를 제출했고 현재 상태는 `validating_files`다.
+- 방법론 수정 run 완료: `ftjob-Mz4HYCUsC7ohp2OW01rpBTud` (`ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755`)는 `succeeded`로 종료됐다.
+- `ds_v9/prompt_v5_methodfix` eval 완료: pass rate `0.875`, strict JSON rate `1.0`으로 기존 champion과 동률이며, 실패 케이스는 `pepper-eval-003`, `failure-eval-001`, `edge-eval-004`다.
+- 방법론 수정 효과 확인: 기존 champion에서 실패하던 `pepper-eval-006`과 `action-eval-002`는 해결됐지만, `rootzone_diagnosis`와 `failure_response` 한 케이스가 새로 회귀해 최고 기록은 아직 `ds_v5/prompt_v5`가 유지된다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -227,11 +229,12 @@
 
 ## 다음 우선순위
 
-1. `ftjob-Mz4HYCUsC7ohp2OW01rpBTud`를 sync해 `ds_v9/prompt_v5_methodfix`가 `succeeded`로 끝나는 즉시 eval `24건`을 다시 실행
-2. `ds_v9`가 champion `0.875`를 넘기면 `fine_tuned_model_eval_latest.*`와 비교표를 새 champion 기준으로 승격
-3. 방법론 수정 이후에도 남는 실패가 무엇인지 `risk_level_match`와 `required_action_types_present` 기준으로 다시 좁혀 corrective seed를 설계
-4. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
-5. offline runner/state-estimator MVP 착수 범위를 확정
+1. `ds_v9`에서 새로 회귀한 `pepper-eval-003`과 `failure-eval-001`의 `risk_level_match` 원인을 분리해 corrective seed를 설계
+2. 공통 잔존 실패인 `edge-eval-004`의 `required_action_types_present` 규칙을 action/failure 계열 seed와 prompt에 다시 반영
+3. `ds_v5`와 `ds_v9`의 장점을 합친 다음 challenger를 설계하되, 동일 eval 입력을 복제하지 않고 인접 사례로만 보강
+4. 다음 challenger가 `0.875`를 넘기면 `fine_tuned_model_eval_latest.*`와 비교표를 새 champion 기준으로 승격
+5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+6. offline runner/state-estimator MVP 착수 범위를 확정
 
 ## 주의할 점
 

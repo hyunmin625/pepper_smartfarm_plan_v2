@@ -21,6 +21,14 @@
 - `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --dataset-version ds_v9 --prompt-version prompt_v5_methodfix --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix.jsonl ...`로 새 challenger job `ftjob-Mz4HYCUsC7ohp2OW01rpBTud`를 제출했다.
 - run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755.json`에 저장했고, submit 직후 sync 기준 상태는 `validating_files`다.
 
+### ds_v9 / prompt_v5_methodfix eval 완료
+- `ftjob-Mz4HYCUsC7ohp2OW01rpBTud`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v9-prompt-v5-methodfix-eval-v1-20260412-1257:DTgUbJHJ`다.
+- `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTgUbJHJ --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix`로 eval `24건`을 재실행했다.
+- 결과는 `pass_rate 0.875`, `strict_json_rate 1.0`이며 기존 champion `ds_v5/prompt_v5`와 동률이다.
+- 실패 케이스는 `pepper-eval-003` (`rootzone_diagnosis`, `risk_level_match`), `failure-eval-001` (`failure_response`, `risk_level_match`), `edge-eval-004` (`required_action_types_present`) 3건이다.
+- 비교 기준으로 보면 `ds_v9`는 기존 champion이 실패하던 `pepper-eval-006`과 `action-eval-002`를 해결했지만, 대신 `pepper-eval-003`과 `failure-eval-001`이 새로 회귀했다.
+- 결론적으로 split/overlap 방법론 수정이 실제 학습 분포를 바꿨다는 점은 확인됐지만, 최고 기록은 아직 `ds_v5/prompt_v5` `0.875`가 유지된다.
+
 ### ds_v8 / prompt_v5_rebase eval 완료
 - `ftjob-od4Gz2SDkPBQfdoabiFz61UZ`를 sync한 결과 `succeeded`로 종료됐고 결과 모델은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v8-prompt-v5-rebase-eval-v1-20260412-120132:DTfbN2GM`다.
 - `./.venv/bin/python scripts/evaluate_fine_tuned_model.py --system-prompt-version sft_v5 --model ...:DTfbN2GM --output-prefix artifacts/reports/fine_tuned_model_eval_ds_v8_prompt_v5_rebase`로 eval `24건`을 재실행했다.
