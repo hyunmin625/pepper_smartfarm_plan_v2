@@ -19,6 +19,8 @@
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - validator 적용 후 blind50 gate 결과는 `safety_invariant_pass_rate 0.9167`, `field_usability_pass_rate 1.0`이지만, `blind_holdout_pass_rate 0.72 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`다.
 - blind50 validator 적용 후에도 실패 `14건`이 남고, 그중 safety invariant 실패 `2건`은 `blind-edge-003`, `blind-edge-005`다. 즉 hard safety 외부화만으로는 제품 수준을 주장할 수 없다.
+- `scripts/report_validator_residual_failures.py` 기준 blind50 validator 잔여 `14건`은 `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`로 나뉜다.
+- `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`로 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 자동 집계할 수 있다.
 
 ## 핵심 시스템 방향
 
@@ -275,7 +277,7 @@
 6. training targeted 보강과 `extended200`, blind holdout `50` 확보는 완료됐다. 남은 우선순위는 runtime policy/output validator 연결, blind50 validator 잔여 실패 `14건` 원인 분석, safety invariant 잔여 `2건` 제거다.
 7. hard block 정책 10개와 approval/output contract 10개는 `docs/policy_output_validator_spec.md`와 `data/examples/policy_output_validator_rules_seed.json`으로 고정됐고, offline/runtime skeleton도 구현했다. 다음 단계는 runtime wiring과 shadow mode 기록이다.
 8. blind50 validator 적용 후 남은 `blind-edge-003`, `blind-edge-005` invariant 실패를 데이터/rubric ownership 관점에서 다시 분해한다.
-9. batch13으로 `gt_master_dryback_high`, `nursery_cold_humid_high`를 training에 고정했고 audit slice로도 잡히게 유지한다. 다음 보강은 blind50 잔여 `14건`과 연결된 `risk_level`/`required_action_types` 경계 중심으로 제한한다.
+9. batch13으로 `gt_master_dryback_high`, `nursery_cold_humid_high`를 training에 고정했고 audit slice로도 잡히게 유지한다. 다음 보강은 blind50 잔여 `14건`과 연결된 `risk_level`/`required_action_types`/`robot_task` 경계 중심으로 제한한다.
 10. 그 다음에만 다음 challenger 제출 여부를 결정
 
 ## 주의할 점

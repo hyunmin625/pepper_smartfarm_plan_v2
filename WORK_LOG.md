@@ -4,6 +4,15 @@
 
 ## 2026-04-12
 
+### validator 잔여 실패 owner 분류와 shadow mode 요약 경로 추가
+- `scripts/report_validator_residual_failures.py`를 추가해 validator 적용 후에도 남는 실패를 `risk_rubric_and_data`, `data_and_model`, `robot_contract_and_model`, `runtime_validator_gap` owner로 재분류할 수 있게 했다.
+- `python3 scripts/report_validator_residual_failures.py --raw-report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout50.json --validator-report artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_blind_holdout50.json --gate-report artifacts/reports/product_readiness_gate_ds_v9_prompt_v5_methodfix_blind_holdout50_validator_applied.json --output-prefix artifacts/reports/validator_residual_failures_ds_v9_prompt_v5_methodfix_blind_holdout50` 결과 blind50 잔여 `14건`은 `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`였다.
+- `python3 scripts/report_validator_residual_failures.py --raw-report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended200.json --validator-report artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_extended200.json --output-prefix artifacts/reports/validator_residual_failures_ds_v9_prompt_v5_methodfix_extended200` 결과 extended200 잔여 `49건`은 `risk_rubric_and_data 38`, `data_and_model 20`, `robot_contract_and_model 7`로 재분류됐다.
+- `llm-orchestrator/llm_orchestrator/runtime.py`를 확장해 `run_shadow_mode_capture`와 shadow-mode audit row를 추가했다.
+- `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`, `data/examples/shadow_mode_runtime_cases.jsonl`를 추가해 shadow mode audit를 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`으로 요약할 수 있게 했다.
+- `python3 scripts/validate_shadow_mode_runtime.py` 기준 sample 3건에서 `operator_agreement_rate 0.6667`, `critical_disagreement_count 1`, `promotion_decision rollback`, `errors 0`을 확인했다.
+- 결론은 더 구체적이다. blind50 raw를 validator로 살린 뒤에도 남는 문제의 주축은 `risk_rubric_and_data`이며, 그 다음이 `required_action_types`와 `robot contract`다. 즉 다음 corrective round는 broad tuning이 아니라 owner별 미세 조정이어야 한다.
+
 ### extended200/blind50 확장과 마지막 완료 모델 재재평가
 - `scripts/generate_extended_eval_tranche4.py`를 추가해 extended eval을 최종 제품 주장 기준 `200건`까지 확장했다. 현재 분포는 `expert 60 / action 28 / forbidden 20 / failure 24 / robot 16 / edge 28 / seasonal 24`다.
 - `scripts/generate_blind_holdout_tranche2.py`를 추가해 blind holdout을 `24 -> 50`으로 확장했고, `evals/blind_holdout_eval_set.jsonl`, `artifacts/training/blind_holdout_eval_cases.jsonl`을 함께 갱신했다.

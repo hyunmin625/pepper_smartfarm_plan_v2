@@ -1,0 +1,401 @@
+{
+  "schema_version": "validator_residual_report.v1",
+  "model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v9-prompt-v5-methodfix-eval-v1-20260412-1257:DTgUbJHJ",
+  "source_raw_report": "",
+  "source_validator_report": "2026-04-12T14:17:42+00:00",
+  "total_cases": 50,
+  "raw_pass_rate": 0.32,
+  "validator_pass_rate": 0.72,
+  "recovered_cases": 20,
+  "remaining_failed_cases": 14,
+  "runtime_validator_gap_cases": 2,
+  "top_remaining_checks": [
+    [
+      "risk_level_match",
+      8
+    ],
+    [
+      "required_action_types_present",
+      3
+    ],
+    [
+      "required_task_types_present",
+      3
+    ],
+    [
+      "forbidden_action_types_absent",
+      2
+    ]
+  ],
+  "remaining_by_category": [
+    [
+      "robot_task_prioritization",
+      4
+    ],
+    [
+      "action_recommendation",
+      3
+    ],
+    [
+      "edge_case",
+      2
+    ],
+    [
+      "climate_risk",
+      2
+    ],
+    [
+      "nutrient_risk",
+      2
+    ],
+    [
+      "rootzone_diagnosis",
+      1
+    ]
+  ],
+  "remaining_by_owner": [
+    {
+      "owner": "risk_rubric_and_data",
+      "cases": 8,
+      "next_action": "risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다."
+    },
+    {
+      "owner": "data_and_model",
+      "cases": 3,
+      "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
+    },
+    {
+      "owner": "robot_contract_and_model",
+      "cases": 3,
+      "next_action": "robot task target/enum/selection slice를 별도 계약형 batch로 보강한다."
+    },
+    {
+      "owner": "runtime_validator_gap",
+      "cases": 2,
+      "next_action": "현재 validator rule catalog에 없는 invariant를 runtime rule로 추가한다."
+    }
+  ],
+  "remaining_cases": [
+    {
+      "eval_id": "blind-action-002",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-action-005",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-action-006",
+      "category": "action_recommendation",
+      "failed_checks": [
+        "forbidden_action_types_absent",
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-001",
+      "category": "climate_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-009",
+      "category": "climate_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-edge-003",
+      "category": "edge_case",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data",
+        "runtime_validator_gap"
+      ]
+    },
+    {
+      "eval_id": "blind-edge-005",
+      "category": "edge_case",
+      "failed_checks": [
+        "forbidden_action_types_absent",
+        "required_action_types_present"
+      ],
+      "owners": [
+        "data_and_model",
+        "runtime_validator_gap"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-003",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-012",
+      "category": "nutrient_risk",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-robot-002",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "required_task_types_present"
+      ],
+      "owners": [
+        "robot_contract_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-robot-004",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    },
+    {
+      "eval_id": "blind-robot-005",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "required_task_types_present"
+      ],
+      "owners": [
+        "robot_contract_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-robot-007",
+      "category": "robot_task_prioritization",
+      "failed_checks": [
+        "required_task_types_present"
+      ],
+      "owners": [
+        "robot_contract_and_model"
+      ]
+    },
+    {
+      "eval_id": "blind-expert-010",
+      "category": "rootzone_diagnosis",
+      "failed_checks": [
+        "risk_level_match"
+      ],
+      "owners": [
+        "risk_rubric_and_data"
+      ]
+    }
+  ],
+  "owner_case_map": {
+    "data_and_model": [
+      {
+        "eval_id": "blind-action-002",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "blind-action-006",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "forbidden_action_types_absent",
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model"
+        ]
+      },
+      {
+        "eval_id": "blind-edge-005",
+        "category": "edge_case",
+        "failed_checks": [
+          "forbidden_action_types_absent",
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model",
+          "runtime_validator_gap"
+        ]
+      }
+    ],
+    "risk_rubric_and_data": [
+      {
+        "eval_id": "blind-action-005",
+        "category": "action_recommendation",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-edge-003",
+        "category": "edge_case",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data",
+          "runtime_validator_gap"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-001",
+        "category": "climate_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-003",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-009",
+        "category": "climate_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-010",
+        "category": "rootzone_diagnosis",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-expert-012",
+        "category": "nutrient_risk",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      },
+      {
+        "eval_id": "blind-robot-004",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data"
+        ]
+      }
+    ],
+    "robot_contract_and_model": [
+      {
+        "eval_id": "blind-robot-002",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "required_task_types_present"
+        ],
+        "owners": [
+          "robot_contract_and_model"
+        ]
+      },
+      {
+        "eval_id": "blind-robot-005",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "required_task_types_present"
+        ],
+        "owners": [
+          "robot_contract_and_model"
+        ]
+      },
+      {
+        "eval_id": "blind-robot-007",
+        "category": "robot_task_prioritization",
+        "failed_checks": [
+          "required_task_types_present"
+        ],
+        "owners": [
+          "robot_contract_and_model"
+        ]
+      }
+    ],
+    "runtime_validator_gap": [
+      {
+        "eval_id": "blind-edge-003",
+        "category": "edge_case",
+        "failed_checks": [
+          "risk_level_match"
+        ],
+        "owners": [
+          "risk_rubric_and_data",
+          "runtime_validator_gap"
+        ]
+      },
+      {
+        "eval_id": "blind-edge-005",
+        "category": "edge_case",
+        "failed_checks": [
+          "forbidden_action_types_absent",
+          "required_action_types_present"
+        ],
+        "owners": [
+          "data_and_model",
+          "runtime_validator_gap"
+        ]
+      }
+    ]
+  }
+}

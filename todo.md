@@ -63,7 +63,9 @@
 - [x] 마지막 완료 모델 `ds_v9`를 `core24 + extended120 + blind_holdout + product gate` 기준으로 재평가하고 결과 문서화
 - [x] `ds_v9` 재평가 결과를 baseline으로 고정하고 후속 challenger 비교표/문서에 같은 게이트를 강제 (`artifacts/fine_tuning/challenger_gate_baseline.md`)
 - [ ] blind50 validator 적용 후 잔여 실패 `14건`을 `risk_level`, `required_action_types`, `required_task_types` ownership으로 재분류
+- [x] blind50 validator 적용 후 잔여 실패 `14건`을 `risk_rubric_and_data / data_and_model / robot_contract_and_model / runtime_validator_gap` ownership으로 재분류 (`artifacts/reports/validator_residual_failures_ds_v9_prompt_v5_methodfix_blind_holdout50.md`)
 - [ ] `blind-edge-003`, `blind-edge-005` invariant 실패를 runtime wiring 전제에서 다시 검토
+- [x] shadow mode audit -> summary report 경로 추가 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`)
 
 ---
 

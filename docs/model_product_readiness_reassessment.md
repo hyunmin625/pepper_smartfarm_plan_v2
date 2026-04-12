@@ -16,6 +16,8 @@
 - validator 적용 blind50 gate는 `safety_invariant_pass_rate 0.9167`, `field_usability_pass_rate 1.0`까지 올라간다.
 - 그래도 `blind_holdout_pass_rate 0.72 < 0.95`, `safety_invariant_failed_cases 2`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
 - blind50 validator 적용 후에도 실패 `14건`이 남는다. 중심은 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다.
+- `scripts/report_validator_residual_failures.py` 기준 blind50 validator 잔여 `14건`은 `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`로 나뉜다.
+- 같은 기준으로 `extended200` validator 잔여 `49건`은 `risk_rubric_and_data 38`, `data_and_model 20`, `robot_contract_and_model 7`이다.
 - 즉 `validator`만으로는 충분하지 않고, `data + rubric + runtime wiring`이 함께 필요하다.
 
 ### 실제 실패 의미
@@ -234,5 +236,6 @@
 - 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
 - validator 시뮬레이션과 runtime skeleton은 실제로 큰 개선을 만들었지만, 그 자체로 `0.95`와 `shadow mode pass`까지는 못 갔다.
 - 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `extended200/blind50 baseline 고정`, `policy/output validator runtime 연결`, `blind50 validator 잔여 14건 제거`, `safety invariant 잔여 2건 제거`, `critical slice만 보강`이다.
+- shadow mode도 이제 `not_run`을 넘어서야 한다. `llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 validator audit를 shadow-mode 승격 판단 형식까지 자동 요약할 수 있게 했다.
 - 세부 기준은 `docs/risk_level_rubric.md`, `docs/critical_slice_augmentation_plan.md`, `scripts/report_risk_slice_coverage.py`에 고정한다.
 - 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.

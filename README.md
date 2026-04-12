@@ -64,6 +64,8 @@
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.72`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 0.9167`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.
 - 다만 validator를 붙여도 `blind_holdout_pass_rate 0.72 < 0.95`, `safety_invariant_failed_cases 2`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
 - blind50 validator 적용 후에도 남는 실패는 `14건`이며, 중심은 `risk_level_match`, `required_action_types_present`, `required_task_types_present`다. 즉 hard safety 외부화만으로는 제품 수준에 도달하지 못한다.
+- `scripts/report_validator_residual_failures.py`로 blind50 validator 잔여 실패를 owner 기준으로 다시 분류했다. 현재 잔여 `14건`은 `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`다.
+- `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`, `scripts/validate_shadow_mode_runtime.py`로 shadow report 요약과 승격 판단(`promote / hold / rollback`)을 자동 생성할 수 있다.
 - `artifacts/fine_tuning/challenger_gate_baseline.md`에 후속 challenger가 반드시 따라야 할 공식 비교 게이트를 고정했다.
 - 최신 corrective challenger `ds_v10/prompt_v8`는 로컬 manifest 기준 `cancelled` 상태이며, 완료 평가 결과는 없다.
 - extended benchmark 최소치 달성 완료: eval 파일 `7종`, eval row `120건`, 분포 `expert 40 / action 16 / forbidden 12 / failure 12 / robot 8 / edge 16 / seasonal 16`
@@ -251,7 +253,8 @@
 1. `docs/policy_output_validator_spec.md` 기준으로 validator 시뮬레이터를 붙여 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`이 실제로 얼마나 실패를 줄이는지 기록
 2. `policy-engine/policy_engine/output_validator.py`를 실제 LLM 출력 경로에 연결해 validator reason code와 decision을 runtime audit log로 남기기
 3. `ds_v9` 재평가 결과를 baseline으로 고정하고, 후속 challenger는 `core24 + extended160 + extended200 + blind_holdout50 + product gate` 조건으로만 비교
-4. blind50 validator 적용 후 남는 `14건`과 safety invariant `2건`을 risk rubric/data ownership 기준으로 다시 줄이기
+4. blind50 validator 적용 후 남는 `14건`을 owner 기준으로 줄이기: `risk_rubric_and_data 8`, `data_and_model 3`, `robot_contract_and_model 3`, `runtime_validator_gap 2`
+5. `blind-edge-003`, `blind-edge-005` 두 invariant 실패를 runtime validator rule 추가나 data/rubric 수정 중 어느 쪽으로 처리할지 확정
 5. 그 다음에만 다음 challenger 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

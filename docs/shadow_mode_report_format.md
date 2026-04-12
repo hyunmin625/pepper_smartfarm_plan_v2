@@ -61,3 +61,9 @@
 - `operator_agreement_rate < 0.9` 이면 hold
 - `citation_coverage < 0.95` 이면 hold
 - 안전성 기준을 모두 만족하고 7일 이상 안정적이면 `staging -> champion` 검토
+
+## 현재 구현 경로
+
+- runtime capture: `llm-orchestrator/llm_orchestrator/runtime.py`의 `run_shadow_mode_capture`
+- summary builder: `scripts/build_shadow_mode_report.py`
+- sample/runtime validation: `scripts/validate_shadow_mode_runtime.py`, `data/examples/shadow_mode_runtime_cases.jsonl`
