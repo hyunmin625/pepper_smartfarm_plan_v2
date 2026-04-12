@@ -23,6 +23,8 @@
 - 다만 이건 어디까지나 offline replay 기준선이다. 실제 corrective backlog는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며 owner는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌다. 이 네 건은 `docs/offline_shadow_residual_batch17_plan.md`와 batch17 sample `8건`으로 직접 역투영했다.
 - offline shadow replay는 실운영 shadow mode 대체가 아니다. 다만 현재 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 빠르게 압축하는 사전 기준선으로는 유효하다.
 - `robot_task`까지 포함한 synthetic shadow `day0` seed pack도 추가했다. `artifacts/reports/shadow_mode_ds_v11_day0_seed.md` 기준 `decision_count 12`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`다. 즉 runtime envelope 기준의 남은 drift는 아직 실제로 줄여야 한다.
+- `batch16 + batch17 + hard-case oversampling`을 묶은 `ds_v12/prompt_v5_methodfix_batch17_hardcase` dry-run package를 생성했다. 현재 draft는 train `815`, validation `57`, format error `0`, manifest `ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151`이다.
+- 이 `ds_v12`는 실제 submit 후보가 아니라 `blocked challenger`다. synthetic shadow `day0 hold`, blind50 validator 기준선 `0.9`, 실제 shadow mode 부재가 모두 풀리기 전까지는 dry-run 상태로만 유지한다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
@@ -34,7 +36,7 @@
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
 - batch17 offline shadow residual `8건`을 추가했다. 대상은 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`이며 `create_alert` 누락, `adjust_fertigation` reflex, `inspect_crop` exact enum drift를 직접 겨냥한다.
-- `scripts/build_openai_sft_datasets.py`는 이제 `--oversample-task-type task_type=factor`를 지원한다. next-only dry-run 기준 권장 가중치를 적용하면 train `803`, validation `57`, SFT format error `0`이다.
+- `scripts/build_openai_sft_datasets.py`는 이제 `--oversample-task-type task_type=factor`를 지원한다. batch17까지 반영한 최신 dry-run 기준 권장 가중치를 적용하면 train `815`, validation `57`, SFT format error `0`이다.
 - `ds_v11 / prompt_v5_methodfix_batch14 / eval_v2`는 이미 완료 평가까지 끝났다. train `238`, validation `50`, 결과 model `DTryNJg3`, frozen gate 기준 새 comparison baseline으로 고정한다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`는 이제 shadow mode audit row까지 남길 수 있고, `scripts/build_shadow_mode_report.py`로 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 자동 집계할 수 있다.
 
@@ -295,7 +297,7 @@
 7. extended200 validator 잔여 `42건`을 `risk_rubric_and_data`, `required_action_types`, `robot contract` 기준으로 다시 줄인다.
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. 다음 corrective challenger는 이 baseline을 먼저 올릴 수 있을 때만 검토한다.
-10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. batch16 + batch17 + next-only oversampling challenger는 그 다음에만 검토한다.
+10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 현재 dry-run only challenger이며, batch16 + batch17 + next-only oversampling submit 여부는 그 다음에만 검토한다.
 
 ## 주의할 점
 

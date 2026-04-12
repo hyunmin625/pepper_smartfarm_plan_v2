@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### ds_v12 hard-case challenger dry-run package 준비
+- `./.venv/bin/python scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --oversample-task-type safety_policy=5 --oversample-task-type failure_response=5 --oversample-task-type sensor_fault=5 --oversample-task-type robot_task_prioritization=3 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl`로 `ds_v12` dry-run package를 생성했다.
+- 결과는 source training `336`, train `815`, validation `57`, eval overlap `0`이다. oversample summary는 `safety_policy 47 -> 235`, `failure_response 42 -> 210`, `sensor_fault 23 -> 115`, `robot_task_prioritization 44 -> 132`다.
+- `./.venv/bin/python scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl` 기준 files `2`, rows `872`, errors `0`을 확인했다.
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --model gpt-4.1-mini-2025-04-14 --model-version pepper-ops-sft-v1.9.0 --dataset-version ds_v12 --prompt-version prompt_v5_methodfix_batch17_hardcase --eval-version eval_v3 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl --notes "batch16+batch17+hard-case oversampling dry-run only; blocked until synthetic shadow day0 improves"`를 `--submit` 없이 실행해 dry-run manifest `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json`를 생성했다.
+- 해석은 분명하다. `ds_v12`는 실제 submit 후보가 아니라 blocked challenger package다. synthetic shadow `day0`가 아직 `hold`이므로, 이번 단계에서는 비용을 쓰지 않고 input package와 실행 식별자만 고정했다.
+
 ### synthetic shadow day0 seed pack 추가
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 보강해 `robot_task_prioritization`도 shadow agreement에 반영되도록 했다. 이제 `ai_robot_task_types_after`와 `operator_robot_task_types`를 함께 기록하고 `inspect_crop / skip_area / manual_review` exact enum drift를 직접 잡는다.
 - `scripts/build_shadow_mode_report.py`와 `docs/shadow_mode_report_format.md`도 같은 계약으로 갱신했다.

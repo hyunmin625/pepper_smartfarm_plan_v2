@@ -9,9 +9,10 @@
 
 ## 현재 기준
 
-- 실제 제출 중인 run: `ds_v11 / prompt_v5_methodfix_batch14`
+- 마지막 완료 run: `ds_v11 / prompt_v5_methodfix_batch14`
 - 이 run에는 oversampling을 적용하지 않았다.
-- oversampling은 `ds_v11` 평가가 끝난 뒤 필요할 때만 다음 challenger에서 사용한다.
+- 현재는 `ds_v12 / prompt_v5_methodfix_batch17_hardcase` dry-run package까지만 준비했다.
+- oversampling은 `synthetic shadow day0`와 residual gate가 풀릴 때만 실제 submit에 사용한다.
 
 ## hard-case batch
 
@@ -22,6 +23,9 @@
 - `data/examples/robot_task_samples_batch6_hard_cases.jsonl`
 - `data/examples/state_judgement_samples_batch16_safety_reinforcement.jsonl`
 - `data/examples/failure_response_samples_batch16_safety_reinforcement.jsonl`
+- `data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl`
+- `data/examples/state_judgement_samples_batch17_shadow_residual.jsonl`
+- `data/examples/robot_task_samples_batch6_shadow_residual.jsonl`
 
 핵심 시나리오:
 
@@ -63,4 +67,4 @@ python3 scripts/build_openai_sft_datasets.py \
 - oversampling은 `next-only`다. 현재 제출된 `ds_v11`에는 소급 적용하지 않는다.
 - oversampling을 써도 frozen gate는 그대로 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`다.
 - score가 오르더라도 blind/generalization이 개선되지 않으면 prompt chasing으로 돌아가지 않는다.
-- batch16까지 반영한 현재 training은 `328건`이다. 권장 가중치 dry-run 기준 train `803`, validation `57`, SFT format error `0`을 확인했다.
+- batch17까지 반영한 현재 training은 `336건`이다. 권장 가중치 dry-run 기준 train `815`, validation `57`, SFT format error `0`을 확인했다.

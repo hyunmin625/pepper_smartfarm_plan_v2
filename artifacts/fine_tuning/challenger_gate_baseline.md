@@ -44,6 +44,7 @@
 - `extended200`, `blind_holdout50`, `product_readiness_gate`를 같이 기록하지 않은 challenger는 비교 대상에서 제외한다.
 - 새 challenger는 순수 모델 결과와 validator 적용 결과를 함께 남겨야 한다.
 - validator 적용 후에도 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`이므로, 다음 challenger는 raw와 validator-applied 모두에서 이 기준을 넘어야 한다.
+- `synthetic shadow day0`는 frozen comparison gate가 아니라 submit 전 preflight다. 현재 baseline은 `operator_agreement_rate 0.6667`, `promotion_decision hold`이며, 다음 challenger는 이 runtime-shaped shadow 기준도 함께 기록해야 한다.
 
 ## Source Reports
 

@@ -78,9 +78,10 @@
 - [x] offline shadow replay false critical disagreement(`blind-forbidden-007`) 해소 및 runtime `HSV-09` 정렬
 - [x] offline shadow replay false drift(`blind-action-003`, `blind-robot-001`, `blind-failure-008`)를 replay contract/heuristic 수정으로 제거
 - [x] offline shadow replay 잔여 drift(`blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`)의 owner별 fix를 batch17 sample `8건`으로 설계 확정 (`docs/offline_shadow_residual_batch17_plan.md`, `scripts/generate_batch17_shadow_residual_samples.py`)
+- [x] `batch16 + batch17 + hard-case oversampling` 기준 `ds_v12/prompt_v5_methodfix_batch17_hardcase` dry-run package 생성 (`artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch17_hardcase.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch17_hardcase.jsonl`, manifest `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json`)
 - [ ] blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data / data_and_model` 기준 targeted fix 여부를 확정
 - [ ] extended200 validator 잔여 `42건` 중 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`의 우선순위 batch를 설계
-- [ ] batch16 + next-only oversampling challenger 제출 여부를 shadow mode와 residual 축소 결과 이후에만 결정
+- [ ] `synthetic shadow day0 hold`를 해소하고 `ds_v12` dry-run package를 실제 submit 후보로 승격할지 결정
 - [x] execution-gateway hard-coded safety interlock 추가 (`execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
 - [x] state-estimator MVP 추가: `sensor_quality bad -> risk_level unknown` 기본 경로 구현 (`state-estimator/state_estimator/estimator.py`, `scripts/validate_state_estimator_mvp.py`)
 - [x] batch15 hard-case `10건` 추가와 next-only oversampling 규칙 고정 (`scripts/generate_batch15_hard_cases.py`, `docs/hard_case_oversampling_plan.md`)

@@ -14,7 +14,8 @@
 - 다만 runtime envelope 기준 synthetic shadow `day0` seed pack은 아직 `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`다. 이는 `robot_task` exact enum drift와 `create_alert` 누락 같은 runtime-shaped backlog가 아직 남아 있음을 보여준다.
 - 다만 offline replay는 여전히 실운영 shadow mode를 대체하지 않는다. 현재 남은 의미 drift는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며, 이는 [shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/shadow_mode_residual_drift_ds_v11_blind_holdout50_offline.md:1)에 정리했다. 이 네 건은 [docs/offline_shadow_residual_batch17_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/offline_shadow_residual_batch17_plan.md:1)와 batch17 sample `8건`으로 직접 역투영했다.
 - 이 replay는 `real field shadow mode`를 대체하지 않는다. 다만 `validator 이후에도 운영자 기대와 어긋나는 케이스`를 실제 shadow 형식으로 압축해 다음 batch 우선순위를 잡는 데는 유효하다.
-- 따라서 현재 결론은 `다음 submit`이 아니라 `shadow mode`, `risk rubric/data 경계 수정`, `required_action_types` 보강, 그 다음에야 batch16 + batch17 + oversampling challenger 검토다.
+- `batch16 + batch17 + hard-case oversampling`을 묶은 `ds_v12 / prompt_v5_methodfix_batch17_hardcase` dry-run package는 준비했다. 현재 draft는 train `815`, validation `57`, format error `0`, manifest `ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151`이다.
+- 따라서 현재 결론은 `다음 submit`이 아니라 `shadow mode`, `risk rubric/data 경계 수정`, `required_action_types` 보강, 그리고 `ds_v12`는 dry-run 상태로만 유지하는 것이다.
 
 ## 1. 현재 로컬 증거
 
