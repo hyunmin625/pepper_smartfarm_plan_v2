@@ -25,7 +25,7 @@
     "param": null
   },
   "notes": "Method fix: task-level split, earliest validation holdout, train/eval overlap cleaned.",
-  "latest_synced_at": "2026-04-12T03:59:51+00:00",
+  "latest_synced_at": "2026-04-12T04:01:03+00:00",
   "estimated_finish": null,
   "finished_at": null,
   "events_path": "artifacts/fine_tuning/events/ftjob-Mz4HYCUsC7ohp2OW01rpBTud.jsonl"
