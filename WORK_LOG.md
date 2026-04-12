@@ -4,6 +4,12 @@
 
 ## 2026-04-13
 
+### challenger submit preflight 리포트 추가
+- `scripts/build_challenger_submit_preflight.py`를 추가해 `ds_v12`와 `ds_v13` candidate를 같은 blocker 기준으로 비교할 수 있게 했다.
+- `python3 scripts/build_challenger_submit_preflight.py --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json --real-shadow-mode-status not_run --output-prefix artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13`로 preflight report를 생성했다.
+- 결과는 분명하다. `ds_v12`, `ds_v13` 모두 `blocked`이고, 공통 blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real_shadow_mode_status not_run`이다.
+- 해석도 명확하다. 지금은 package를 더 늘리는 단계가 아니라 runtime shadow evidence를 쌓고 `synthetic shadow day0`를 `promote`로 올리는 단계다.
+
 ### ds_v13 batch18 hard-case challenger dry-run package 준비
 - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v5 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --oversample-task-type safety_policy=5 --oversample-task-type failure_response=5 --oversample-task-type sensor_fault=5 --oversample-task-type robot_task_prioritization=3 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl`로 batch18 live head 기준 `ds_v13` dry-run package를 생성했다.
 - 결과는 source training `344`, train `822`, validation `60`, eval overlap `0`이다. oversample summary는 `safety_policy 47 -> 235`, `failure_response 42 -> 210`, `sensor_fault 23 -> 115`, `robot_task_prioritization 45 -> 135`다.

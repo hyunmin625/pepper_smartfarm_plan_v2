@@ -28,6 +28,7 @@
 - 이 `ds_v12`는 실제 submit 후보가 아니라 `blocked challenger`다. synthetic shadow `day0 hold`, blind50 validator 기준선 `0.9`, 실제 shadow mode 부재가 모두 풀리기 전까지는 dry-run 상태로만 유지한다.
 - `docs/synthetic_shadow_day0_batch18_plan.md`와 batch18 sample `8건`으로 synthetic shadow `day0` residual `4건`을 live head에 직접 역투영했다. 현재 live head는 training `344건`, 추천 split train `284` / validation `60`, next-only hard-case dry-run은 train `822` / validation `60` / format error `0`이다.
 - batch18 live head까지 반영한 `ds_v13/prompt_v5_methodfix_batch18_hardcase` dry-run package도 생성했다. 현재 draft는 train `822`, validation `60`, format error `0`, manifest `ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846`이다.
+- `scripts/build_challenger_submit_preflight.py`로 `ds_v12`와 `ds_v13` submit preflight를 같은 기준으로 묶었다. 현재 리포트 `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md` 기준 두 candidate 모두 `blocked`이며 공통 blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real shadow mode not_run`이다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
@@ -301,7 +302,7 @@
 7. extended200 validator 잔여 `42건`을 `risk_rubric_and_data`, `required_action_types`, `robot contract` 기준으로 다시 줄인다.
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
-10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 실제 submit 여부는 그 다음에만 검토한다.
+10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 실제 submit 여부는 그 다음에만 검토한다.
 
 ## 주의할 점
 

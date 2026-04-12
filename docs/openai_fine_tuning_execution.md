@@ -30,6 +30,7 @@
 - 실제 submit은 둘 다 아직 보류한다. 이유는 `synthetic shadow day0 hold`, blind50 validator 기준선 `0.9` 미초과, 실제 shadow mode 부재다.
 
 세부 package는 [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1)와 [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)에 정리한다.
+현재 submit blocker 요약은 [challenger_submit_preflight_ds_v12_ds_v13.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md:1)에 둔다.
 
 ## 3. 실행 순서
 
@@ -136,4 +137,5 @@ submit 후 평가는 아래 gate를 모두 남겨야 한다.
 - validation은 반드시 `spread` 기반 `60건`을 유지한다.
 - 기본 경로 사용 시 `scripts/build_openai_sft_datasets.py`는 stale 합본이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다.
 - submit 전에는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_gate_baseline.md:1), [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1), [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)를 함께 확인한다.
+- candidate submit 전에는 `scripts/build_challenger_submit_preflight.py`로 `blind50 validator`, `synthetic shadow day0`, `real shadow mode` blocker를 다시 계산한다.
 - `synthetic shadow day0`가 `hold`인 동안은 후속 challenger를 dry-run까지만 허용한다.
