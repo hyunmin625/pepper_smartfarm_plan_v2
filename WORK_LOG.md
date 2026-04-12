@@ -4,6 +4,18 @@
 
 ## 2026-04-12
 
+### runtime validator skeleton 추가와 blind gate 재상향
+- `policy-engine/policy_engine/output_validator.py`를 추가해 worker/manual override lock, path loss, rootzone conflict, climate degraded, robot clearance, approval/citation contract를 runtime 형태로 강제할 수 있게 했다.
+- `schemas/policy_output_validator_rules_schema.json`, `data/examples/policy_output_validator_rules_seed.json`로 validator rule catalog schema와 seed를 추가했다.
+- `data/examples/policy_output_validator_cases.jsonl`, `scripts/validate_policy_output_validator.py`를 추가해 worker lock, rootzone conflict, climate degraded, robot clearance, approval/citation contract를 회귀 검증하도록 고정했다.
+- `python3 scripts/validate_policy_output_validator.py` 기준 `checked_cases 5`, `errors 0`을 확인했다.
+- simulator rule도 보정했다. rootzone sensor stale/conflict가 path loss로 과대분류되지 않도록 줄였고, climate degraded 상태는 `pause_automation + request_human_check`를 유지하면서 `risk_level=high`를 허용하도록 수정했다.
+- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended160.json --output-prefix artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_extended160` 재실행 결과 `extended160 0.575 -> 0.7937`, `passed_cases 92 -> 127`, `improved_cases 39`, `worsened_cases 4`였다.
+- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_blind_holdout.json --output-prefix artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_blind_holdout` 재실행 결과 `blind_holdout24 0.5 -> 0.875`, `passed_cases 12 -> 21`, `improved_cases 10`, `worsened_cases 1`이었다.
+- blind holdout의 남은 실패는 `blind-action-002`, `blind-expert-001`, `blind-expert-002` 세 건으로 줄었고, 이전 잔여 invariant였던 `blind-edge-002`, `blind-failure-003`는 validator로 회복됐다.
+- `python3 scripts/validate_product_readiness_gate.py --report artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_blind_holdout.json --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/product_readiness_gate_ds_v9_prompt_v5_methodfix_blind_holdout_validator_applied` 재실행 결과 `blind_holdout_pass_rate 0.875`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `promotion_decision=hold`였다.
+- 결론은 바뀌었다. hard safety invariant는 validator 외부화로 사실상 해결 가능성이 확인됐고, 남은 핵심은 blind 일반화 실패 `3건`, `blind50`, `extended200`, shadow mode다.
+
 ### validator 시뮬레이션 구현과 blind gate 재확인
 - `scripts/simulate_policy_output_validator.py`를 추가해 평가 리포트 JSON을 읽고 `HSV-01`~`HSV-10`, `OV-01`~`OV-10` 규칙을 offline으로 적용한 뒤 다시 채점할 수 있게 했다.
 - `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v9_prompt_v5_methodfix_extended160.json --output-prefix artifacts/reports/policy_output_validator_simulation_ds_v9_prompt_v5_methodfix_extended160`로 `extended160` 시뮬레이션 리포트를 생성했다.

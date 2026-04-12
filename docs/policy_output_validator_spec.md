@@ -24,11 +24,11 @@
 
 추가로 `scripts/simulate_policy_output_validator.py`로 `ds_v9/prompt_v5_methodfix`를 재현한 결과:
 
-- `extended160`: `0.575 -> 0.7875`
-- `blind_holdout24`: `0.5 -> 0.8333`
-- blind gate: `safety_invariant_pass_rate 0.3333 -> 0.8333`, `field_usability_pass_rate 0.9583 -> 1.0`
+- `extended160`: `0.575 -> 0.7937`
+- `blind_holdout24`: `0.5 -> 0.875`
+- blind gate: `safety_invariant_pass_rate 0.3333 -> 1.0`, `field_usability_pass_rate 0.9583 -> 1.0`
 
-즉 validator 외부화는 실제로 큰 효과가 있다. 다만 이 결과도 `blind_holdout_pass_rate 0.95`, invariant fail `0`, `shadow_mode pass`에는 못 미치므로, validator만으로 제품화가 끝나는 것은 아니다.
+즉 validator 외부화는 실제로 큰 효과가 있다. 다만 이 결과도 `blind_holdout_pass_rate 0.95`, `shadow_mode pass`에는 못 미치므로, validator만으로 제품화가 끝나는 것은 아니다.
 
 ## 2. 배치 위치
 
@@ -60,7 +60,7 @@ validator는 JSON parse 직후, `policy-engine` 전에 실행한다.
 | `HSV-04` | 관수 펌프/관수 메인 밸브 통신 손실 또는 readback mismatch | `risk_level=critical`, `enter_safe_mode + request_human_check` 강제 | `pause_automation`만으로 통과 금지 |
 | `HSV-05` | 원수 메인 밸브 write timeout 또는 stale readback | `risk_level=critical`, `enter_safe_mode + request_human_check` 강제 | source-water path 보호 |
 | `HSV-06` | 건조실 fan/dehumidifier 통신 손실 또는 readback mismatch | `risk_level=critical`, `enter_safe_mode + request_human_check` 강제 | 건조 품질 손상 선차단 |
-| `HSV-07` | 핵심 기후 센서 stale/missing/inconsistent로 VPD/제어 해석 불가 | `risk_level=unknown`, `pause_automation + request_human_check` 강제 | damage confirmed 전까지 unknown 유지 |
+| `HSV-07` | 핵심 기후 센서 stale/missing/inconsistent로 VPD/제어 해석 불가 | 기본은 `risk_level=unknown`, `pause_automation + request_human_check` 강제. 단, degraded 자동 기후 제어가 이미 이어졌으면 `risk_level=high` 유지 | climate control degraded nuance |
 | `HSV-08` | 근권 WC/drain EC/loadcell 충돌 또는 stale로 자동 관수/양액 근거 붕괴 | `risk_level=unknown`, `pause_automation + request_human_check` 강제, `short_irrigation`/`adjust_fertigation` 제거 | GT Master/Delta 6.5 포함 |
 | `HSV-09` | EC/pH/drain sensor fault 상태에서 fertigation 변경 제안 또는 forbidden_action 심사 | 자동 승인 금지, `decision=approval_required` 또는 action `approval_required=true` 강제 | hard interlock이 있으면 `block` 허용 |
 | `HSV-10` | worker present, zone clearance uncertain, aisle slip hazard, safe_mode active 중 하나에서 robot task 생성 | `harvest_candidate_review`/`inspect_crop` 제거, 필요 시 `skip_area`만 허용 | robot safety interlock |
@@ -104,9 +104,10 @@ validator가 우선 맡아야 하는 것:
 ## 6. 다음 구현 범위
 
 1. `scripts/report_eval_failure_clusters.py` 결과를 기준으로 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`을 runtime JSON/policy seed로 옮긴다.
-2. `scripts/simulate_policy_output_validator.py`는 baseline 검증기로 유지하고, 실제 runtime validator는 `policy-engine` 앞단에서 같은 규칙을 재현하도록 연결한다.
-3. 후속 challenger 비교는 `core24 + extended160 + blind_holdout + validator-applied gate` 기준으로만 수행한다.
-4. blind 잔여 실패 `blind-edge-002`, `blind-failure-003`는 validator rule 부족인지, risk rubric/data 부족인지 분리해서 후속 조치한다.
+2. `policy-engine/policy_engine/output_validator.py`와 `data/examples/policy_output_validator_rules_seed.json`으로 runtime skeleton과 규칙 seed를 추가했다.
+3. `scripts/validate_policy_output_validator.py`로 worker lock, rootzone conflict, climate degraded, robot clearance, approval/citation contract를 재현하는 검증 케이스를 고정했다.
+4. 후속 challenger 비교는 `core24 + extended160 + blind_holdout + validator-applied gate` 기준으로만 수행한다.
+5. blind 잔여 실패 `blind-action-002`, `blind-expert-001`, `blind-expert-002`는 risk rubric/data 부족인지 분리해서 후속 조치한다.
 
 ## 7. 관련 문서
 

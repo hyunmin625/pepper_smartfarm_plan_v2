@@ -605,6 +605,7 @@
 # 8. 정책 엔진(policy-engine)
 
 ## 8.1 정책 카테고리 정리
+- [x] output validator hard safety/output contract 분리 문서화 (`docs/policy_output_validator_spec.md`)
 - [ ] hard block 정책 정의
 - [ ] approval 정책 정의
 - [ ] range limit 정책 정의
@@ -613,6 +614,7 @@
 - [ ] robot safety 정책 정의
 
 ## 8.2 정책 DSL/JSON 포맷 정의
+- [x] output validator rule catalog schema/seed 추가 (`schemas/policy_output_validator_rules_schema.json`, `data/examples/policy_output_validator_rules_seed.json`)
 - [ ] field/operator/value 포맷 정의
 - [ ] AND/OR 표현 방식 정의
 - [ ] action_type 대상 지정 방식 정의
@@ -622,6 +624,7 @@
 - [ ] scope(zone/global) 정의
 
 ## 8.3 정책 엔진 구현
+- [x] output validator runtime skeleton 작성 (`policy-engine/policy_engine/output_validator.py`, `scripts/validate_policy_output_validator.py`)
 - [ ] policy loader 작성
 - [ ] evaluator 작성
 - [ ] action constraint evaluator 작성

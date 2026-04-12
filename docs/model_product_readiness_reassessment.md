@@ -12,10 +12,10 @@
 - 비교 기준인 `ds_v5/prompt_v5`는 `extended120`과 `blind_holdout24`에서 모두 `pass_rate 0.5417`이다.
 - blind holdout 제품화 게이트 기준 `ds_v9`는 `promotion_decision=hold`, `safety_invariant_pass_rate=0.3333`, `field_usability_pass_rate=0.9583`, `shadow_mode_status=not_run`이다.
 - 즉 `ds_v9`는 공개 benchmark와 robot field contract는 개선했지만, blind safety invariant는 오히려 악화됐다.
-- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended160 0.575 -> 0.7875`, `blind_holdout24 0.5 -> 0.8333`까지 회복된다.
-- validator 적용 blind gate는 `safety_invariant_pass_rate 0.8333`, `field_usability_pass_rate 1.0`까지 올라간다.
-- 그래도 `blind_holdout_pass_rate 0.8333 < 0.95`, safety invariant 실패 `2건`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
-- 남은 blind invariant 실패는 `blind-edge-002`, `blind-failure-003` 두 건으로 좁혀졌다.
+- 다만 `policy_output_validator` 시뮬레이션을 적용하면 `extended160 0.575 -> 0.7937`, `blind_holdout24 0.5 -> 0.875`까지 회복된다.
+- validator 적용 blind gate는 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라간다.
+- 그래도 `blind_holdout_pass_rate 0.875 < 0.95`, `shadow_mode_status=not_run`이라 제품 승격은 계속 `hold`다.
+- 남은 blind 실패는 `blind-action-002`, `blind-expert-001`, `blind-expert-002` 세 건으로 좁혀졌다.
 
 ### 실제 실패 의미
 
@@ -58,7 +58,7 @@
 - 현재 training `268건` 기준으로 위 split을 적용하면 validation은 `48건`, train은 `220건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
-- 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `blind invariant 잔여 2건 제거`, `runtime wiring` 순서로 간다.
+- 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 3건 제거` 순서로 간다.
 
 ### C. 데이터 부족 문제인가
 
@@ -114,7 +114,7 @@
 - blind holdout은 `24건`이라 invariant/field usability를 보기엔 방향은 맞지만 표본이 작다.
 - 최신 완료 모델 `ds_v9`를 같은 기준으로 재심사한 결과, `extended120`은 개선됐지만 blind/product gate는 여전히 막혔다.
 - `extended160` 실패군 재분류 결과 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 외부화 우선 대상으로 묶였다.
-- 실제 시뮬레이션에서도 그 방향이 맞았다. `extended160`은 `126/160`, `blind_holdout24`는 `20/24`까지 회복됐다.
+- 실제 시뮬레이션에서도 그 방향이 맞았다. `extended160`은 `127/160`, `blind_holdout24`는 `21/24`까지 회복됐다.
 
 결론:
 
@@ -148,8 +148,8 @@
 
 5. `validator 외부화`
 - 한다.
-- offline 시뮬레이션으로 효과는 이미 확인됐다.
-- 다음 단계는 runtime validator JSON/policy wiring과 blind invariant 잔여 `2건` 제거다.
+- offline 시뮬레이션과 runtime skeleton으로 효과는 이미 확인됐다.
+- 다음 단계는 runtime validator wiring과 blind 잔여 `3건` 제거다.
 
 ## 4. 실행 계획
 
@@ -179,7 +179,7 @@
   - `seasonal`: `24`
 - blind holdout은 `24 -> 50`으로 확장한다.
 - 신규 training sample은 critical slice 중심으로 `+42` 내외만 추가한다.
-- blind holdout `24`의 남은 실패 `4건`은 별도 ownership으로 분리한다.
+- blind holdout `24`의 남은 실패 `3건`은 별도 ownership으로 분리한다.
   - validator로 줄일 수 없는 `risk_level` 경계 문제
   - validator가 강제해야 할 pair/contract 누락 문제
 
@@ -201,7 +201,7 @@
 - blind holdout `50` 설계 확정
 - hard-rule validator 초안 완성
 - targeted training slice 보강 완료
-- runtime validator JSON/policy wiring 초안 완료
+- runtime validator skeleton과 JSON/policy seed 초안 완료
 
 ## 5. 재개 조건과 모델 교체 조건
 
@@ -212,7 +212,7 @@
 - blind holdout `50` 설계 또는 그에 준하는 frozen plan 확정
 - validation rows가 최소 `28+`로 증가
 - policy/output validator 초안 구현
-- runtime validator JSON/policy wiring 초안 완료
+- runtime validator skeleton과 JSON/policy seed 초안 완료
 
 ### base model 교체 검토 조건
 
@@ -226,7 +226,7 @@
 ## 6. 결론
 
 - 지금 문제의 중심은 `모델이 약해서`가 아니라 `평가와 학습 방식이 제품 목표와 어긋난 채 score chasing으로 흘렀다`는 점이다.
-- validator 시뮬레이션은 실제로 큰 개선을 만들었지만, 그 자체로 `0.95`와 blind invariant `0 fail`까지는 못 갔다.
-- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator runtime 외부화`, `blind 잔여 2건 제거`, `critical slice만 보강`이다.
+- validator 시뮬레이션과 runtime skeleton은 실제로 큰 개선을 만들었지만, 그 자체로 `0.95`와 `shadow mode pass`까지는 못 갔다.
+- 따라서 다음 한 번의 fine-tuning보다 먼저 해야 할 일은 `validation 강화`, `eval200 계획`, `blind50 설계`, `policy/output validator runtime 연결`, `blind 잔여 3건 제거`, `critical slice만 보강`이다.
 - 세부 기준은 `docs/risk_level_rubric.md`, `docs/critical_slice_augmentation_plan.md`, `scripts/report_risk_slice_coverage.py`에 고정한다.
 - 제품 수준 주장은 `extended200 + blind_holdout50 + safety invariant 100% + field usability 100% + shadow mode` 전까지 하지 않는다.

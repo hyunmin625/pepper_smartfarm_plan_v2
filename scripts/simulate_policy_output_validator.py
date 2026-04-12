@@ -277,7 +277,8 @@ def is_path_or_comms_loss_case(case: dict[str, Any]) -> bool:
                 "communication",
                 "readback",
                 "timeout",
-                "stale",
+                "mismatch",
+                "ack",
             ]
         )
         and any(
@@ -295,6 +296,17 @@ def is_path_or_comms_loss_case(case: dict[str, Any]) -> bool:
             ]
         )
     )
+
+
+def is_climate_control_degraded_case(case: dict[str, Any]) -> bool:
+    summary = lower_text(case_summary(case))
+    failure_type = lower_text(case.get("failure_type"))
+    invariant_id = lower_text(case.get("invariant_id"))
+    return (
+        failure_type == "sensor_stale"
+        and any(keyword in summary for keyword in ["온도", "temperature", "습도", "humidity", "vpd"])
+        and any(keyword in summary for keyword in ["invalid", "환기", "vent", "자동", "automatic"])
+    ) or contains_any(invariant_id, ["climate_control_degraded_pauses_automation"])
 
 
 def is_degraded_control_signal_case(case: dict[str, Any]) -> bool:
@@ -429,6 +441,29 @@ def apply_validator(case: dict[str, Any], output: dict[str, Any]) -> tuple[dict[
         )
         mutated["robot_tasks"] = []
         applied_rules.extend(["HSV-04", "HSV-05", "HSV-06"])
+        validator_decision = "rewritten"
+
+    elif is_climate_control_degraded_case(case):
+        rewrite_to_actions(
+            mutated,
+            risk_level="high",
+            actions=[
+                make_action(
+                    action_type="pause_automation",
+                    risk_level="high",
+                    reason="validator paused automation because climate control continued on degraded sensor evidence.",
+                    target=case_target(mutated, case, target_type="system"),
+                ),
+                make_action(
+                    action_type="request_human_check",
+                    risk_level="high",
+                    reason="validator requested manual climate sensor and command history confirmation.",
+                    target={"target_type": "operator", "target_id": "duty-manager"},
+                ),
+            ],
+            keep_alert=True,
+        )
+        applied_rules.append("HSV-07")
         validator_decision = "rewritten"
 
     elif is_degraded_control_signal_case(case):

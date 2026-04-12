@@ -1,0 +1,345 @@
+{
+  "schema_version": "policy_output_validator_rules.v1",
+  "rules": [
+    {
+      "rule_id": "HSV-01",
+      "stage": "hard_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "작업자 접근이 active면 device control과 robot task를 막고 block_action + create_alert로 rewrite한다.",
+      "trigger_flags": ["worker_present"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "critical",
+        "force_action_types": ["block_action", "create_alert"],
+        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "short_irrigation", "adjust_fertigation", "adjust_heating", "adjust_co2", "create_robot_task"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-02",
+      "stage": "hard_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "manual override active면 AI device control을 제거하고 block_action + create_alert로 rewrite한다.",
+      "trigger_flags": ["manual_override_active"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "critical",
+        "force_action_types": ["block_action", "create_alert"],
+        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "short_irrigation", "adjust_fertigation", "adjust_heating", "adjust_co2", "create_robot_task"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-03",
+      "stage": "hard_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "safe_mode latch 상태에서는 추가 제어를 제거하고 block_action + create_alert만 남긴다.",
+      "trigger_flags": ["safe_mode_active"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "critical",
+        "force_action_types": ["block_action", "create_alert"],
+        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "short_irrigation", "adjust_fertigation", "adjust_heating", "adjust_co2", "create_robot_task", "enter_safe_mode"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-04",
+      "stage": "hard_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "관수 경로 통신/readback 손실이면 enter_safe_mode + request_human_check를 강제한다.",
+      "trigger_flags": ["irrigation_path_degraded"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "critical",
+        "force_action_types": ["enter_safe_mode", "request_human_check"],
+        "strip_action_types": ["short_irrigation", "adjust_fertigation"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-05",
+      "stage": "hard_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "원수 메인 밸브 경로 손실이면 enter_safe_mode + request_human_check를 강제한다.",
+      "trigger_flags": ["source_water_path_degraded"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "critical",
+        "force_action_types": ["enter_safe_mode", "request_human_check"],
+        "strip_action_types": ["short_irrigation", "adjust_fertigation"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-06",
+      "stage": "hard_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "건조실 fan/dehumidifier 경로 손실이면 enter_safe_mode + request_human_check를 강제한다.",
+      "trigger_flags": ["dry_room_path_degraded"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "critical",
+        "force_action_types": ["enter_safe_mode", "request_human_check"],
+        "strip_action_types": ["adjust_fan", "adjust_heating"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-07",
+      "stage": "hard_safety",
+      "severity": "high",
+      "enabled": true,
+      "description": "기후 센서 해석 불가면 pause_automation + request_human_check를 강제한다. 단, degraded 제어가 이미 진행됐으면 risk_level은 high를 유지한다.",
+      "trigger_flags": ["core_climate_interpretable", "climate_control_degraded"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "high",
+        "force_action_types": ["pause_automation", "request_human_check"],
+        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "adjust_heating", "adjust_co2"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-08",
+      "stage": "hard_safety",
+      "severity": "high",
+      "enabled": true,
+      "description": "근권 센서 충돌이나 해석 불가면 unknown + pause_automation + request_human_check를 강제한다.",
+      "trigger_flags": ["rootzone_sensor_conflict", "rootzone_control_interpretable"],
+      "enforcement": {
+        "mode": "rewrite_to_safe_pair",
+        "set_risk_level": "unknown",
+        "force_action_types": ["pause_automation", "request_human_check"],
+        "strip_action_types": ["short_irrigation", "adjust_fertigation"],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-09",
+      "stage": "hard_safety",
+      "severity": "high",
+      "enabled": true,
+      "description": "EC/pH/drain fault 상태에서 fertigation 변경은 approval_required로 승격한다.",
+      "trigger_flags": ["rootzone_sensor_conflict"],
+      "enforcement": {
+        "mode": "approval_escalation",
+        "set_risk_level": "high",
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "HSV-10",
+      "stage": "hard_safety",
+      "severity": "high",
+      "enabled": true,
+      "description": "worker clearance가 불확실하거나 통로가 unsafe면 robot task를 skip_area/manual_review로 정규화한다.",
+      "trigger_flags": ["zone_clearance_uncertain", "aisle_slip_hazard"],
+      "enforcement": {
+        "mode": "strip_or_reject",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": "skip_area",
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-01",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "recommended_actions.action_type은 허용 enum만 사용한다.",
+      "trigger_flags": ["recommended_actions"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-02",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "robot_task.task_type은 허용 enum만 사용한다.",
+      "trigger_flags": ["robot_tasks"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": "manual_review",
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-03",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "recommended_actions는 target/reason/risk_level/approval_required/cooldown_minutes/expected_effect를 채운다.",
+      "trigger_flags": ["recommended_actions"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-04",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "robot_tasks는 candidate_id 또는 target을 반드시 가진다.",
+      "trigger_flags": ["robot_tasks"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": "manual_review",
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-05",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "actionable output은 follow_up을 반드시 포함한다.",
+      "trigger_flags": ["recommended_actions", "follow_up"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": true
+      }
+    },
+    {
+      "rule_id": "OV-06",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "citation required 케이스는 citations를 반드시 포함한다.",
+      "trigger_flags": ["requires_citations", "citations"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": true,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-07",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "forbidden_action 계약은 별도 policy-engine에서 다시 검증한다.",
+      "trigger_flags": ["task_type"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-08",
+      "stage": "output_contract",
+      "severity": "high",
+      "enabled": true,
+      "description": "고위험 액션은 approval_required=true로 승격한다.",
+      "trigger_flags": ["recommended_actions"],
+      "enforcement": {
+        "mode": "approval_escalation",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-09",
+      "stage": "output_contract",
+      "severity": "high",
+      "enabled": true,
+      "description": "top-level risk_level은 강제된 safety rule보다 낮아지면 안 된다.",
+      "trigger_flags": ["risk_level"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "OV-10",
+      "stage": "output_contract",
+      "severity": "medium",
+      "enabled": true,
+      "description": "validator mutation은 reason code와 decision을 audit-ready 형태로 남긴다.",
+      "trigger_flags": ["validator_reason_codes", "validator_decision"],
+      "enforcement": {
+        "mode": "normalize_contract",
+        "set_risk_level": null,
+        "force_action_types": [],
+        "strip_action_types": [],
+        "robot_fallback_task_type": null,
+        "require_citations": false,
+        "require_follow_up": false
+      }
+    }
+  ]
+}
