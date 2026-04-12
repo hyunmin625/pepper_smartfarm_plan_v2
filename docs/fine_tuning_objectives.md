@@ -152,3 +152,11 @@ confidence는 위험도와 별개다. `high` risk라도 근거가 명확하면 c
 - `sensor_fault overall risk`: 핵심 센서 stale, flatline, missing, inconsistent가 핵심 문제인 경우 전체 `risk_level`은 `unknown`이다. `pause_automation` action의 긴급도가 높더라도 전체 `risk_level`을 `high`로 올리면 안 된다.
 - `drying action watch`: 건조실 습도 상승과 저장 함수율 증가 우려 같은 watch 상황은 알림을 내더라도 전체 `risk_level=medium`을 유지한다. `high`라는 표현은 결로, 곰팡이, 실측 품질 손상이 확인됐을 때만 허용한다.
 - `co2 low + vent_open_lock failure`: CO2 부족과 `vent_open_lock`이 함께 active면 전체 `risk_level=high`다. 이유는 제어 경로가 막혀 있고 작물 스트레스가 지속될 수 있기 때문이다. `request_human_check`는 필수이고 `adjust_co2`는 금지다. `create_alert`는 추가 가능하지만 전체 위험도를 `medium`으로 낮추면 안 된다.
+
+## 14. prompt_v8 초안
+
+`prompt_v8`는 ds_v9/methodfix 이후에도 남은 3개 실패만 겨냥한다. 핵심은 `sensor_fault`와 `failure_response`의 위험도 의미를 분리하고, `manual_override + safe_mode`와 `rootzone high-risk`를 더 직접적으로 고정하는 것이다.
+
+- `rootzone high-risk`: 배지 함수율 고착, 배액 EC 상승, 배액 불량, 뿌리 활력 저하/갈변 의심이 함께 나타나면 `rootzone_diagnosis`의 전체 `risk_level`은 `high`다. 기본 조합은 `create_alert + request_human_check`이며 `short_irrigation`은 금지한다.
+- `sensor_fault vs failure_response`: `sensor_fault` task에서 핵심 센서 stale/missing/inconsistent는 전체 `risk_level=unknown`을 유지한다. 반면 `failure_response` task에서 핵심 기후 센서 stale 때문에 VPD 계산이나 자동 기후 제어가 실제로 degraded 상태가 되면 전체 `risk_level=high`를 사용한다. 이 경우 기본 조합은 `pause_automation + request_human_check`다.
+- `manual_override + safe_mode latched`: `safety_policy`에서 `manual_override`와 `safe_mode`가 함께 active면 `block_action + create_alert`가 필수다. `enter_safe_mode`는 이미 latch된 상태를 반복하는 action이므로 출력하면 안 된다.

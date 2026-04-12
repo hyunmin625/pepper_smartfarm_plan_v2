@@ -149,6 +149,8 @@
 - 방법론 수정 run 완료: `ftjob-Mz4HYCUsC7ohp2OW01rpBTud` (`ft-sft-gpt41mini-ds_v9-prompt_v5_methodfix-eval_v1-20260412-125755`)는 `succeeded`로 종료됐다.
 - `ds_v9/prompt_v5_methodfix` eval 완료: pass rate `0.875`, strict JSON rate `1.0`으로 기존 champion과 동률이며, 실패 케이스는 `pepper-eval-003`, `failure-eval-001`, `edge-eval-004`다.
 - 방법론 수정 효과 확인: 기존 champion에서 실패하던 `pepper-eval-006`과 `action-eval-002`는 해결됐지만, `rootzone_diagnosis`와 `failure_response` 한 케이스가 새로 회귀해 최고 기록은 아직 `ds_v5/prompt_v5`가 유지된다.
+- `ds_v10/prompt_v8` corrective round 제출 완료: `ftjob-LXWpGudJCeyqsH7WMorGHAT2` (`ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205`)를 제출했다. train `165`, validation `14`, submit 직후 상태는 `validating_files`다.
+- `ds_v10` 입력은 `batch9` corrective sample 4건과 `prompt_v8` 규칙 3개로 구성했다. 대상은 `rootzone_diagnosis high-risk`, `failure_response sensor_stale high`, `manual_override + safe_mode -> block_action + create_alert`다.
 - 다음 corrective round 준비 완료: `batch8`로 ds_v6 eval 뒤 남은 3개 실패 케이스를 직접 보강했고 `prompt_v7` draft를 추가했다.
 - `prompt_v7` 전용 OpenAI SFT draft 파일 생성 완료: train `161`, validation `14`, format error `0` (`artifacts/fine_tuning/openai_sft_train_prompt_v7.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v7.jsonl`)
 - rebase 실험 준비 및 제출 완료: `prompt_v5_rebase` 기준 OpenAI SFT draft 파일 train `161`, validation `14`, format error `0`을 생성했고, `ftjob-od4Gz2SDkPBQfdoabiFz61UZ` (`ft-sft-gpt41mini-ds_v8-prompt_v5_rebase-eval_v1-20260412-120132`)를 제출했다.
@@ -229,12 +231,11 @@
 
 ## 다음 우선순위
 
-1. `ds_v9`에서 새로 회귀한 `pepper-eval-003`과 `failure-eval-001`의 `risk_level_match` 원인을 분리해 corrective seed를 설계
-2. 공통 잔존 실패인 `edge-eval-004`의 `required_action_types_present` 규칙을 action/failure 계열 seed와 prompt에 다시 반영
-3. `ds_v5`와 `ds_v9`의 장점을 합친 다음 challenger를 설계하되, 동일 eval 입력을 복제하지 않고 인접 사례로만 보강
-4. 다음 challenger가 `0.875`를 넘기면 `fine_tuned_model_eval_latest.*`와 비교표를 새 champion 기준으로 승격
-5. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
-6. offline runner/state-estimator MVP 착수 범위를 확정
+1. `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 sync해 `ds_v10/prompt_v8`이 `succeeded`로 끝나는 즉시 eval `24건`을 다시 실행
+2. `ds_v10`이 champion `0.875`를 넘기면 `fine_tuned_model_eval_latest.*`와 비교표를 새 champion 기준으로 승격
+3. `ds_v10`이 다시 동률 또는 회귀면 `sensor_fault`와 `failure_response`의 `risk_level` 의미를 eval/seed/prompt 관점에서 더 엄격히 분리
+4. hard block 정책 10개와 approval 정책 10개를 정책 JSON으로 구체화
+5. offline runner/state-estimator MVP 착수 범위를 확정
 
 ## 주의할 점
 

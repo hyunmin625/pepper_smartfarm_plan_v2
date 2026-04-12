@@ -4,6 +4,33 @@
 
 ## 2026-04-12
 
+### ds_v10 / prompt_v8 corrective round 제출
+- `ds_v9` eval 뒤 남은 실패 3건을 다시 분석했다.
+  - `pepper-eval-003`: `rootzone_diagnosis`가 `high` 대신 `medium`
+  - `failure-eval-001`: `failure_response`가 `high` 대신 `unknown`
+  - `edge-eval-004`: `manual_override + safe_mode`에서 `block_action` 대신 `enter_safe_mode`
+- 원인 정리:
+  - `rootzone_diagnosis`는 고수분+고EC+뿌리 활력 저하 의심 조합의 high-risk 사례 밀도가 부족했다.
+  - `failure_response`는 `sensor_fault=unknown` 규칙이 `failure_response sensor_stale`까지 과하게 끌고 가는 prompt 충돌이 있었다.
+  - `safety_policy`는 `manual_override + safe_mode`에서 `block_action` 우선 규칙이 있어도 `enter_safe_mode`로 미끄러지는 잔여 패턴이 남아 있었다.
+- corrective seed 4건을 추가했다.
+  - `data/examples/state_judgement_samples_batch9.jsonl`
+  - `data/examples/failure_response_samples_batch9.jsonl`
+- `docs/fine_tuning_objectives.md`에 `prompt_v8` 초안을 추가했다.
+  - `rootzone_diagnosis`: 고수분+고EC+배수 불량+뿌리 활력 저하/갈변 의심 조합은 `risk_level=high`
+  - `failure_response`: 핵심 기후 센서 stale로 VPD/기후 제어가 degraded 상태면 `risk_level=high`
+  - `safety_policy`: `manual_override + safe_mode`는 `block_action + create_alert` 필수, `enter_safe_mode` 금지
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V8_SYSTEM_PROMPT`를 추가했고, `scripts/evaluate_fine_tuned_model.py`도 `sft_v8` 선택을 지원하도록 맞췄다.
+- 다시 처음부터 검증했다.
+  - `python3 scripts/build_training_jsonl.py --include-source-file` 기준 `rows 179`
+  - `python3 scripts/validate_training_examples.py` 기준 `sample_rows 179`, `sample_errors 0`
+  - `python3 scripts/audit_training_data_consistency.py` 기준 `duplicate_rows 0`, `potential_contradictions 0`, `eval_overlap_rows 0`
+  - split 재확인 기준 train `165`, validation `14`, corrective target `state-judgement-044`, `state-judgement-045`, `failure-response-026`, `failure-response-027` 전부 train
+  - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v8 ...` 기준 train `165`, validation `14`
+  - `python3 scripts/validate_openai_sft_dataset.py artifacts/fine_tuning/openai_sft_train_prompt_v8.jsonl artifacts/fine_tuning/openai_sft_validation_prompt_v8.jsonl` 기준 `rows 179`, `errors 0`
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --submit --dataset-version ds_v10 --prompt-version prompt_v8 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v8.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v8.jsonl ...`로 새 challenger job `ftjob-LXWpGudJCeyqsH7WMorGHAT2`를 제출했다.
+- run manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v10-prompt_v8-eval_v1-20260412-171205.json`에 저장했고, submit 직후 상태는 `validating_files`다.
+
 ### ds_v9 / prompt_v5_methodfix 원인 수정과 challenger 제출
 - 반복 회귀의 직접 원인을 다시 점검한 결과, 최근 corrective sample이 `sample_id` 기준 split 때문에 validation으로 빠지고 있었고 일부 corrective sample은 eval과 exact overlap 위험이 있었다.
 - `scripts/build_openai_sft_datasets.py`를 수정해 family bucket을 task-level bucket으로 세분화했고, validation은 각 task에서 earliest eligible sample만 holdout 하도록 변경했다.

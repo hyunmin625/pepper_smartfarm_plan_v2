@@ -1,0 +1,2 @@
+{"id": "ftevent-qv0EA8pYCyVlKhhiiXw8Aw0y", "created_at": 1775981531, "level": "info", "message": "Validating training file: file-7bi5UqNG7ZdpyAM44WaEhD and validation file: file-5WdKk4u5EsWAoLJcU4MXDJ", "object": "fine_tuning.job.event", "data": {}, "type": "message"}
+{"id": "ftevent-AxedsQGU6scLmWi2pjtEMxwd", "created_at": 1775981531, "level": "info", "message": "Created fine-tuning job: ftjob-LXWpGudJCeyqsH7WMorGHAT2", "object": "fine_tuning.job.event", "data": {}, "type": "message"}
