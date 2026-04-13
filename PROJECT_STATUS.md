@@ -30,6 +30,7 @@
 - batch18 live head까지 반영한 `ds_v13/prompt_v5_methodfix_batch18_hardcase` dry-run package도 생성했다. 현재 draft는 train `822`, validation `60`, format error `0`, manifest `ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846`이다.
 - `scripts/build_challenger_submit_preflight.py`로 `ds_v12`와 `ds_v13` submit preflight를 같은 기준으로 묶었다. 현재 리포트 `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md` 기준 두 candidate 모두 `blocked`이며 공통 blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real shadow mode not_run`이다.
 - 실제 운영 전환용 shadow 경로도 추가했다. `scripts/run_shadow_mode_capture_cases.py`는 일자별 shadow case JSONL을 append 방식으로 적재하고, `scripts/build_shadow_mode_window_report.py`는 여러 audit log를 rolling window 기준으로 집계한다. `docs/real_shadow_mode_runbook.md`에 post-construction 절차를 고정했다.
+- `scripts/build_challenger_submit_preflight.py`는 이제 `--real-shadow-report`를 지원한다. 실제 shadow window JSON을 넣으면 `promotion_decision promote -> pass`, `hold -> hold`, `rollback -> rollback`으로 자동 변환해 submit blocker에 반영한다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.

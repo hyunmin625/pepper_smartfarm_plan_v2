@@ -84,6 +84,7 @@
 - [x] batch18 live head 기준 `ds_v13/prompt_v5_methodfix_batch18_hardcase` dry-run package 생성 (`artifacts/fine_tuning/openai_sft_train_prompt_v5_methodfix_batch18_hardcase.jsonl`, `artifacts/fine_tuning/openai_sft_validation_prompt_v5_methodfix_batch18_hardcase.jsonl`, manifest `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json`)
 - [x] `scripts/build_challenger_submit_preflight.py`로 `ds_v12` / `ds_v13` submit blocker 리포트 생성 (`artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md`)
 - [x] 실제 운영 전환용 shadow capture runner와 rolling window report 추가 (`scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py`, `docs/real_shadow_mode_runbook.md`)
+- [x] submit preflight에 real shadow window 자동 연결 추가 (`scripts/build_challenger_submit_preflight.py --real-shadow-report`)
 - [ ] blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data / data_and_model` 기준 targeted fix 여부를 확정
 - [ ] extended200 validator 잔여 `42건` 중 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`의 우선순위 batch를 설계
 - [ ] `synthetic shadow day0 hold`를 해소하고 `ds_v12` frozen dry-run package와 `ds_v13` batch18 next candidate 중 실제 submit 후보를 결정

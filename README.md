@@ -71,6 +71,7 @@
 - batch18까지 반영한 현재 live head 기준 추천 split은 train `284`, validation `60`이고, 같은 hard-case oversampling 규칙을 다시 적용한 next-only dry-run은 train `822`, validation `60`, format error `0`이다.
 - batch18 live head 기준 `ds_v13/prompt_v5_methodfix_batch18_hardcase` dry-run package도 분리했다. [challenger_submit_preflight_ds_v12_ds_v13.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md:1) 기준 현재 `ds_v12`, `ds_v13` 둘 다 `blocked`이며 공통 blocker는 `blind50 validator 0.9`, `synthetic shadow day0 hold`, `real shadow mode not_run`이다.
 - 실제 운영 전환용 shadow 경로도 추가했다. [docs/real_shadow_mode_runbook.md](/home/user/pepper-smartfarm-plan-v2/docs/real_shadow_mode_runbook.md:1), `scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py` 기준으로 일자별 capture와 rolling window 승격 판단을 바로 만들 수 있다.
+- submit preflight도 이 real shadow window를 직접 읽을 수 있다. `scripts/build_challenger_submit_preflight.py --real-shadow-report <window.json>` 경로로 실제 shadow 결과를 `pass / hold / rollback`으로 자동 반영한다.
 - `ds_v9/prompt_v5_methodfix`는 이제 frozen historical baseline으로 유지한다. raw `extended200 0.51`, `blind_holdout50 0.32`였고, validator 적용 후에도 `blind_holdout50 0.76`에 그쳤다.
 - `extended160` 실패군 재분류 완료: 전체 실패 `68건` 중 `34건`은 `policy_output_validator` 우선 규칙으로 직접 줄일 수 있는 타입으로 묶였다.
 - `extended200` 실패군 재분류 완료: 전체 실패 `98건` 중 `50건`은 validator 외부화 우선 대상으로 묶였고, 새 tranche 실패 `25건`은 `edge/seasonal`의 unseen generalization 문제를 더 선명하게 드러냈다.

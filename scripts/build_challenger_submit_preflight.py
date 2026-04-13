@@ -32,6 +32,15 @@ def candidate_summary(manifest: dict[str, Any], candidate_name: str) -> dict[str
     }
 
 
+def derive_real_shadow_status(report: dict[str, Any]) -> str:
+    decision = str(report.get("promotion_decision") or "").strip()
+    if decision == "promote":
+        return "pass"
+    if decision in {"hold", "rollback"}:
+        return decision
+    return "not_run"
+
+
 def build_candidate_decision(
     candidate: dict[str, Any],
     gate_summary: dict[str, Any],
@@ -167,6 +176,11 @@ def main() -> None:
         help="Current real shadow mode status: not_run, hold, pass, rollback",
     )
     parser.add_argument(
+        "--real-shadow-report",
+        default=None,
+        help="Optional rolling real shadow-mode summary JSON. If set, derives real_shadow_mode_status automatically.",
+    )
+    parser.add_argument(
         "--output-prefix",
         default="artifacts/reports/challenger_submit_preflight",
     )
@@ -175,6 +189,11 @@ def main() -> None:
     gate = load_json(Path(args.gate_report))["gate_summary"]
     synthetic_shadow = load_json(Path(args.synthetic_shadow_report))
     offline_shadow = load_json(Path(args.offline_shadow_report))
+    real_shadow_mode_status = args.real_shadow_mode_status
+    real_shadow_report = None
+    if args.real_shadow_report:
+        real_shadow_report = load_json(Path(args.real_shadow_report))
+        real_shadow_mode_status = derive_real_shadow_status(real_shadow_report)
 
     candidates: list[dict[str, Any]] = []
     for manifest_path in args.candidate_manifest:
@@ -186,7 +205,7 @@ def main() -> None:
                 gate,
                 synthetic_shadow,
                 offline_shadow,
-                args.real_shadow_mode_status,
+                real_shadow_mode_status,
             )
         )
 
@@ -198,7 +217,8 @@ def main() -> None:
         "synthetic_shadow_day0_promotion": synthetic_shadow["promotion_decision"],
         "offline_shadow_agreement_rate": offline_shadow["operator_agreement_rate"],
         "offline_shadow_promotion": offline_shadow["promotion_decision"],
-        "real_shadow_mode_status": args.real_shadow_mode_status,
+        "real_shadow_mode_status": real_shadow_mode_status,
+        "real_shadow_report_id": real_shadow_report.get("report_id") if real_shadow_report else None,
         "candidates": candidates,
     }
 

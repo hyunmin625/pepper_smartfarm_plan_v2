@@ -27,6 +27,7 @@
    - VPD, DLI, rootzone trend를 실제 데이터 기준으로 재계산한다.
 8. AI 입력 전환
    - `shadow mode`에서 실측 데이터만 사용한 판단 로그를 축적한다.
+   - `data/ops/shadow_mode_cases_template.jsonl`을 복사해 일자별 실제 shadow case 파일을 만든다.
    - `scripts/run_shadow_mode_capture_cases.py`로 일자별 shadow audit를 적재한다.
    - `scripts/build_shadow_mode_window_report.py`로 2일 이상 rolling window 요약을 만든다.
 9. rollback 준비

@@ -9,6 +9,7 @@
 - `scripts/build_shadow_mode_window_report.py`를 추가해 여러 shadow audit log를 rolling window 기준으로 합산하고 `promotion_decision`까지 바로 계산할 수 있게 했다.
 - `scripts/validate_shadow_mode_window_report.py`로 append-style capture와 window report를 함께 검증했다. sample `15건` 기준 `critical_disagreement_count 1`, `promotion_decision rollback`, `eval_set_ids ['shadow-day-20260412', 'shadow_seed_day0']`, `errors []`를 확인했다.
 - `docs/real_shadow_mode_runbook.md`를 추가해 공사 완료 후 실제 shadow log를 어떻게 적재하고 submit blocker에 연결할지 절차를 고정했다.
+- 이어서 `scripts/build_challenger_submit_preflight.py --real-shadow-report /tmp/shadow_mode_real_window.json ...`를 재실행해 real shadow window 리포트를 submit blocker에 자동 연결하는 것도 확인했다. 이 경우 `real_shadow_mode_status`는 `rollback`으로 파생됐고, `ds_v12`, `ds_v13` 둘 다 계속 `blocked`였다.
 
 ### challenger submit preflight 리포트 추가
 - `scripts/build_challenger_submit_preflight.py`를 추가해 `ds_v12`와 `ds_v13` candidate를 같은 blocker 기준으로 비교할 수 있게 했다.

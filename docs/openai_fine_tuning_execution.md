@@ -137,5 +137,5 @@ submit 후 평가는 아래 gate를 모두 남겨야 한다.
 - validation은 반드시 `spread` 기반 `60건`을 유지한다.
 - 기본 경로 사용 시 `scripts/build_openai_sft_datasets.py`는 stale 합본이 아니라 현재 `training_sample_files()` 집합을 직접 읽는다.
 - submit 전에는 [challenger_gate_baseline.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_gate_baseline.md:1), [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1), [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)를 함께 확인한다.
-- candidate submit 전에는 `scripts/build_challenger_submit_preflight.py`로 `blind50 validator`, `synthetic shadow day0`, `real shadow mode` blocker를 다시 계산한다.
+- candidate submit 전에는 `scripts/build_challenger_submit_preflight.py`로 `blind50 validator`, `synthetic shadow day0`, `real shadow mode` blocker를 다시 계산한다. real shadow window 리포트가 있으면 `--real-shadow-report`를 우선 사용한다.
 - `synthetic shadow day0`가 `hold`인 동안은 후속 challenger를 dry-run까지만 허용한다.
