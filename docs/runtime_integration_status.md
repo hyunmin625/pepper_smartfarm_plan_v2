@@ -39,12 +39,16 @@
 - `state-estimator/state_estimator/features.py`
   - VPD
   - DLI
+  - 1분 평균
   - 5분 평균
+  - 10분 변화율
   - 30분 변화율
   - 관수 후 회복률
   - 배액률
+  - climate/rootzone stress score
   - rootzone/climate/crop risk score
   - automation/sensor reliability score
+  - raw sensor/device row -> snapshot loader
 - `state-estimator/state_estimator/estimator.py`
   - `sensor_quality bad -> unknown`
   - `worker/manual_override/safe_mode/estop -> critical`
@@ -100,6 +104,7 @@
 ```bash
 python3 scripts/validate_state_estimator_mvp.py
 python3 scripts/validate_state_estimator_features.py
+python3 scripts/validate_state_estimator_raw_loader.py
 python3 scripts/validate_llm_orchestrator_service.py
 python3 scripts/validate_llm_response_parser.py
 python3 scripts/validate_ops_api_flow.py
@@ -117,6 +122,6 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 ## 다음 우선순위
 
 1. `OPS_API_LLM_PROVIDER=openai`, `OPS_API_MODEL_ID=champion` 기준 online smoke 실행
-2. sensor-ingestor snapshot을 state-estimator raw loader에 직접 연결
+2. sensor-ingestor runtime outbox를 state-estimator raw loader에 직접 연결
 3. approval mode dispatch 결과를 shadow window/report와 한 화면에서 묶기
 4. auth / role / alert endpoint 추가

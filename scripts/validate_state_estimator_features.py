@@ -11,7 +11,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "state-estimator"))
 
-from state_estimator import build_feature_snapshot  # noqa: E402
+from state_estimator import build_feature_snapshot, validate_feature_snapshot  # noqa: E402
 
 
 def load_jsonl(path: Path) -> list[dict]:
@@ -34,12 +34,18 @@ def main() -> int:
     stable = build_feature_snapshot(scenarios["synthetic-001"])
     if stable["climate"]["vpd_kpa"]["value"] is None:
         errors.append("synthetic-001 should calculate VPD")
+    if stable["climate"]["air_temperature_1m_avg_c"]["value"] is None:
+        errors.append("synthetic-001 should expose air_temperature_1m_avg_c")
     if stable["risk_scores"]["sensor_reliability_score"]["score"] <= 0.5:
         errors.append("synthetic-001 should keep sensor reliability high")
+    if validate_feature_snapshot(stable):
+        errors.append("synthetic-001 should pass feature snapshot validation")
 
     rootzone = build_feature_snapshot(scenarios["synthetic-003"])
     if rootzone["rootzone"]["rootzone_stress_risk"]["level"] not in {"medium", "high"}:
         errors.append("synthetic-003 should elevate rootzone stress risk")
+    if rootzone["risk_scores"]["rootzone_stress_score"]["score"] is None:
+        errors.append("synthetic-003 should calculate rootzone stress score")
 
     stale = build_feature_snapshot(scenarios["synthetic-004"])
     if stale["risk_scores"]["sensor_reliability_score"]["score"] >= 0.6:
@@ -56,7 +62,9 @@ def main() -> int:
                 "errors": errors,
                 "sample_scores": {
                     "synthetic-001_vpd": stable["climate"]["vpd_kpa"]["value"],
+                    "synthetic-001_air_temperature_1m_avg_c": stable["climate"]["air_temperature_1m_avg_c"]["value"],
                     "synthetic-003_rootzone_risk": rootzone["rootzone"]["rootzone_stress_risk"]["level"],
+                    "synthetic-003_rootzone_stress_score": rootzone["risk_scores"]["rootzone_stress_score"]["score"],
                     "synthetic-004_reliability": stale["risk_scores"]["sensor_reliability_score"]["score"],
                     "synthetic-008_heat": heat["climate"]["heat_stress_risk"]["level"],
                 },

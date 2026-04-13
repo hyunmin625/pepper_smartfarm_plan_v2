@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 
@@ -46,11 +46,23 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
     sensor_quality = _dict(snapshot.get("sensor_quality"))
     growth_stage = str(snapshot.get("growth_stage") or "unknown")
 
+    climate_temp_1m = _aggregate_metric(
+        history=history,
+        current_state=current_state,
+        metric_names=("air_temp_c", "temperature_c"),
+        preferred_window="1m",
+    )
     climate_temp = _aggregate_metric(
         history=history,
         current_state=current_state,
         metric_names=("air_temp_c", "temperature_c"),
         preferred_window="5m",
+    )
+    climate_rh_1m = _aggregate_metric(
+        history=history,
+        current_state=current_state,
+        metric_names=("rh_pct", "relative_humidity_pct", "humidity_pct"),
+        preferred_window="1m",
     )
     climate_rh = _aggregate_metric(
         history=history,
@@ -62,9 +74,27 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
         history=history,
         current_state=current_state,
         metric_names=("par_umol_m2_s", "par"),
-        preferred_window="daily",
+        preferred_window="1m",
+    )
+    climate_co2 = _aggregate_metric(
+        history=history,
+        current_state=current_state,
+        metric_names=("co2_ppm",),
+        preferred_window="1m",
     )
     moisture = _aggregate_metric(
+        history=history,
+        current_state=current_state,
+        metric_names=("substrate_moisture_pct", "soil_moisture_pct"),
+        preferred_window="1m",
+    )
+    climate_temp_5m = _aggregate_metric(
+        history=history,
+        current_state=current_state,
+        metric_names=("air_temp_c", "temperature_c"),
+        preferred_window="5m",
+    )
+    moisture_5m = _aggregate_metric(
         history=history,
         current_state=current_state,
         metric_names=("substrate_moisture_pct", "soil_moisture_pct"),
@@ -79,17 +109,41 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
 
     vpd_value = _calculate_vpd_kpa(climate_temp.value, climate_rh.value)
     dli_value = _calculate_dli_mol_m2_day(climate_par, current_state, history)
+    air_temp_delta_10m = _metric_delta(
+        history=history,
+        current_state=current_state,
+        metric_names=("air_temp_c", "temperature_c"),
+        window="10m",
+    )
     air_temp_delta_30m = _metric_delta(
         history=history,
         current_state=current_state,
         metric_names=("air_temp_c", "temperature_c"),
         window="30m",
     )
+    rh_delta_10m = _metric_delta(
+        history=history,
+        current_state=current_state,
+        metric_names=("rh_pct", "relative_humidity_pct", "humidity_pct"),
+        window="10m",
+    )
     rh_delta_30m = _metric_delta(
         history=history,
         current_state=current_state,
         metric_names=("rh_pct", "relative_humidity_pct", "humidity_pct"),
         window="30m",
+    )
+    par_delta_10m = _metric_delta(
+        history=history,
+        current_state=current_state,
+        metric_names=("par_umol_m2_s", "par"),
+        window="10m",
+    )
+    moisture_delta_10m = _metric_delta(
+        history=history,
+        current_state=current_state,
+        metric_names=("substrate_moisture_pct", "soil_moisture_pct"),
+        window="10m",
     )
     moisture_delta_30m = _metric_delta(
         history=history,
@@ -125,6 +179,17 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
         feed_drain_ph_gap=_gap(feed_ph, drain_ph),
         drain_rate_pct=drain_rate.value,
     )
+    climate_stress_score = _climate_stress_score(
+        heat_level=heat_risk["level"],
+        condensation_level=condensation_risk["level"],
+        vpd_kpa=vpd_value,
+    )
+    rootzone_stress_score = _rootzone_stress_score(
+        level=rootzone_risk["level"],
+        recovery_pct=recovery_value,
+        moisture_delta_30m=moisture_delta_30m,
+        drain_rate_pct=drain_rate.value,
+    )
     flower_fruit_risk = _flower_fruit_risk(growth_stage, heat_risk["level"], condensation_risk["level"])
     disease_score = _disease_suspicion_score(
         condensation_level=condensation_risk["level"],
@@ -132,8 +197,8 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
         disease_pressure=current_state.get("disease_pressure"),
     )
     overall_stress = max(
-        _risk_to_score(heat_risk["level"]),
-        _risk_to_score(rootzone_risk["level"]),
+        climate_stress_score,
+        rootzone_stress_score,
         disease_score,
     )
     reliability_score = _sensor_reliability_score(sensor_quality)
@@ -146,16 +211,25 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
         "schema_version": "features.v1",
         "calculated_at": calculated_at or utc_now(),
         "climate": {
-            "vpd_kpa": _feature_value(vpd_value, "kPa", _field_quality(sensor_quality, "temperature", "humidity"), "5m"),
+            "air_temperature_1m_avg_c": _feature_value(climate_temp_1m.value, "C", climate_temp_1m.quality, climate_temp_1m.source_window),
+            "relative_humidity_1m_avg_pct": _feature_value(climate_rh_1m.value, "pct", climate_rh_1m.quality, climate_rh_1m.source_window),
+            "par_1m_avg_umol_m2_s": _feature_value(climate_par.value, "umol/m2/s", climate_par.quality, climate_par.source_window),
+            "co2_1m_avg_ppm": _feature_value(climate_co2.value, "ppm", climate_co2.quality, climate_co2.source_window),
+            "vpd_kpa": _feature_value(vpd_value, "kPa", _field_quality(sensor_quality, "temperature", "temp", "humidity", "rh"), "5m"),
             "dli_mol_m2_d": _feature_value(dli_value, "mol/m2/d", _field_quality(sensor_quality, "par", "light"), "daily"),
-            "air_temperature_5m_avg_c": _feature_value(climate_temp.value, "C", climate_temp.quality, climate_temp.source_window),
+            "air_temperature_5m_avg_c": _feature_value(climate_temp_5m.value, "C", climate_temp_5m.quality, climate_temp_5m.source_window),
+            "air_temperature_10m_delta_c": _feature_value(air_temp_delta_10m, "delta_C", climate_temp.quality, "10m"),
             "air_temperature_30m_delta_c": _feature_value(air_temp_delta_30m, "delta_C", climate_temp.quality, "30m"),
+            "relative_humidity_10m_delta_pct": _feature_value(rh_delta_10m, "delta_pct", climate_rh.quality, "10m"),
             "relative_humidity_30m_delta_pct": _feature_value(rh_delta_30m, "delta_pct", climate_rh.quality, "30m"),
+            "par_10m_delta_umol_m2_s": _feature_value(par_delta_10m, "delta_umol/m2/s", climate_par.quality, "10m"),
             "condensation_risk": condensation_risk,
             "heat_stress_risk": heat_risk,
         },
         "rootzone": {
-            "substrate_moisture_5m_avg_pct": _feature_value(moisture.value, "pct", moisture.quality, moisture.source_window),
+            "substrate_moisture_1m_avg_pct": _feature_value(moisture.value, "pct", moisture.quality, moisture.source_window),
+            "substrate_moisture_5m_avg_pct": _feature_value(moisture_5m.value, "pct", moisture_5m.quality, moisture_5m.source_window),
+            "substrate_moisture_10m_delta_pct": _feature_value(moisture_delta_10m, "delta_pct", moisture.quality, "10m"),
             "substrate_moisture_30m_delta_pct": _feature_value(moisture_delta_30m, "delta_pct", moisture.quality, "30m"),
             "post_irrigation_recovery_pct": _feature_value(
                 recovery_value,
@@ -193,6 +267,8 @@ def build_feature_snapshot(snapshot: dict[str, Any], *, calculated_at: str | Non
         },
         "risk_scores": {
             "overall_stress_score": _score_value(overall_stress, _overall_quality(sensor_quality), "max_heat_rootzone_disease"),
+            "climate_stress_score": _score_value(climate_stress_score, _overall_quality(sensor_quality), "heat_condensation_vpd"),
+            "rootzone_stress_score": _score_value(rootzone_stress_score, _overall_quality(sensor_quality), "moisture_recovery_drain"),
             "automation_safety_score": _score_value(
                 automation_safety_score,
                 "good" if reliability_score >= 0.6 else "suspect",
@@ -220,6 +296,144 @@ def build_zone_state_payload(snapshot: dict[str, Any], *, calculated_at: str | N
         "active_constraints": constraints,
         "sensor_quality": _dict(snapshot.get("sensor_quality")),
     }
+
+
+def build_snapshot_from_raw_records(
+    records: Iterable[dict[str, Any]],
+    *,
+    zone_id: str,
+    growth_stage: str = "unknown",
+    farm_id: str = "gh-01",
+    site_id: str | None = None,
+    constraints: dict[str, Any] | None = None,
+    weather_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    latest_timestamp: datetime | None = None
+    current_state: dict[str, Any] = {}
+    history_points: dict[str, list[tuple[datetime, float]]] = {}
+    sensor_quality_flags: dict[str, list[str]] = {}
+    device_status: dict[str, dict[str, Any]] = {}
+
+    for record in records:
+        payload = _extract_runtime_payload(record)
+        if not isinstance(payload, dict):
+            continue
+        payload_zone_id = str(payload.get("zone_id") or "")
+        payload_site_id = str(payload.get("site_id") or site_id or farm_id or "gh-01")
+        measured_at = _parse_datetime(payload.get("measured_at") or payload.get("timestamp") or payload.get("published_at"))
+        if measured_at is None:
+            continue
+        if payload_zone_id and payload_zone_id != zone_id:
+            continue
+        latest_timestamp = measured_at if latest_timestamp is None or measured_at > latest_timestamp else latest_timestamp
+
+        if payload.get("sensor_id"):
+            _accumulate_sensor_payload(
+                payload,
+                measured_at=measured_at,
+                current_state=current_state,
+                history_points=history_points,
+                sensor_quality_flags=sensor_quality_flags,
+            )
+            if payload.get("sensor_type") == "outside_weather":
+                current_state["outside_zone_id"] = payload_zone_id
+        elif payload.get("device_id"):
+            _accumulate_device_payload(payload, measured_at=measured_at, device_status=device_status)
+        current_state.setdefault("site_id", payload_site_id)
+
+    history = _build_history_windows(history_points, latest_timestamp)
+    sensor_quality = _build_sensor_quality_map(sensor_quality_flags)
+    snapshot = {
+        "zone_id": zone_id,
+        "growth_stage": growth_stage,
+        "current_state": current_state,
+        "history": history,
+        "sensor_quality": sensor_quality,
+        "device_status": list(device_status.values()),
+        "constraints": dict(constraints or {}),
+        "weather_context": dict(weather_context or {}),
+    }
+    if latest_timestamp is not None:
+        snapshot["measured_at"] = latest_timestamp.astimezone(UTC).isoformat()
+    return snapshot
+
+
+def build_zone_state_from_raw_records(
+    records: Iterable[dict[str, Any]],
+    *,
+    zone_id: str,
+    growth_stage: str = "unknown",
+    farm_id: str = "gh-01",
+    site_id: str | None = None,
+    constraints: dict[str, Any] | None = None,
+    weather_context: dict[str, Any] | None = None,
+    calculated_at: str | None = None,
+) -> dict[str, Any]:
+    snapshot = build_snapshot_from_raw_records(
+        records,
+        zone_id=zone_id,
+        growth_stage=growth_stage,
+        farm_id=farm_id,
+        site_id=site_id,
+        constraints=constraints,
+        weather_context=weather_context,
+    )
+    return build_zone_state_payload(snapshot, calculated_at=calculated_at)
+
+
+def validate_feature_snapshot(feature_snapshot: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for key in ("schema_version", "calculated_at", "climate", "rootzone", "crop_signals", "risk_scores"):
+        if key not in feature_snapshot:
+            errors.append(f"missing_top_level:{key}")
+    climate = _dict(feature_snapshot.get("climate"))
+    rootzone = _dict(feature_snapshot.get("rootzone"))
+    crop_signals = _dict(feature_snapshot.get("crop_signals"))
+    risk_scores = _dict(feature_snapshot.get("risk_scores"))
+
+    for field_name in (
+        "air_temperature_1m_avg_c",
+        "air_temperature_5m_avg_c",
+        "air_temperature_10m_delta_c",
+        "air_temperature_30m_delta_c",
+        "relative_humidity_1m_avg_pct",
+        "relative_humidity_10m_delta_pct",
+        "relative_humidity_30m_delta_pct",
+        "vpd_kpa",
+        "dli_mol_m2_d",
+    ):
+        errors.extend(_validate_feature_value(climate.get(field_name), f"climate.{field_name}"))
+
+    for field_name in (
+        "substrate_moisture_1m_avg_pct",
+        "substrate_moisture_5m_avg_pct",
+        "substrate_moisture_10m_delta_pct",
+        "substrate_moisture_30m_delta_pct",
+        "post_irrigation_recovery_pct",
+        "drain_rate_1h_avg_pct",
+    ):
+        errors.extend(_validate_feature_value(rootzone.get(field_name), f"rootzone.{field_name}"))
+
+    for field_name in ("growth_vigor_score", "ripeness_score", "disease_suspicion_score", "harvest_priority_score"):
+        errors.extend(_validate_score_value(crop_signals.get(field_name), f"crop_signals.{field_name}"))
+
+    for field_name in (
+        "overall_stress_score",
+        "climate_stress_score",
+        "rootzone_stress_score",
+        "automation_safety_score",
+        "sensor_reliability_score",
+    ):
+        errors.extend(_validate_score_value(risk_scores.get(field_name), f"risk_scores.{field_name}"))
+
+    for field_name in ("condensation_risk", "heat_stress_risk"):
+        errors.extend(_validate_risk_value(climate.get(field_name), f"climate.{field_name}"))
+    for field_name in ("rootzone_stress_risk", "nutrient_imbalance_risk"):
+        errors.extend(_validate_risk_value(rootzone.get(field_name), f"rootzone.{field_name}"))
+    for field_name in ("flower_fruit_risk",):
+        errors.extend(_validate_risk_value(crop_signals.get(field_name), f"crop_signals.{field_name}"))
+
+    return errors
 
 
 def _dict(value: Any) -> dict[str, Any]:
@@ -322,6 +536,198 @@ def _history_bucket(history: dict[str, Any], metric_names: tuple[str, ...], wind
         if values:
             return values
     return []
+
+
+def _extract_runtime_payload(record: dict[str, Any]) -> dict[str, Any] | None:
+    payload = record.get("payload")
+    if isinstance(payload, dict):
+        return payload
+    return record if isinstance(record, dict) else None
+
+
+def _parse_datetime(raw_value: Any) -> datetime | None:
+    if not isinstance(raw_value, str) or not raw_value.strip():
+        return None
+    normalized = raw_value.strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
+
+def _accumulate_sensor_payload(
+    payload: dict[str, Any],
+    *,
+    measured_at: datetime,
+    current_state: dict[str, Any],
+    history_points: dict[str, list[tuple[datetime, float]]],
+    sensor_quality_flags: dict[str, list[str]],
+) -> None:
+    sensor_type = str(payload.get("sensor_type") or "")
+    values = _dict(payload.get("values"))
+    quality_flag = str(payload.get("quality_flag") or "missing")
+    metric_map = _sensor_metric_mapping(sensor_type, values)
+    for current_key, raw_value in metric_map.items():
+        if isinstance(raw_value, (int, float)) and not isinstance(raw_value, bool):
+            value = float(raw_value)
+            current_state[current_key] = value
+            history_points.setdefault(current_key, []).append((measured_at, value))
+            sensor_quality_flags.setdefault(current_key, []).append(quality_flag)
+    if quality_flag:
+        sensor_quality_flags.setdefault("overall", []).append(quality_flag)
+
+
+def _accumulate_device_payload(
+    payload: dict[str, Any],
+    *,
+    measured_at: datetime,
+    device_status: dict[str, dict[str, Any]],
+) -> None:
+    device_id = str(payload.get("device_id") or "")
+    if not device_id:
+        return
+    device_type = str(payload.get("device_type") or "other")
+    readback = _dict(payload.get("readback"))
+    state = str(readback.get("run_state") or readback.get("state") or "unknown")
+    mode = "auto" if str(payload.get("automation_gate") or "") == "allowed" else "approval"
+    health = "ok" if str(payload.get("quality_flag") or "") == "good" else "degraded"
+    device_status[device_id] = {
+        "device_id": device_id,
+        "device_type": device_type,
+        "mode": mode,
+        "state": state,
+        "health": health,
+        "last_readback_at": measured_at.astimezone(UTC).isoformat(),
+        "readback": readback,
+    }
+
+
+def _sensor_metric_mapping(sensor_type: str, values: dict[str, Any]) -> dict[str, float]:
+    if sensor_type == "air_temp_rh":
+        return {
+            "air_temp_c": values.get("air_temp_c"),
+            "rh_pct": values.get("relative_humidity_pct"),
+        }
+    if sensor_type == "co2":
+        return {"co2_ppm": values.get("co2_ppm")}
+    if sensor_type == "par":
+        return {"par_umol_m2_s": values.get("par_umol_m2_s")}
+    if sensor_type == "solar_radiation":
+        return {"outside_solar_w_m2": values.get("solar_radiation_w_m2")}
+    if sensor_type == "substrate_moisture":
+        return {"substrate_moisture_pct": values.get("substrate_moisture_pct")}
+    if sensor_type == "substrate_temp":
+        return {"substrate_temp_c": values.get("substrate_temperature_c")}
+    if sensor_type == "feed_ec_ph":
+        return {
+            "feed_ec_ds_m": values.get("feed_ec_ds_m"),
+            "feed_ph": values.get("feed_ph"),
+        }
+    if sensor_type == "drain_ec_ph":
+        return {
+            "drain_ec_ds_m": values.get("drain_ec_ds_m"),
+            "drain_ph": values.get("drain_ph"),
+        }
+    if sensor_type == "drain_volume":
+        return {"drain_rate_pct": values.get("drain_rate_pct")}
+    if sensor_type == "outside_weather":
+        return {
+            "outside_temp_c": values.get("outside_temperature_c"),
+            "outside_rh_pct": values.get("outside_relative_humidity_pct"),
+            "wind_speed_m_s": values.get("wind_speed_m_s"),
+            "rainfall_mm_h": values.get("rainfall_mm_h"),
+        }
+    return {}
+
+
+def _build_history_windows(
+    history_points: dict[str, list[tuple[datetime, float]]],
+    latest_timestamp: datetime | None,
+) -> dict[str, Any]:
+    if latest_timestamp is None:
+        return {}
+    windows = {
+        "1m": timedelta(minutes=1),
+        "5m": timedelta(minutes=5),
+        "10m": timedelta(minutes=10),
+        "30m": timedelta(minutes=30),
+        "daily": timedelta(hours=24),
+    }
+    history: dict[str, Any] = {}
+    for metric_name, points in history_points.items():
+        sorted_points = sorted(points, key=lambda item: item[0])
+        metric_windows: dict[str, list[float]] = {}
+        for window_name, delta in windows.items():
+            start = latest_timestamp - delta
+            metric_windows[window_name] = [
+                value
+                for timestamp, value in sorted_points
+                if timestamp >= start
+            ]
+        history[metric_name] = metric_windows
+    return history
+
+
+def _build_sensor_quality_map(sensor_quality_flags: dict[str, list[str]]) -> dict[str, Any]:
+    built = {
+        key: _collapse_quality_flags(flags)
+        for key, flags in sensor_quality_flags.items()
+        if flags
+    }
+    if "overall" not in built:
+        built["overall"] = "missing"
+    return built
+
+
+def _collapse_quality_flags(flags: list[str]) -> str:
+    normalized = [_normalize_quality_flag(flag) for flag in flags]
+    if "bad" in normalized:
+        return "bad"
+    if "suspect" in normalized:
+        return "partial"
+    if "missing" in normalized:
+        return "missing"
+    return "good"
+
+
+def _validate_feature_value(value: Any, field_name: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [f"invalid_feature_value:{field_name}"]
+    if value.get("quality") not in {"good", "suspect", "bad", "missing"}:
+        errors.append(f"invalid_quality:{field_name}")
+    numeric = value.get("value")
+    if numeric is not None and not isinstance(numeric, (int, float)):
+        errors.append(f"invalid_numeric_value:{field_name}")
+    return errors
+
+
+def _validate_score_value(value: Any, field_name: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [f"invalid_score_value:{field_name}"]
+    score = value.get("score")
+    if score is not None:
+        if not isinstance(score, (int, float)):
+            errors.append(f"invalid_score_numeric:{field_name}")
+        elif score < 0 or score > 1:
+            errors.append(f"score_out_of_range:{field_name}")
+    if value.get("quality") not in {"good", "suspect", "bad", "missing"}:
+        errors.append(f"invalid_score_quality:{field_name}")
+    return errors
+
+
+def _validate_risk_value(value: Any, field_name: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [f"invalid_risk_value:{field_name}"]
+    if value.get("level") not in {"low", "medium", "high", "critical", "unknown"}:
+        errors.append(f"invalid_risk_level:{field_name}")
+    confidence = value.get("confidence")
+    if not isinstance(confidence, (int, float)) or confidence < 0 or confidence > 1:
+        errors.append(f"invalid_risk_confidence:{field_name}")
+    return errors
 
 
 def _numbers_from_iterable(value: Any) -> list[float]:
@@ -496,6 +902,34 @@ def _nutrient_imbalance_risk(
         severity = "high" if (drain_rate_pct or 100) <= 10 else "medium"
         return _risk_value(severity, 0.8, "drain_gap_outside_normal_band")
     return _risk_value("low", 0.7, "nutrient_gap_stable")
+
+
+def _climate_stress_score(*, heat_level: str, condensation_level: str, vpd_kpa: float | None) -> float:
+    score = max(_risk_to_score(heat_level), _risk_to_score(condensation_level))
+    if vpd_kpa is None:
+        return round(min(1.0, score + 0.05), 3)
+    if vpd_kpa >= 1.7:
+        score += 0.08
+    elif vpd_kpa <= 0.2:
+        score += 0.06
+    return round(min(1.0, score), 3)
+
+
+def _rootzone_stress_score(
+    *,
+    level: str,
+    recovery_pct: float | None,
+    moisture_delta_30m: float | None,
+    drain_rate_pct: float | None,
+) -> float:
+    score = _risk_to_score(level)
+    if recovery_pct is not None and recovery_pct <= 15:
+        score += 0.1
+    if moisture_delta_30m is not None and abs(moisture_delta_30m) >= 8:
+        score += 0.08
+    if drain_rate_pct is not None and drain_rate_pct <= 4:
+        score += 0.05
+    return round(min(1.0, score), 3)
 
 
 def _flower_fruit_risk(growth_stage: str, heat_level: str, condensation_level: str) -> dict[str, Any]:

@@ -90,7 +90,7 @@
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 연결했다.
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 차단한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
-- `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, stress score를 `feature_schema.json` 형태로 계산한다.
+- `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 1분/5분 평균, 10분/30분 변화율, 관수 후 회복률, 배액률, climate/rootzone stress score를 `feature_schema.json` 형태로 계산하고, raw sensor/device row를 zone snapshot으로 올리는 loader도 함께 제공한다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
 - `llm-orchestrator/llm_orchestrator/tool_registry.py`, `model_registry.py`, `scripts/run_llm_orchestrator_smoke.py`를 추가해 runtime capability catalog, `champion` alias 기반 FT model 해석, stub/openai 공통 smoke 경로를 고정했다.
 - `ops-api/ops_api/app.py`를 추가해 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET/POST /runtime/mode`를 제공하는 FastAPI backend를 만들었다.

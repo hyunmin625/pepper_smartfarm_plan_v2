@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### state-estimator feature engineering 보강
+- `state-estimator/state_estimator/features.py`를 확장해 `1분 평균`, `10분 변화율`, `co2_1m_avg_ppm`, `par_10m_delta_umol_m2_s`, `substrate_moisture_10m_delta_pct`, `climate_stress_score`, `rootzone_stress_score`를 추가했다.
+- 같은 파일에 raw sensor/device runtime row를 현재 snapshot 형식으로 올리는 `build_snapshot_from_raw_records`, `build_zone_state_from_raw_records`, `validate_feature_snapshot`를 구현했다.
+- `schemas/feature_schema.json`도 새 파생 필드를 반영하도록 확장했다.
+- `data/examples/raw_sensor_window_seed.jsonl`와 `scripts/validate_state_estimator_raw_loader.py`를 추가해 `sensor-ingestor -> state-estimator` window loader 회귀 검증을 만들었다.
+- `python3 scripts/validate_state_estimator_features.py`, `python3 scripts/validate_state_estimator_raw_loader.py`, `python3 scripts/validate_state_estimator_mvp.py`를 다시 실행했고 오류 `0`을 확인했다.
+
 ### LLM orchestrator tool registry + model alias + smoke path
 - `llm-orchestrator/llm_orchestrator/tool_registry.py`를 추가해 runtime에서 모델에 노출할 capability catalog를 고정했다. 구현된 도구는 `get_zone_state`, `search_cultivation_knowledge`, `get_recent_trend`, `get_active_constraints`, `estimate_growth_stage`, `request_human_approval`, `log_decision`이고, planned 도구는 prompt 노출에서 제외했다.
 - `llm-orchestrator/llm_orchestrator/model_registry.py`와 `artifacts/runtime/llm_orchestrator/model_registry.json`를 추가해 `champion`, `ds_v11_champion`, `ds_v14_rejected` alias를 실제 FT model id로 해석하도록 했다. `client.py`는 이제 alias를 먼저 해석한 뒤 `stub/openai` 공통으로 같은 id를 사용한다.

@@ -607,9 +607,9 @@
 ## 7.1 특징량 정의
 - [x] VPD 계산식 검증 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`)
 - [x] DLI 계산 방식 정의 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`)
-- [ ] 1분 평균 정의
+- [x] 1분 평균 정의 (`state-estimator/state_estimator/features.py`, `schemas/feature_schema.json`)
 - [x] 5분 평균 정의 (`state-estimator/state_estimator/features.py`)
-- [ ] 10분 변화율 정의
+- [x] 10분 변화율 정의 (`state-estimator/state_estimator/features.py`, `schemas/feature_schema.json`)
 - [x] 30분 변화율 정의 (`state-estimator/state_estimator/features.py`)
 - [x] 관수 후 회복률 정의 (`state-estimator/state_estimator/features.py`)
 - [x] 배액률 정의 (`state-estimator/state_estimator/features.py`)
@@ -617,13 +617,13 @@
 - [x] 생육 단계 반영 방식 정의 (`state-estimator/state_estimator/features.py`)
 
 ## 7.2 feature builder 구현
-- [ ] raw sensor loader 작성
+- [x] raw sensor loader 작성 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_raw_loader.py`)
 - [x] aggregation 함수 작성 (`state-estimator/state_estimator/features.py`)
 - [x] VPD calculator 작성 (`state-estimator/state_estimator/features.py`)
 - [x] trend calculator 작성 (`state-estimator/state_estimator/features.py`)
 - [x] stress score calculator 작성 (`state-estimator/state_estimator/features.py`)
 - [x] substrate recovery calculator 작성 (`state-estimator/state_estimator/features.py`)
-- [ ] derived feature validator 작성
+- [x] derived feature validator 작성 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`, `scripts/validate_state_estimator_raw_loader.py`)
 - [x] snapshot serializer 작성 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`)
 
 ## 7.3 zone state 생성

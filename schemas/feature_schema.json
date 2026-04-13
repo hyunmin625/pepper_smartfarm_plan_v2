@@ -25,6 +25,18 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "air_temperature_1m_avg_c": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "relative_humidity_1m_avg_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "par_1m_avg_umol_m2_s": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "co2_1m_avg_ppm": {
+          "$ref": "#/$defs/feature_value"
+        },
         "vpd_kpa": {
           "$ref": "#/$defs/feature_value"
         },
@@ -34,10 +46,19 @@
         "air_temperature_5m_avg_c": {
           "$ref": "#/$defs/feature_value"
         },
+        "air_temperature_10m_delta_c": {
+          "$ref": "#/$defs/feature_value"
+        },
         "air_temperature_30m_delta_c": {
           "$ref": "#/$defs/feature_value"
         },
+        "relative_humidity_10m_delta_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
         "relative_humidity_30m_delta_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "par_10m_delta_umol_m2_s": {
           "$ref": "#/$defs/feature_value"
         },
         "condensation_risk": {
@@ -52,7 +73,13 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "substrate_moisture_1m_avg_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
         "substrate_moisture_5m_avg_pct": {
+          "$ref": "#/$defs/feature_value"
+        },
+        "substrate_moisture_10m_delta_pct": {
           "$ref": "#/$defs/feature_value"
         },
         "substrate_moisture_30m_delta_pct": {
@@ -104,6 +131,12 @@
       "additionalProperties": false,
       "properties": {
         "overall_stress_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "climate_stress_score": {
+          "$ref": "#/$defs/score_value"
+        },
+        "rootzone_stress_score": {
           "$ref": "#/$defs/score_value"
         },
         "automation_safety_score": {
