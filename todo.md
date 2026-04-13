@@ -538,8 +538,8 @@
 - [ ] 보관 주기 정책 검토
 
 ## 5.3 시계열 저장소
-- [ ] TimescaleDB vs InfluxDB 결정
-- [ ] sensor_readings 스키마 작성
+- [x] TimescaleDB vs InfluxDB 결정 (`docs/timeseries_storage_dashboard_plan.md`)
+- [ ] sensor_readings hypertable 스키마 작성
 - [ ] zone_state_snapshots 스키마 작성
 - [ ] retention policy 작성
 - [ ] downsampling 정책 작성
@@ -559,12 +559,12 @@
 # 6. 센서 수집 파이프라인
 
 ## 6.1 수집 아키텍처 정의
-- [ ] polling vs event 방식 결정
+- [x] polling vs event 방식 결정 (`docs/sensor_collection_plan.md`, `docs/sensor_ingestor_config_spec.md`)
 - [x] 샘플링 주기 결정 (`docs/sensor_collection_plan.md`, `data/examples/sensor_catalog_seed.json`)
-- [ ] timestamp 기준 정의
-- [ ] 데이터 손실 처리 방식 정의
-- [ ] 재전송 정책 정의
-- [ ] 장애 시 buffer 정책 정의
+- [x] timestamp 기준 정의 (`docs/sensor_collection_plan.md`, `docs/sensor_ingestor_runtime_flow.md`)
+- [x] 데이터 손실 처리 방식 정의 (`docs/sensor_collection_plan.md`, `docs/sensor_quality_rules_pseudocode.md`, `docs/sensor_ingestor_runtime_flow.md`)
+- [x] 재전송 정책 정의 (`docs/sensor_collection_plan.md`, `docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`)
+- [x] 장애 시 buffer 정책 정의 (`docs/sensor_collection_plan.md`, `docs/sensor_ingestor_config_spec.md`, `docs/post_construction_sensor_cutover.md`)
 - [x] AI 학습용 raw data와 feature data 분리 저장 방식 정의 (`AI_MLOPS_PLAN.md`, `docs/sensor_collection_plan.md`)
 - [x] 센서 이벤트와 장치 명령 시간축 정렬 방식 정의 (`AI_MLOPS_PLAN.md`)
 - [x] calibration_version 저장 방식 정의 (`docs/sensor_collection_plan.md`)
@@ -582,15 +582,15 @@
 - [x] AI 학습 반영 가능 여부별 데이터 우선순위 지정 (`docs/sensor_collection_plan.md`)
 
 ## 6.2 센서 어댑터 구현
-- [ ] 온도/습도 센서 어댑터 작성
-- [ ] CO2 센서 어댑터 작성
-- [ ] 광량 센서 어댑터 작성
-- [ ] 함수율 센서 어댑터 작성
-- [ ] EC 센서 어댑터 작성
-- [ ] pH 센서 어댑터 작성
-- [ ] 외기 센서 어댑터 작성
-- [ ] 각 어댑터 timeout 처리
-- [ ] 각 어댑터 retry 처리
+- [x] 온도/습도 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] CO2 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] 광량 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] 함수율 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] EC 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] pH 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] 외기 센서 어댑터 작성 (`sensor-ingestor/sensor_ingestor/adapters.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] 각 어댑터 timeout 처리 (`sensor-ingestor/sensor_ingestor/runtime.py`, `scripts/validate_sensor_ingestor_adapters.py`)
+- [x] 각 어댑터 retry 처리 (`sensor-ingestor/sensor_ingestor/runtime.py`, `scripts/validate_sensor_ingestor_adapters.py`)
 - [x] 품질 플래그 생성 로직 작성 (`sensor-ingestor/sensor_ingestor/quality.py`, `sensor-ingestor/sensor_ingestor/runtime.py`)
 
 ## 6.3 sensor-ingestor 서비스
@@ -955,6 +955,12 @@
 - [x] 승인/거절 UI (`ops-api/ops_api/app.py`)
 - [x] 주석/운영 메모 UI (`ops-api/ops_api/app.py`)
 - [x] 문제 사례 태깅 UI (`ops-api/ops_api/app.py` `flagCase()` JS → `POST /shadow/reviews` with `flag:` prefix, `scripts/validate_ops_api_dashboard_section14.py` operator_review 회귀)
+
+## 14.4 Grafana 통합
+- [ ] TimescaleDB datasource provisioning 설계 (`docs/timeseries_storage_dashboard_plan.md`)
+- [ ] Grafana dashboard/panel JSON 버전관리 구조 설계 (`docs/timeseries_storage_dashboard_plan.md`)
+- [ ] `/dashboard` 존 모니터링 뷰에 Grafana panel embed 설계 (`docs/timeseries_storage_dashboard_plan.md`)
+- [ ] 통합관제 role/auth와 Grafana read-only 접근 정책 정리 (`docs/timeseries_storage_dashboard_plan.md`)
 
 ---
 

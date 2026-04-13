@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 from typing import Any
 
+from .adapters import AdapterContext, SensorAdapterRegistry
 from .backends import PublishRouter
 from .config import LoadedConfig
 from .quality import SensorHistoryEntry, evaluate_device_quality, evaluate_sensor_quality
@@ -15,34 +16,6 @@ from .quality import SensorHistoryEntry, evaluate_device_quality, evaluate_senso
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def default_value_for_field(field_name: str) -> Any:
-    if "temp" in field_name:
-        return 24.5
-    if "humidity" in field_name or "rh" in field_name:
-        return 68.0
-    if "co2" in field_name:
-        return 820
-    if "par" in field_name:
-        return 650
-    if "solar" in field_name:
-        return 540
-    if "moisture" in field_name:
-        return 44.0
-    if "ec" in field_name:
-        return 2.3
-    if "ph" in field_name:
-        return 5.9
-    if "volume" in field_name:
-        return 3.5
-    if "wind" in field_name:
-        return 1.8
-    if "rain" in field_name:
-        return 0.0
-    if "rgb_frame" in field_name:
-        return f"mock://vision/{field_name}.jpg"
-    return 1
 
 
 def default_device_readback(device_type: str) -> dict[str, Any]:
@@ -86,6 +59,9 @@ class RuntimeMetrics:
     timeseries_records_written: int = 0
     object_store_records_written: int = 0
     anomaly_alerts_emitted: int = 0
+    sensor_retry_attempts: int = 0
+    device_retry_attempts: int = 0
+    timeout_fallback_records: int = 0
     publish_target_counts: Counter[str] = field(default_factory=Counter)
     last_run_at: str | None = None
     last_error: str | None = None
@@ -116,6 +92,15 @@ class RuntimeMetrics:
             "# HELP sensor_ingestor_anomaly_alerts_emitted Total anomaly alerts emitted",
             "# TYPE sensor_ingestor_anomaly_alerts_emitted counter",
             f"sensor_ingestor_anomaly_alerts_emitted {self.anomaly_alerts_emitted}",
+            "# HELP sensor_ingestor_sensor_retry_attempts Total sensor read retries attempted",
+            "# TYPE sensor_ingestor_sensor_retry_attempts counter",
+            f"sensor_ingestor_sensor_retry_attempts {self.sensor_retry_attempts}",
+            "# HELP sensor_ingestor_device_retry_attempts Total device read retries attempted",
+            "# TYPE sensor_ingestor_device_retry_attempts counter",
+            f"sensor_ingestor_device_retry_attempts {self.device_retry_attempts}",
+            "# HELP sensor_ingestor_timeout_fallback_records Total records emitted after retry exhaustion",
+            "# TYPE sensor_ingestor_timeout_fallback_records counter",
+            f"sensor_ingestor_timeout_fallback_records {self.timeout_fallback_records}",
         ]
         for target_id, count in sorted(self.publish_target_counts.items()):
             lines.append(f'sensor_ingestor_publish_target_total{{target_id="{target_id}"}} {count}')
@@ -127,6 +112,7 @@ class SensorIngestorService:
         self.loaded = loaded
         self.metrics = RuntimeMetrics()
         self.publisher = PublishRouter(loaded.publish_targets)
+        self.sensor_adapters = SensorAdapterRegistry()
         self.sensor_history: dict[str, SensorHistoryEntry] = {}
         self._http_server: ThreadingHTTPServer | None = None
         self._http_thread: Thread | None = None
@@ -145,52 +131,132 @@ class SensorIngestorService:
     def _device_groups(self) -> list[dict[str, Any]]:
         return [group for group in self.loaded.config.get("device_binding_groups", []) if group.get("enabled", False)]
 
-    def _read_sensor_group(self, group: dict[str, Any], overrides: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    @staticmethod
+    def _simulate_timeout(override: dict[str, Any] | None, attempt_index: int) -> bool:
+        if not override:
+            return False
+        if override.get("simulate_timeout") is True:
+            return True
+        timeout_attempts = override.get("simulate_timeout_attempts")
+        return isinstance(timeout_attempts, int) and attempt_index < timeout_attempts
+
+    def _read_sensor_with_retry(
+        self,
+        sensor: dict[str, Any],
+        group: dict[str, Any],
+        poller_profile: dict[str, Any],
+        override: dict[str, Any] | None,
+    ) -> dict[str, Any]:
         measured_at = utc_now()
+        context = AdapterContext(site_id=self.site_id, measured_at=measured_at, override=override)
+        adapter = self.sensor_adapters.for_sensor(sensor)
+        max_attempts = poller_profile["retry_count"] + 1
+
+        for attempt_index in range(max_attempts):
+            if self._simulate_timeout(override, attempt_index):
+                if attempt_index < max_attempts - 1:
+                    self.metrics.sensor_retry_attempts += 1
+                    continue
+                fallback = adapter.timeout_fallback(sensor, context)
+                fallback["parser_id"] = group["parser_id"]
+                fallback["poll_interval_seconds"] = poller_profile["poll_interval_seconds"]
+                fallback["quality_rule_set_id"] = group["quality_rule_set_id"]
+                fallback["timeout_retry_exhausted"] = True
+                fallback["retry_count"] = poller_profile["retry_count"]
+                self.metrics.timeout_fallback_records += 1
+                return merge_override(fallback, override)
+            record = adapter.read(sensor, context)
+            record["parser_id"] = group["parser_id"]
+            record["poll_interval_seconds"] = poller_profile["poll_interval_seconds"]
+            record["quality_rule_set_id"] = group["quality_rule_set_id"]
+            record["retry_count"] = poller_profile["retry_count"]
+            return merge_override(record, override)
+
+        fallback = adapter.timeout_fallback(sensor, context)
+        fallback["parser_id"] = group["parser_id"]
+        fallback["poll_interval_seconds"] = poller_profile["poll_interval_seconds"]
+        fallback["quality_rule_set_id"] = group["quality_rule_set_id"]
+        fallback["timeout_retry_exhausted"] = True
+        fallback["retry_count"] = poller_profile["retry_count"]
+        self.metrics.timeout_fallback_records += 1
+        return merge_override(fallback, override)
+
+    def _read_sensor_group(self, group: dict[str, Any], overrides: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
         poller_profile = self.loaded.poller_profiles[group["poller_profile_id"]]
         for sensor_id in group["sensor_ids"]:
             sensor = self.loaded.sensors[sensor_id]
-            values = {
-                field_name: default_value_for_field(field_name)
-                for field_name in sensor["measurement_fields"]
-            }
-            base_record = {
-                "record_kind": "sensor",
-                "site_id": self.site_id,
-                "zone_id": sensor["zone_id"],
-                "sensor_id": sensor_id,
-                "sensor_type": sensor["sensor_type"],
-                "measured_at": measured_at,
-                "protocol": sensor["protocol"],
-                "parser_id": group["parser_id"],
-                "poll_interval_seconds": poller_profile["poll_interval_seconds"],
-                "quality_rule_set_id": group["quality_rule_set_id"],
-                "transport_status": "ok",
-                "calibration_due": False,
-                "values": values,
-            }
-            records.append(merge_override(base_record, overrides.get(sensor_id)))
+            records.append(self._read_sensor_with_retry(sensor, group, poller_profile, overrides.get(sensor_id)))
         return records
 
-    def _read_device_group(self, group: dict[str, Any], overrides: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    def _read_device_with_retry(
+        self,
+        device: dict[str, Any],
+        group: dict[str, Any],
+        poller_profile: dict[str, Any],
+        override: dict[str, Any] | None,
+    ) -> dict[str, Any]:
         measured_at = utc_now()
-        records: list[dict[str, Any]] = []
-        for device_id in group["device_ids"]:
-            device = self.loaded.devices[device_id]
+        max_attempts = poller_profile["retry_count"] + 1
+        for attempt_index in range(max_attempts):
+            if self._simulate_timeout(override, attempt_index):
+                if attempt_index < max_attempts - 1:
+                    self.metrics.device_retry_attempts += 1
+                    continue
+                fallback = {
+                    "record_kind": "device",
+                    "site_id": self.site_id,
+                    "zone_id": device["zone_id"],
+                    "device_id": device["device_id"],
+                    "device_type": device["device_type"],
+                    "measured_at": measured_at,
+                    "protocol": device["protocol"],
+                    "parser_id": group["parser_id"],
+                    "transport_status": "down",
+                    "readback": {"fault_state": True, "run_state": "fault"},
+                    "timeout_retry_exhausted": True,
+                    "retry_count": poller_profile["retry_count"],
+                }
+                self.metrics.timeout_fallback_records += 1
+                return merge_override(fallback, override)
             base_record = {
                 "record_kind": "device",
                 "site_id": self.site_id,
                 "zone_id": device["zone_id"],
-                "device_id": device_id,
+                "device_id": device["device_id"],
                 "device_type": device["device_type"],
                 "measured_at": measured_at,
                 "protocol": device["protocol"],
                 "parser_id": group["parser_id"],
                 "transport_status": "ok",
                 "readback": default_device_readback(device["device_type"]),
+                "retry_count": poller_profile["retry_count"],
             }
-            records.append(merge_override(base_record, overrides.get(device_id)))
+            return merge_override(base_record, override)
+
+        fallback = {
+            "record_kind": "device",
+            "site_id": self.site_id,
+            "zone_id": device["zone_id"],
+            "device_id": device["device_id"],
+            "device_type": device["device_type"],
+            "measured_at": measured_at,
+            "protocol": device["protocol"],
+            "parser_id": group["parser_id"],
+            "transport_status": "down",
+            "readback": {"fault_state": True, "run_state": "fault"},
+            "timeout_retry_exhausted": True,
+            "retry_count": poller_profile["retry_count"],
+        }
+        self.metrics.timeout_fallback_records += 1
+        return merge_override(fallback, override)
+
+    def _read_device_group(self, group: dict[str, Any], overrides: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        records: list[dict[str, Any]] = []
+        poller_profile = self.loaded.poller_profiles[group["poller_profile_id"]]
+        for device_id in group["device_ids"]:
+            device = self.loaded.devices[device_id]
+            records.append(self._read_device_with_retry(device, group, poller_profile, overrides.get(device_id)))
         return records
 
     def _parse_records(self, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -218,6 +284,7 @@ class SensorIngestorService:
             "site_id": record["site_id"],
             "zone_id": record["zone_id"],
             "measured_at": record["measured_at"],
+            "ingested_at": utc_now(),
             "source": "sensor-ingestor",
             "sensor_id": record["sensor_id"],
             "sensor_type": record["sensor_type"],
@@ -252,6 +319,7 @@ class SensorIngestorService:
             "site_id": record["site_id"],
             "zone_id": record["zone_id"],
             "measured_at": record["measured_at"],
+            "ingested_at": utc_now(),
             "source": "sensor-ingestor",
             "device_id": record["device_id"],
             "device_type": record["device_type"],
@@ -340,6 +408,9 @@ class SensorIngestorService:
             "sensor_records_published": self.metrics.sensor_records_published,
             "device_records_published": self.metrics.device_records_published,
             "anomaly_alerts_emitted": self.metrics.anomaly_alerts_emitted,
+            "sensor_retry_attempts": self.metrics.sensor_retry_attempts,
+            "device_retry_attempts": self.metrics.device_retry_attempts,
+            "timeout_fallback_records": self.metrics.timeout_fallback_records,
             "backend_status": self.publisher.status_payload(),
             "alert_preview": alerts_emitted[:3],
             "health": self.health_payload(),
@@ -358,6 +429,9 @@ class SensorIngestorService:
             "mqtt_messages_published": self.metrics.mqtt_messages_published,
             "timeseries_records_written": self.metrics.timeseries_records_written,
             "anomaly_alerts_emitted": self.metrics.anomaly_alerts_emitted,
+            "sensor_retry_attempts": self.metrics.sensor_retry_attempts,
+            "device_retry_attempts": self.metrics.device_retry_attempts,
+            "timeout_fallback_records": self.metrics.timeout_fallback_records,
         }
 
     def start_http_server(self, port: int) -> None:

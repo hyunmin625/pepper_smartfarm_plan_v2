@@ -39,6 +39,7 @@ for poller_profile in enabled_profiles:
   "sensor_id": "gh-01-zone-a--air-temp-rh--01",
   "sensor_type": "air_temp_rh",
   "measured_at": "2026-04-11T08:00:10+09:00",
+  "ingested_at": "2026-04-11T08:00:11+09:00",
   "values": {
     "air_temp_c": 27.1,
     "relative_humidity_pct": 74.2
@@ -58,6 +59,7 @@ for poller_profile in enabled_profiles:
   "device_id": "gh-01-zone-a--vent-window--01",
   "device_type": "vent_window",
   "measured_at": "2026-04-11T08:00:10+09:00",
+  "ingested_at": "2026-04-11T08:00:11+09:00",
   "readback": {
     "position_pct": 35,
     "run_state": "open"
@@ -71,7 +73,7 @@ for poller_profile in enabled_profiles:
 
 - `mqtt-sensor-raw`, `mqtt-device-state`: 실시간 downstream 구독용
 - `tsdb-sensor-raw`, `tsdb-device-state`: 원시 이력 저장
-- `tsdb-sensor-snapshot`: 1분 snapshot과 5/30분 trend 입력
+- `tsdb-sensor-snapshot`: 1분 snapshot과 5/30분 trend 입력, 이후 `TimescaleDB` continuous aggregate / `Grafana` panel source
 - `object-store-vision`: 이미지 원본 저장, MQTT에는 메타데이터만 전송
 - 로컬 개발에서는 위 publish가 각각 `mqtt_outbox.jsonl`, `timeseries_outbox.lp`, `object_store_outbox.jsonl`에 기록된다.
 
@@ -87,12 +89,15 @@ for poller_profile in enabled_profiles:
 - timeout/retry 초과 시 connection 상태를 `degraded`로 변경
 - 같은 poller에서 연속 실패가 임계치를 넘으면 `health_config.status_topic`에 경보 발행
 - manual import 미도착은 `bad`가 아니라 `pending_batch` 이벤트로 먼저 기록
+- publish target 장애 시 local outbox에서 `at-least-once` 재전송하고, dedupe는 `(sensor_id|device_id, measured_at, binding_group_id)` 또는 `event_id` 기준으로 처리한다.
+- telemetry outbox는 최소 `48시간`, vision metadata/file pointer outbox는 최소 `24시간` 보관을 기본값으로 둔다.
 - `quality_flag != good`이면 `anomaly_alerts.jsonl`에 `sensor_anomaly` 또는 `device_readback_anomaly`를 기록한다.
 
 ## 7. 다음 구현 순서
 
 1. 실제 protocol adapter registry
 2. 실제 MQTT broker 연결
-3. 실제 timeseries DB writer 연결
-4. snapshot/trend scheduler 고도화
-5. anomaly alert를 alert service와 연동
+3. 실제 `TimescaleDB` writer 연결
+4. snapshot/trend scheduler와 continuous aggregate 정책 고도화
+5. `Grafana` datasource/panel이 same schema를 읽도록 연동
+6. anomaly alert를 alert service와 연동

@@ -15,10 +15,11 @@
 - `sensor_binding_groups`: 센서를 connection + poller + parser + quality rule에 묶는 단위
 - `device_binding_groups`: 장치 readback을 PLC connection과 parser에 묶는 단위
 - `quality_rule_sets`: stale, bad 전환 시점과 flatline/jump/허용 범위
-- `publish_targets`: MQTT, timeseries, object store 목적지
+- `publish_targets`: MQTT, timeseries, object store 목적지와 durable outbox route
 - `snapshot_pipeline`: 1분 snapshot, 5/30분 trend, retention 기준
 - `health_config`: heartbeat, lag alarm, metrics namespace
 - 로컬 개발에서는 실제 broker/DB 대신 `.env.example`의 `SENSOR_INGESTOR_*_OUTBOX_PATH`를 사용해 file-backed outbox로 기록한다.
+- 운영 배포 기준 canonical timeseries DB는 `TimescaleDB`이며, `snapshot_pipeline` 산출물은 이후 `Grafana` 패널 datasource로 사용한다.
 
 ## 3. Poller Profile 기준
 
@@ -42,14 +43,25 @@ Profile은 transport 동작만 가진다. 센서별 해석은 binding group의 `
 - `zone_scope`를 쓰면 바인딩된 항목의 `zone_id`가 모두 범위 안에 있어야 한다.
 - 실제 IP, RTSP URL, PLC 주소는 넣지 않고 `endpoint_ref`, `credential_ref` placeholder만 기록한다.
 
-## 5. 운영 규칙
+## 5. Timestamp / Retry / Buffer 규칙
+
+- 센서/장치 정규화 row의 canonical 시각은 `measured_at`이다.
+- source timestamp가 collector와 `5초` 이내로 동기화돼 있으면 그 값을 `measured_at`으로 사용한다.
+- source timestamp가 없거나 drift가 크면 collector 수신 시각을 `measured_at`으로 사용하고, transport metadata에는 `ingested_at`을 남긴다.
+- `poller_profiles.retry_count`, `retry_backoff_seconds`는 source read 단계에서만 사용한다.
+- publish 단계는 poll retry와 별개로 local durable outbox 기준 `at-least-once` 재전송을 수행한다.
+- publish dedupe key는 polling row는 `(sensor_id|device_id, measured_at, binding_group_id)`, event row는 `event_id`를 사용한다.
+- non-image telemetry outbox는 최소 `48시간` 보관을 기본값으로 두고, vision metadata/file pointer outbox는 최소 `24시간` 보관을 기본값으로 둔다.
+- buffer pressure가 생기면 optional vision capture와 should-have telemetry부터 downsample 또는 지연 전송하고, must-have telemetry는 마지막까지 보존한다.
+
+## 6. 운영 규칙
 
 - `quality_rule_sets`는 최소 `stale_after_seconds`, `bad_after_seconds`를 포함한다.
 - `snapshot_pipeline.exclude_bad_quality_from_ai`는 `true`로 유지한다.
 - vision frame은 이미지 자체보다 메타데이터와 저장 위치를 publish 대상으로 둔다.
 - manual import 계열은 batch file drop 이후 ingest event를 남긴다.
 
-## 6. 구현 연결
+## 7. 구현 연결
 
 이 설정이 있으면 다음 단계 구현 입력이 고정된다.
 
@@ -59,4 +71,4 @@ Profile은 transport 동작만 가진다. 센서별 해석은 binding group의 `
 4. `publisher`: MQTT/topic, timeseries measurement, object store route로 분기
 5. `health`: heartbeat, lag, coverage 누락 감시
 
-다음 후속 작업은 실제 MQTT broker, 실제 timeseries DB, snapshot/trend scheduler를 backend로 연결하는 것이다.
+다음 후속 작업은 실제 MQTT broker, 실제 `TimescaleDB` writer, snapshot/trend scheduler를 backend로 연결하고, `Grafana` datasource/panel이 같은 schema를 읽도록 정렬하는 것이다.

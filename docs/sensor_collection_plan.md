@@ -12,6 +12,42 @@
 - 센서값만 저장하지 않고 같은 시점의 장치 상태와 운영 이벤트를 함께 저장한다.
 - 제어 판단에 직접 쓰이는 센서는 `must_have`, 보조 판단은 `should_have`, 추후 확장은 `optional`로 구분한다.
 
+### 1.1 polling vs event 방식 결정
+
+수집 방식은 단일 polling 또는 단일 event가 아니라 `hybrid`로 고정한다.
+
+- `polling`: RS485/Modbus 계열 환경 센서, 근권 센서, 양액 센서, PLC readback 장치 상태
+- `event-first`: pulse counter 배액량, 관수 밸브 on/off, manual override, 작업자 개입, 알람, 승인/차단 이벤트
+- `snapshot trigger`: vision frame과 수동 batch import는 낮은 빈도 event로 취급하고 object store + metadata publish를 분리한다.
+
+원칙은 아래와 같다.
+
+- 센서/장치 readback은 poller profile 기준으로 주기 수집한다.
+- 운영 이벤트는 source 발생 시점에 바로 적재하되, `sensor-ingestor` 내부에서는 동일한 시간축 정렬 규칙을 쓴다.
+- AI 입력에서는 polling raw row와 event row를 같은 zone timeline에 병합한다.
+
+### 1.2 timestamp 기준 정의
+
+시간 기준은 `source observation time 우선, collector ingest time 보조`로 고정한다.
+
+- 센서/장치 raw row의 판단 기준 시각은 `measured_at`이다.
+- source 장비 timestamp가 있고 collector clock과 `5초` 이내 차이면 그 값을 `measured_at`으로 사용한다.
+- source timestamp가 없거나 drift가 `5초`를 넘으면 collector 수신 시각을 `measured_at`으로 사용한다.
+- publish/재전송/정렬 추적용 내부 메타데이터에는 `ingested_at`을 별도로 남긴다.
+- `state-estimator`의 1분 snapshot `timestamp`는 raw row 시각이 아니라 `window end`를 사용한다.
+- 수동 batch import는 작업자가 제공한 관측 시각을 `measured_at`, 파일 수신 시각을 `ingested_at`으로 분리한다.
+
+### 1.3 데이터 손실, 재전송, buffer 기준
+
+- raw store에는 누락 구간을 보간해서 채우지 않는다.
+- poller는 `poller_profile.retry_count`와 `retry_backoff_seconds`를 모두 소진한 뒤에만 해당 tick을 실패로 본다.
+- retry 소진 후에도 데이터가 없으면 synthetic value를 만들지 않고 `missing/stale/communication_loss` 규칙만 남긴다.
+- `must_have` 센서가 `bad`로 전환되면 그 시점부터 자동화 입력은 차단하고 snapshot에는 품질 저하 이유를 기록한다.
+- manual batch import가 SLA 안에 도착하지 않으면 즉시 `bad`로 간주하지 않고 `pending_batch` 운영 이벤트로 먼저 기록한다.
+- downstream publish는 `at-least-once`로 보며, dedupe key는 polling row는 `(sensor_id|device_id, measured_at, binding_group_id)`, event row는 `event_id`로 고정한다.
+- MQTT / timeseries / object store publish가 막히면 local durable outbox에 최소 `48시간` telemetry를 보관한다.
+- vision frame은 원본 대신 metadata와 local file path를 우선 보관하며, buffer pressure가 생기면 optional vision capture부터 downsample한다.
+
 ## 2. Zone 정의
 
 초기 계획 기준 zone은 아래처럼 둔다.

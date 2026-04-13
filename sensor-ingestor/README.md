@@ -1,14 +1,15 @@
 # Sensor Ingestor MVP Skeleton
 
-이 디렉터리는 `sensor-ingestor` 서비스의 최소 실행 뼈대다. 현재 단계의 목표는 설정 파일, poller, parser, normalizer, publish 경계를 코드로 고정하고, 로컬 개발용 MQTT/timeseries outbox backend까지 연결하는 것이다.
+이 디렉터리는 `sensor-ingestor` 서비스의 최소 실행 뼈대다. 현재 단계의 목표는 설정 파일, poller, parser, normalizer, publish 경계를 코드로 고정하고, 로컬 개발용 MQTT/timeseries outbox backend까지 연결하는 것이다. canonical 시계열 저장소는 `TimescaleDB`로 고정하며, 현재 line protocol outbox는 실제 writer 연결 전까지의 개발 경계로 사용한다.
 
 ## 현재 포함 범위
 
 - 설정 파일과 catalog 로드
 - sensor/device binding group 기준 1회 polling
-- protocol별 mock adapter
+- sensor type별 mock adapter registry (`air_temp_rh`, `co2`, `par`, `substrate_moisture`, `ec/ph`, `outside_weather` 등)
 - parser registry
 - normalizer registry
+- poller profile 기반 timeout/retry 처리와 retry exhaustion fallback
 - quality evaluator
 - file-backed MQTT outbox writer
 - file-backed timeseries line protocol writer
@@ -19,8 +20,8 @@
 
 - 실제 Modbus/RTSP/PLC 연결
 - 실제 MQTT broker 연결
-- 실제 TimescaleDB/InfluxDB 연결
-- daemon scheduler와 재시도 백오프 고도화
+- 실제 TimescaleDB writer 연결
+- daemon scheduler 고도화와 adaptive backoff tuning
 
 ## 실행 예시
 
