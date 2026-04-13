@@ -55,4 +55,4 @@
 
 ## judgement
 
-`ds_v14`는 원래 blocker가 남아 있어 submit 금지 후보였지만 사용자 승인으로 실제 submit했다. 완료 후 같은 frozen gate로 재평가한 결과 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.84`로 `ds_v11` baseline을 넘지 못했다. 따라서 baseline 승격 없이 rejected challenger로 남긴다.
+`ds_v14`는 원래 blocker가 남아 있어 submit 금지 후보였지만 사용자 승인으로 실제 submit했다. 완료 후 같은 frozen gate로 재평가한 결과 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.9`로 `ds_v11` baseline을 넘지 못했다. validator gap은 흡수했지만 core/extended가 더 나빠 baseline 승격 없이 rejected challenger로 남긴다.

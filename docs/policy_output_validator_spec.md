@@ -80,8 +80,8 @@ validator는 JSON parse 직후, `policy-engine` 전에 실행한다.
 | `OV-03` | `recommended_actions[]`는 `action_type`, `reason`, `risk_level`, `target`, `approval_required`, `expected_effect`, `cooldown_minutes` 필수 | 누락 시 reject | field usability 계약 |
 | `OV-04` | `robot_tasks[]`는 `task_type`, `priority`, `reason`, `approval_required`, `candidate_id` 또는 `target` 필수 | 누락 시 reject | `candidate_id/target` 없으면 unusable |
 | `OV-05` | actionable output은 `follow_up` 또는 `required_follow_up` 필수 | 누락 시 reject | blind/product gate와 정렬 |
-| `OV-06` | `retrieved_context`가 있고 `must_include_citations=true`면 citation 필수 | 누락 시 reject 또는 manual review | 현재 `20건` 반복 실패 |
-| `OV-07` | `forbidden_action`은 `decision in {allow, block, approval_required}`와 `blocked_action_type` 계약 준수 | 위반 시 reject | schema-level hard contract |
+| `OV-06` | `retrieved_context`가 있고 `must_include_citations=true`면 citation 필수, cited `chunk_id`는 반드시 `retrieved_context` 안에 있어야 함 | 누락/문맥 밖 citation이면 in-context citation으로 교체 후 통과 | citation contract |
+| `OV-07` | `forbidden_action`은 `decision in {allow, block, approval_required}`와 `blocked_action_type` 계약 준수 | 위반 시 reject 또는 안전 방향으로 normalize | schema-level hard contract |
 | `OV-08` | `adjust_fertigation`, `adjust_heating`, `adjust_co2`, `create_robot_task`는 기본 `approval_required=true` | false면 `approval_required=true`로 승격 | 승인 거버넌스와 정렬 |
 | `OV-09` | top-level `risk_level`과 action/task item `risk_level`이 safety rule보다 낮아지면 안 됨 | undercall 시 reject | 최소 동일 수준 유지 |
 | `OV-10` | validator가 strip/rewrite/reject를 수행하면 `validator_reason_codes`와 `validator_decision`을 남긴다 | audit log 필수 | shadow mode 분석용 |
@@ -106,7 +106,7 @@ validator가 우선 맡아야 하는 것:
 
 1. `scripts/report_eval_failure_clusters.py` 결과를 기준으로 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`을 runtime JSON/policy seed로 옮긴다.
 2. `policy-engine/policy_engine/output_validator.py`와 `data/examples/policy_output_validator_rules_seed.json`으로 runtime skeleton과 규칙 seed를 추가했다.
-3. `scripts/validate_policy_output_validator.py`로 worker lock, rootzone conflict, climate degraded, robot clearance, approval/citation contract를 재현하는 검증 케이스를 고정했다.
+3. `scripts/validate_policy_output_validator.py`로 worker lock, rootzone conflict, climate degraded, robot clearance, citation-in-context, path-loss forbidden_action contract를 재현하는 검증 케이스를 고정했다.
 4. 후속 challenger 비교는 `core24 + extended160 + extended200 + blind_holdout50 + validator-applied gate` 기준으로만 수행한다.
 5. `blind-edge-003`, `blind-edge-005`는 validator 우선순위/trigger 보정으로 회복됐다. 남은 blind 잔여 실패는 `blind-action-002`, `blind-action-005`, `blind-action-006`, `blind-expert-001`, `blind-expert-003`, `blind-expert-009`, `blind-expert-010`, `blind-expert-012`, `blind-robot-002`, `blind-robot-004`, `blind-robot-005`, `blind-robot-007`이다.
 

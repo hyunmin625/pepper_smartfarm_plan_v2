@@ -67,6 +67,16 @@ def main() -> int:
                 errors.append(f"{case_id}: missing robot_task_type={task_type}")
         if expected.get("requires_citations") and not result.output.get("citations"):
             errors.append(f"{case_id}: citations were not added")
+        required_citation_chunk_ids = expected.get("required_citation_chunk_ids", [])
+        if isinstance(required_citation_chunk_ids, list) and required_citation_chunk_ids:
+            output_citation_ids = {
+                str(citation.get("chunk_id"))
+                for citation in result.output.get("citations", [])
+                if isinstance(citation, dict) and citation.get("chunk_id")
+            }
+            for chunk_id in required_citation_chunk_ids:
+                if chunk_id not in output_citation_ids:
+                    errors.append(f"{case_id}: missing required citation chunk_id={chunk_id}")
         if expected.get("follow_up_count_min", 0) > len(result.output.get("follow_up", [])):
             errors.append(f"{case_id}: expected follow_up_count_min={expected['follow_up_count_min']}")
         if expected.get("required_follow_up_count_min", 0) > len(result.output.get("required_follow_up", [])):

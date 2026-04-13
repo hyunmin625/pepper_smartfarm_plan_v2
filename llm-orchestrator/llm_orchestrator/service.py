@@ -125,7 +125,7 @@ class LLMOrchestratorService:
         envelope = LLMDecisionEnvelope(
             request_id=request.request_id,
             task_type=request.task_type,
-            context=ValidatorContext.from_dict(self._validator_context(request)),
+            context=ValidatorContext.from_dict(self._validator_context(request, retrieval_chunks)),
             output=parsed_output,
         )
         validated_output, audit, audit_path = run_output_validator(envelope)
@@ -167,7 +167,7 @@ class LLMOrchestratorService:
         envelope = LLMDecisionEnvelope(
             request_id=request.request_id,
             task_type=request.task_type,
-            context=ValidatorContext.from_dict(self._validator_context(request)),
+            context=ValidatorContext.from_dict(self._validator_context(request, retrieval_chunks)),
             output=parsed_output,
         )
         validated_output, validator_audit, shadow_record, shadow_path = run_shadow_mode_capture(
@@ -216,7 +216,7 @@ class LLMOrchestratorService:
         }
         return json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2)
 
-    def _validator_context(self, request: OrchestratorRequest) -> dict[str, Any]:
+    def _validator_context(self, request: OrchestratorRequest, retrieval_chunks: list[RetrievedChunk]) -> dict[str, Any]:
         zone_state = request.zone_state
         current_state = zone_state.get("current_state", {})
         sensor_quality = zone_state.get("sensor_quality", {})
@@ -229,6 +229,8 @@ class LLMOrchestratorService:
             "task_type": request.task_type,
             "summary": str(current_state.get("summary") or ""),
             "requires_citations": True,
+            "retrieved_context": [chunk.chunk_id for chunk in retrieval_chunks],
+            "proposed_action": str(zone_state.get("proposed_action") or ""),
             "worker_present": bool(current_state.get("worker_present") or current_state.get("operator_present")),
             "manual_override_active": bool(current_state.get("manual_override")),
             "safe_mode_active": bool(current_state.get("safe_mode")),

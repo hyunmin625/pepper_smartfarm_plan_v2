@@ -42,6 +42,23 @@ HIGH_APPROVAL_ACTIONS = {
 }
 
 
+def _normalize_retrieved_context(raw: Any) -> tuple[str, ...]:
+    if not isinstance(raw, list):
+        return ()
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        chunk_id = ""
+        if isinstance(item, str):
+            chunk_id = item.strip()
+        elif isinstance(item, dict):
+            chunk_id = str(item.get("chunk_id") or "").strip()
+        if chunk_id and chunk_id not in seen:
+            seen.add(chunk_id)
+            ordered.append(chunk_id)
+    return tuple(ordered)
+
+
 @dataclass(frozen=True)
 class ValidatorContext:
     farm_id: str
@@ -61,6 +78,8 @@ class ValidatorContext:
     rootzone_sensor_conflict: bool = False
     rootzone_control_interpretable: bool = True
     core_climate_interpretable: bool = True
+    retrieved_context: tuple[str, ...] = ()
+    proposed_action: str = ""
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "ValidatorContext":
@@ -82,6 +101,8 @@ class ValidatorContext:
             rootzone_sensor_conflict=bool(raw.get("rootzone_sensor_conflict")),
             rootzone_control_interpretable=bool(raw.get("rootzone_control_interpretable", True)),
             core_climate_interpretable=bool(raw.get("core_climate_interpretable", True)),
+            retrieved_context=_normalize_retrieved_context(raw.get("retrieved_context")),
+            proposed_action=str(raw.get("proposed_action") or ""),
         )
 
 
@@ -125,6 +146,14 @@ def _follow_up(description: str) -> list[dict[str, Any]]:
 
 
 def _citations(context: ValidatorContext) -> list[dict[str, str]]:
+    if context.retrieved_context:
+        return [
+            {
+                "document_id": "VALIDATOR-AUTO",
+                "chunk_id": chunk_id,
+            }
+            for chunk_id in context.retrieved_context
+        ]
     return [
         {
             "document_id": "VALIDATOR-AUTO",
@@ -228,6 +257,43 @@ def _normalize_robot_contract(output: dict[str, Any], context: ValidatorContext,
     output["robot_tasks"] = normalized
 
 
+def _normalize_citation_contract(output: dict[str, Any], context: ValidatorContext, applied_rules: list[str]) -> None:
+    if not context.requires_citations:
+        return
+    citations = output.get("citations")
+    allowed = set(context.retrieved_context)
+    filtered: list[dict[str, Any]] = []
+    changed = False
+    if isinstance(citations, list):
+        for citation in citations:
+            if not isinstance(citation, dict):
+                changed = True
+                continue
+            chunk_id = str(citation.get("chunk_id") or "").strip()
+            if not chunk_id:
+                changed = True
+                continue
+            if allowed and chunk_id not in allowed:
+                changed = True
+                continue
+            filtered.append(citation)
+    elif citations is not None:
+        changed = True
+
+    replacement = _citations(context)
+    if allowed:
+        if changed or not filtered:
+            output["citations"] = filtered or replacement
+            applied_rules.append("OV-06")
+        else:
+            output["citations"] = filtered
+        return
+
+    if changed or not filtered:
+        output["citations"] = replacement
+        applied_rules.append("OV-06")
+
+
 def apply_output_validator(
     raw_output: dict[str, Any],
     context: ValidatorContext,
@@ -250,8 +316,38 @@ def apply_output_validator(
     rootzone_degraded = context.rootzone_sensor_conflict or not context.rootzone_control_interpretable
     climate_degraded = context.climate_control_degraded
     climate_unknown = (not context.core_climate_interpretable) and not climate_degraded
+    blocked_action_type = str(output.get("blocked_action_type") or context.proposed_action or "")
 
-    if worker_or_lock and any(catalog.get(rule_id, {}).get("enabled", True) for rule_id in ("HSV-01", "HSV-02", "HSV-03")):
+    if (
+        context.task_type == "forbidden_action"
+        and blocked_action_type
+        and path_degraded
+        and any(catalog.get(rule_id, {}).get("enabled", True) for rule_id in ("HSV-04", "HSV-05", "HSV-06"))
+    ):
+        output["decision"] = "block"
+        output["blocked_action_type"] = blocked_action_type
+        output["risk_level"] = "critical"
+        output["recommended_actions"] = []
+        output["robot_tasks"] = []
+        output.setdefault(
+            "required_follow_up",
+            _follow_up("validator blocked the proposed action until the degraded control path is confirmed."),
+        )
+        output["requires_human_approval"] = False
+        applied_rules.extend(
+            [
+                rule_id
+                for rule_id, active in (
+                    ("HSV-04", context.irrigation_path_degraded),
+                    ("HSV-05", context.source_water_path_degraded),
+                    ("HSV-06", context.dry_room_path_degraded),
+                )
+                if active
+            ]
+        )
+        applied_rules.append("OV-07")
+        decision = "rewritten"
+    elif worker_or_lock and any(catalog.get(rule_id, {}).get("enabled", True) for rule_id in ("HSV-01", "HSV-02", "HSV-03")):
         _rewrite_actions(
             output,
             risk_level="critical",
@@ -391,7 +487,6 @@ def apply_output_validator(
             applied_rules.append("HSV-08")
         decision = "rewritten"
 
-    blocked_action_type = str(output.get("blocked_action_type") or "")
     if (
         context.task_type == "forbidden_action"
         and blocked_action_type == "adjust_fertigation"
@@ -427,10 +522,7 @@ def apply_output_validator(
 
     _normalize_action_contract(output, context, applied_rules)
     _normalize_robot_contract(output, context, applied_rules)
-
-    if context.requires_citations and not output.get("citations"):
-        output["citations"] = _citations(context)
-        applied_rules.append("OV-06")
+    _normalize_citation_contract(output, context, applied_rules)
     if output.get("recommended_actions") and not output.get("follow_up"):
         output["follow_up"] = _follow_up("validator inserted follow-up for required review.")
         applied_rules.append("OV-05")

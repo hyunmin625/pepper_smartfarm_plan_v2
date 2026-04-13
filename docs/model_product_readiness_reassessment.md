@@ -26,14 +26,14 @@
 
 - `ds_v14/prompt_v10_validator_aligned_batch19_hardcase`는 사용자 승인으로 실제 submit했고 run `ftjob-37TzJb1FtgGUghjfyaGqAxkA`는 `succeeded`로 종료됐다.
 - 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`다.
-- frozen gate 재평가 결과는 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.84`다.
-- `blind_holdout50` raw는 `0.7 -> 0.74`로 소폭 올랐지만, validator blind gate는 `0.9 -> 0.84`, `safety_invariant_pass_rate 1.0 -> 0.875`로 다시 떨어졌다.
+- frozen gate 재평가 결과는 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.9`다.
+- `blind_holdout50` raw는 `0.7 -> 0.74`로 소폭 올랐지만, validator blind gate는 `0.9 -> 0.9`로 제자리이고 core/extended는 여전히 떨어졌다.
 - raw blind gate도 `blind_holdout_pass_rate 0.74`, `safety_invariant_pass_rate 0.75`, `field_usability_pass_rate 0.98`, `promotion_decision hold`였다.
-- validator blind gate는 `blind_holdout_pass_rate 0.84`, `safety_invariant_pass_rate 0.875`, `field_usability_pass_rate 1.0`, `promotion_decision hold`였다.
-- validator 적용 후 잔여 실패는 blind50 `8건`, extended200 `43건`이다. owner 기준으로 blind50은 `risk_rubric_and_data 5`, `data_and_model 4`, `runtime_validator_gap 3`, extended200은 `risk_rubric_and_data 33`, `data_and_model 16`, `robot_contract_and_model 1`이다.
+- validator blind gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `promotion_decision hold`였다.
+- validator 적용 후 잔여 실패는 blind50 `5건`, extended200 `40건`이다. owner 기준으로 blind50은 `risk_rubric_and_data 4`, `data_and_model 2`, extended200은 `risk_rubric_and_data 32`, `data_and_model 14`, `robot_contract_and_model 1`이다.
 - 즉 `batch19 + prompt_v10 validator alignment`는 blind raw를 조금 올렸지만, validator-aware 안전 의미를 모델 내부에 더 밀어 넣으면서 generalization이 오히려 나빠졌다.
-- 특히 remaining failure cluster 기준 중심 실패는 `risk_level_match`, `required_action_types_present`, `citations_in_context`, `decision_match`다. 이는 `prompt alignment`보다 `risk rubric/data label`과 `runtime validator` ownership 문제라는 기존 판단을 더 강하게 확인해 준다.
-- 결론: `ds_v14`는 rejected challenger다. baseline은 그대로 `ds_v11` 유지다. 다음 단계는 `ds_v15` submit이 아니라 `runtime_validator_gap 3건` 흡수, blind50 `risk_rubric_and_data 5건` 재라벨, real shadow 로그 누적이다.
+- 특히 remaining failure cluster 기준 blind50의 중심 실패는 이제 `risk_level_match`와 `required_action_types_present`뿐이다. 이는 `prompt alignment`보다 `risk rubric/data label`과 `data slice` ownership 문제라는 기존 판단을 더 강하게 확인해 준다.
+- 결론: `ds_v14`는 여전히 rejected challenger다. baseline은 그대로 `ds_v11` 유지다. 다음 단계는 `ds_v15` submit이 아니라 blind50 residual `5건`용 batch20 반영, extended200 `risk_rubric_and_data` 정리, real shadow 로그 누적이다.
 
 ## 1. 현재 로컬 증거
 
@@ -91,7 +91,7 @@
 
 - 다음 라운드부터는 `validation 14 고정`을 중단한다.
 - 권장 split은 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`다.
-- 현재 live head training `344건` 기준으로 위 split을 적용하면 validation은 `60건`, train은 `284건`이 된다.
+- 현재 live head training `360건` 기준으로 위 split을 적용하면 validation은 `61건`, train은 `299건`이 된다.
 - hard safety rule은 모델이 아니라 `policy/output validator`가 우선 강제해야 한다.
 - 새 fine-tuning submit은 위 조건이 고정되기 전까지 중지한다.
 - 다음 실험은 broad corrective tuning이 아니라 `validator 적용 전/후 동시 기록`, `runtime wiring`, `blind 잔여 2건 제거` 순서로 간다.
@@ -101,7 +101,7 @@
 
 판단: `그렇다. 하지만 총량보다 critical slice 부족이 본질이다.`
 
-기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `344건`으로 늘렸다.
+기존 training `194건` 기준으로는 critical slice가 얇았고, 현재는 targeted augmentation 후 `360건`으로 늘렸다.
 
 전체 action 분포도 치우쳐 있다.
 

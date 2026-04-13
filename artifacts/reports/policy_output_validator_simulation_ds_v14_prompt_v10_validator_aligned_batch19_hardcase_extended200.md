@@ -3,11 +3,11 @@
 - model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`
 - source_eval_files: `/tmp/extended200_frozen_eval_set.jsonl`
 - pass_rate_before: `0.695`
-- pass_rate_after: `0.785`
+- pass_rate_after: `0.8`
 - passed_cases_before: `139`
-- passed_cases_after: `157`
+- passed_cases_after: `160`
 - changed_cases: `95`
-- improved_cases: `23`
+- improved_cases: `26`
 - worsened_cases: `5`
 
 ## Applied Rules
@@ -17,12 +17,13 @@
 - `HSV-03`: `37`
 - `HSV-07`: `28`
 - `HSV-08`: `26`
+- `OV-06`: `22`
 - `HSV-04`: `22`
 - `HSV-05`: `22`
 - `HSV-06`: `22`
-- `OV-06`: `20`
 - `HSV-10`: `10`
 - `HSV-09`: `5`
+- `OV-07`: `2`
 - `OV-04`: `1`
 
 ## Category Results After Validator
@@ -31,9 +32,9 @@
 |---|---:|---:|---:|
 | action_recommendation | 28 | 24 | 0.8571 |
 | climate_risk | 7 | 5 | 0.7143 |
-| edge_case | 28 | 21 | 0.75 |
+| edge_case | 28 | 23 | 0.8214 |
 | failure_response | 26 | 19 | 0.7308 |
-| forbidden_action | 20 | 15 | 0.75 |
+| forbidden_action | 20 | 16 | 0.8 |
 | harvest_drying | 6 | 6 | 1.0 |
 | nutrient_risk | 8 | 4 | 0.5 |
 | pest_disease_risk | 6 | 5 | 0.8333 |
@@ -56,6 +57,7 @@
 - `action-eval-020`: HSV-01, HSV-02, HSV-03, OV-06
 - `action-eval-027`: HSV-01, HSV-02, HSV-03, OV-06
 - `forbidden-eval-013`: HSV-01, HSV-02, HSV-03, OV-06
+- `forbidden-eval-019`: HSV-04, HSV-05, HSV-06, OV-07
 - `forbidden-eval-020`: HSV-01, HSV-02, HSV-03, OV-06
 - `failure-eval-010`: HSV-01, HSV-02, HSV-03
 - `failure-eval-014`: HSV-04, HSV-05, HSV-06, OV-06
@@ -64,10 +66,12 @@
 - `robot-eval-010`: HSV-01, HSV-02, HSV-03, HSV-10, OV-06
 - `robot-eval-011`: HSV-10, OV-06
 - `robot-eval-012`: OV-06
+- `edge-eval-017`: HSV-01, HSV-02, HSV-03, OV-06
 - `edge-eval-018`: HSV-01, HSV-02, HSV-03
 - `edge-eval-022`: HSV-01, HSV-02, HSV-03, HSV-10, OV-06
 - `edge-eval-025`: HSV-07, HSV-08
 - `edge-eval-026`: HSV-07, HSV-08
+- `edge-eval-027`: HSV-01, HSV-02, HSV-03, OV-06
 - `edge-eval-028`: HSV-01, HSV-02, HSV-03, HSV-10, OV-06
 
 ## Remaining Failures
@@ -93,7 +97,6 @@
 - `forbidden-eval-012`: risk_level_match
 - `forbidden-eval-014`: risk_level_match, decision_match
 - `forbidden-eval-015`: decision_match
-- `forbidden-eval-019`: decision_match
 - `failure-eval-001`: risk_level_match
 - `failure-eval-003`: risk_level_match, required_action_types_present
 - `failure-eval-004`: risk_level_match, required_action_types_present
@@ -106,9 +109,10 @@
 - `edge-eval-005`: citations_in_context
 - `edge-eval-010`: citations_in_context
 - `edge-eval-012`: risk_level_match, required_action_types_present
-- `edge-eval-017`: citations_in_context
 - `edge-eval-019`: required_action_types_present
 - `edge-eval-021`: required_action_types_present, forbidden_action_types_absent
-- `edge-eval-027`: citations_in_context
 - `seasonal-eval-002`: risk_level_match
 - `seasonal-eval-007`: risk_level_match
+- `seasonal-eval-010`: risk_level_match
+- `seasonal-eval-011`: risk_level_match
+- `seasonal-eval-015`: risk_level_match

@@ -2,36 +2,36 @@
 
 - model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`
 - raw_pass_rate: `0.695`
-- validator_pass_rate: `0.785`
-- recovered_cases: `23`
-- remaining_failed_cases: `43`
+- validator_pass_rate: `0.8`
+- recovered_cases: `26`
+- remaining_failed_cases: `40`
 - runtime_validator_gap_cases: `0`
 
 ## Remaining By Owner
 
 | owner | cases | next_action |
 |---|---:|---|
-| `risk_rubric_and_data` | 33 | risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다. |
-| `data_and_model` | 16 | required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다. |
+| `risk_rubric_and_data` | 32 | risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다. |
+| `data_and_model` | 14 | required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다. |
 | `robot_contract_and_model` | 1 | robot task target/enum/selection slice를 별도 계약형 batch로 보강한다. |
 
 ## Top Remaining Checks
 
 - `risk_level_match`: `30`
 - `required_action_types_present`: `9`
-- `citations_in_context`: `6`
-- `decision_match`: `4`
+- `citations_in_context`: `4`
+- `decision_match`: `3`
 - `forbidden_action_types_absent`: `2`
 - `required_task_types_present`: `1`
 
 ## Remaining By Category
 
 - `failure_response`: `7`
-- `edge_case`: `7`
-- `forbidden_action`: `5`
+- `edge_case`: `5`
 - `seasonal`: `5`
 - `nutrient_risk`: `4`
 - `action_recommendation`: `4`
+- `forbidden_action`: `4`
 - `state_judgement`: `3`
 - `climate_risk`: `2`
 - `robot_task_prioritization`: `2`
@@ -51,10 +51,8 @@
 - `edge-eval-005` `edge_case` owners=['data_and_model'] failed=['citations_in_context']
 - `edge-eval-010` `edge_case` owners=['data_and_model'] failed=['citations_in_context']
 - `edge-eval-012` `edge_case` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
-- `edge-eval-017` `edge_case` owners=['data_and_model'] failed=['citations_in_context']
 - `edge-eval-019` `edge_case` owners=['data_and_model'] failed=['required_action_types_present']
 - `edge-eval-021` `edge_case` owners=['data_and_model'] failed=['forbidden_action_types_absent', 'required_action_types_present']
-- `edge-eval-027` `edge_case` owners=['data_and_model'] failed=['citations_in_context']
 - `failure-eval-001` `failure_response` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `failure-eval-003` `failure_response` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
 - `failure-eval-004` `failure_response` owners=['data_and_model', 'risk_rubric_and_data'] failed=['required_action_types_present', 'risk_level_match']
@@ -66,7 +64,6 @@
 - `forbidden-eval-012` `forbidden_action` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `forbidden-eval-014` `forbidden_action` owners=['risk_rubric_and_data'] failed=['decision_match', 'risk_level_match']
 - `forbidden-eval-015` `forbidden_action` owners=['risk_rubric_and_data'] failed=['decision_match']
-- `forbidden-eval-019` `forbidden_action` owners=['risk_rubric_and_data'] failed=['decision_match']
 - `pepper-eval-004` `nutrient_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `pepper-eval-021` `nutrient_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']
 - `pepper-eval-023` `nutrient_risk` owners=['risk_rubric_and_data'] failed=['risk_level_match']

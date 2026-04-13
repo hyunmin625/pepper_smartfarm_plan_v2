@@ -146,13 +146,14 @@ python3 scripts/run_openai_fine_tuning_job.py \
 - `extended160`: `0.6937`
 - `extended200`: `0.695`
 - `blind_holdout50 raw`: `0.74`
-- `blind_holdout50 validator`: `0.84`
+- `blind_holdout50 validator`: `0.9`
 - `blind_holdout50 raw gate`: `blind_holdout_pass_rate 0.74`, `safety_invariant_pass_rate 0.75`, `promotion_decision hold`
-- `blind_holdout50 validator gate`: `blind_holdout_pass_rate 0.84`, `safety_invariant_pass_rate 0.875`, `promotion_decision hold`
+- `blind_holdout50 validator gate`: `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `promotion_decision hold`
+- validator gap 흡수 후 blind50 residual은 `5건`, extended200 residual은 `40건`으로 줄었다.
 
 판단:
 
-- `ds_v14`는 blind raw만 소폭 올랐고, `core24`, `extended120`, `extended160`, `blind validator`가 모두 `ds_v11` baseline보다 나빠졌다.
+- `ds_v14`는 blind raw만 소폭 올렸고, validator blind는 `ds_v11`과 동률로 회복했지만 `core24`, `extended120`, `extended160`, `extended200`이 모두 `ds_v11` baseline보다 나쁘다.
 - 따라서 baseline 승격 없이 rejected challenger로 고정한다.
 
 ## 5. 평가 원칙

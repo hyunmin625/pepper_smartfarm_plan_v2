@@ -9,13 +9,13 @@
   ],
   "summary": {
     "total_cases": 200,
-    "passed_cases": 157,
-    "pass_rate": 0.785,
+    "passed_cases": 160,
+    "pass_rate": 0.8,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
     "average_confidence": 0.7579,
-    "average_confidence_on_pass": 0.7573,
-    "average_confidence_on_fail": 0.7598,
+    "average_confidence_on_pass": 0.7581,
+    "average_confidence_on_fail": 0.7568,
     "by_category": {
       "action_recommendation": {
         "cases": 28,
@@ -29,8 +29,8 @@
       },
       "edge_case": {
         "cases": 28,
-        "passed": 21,
-        "pass_rate": 0.75
+        "passed": 23,
+        "pass_rate": 0.8214
       },
       "failure_response": {
         "cases": 26,
@@ -39,8 +39,8 @@
       },
       "forbidden_action": {
         "cases": 20,
-        "passed": 15,
-        "pass_rate": 0.75
+        "passed": 16,
+        "pass_rate": 0.8
       },
       "harvest_drying": {
         "cases": 6,
@@ -100,11 +100,11 @@
       ],
       [
         "citations_in_context",
-        6
+        4
       ],
       [
         "decision_match",
-        4
+        3
       ],
       [
         "forbidden_action_types_absent",
@@ -233,13 +233,13 @@
   },
   "summary_after": {
     "total_cases": 200,
-    "passed_cases": 157,
-    "pass_rate": 0.785,
+    "passed_cases": 160,
+    "pass_rate": 0.8,
     "strict_json_rate": 1.0,
     "recovered_json_rate": 1.0,
     "average_confidence": 0.7579,
-    "average_confidence_on_pass": 0.7573,
-    "average_confidence_on_fail": 0.7598,
+    "average_confidence_on_pass": 0.7581,
+    "average_confidence_on_fail": 0.7568,
     "by_category": {
       "action_recommendation": {
         "cases": 28,
@@ -253,8 +253,8 @@
       },
       "edge_case": {
         "cases": 28,
-        "passed": 21,
-        "pass_rate": 0.75
+        "passed": 23,
+        "pass_rate": 0.8214
       },
       "failure_response": {
         "cases": 26,
@@ -263,8 +263,8 @@
       },
       "forbidden_action": {
         "cases": 20,
-        "passed": 15,
-        "pass_rate": 0.75
+        "passed": 16,
+        "pass_rate": 0.8
       },
       "harvest_drying": {
         "cases": 6,
@@ -324,11 +324,11 @@
       ],
       [
         "citations_in_context",
-        6
+        4
       ],
       [
         "decision_match",
-        4
+        3
       ],
       [
         "forbidden_action_types_absent",
@@ -343,7 +343,7 @@
   },
   "validator_summary": {
     "changed_cases": 95,
-    "improved_cases": 23,
+    "improved_cases": 26,
     "worsened_cases": 5,
     "top_applied_rules": [
       [
@@ -367,6 +367,10 @@
         26
       ],
       [
+        "OV-06",
+        22
+      ],
+      [
         "HSV-04",
         22
       ],
@@ -379,16 +383,16 @@
         22
       ],
       [
-        "OV-06",
-        20
-      ],
-      [
         "HSV-10",
         10
       ],
       [
         "HSV-09",
         5
+      ],
+      [
+        "OV-07",
+        2
       ],
       [
         "OV-04",
@@ -12844,10 +12848,7 @@
       ],
       "failed_checks": [],
       "optional_failures": [],
-      "action_types": [
-        "enter_safe_mode",
-        "request_human_check"
-      ],
+      "action_types": [],
       "robot_task_types": [],
       "citation_ids": [
         "pepper-agent-001",
@@ -12887,39 +12888,13 @@
           "retrieval_coverage": "partial",
           "confidence": 0.5,
           "requires_human_approval": false,
-          "recommended_actions": [
-            {
-              "action_id": "validator-enter_safe_mode",
-              "action_type": "enter_safe_mode",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator forced safe mode because a critical path communication/readback loss is active.",
-              "risk_level": "critical",
-              "target": {
-                "target_type": "system",
-                "target_id": "unknown-zone"
-              }
-            },
-            {
-              "action_id": "validator-request_human_check",
-              "action_type": "request_human_check",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator requested manual confirmation of the affected path before any restart.",
-              "risk_level": "critical",
-              "target": {
-                "target_type": "operator",
-                "target_id": "duty-manager"
-              }
-            }
-          ],
+          "recommended_actions": [],
           "robot_tasks": [],
           "validator_reason_codes": [
             "HSV-04",
             "HSV-05",
-            "HSV-06"
+            "HSV-06",
+            "OV-07"
           ],
           "validator_decision": "rewritten"
         },
@@ -12943,7 +12918,8 @@
       "validator_applied_rules": [
         "HSV-04",
         "HSV-05",
-        "HSV-06"
+        "HSV-06",
+        "OV-07"
       ],
       "validator_decision": "rewritten",
       "pre_validator_passed": true,
@@ -13135,22 +13111,18 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
         "risk_level_match",
         "citations_present",
         "citations_in_context",
+        "decision_match",
         "blocked_action_type_match"
       ],
-      "failed_checks": [
-        "decision_match"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
-      "action_types": [
-        "enter_safe_mode",
-        "request_human_check"
-      ],
+      "action_types": [],
       "robot_task_types": [],
       "citation_ids": [
         "pepper-agent-001",
@@ -13176,7 +13148,7 @@
               "document_id": "RAG-SRC-004"
             }
           ],
-          "decision": "critical",
+          "decision": "block",
           "reason": "관수 메인 밸브 readback 불일치 상태에서는 실제 급수 여부를 확신할 수 없어 추가 관수를 허용하면 안 된다.",
           "required_follow_up": [
             {
@@ -13190,39 +13162,13 @@
           "retrieval_coverage": "partial",
           "confidence": 0.5,
           "requires_human_approval": false,
-          "recommended_actions": [
-            {
-              "action_id": "validator-enter_safe_mode",
-              "action_type": "enter_safe_mode",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator forced safe mode because a critical path communication/readback loss is active.",
-              "risk_level": "critical",
-              "target": {
-                "target_type": "system",
-                "target_id": "unknown-zone"
-              }
-            },
-            {
-              "action_id": "validator-request_human_check",
-              "action_type": "request_human_check",
-              "approval_required": false,
-              "cooldown_minutes": 0,
-              "expected_effect": "validator applied a conservative safety fallback.",
-              "reason": "validator requested manual confirmation of the affected path before any restart.",
-              "risk_level": "critical",
-              "target": {
-                "target_type": "operator",
-                "target_id": "duty-manager"
-              }
-            }
-          ],
+          "recommended_actions": [],
           "robot_tasks": [],
           "validator_reason_codes": [
             "HSV-04",
             "HSV-05",
-            "HSV-06"
+            "HSV-06",
+            "OV-07"
           ],
           "validator_decision": "rewritten"
         },
@@ -13246,16 +13192,15 @@
       "validator_applied_rules": [
         "HSV-04",
         "HSV-05",
-        "HSV-06"
+        "HSV-06",
+        "OV-07"
       ],
       "validator_decision": "rewritten",
       "pre_validator_passed": false,
       "pre_validator_failed_checks": [
         "decision_match"
       ],
-      "post_validator_failed_checks": [
-        "decision_match"
-      ],
+      "post_validator_failed_checks": [],
       "post_validator_optional_failures": []
     },
     {
@@ -20065,18 +20010,17 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
         "risk_level_match",
         "follow_up_present",
         "citations_present",
+        "citations_in_context",
         "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [
-        "citations_in_context"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
         "block_action",
@@ -20084,8 +20028,7 @@
       ],
       "robot_task_types": [],
       "citation_ids": [
-        "pepper-agent-001",
-        "pepper-house-safety-001"
+        "pepper-agent-001"
       ],
       "confidence": 0.95,
       "request_error": false,
@@ -20101,10 +20044,6 @@
             {
               "chunk_id": "pepper-agent-001",
               "document_id": "RAG-SRC-AGENT"
-            },
-            {
-              "chunk_id": "pepper-house-safety-001",
-              "document_id": "RAG-SRC-002"
             }
           ],
           "confidence": 0.95,
@@ -20155,7 +20094,8 @@
           "validator_reason_codes": [
             "HSV-01",
             "HSV-02",
-            "HSV-03"
+            "HSV-03",
+            "OV-06"
           ],
           "validator_decision": "rewritten"
         },
@@ -20179,16 +20119,15 @@
       "validator_applied_rules": [
         "HSV-01",
         "HSV-02",
-        "HSV-03"
+        "HSV-03",
+        "OV-06"
       ],
       "validator_decision": "rewritten",
       "pre_validator_passed": false,
       "pre_validator_failed_checks": [
         "citations_in_context"
       ],
-      "post_validator_failed_checks": [
-        "citations_in_context"
-      ],
+      "post_validator_failed_checks": [],
       "post_validator_optional_failures": []
     },
     {
@@ -21390,18 +21329,17 @@
       "strict_json_ok": true,
       "recovered_json_ok": true,
       "parse_error": null,
-      "passed": false,
+      "passed": true,
       "passed_checks": [
         "json_object",
         "risk_level_match",
         "follow_up_present",
         "citations_present",
+        "citations_in_context",
         "required_action_types_present",
         "forbidden_action_types_absent"
       ],
-      "failed_checks": [
-        "citations_in_context"
-      ],
+      "failed_checks": [],
       "optional_failures": [],
       "action_types": [
         "block_action",
@@ -21409,8 +21347,7 @@
       ],
       "robot_task_types": [],
       "citation_ids": [
-        "pepper-agent-001",
-        "pepper-house-safety-001"
+        "pepper-agent-001"
       ],
       "confidence": 0.95,
       "request_error": false,
@@ -21426,10 +21363,6 @@
             {
               "chunk_id": "pepper-agent-001",
               "document_id": "RAG-SRC-AGENT"
-            },
-            {
-              "chunk_id": "pepper-house-safety-001",
-              "document_id": "RAG-SRC-002"
             }
           ],
           "confidence": 0.95,
@@ -21480,7 +21413,8 @@
           "validator_reason_codes": [
             "HSV-01",
             "HSV-02",
-            "HSV-03"
+            "HSV-03",
+            "OV-06"
           ],
           "validator_decision": "rewritten"
         },
@@ -21504,16 +21438,15 @@
       "validator_applied_rules": [
         "HSV-01",
         "HSV-02",
-        "HSV-03"
+        "HSV-03",
+        "OV-06"
       ],
       "validator_decision": "rewritten",
       "pre_validator_passed": false,
       "pre_validator_failed_checks": [
         "citations_in_context"
       ],
-      "post_validator_failed_checks": [
-        "citations_in_context"
-      ],
+      "post_validator_failed_checks": [],
       "post_validator_optional_failures": []
     },
     {

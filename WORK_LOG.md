@@ -4,15 +4,24 @@
 
 ## 2026-04-13
 
+### ds_v14 validator gap 흡수 + batch20 staging
+- `policy-engine/policy_engine/output_validator.py`를 보정해 `retrieved_context` 바깥 citation을 in-context citation으로 정렬하고, `forbidden_action + path/readback loss`를 `decision=block`으로 강제했다. `llm-orchestrator/llm_orchestrator/service.py`와 `scripts/build_shadow_mode_replay_from_eval.py`도 같은 context(`retrieved_context`, `proposed_action`)를 validator에 넘기도록 맞췄다.
+- `scripts/validate_policy_output_validator.py`에 citation-in-context와 `short_irrigation + path loss` 회귀 케이스를 추가했고, 총 `9건` 검증에서 오류 `0`을 확인했다.
+- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50.json --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/policy_output_validator_simulation_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50` 재실행 결과 blind50 validator는 `0.84 -> 0.9`로 회복됐다.
+- `python3 scripts/validate_product_readiness_gate.py --report artifacts/reports/policy_output_validator_simulation_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50.json --eval-files evals/blind_holdout_eval_set.jsonl --output-prefix artifacts/reports/product_readiness_gate_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50_validator_applied` 결과 validator gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `promotion_decision hold`였다.
+- `python3 scripts/report_validator_residual_failures.py` 재실행 결과 blind50 잔여는 `8건 -> 5건`, extended200 잔여는 `43건 -> 40건`으로 줄었고, blind50의 `runtime_validator_gap`은 `3 -> 0`이 됐다.
+- 남은 blind50 residual `5건`은 `scripts/generate_batch20_post_validator_residual_samples.py`와 [docs/batch20_post_validator_residual_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/batch20_post_validator_residual_plan.md:1) 기준 batch20 sample `8건`으로 training seed에 직접 역투영했다.
+- `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py` 기준 현재 training `360건`, eval `250건`, duplicate `0`, contradiction `0`, eval overlap `0`이다.
+
 ### ds_v14 완료 후 frozen gate 재평가
 - `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-113447.json` 기준 `ds_v14` run `ftjob-37TzJb1FtgGUghjfyaGqAxkA`는 `succeeded`로 종료됐다. 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`다.
 - `ds_v11` 리포트에 저장된 `eval_id`를 기준으로 `/tmp/core24_frozen_eval_set.jsonl`, `/tmp/extended120_frozen_eval_set.jsonl`, `/tmp/extended160_frozen_eval_set.jsonl`, `/tmp/extended200_frozen_eval_set.jsonl`, `/tmp/blind_holdout50_frozen_eval_set.jsonl`를 복원해 같은 frozen subset으로 다시 평가했다.
 - raw 재평가 결과는 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 0.74`였다. `ds_v11` baseline `0.9167 / 0.7667 / 0.75 / 0.7 / 0.7` 대비 blind raw만 소폭 올랐고 나머지는 모두 하락했다.
-- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50.json ...` 결과 blind50은 `0.74 -> 0.84`였다. `ds_v11` validator blind `0.9`보다 낮다.
+- `python3 scripts/simulate_policy_output_validator.py --report artifacts/reports/fine_tuned_model_eval_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50.json ...` 초기 결과 blind50은 `0.74 -> 0.84`였고, 이후 citation/path-loss contract 보정 뒤 `0.9`까지 회복됐다.
 - `python3 scripts/validate_product_readiness_gate.py --report artifacts/reports/fine_tuned_model_eval_ds_v14_prompt_v10_validator_aligned_batch19_hardcase_blind_holdout50.json ...` 결과 raw gate는 `blind_holdout_pass_rate 0.74`, `safety_invariant_pass_rate 0.75`, `field_usability_pass_rate 0.98`, `promotion_decision hold`였다.
-- 같은 스크립트를 validator report에 적용한 결과 validator gate는 `blind_holdout_pass_rate 0.84`, `safety_invariant_pass_rate 0.875`, `field_usability_pass_rate 1.0`, `promotion_decision hold`였다.
+- 같은 스크립트를 validator report에 적용한 결과 validator gate는 초기 `0.84 / 0.875 / hold`였고, runtime validator gap 보정 뒤 `0.9 / 1.0 / hold`로 올라갔다.
 - `python3 scripts/report_eval_failure_clusters.py` 결과 blind50 실패 `13건`, extended200 실패 `61건`이고 중심 root cause는 `risk_rubric_and_data`, `data_and_model`, `output_contract`였다.
-- `python3 scripts/report_validator_residual_failures.py` 결과 validator 적용 후 잔여 실패는 blind50 `8건`, extended200 `43건`이다. blind50 owner는 `risk_rubric_and_data 5`, `data_and_model 4`, `runtime_validator_gap 3`, extended200 owner는 `risk_rubric_and_data 33`, `data_and_model 16`, `robot_contract_and_model 1`이다.
+- `python3 scripts/report_validator_residual_failures.py` 결과 validator 적용 후 잔여 실패는 blind50 `5건`, extended200 `40건`이다. blind50 owner는 `risk_rubric_and_data 4`, `data_and_model 2`, extended200 owner는 `risk_rubric_and_data 32`, `data_and_model 14`, `robot_contract_and_model 1`이다.
 - 결론은 분명하다. `batch19 + prompt_v10 validator alignment`는 blind raw를 조금 올렸지만, validator-aware generalization은 오히려 악화됐다. `ds_v14`는 baseline 승격 없이 rejected challenger로 남기고, 기준선은 계속 `ds_v11`로 유지한다.
 
 ### ds_v14 실제 submit

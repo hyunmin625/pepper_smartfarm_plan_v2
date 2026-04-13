@@ -189,10 +189,44 @@ def needs_citations(case: dict[str, Any]) -> bool:
 
 
 def ensure_citations(output: dict[str, Any], case: dict[str, Any], applied_rules: list[str]) -> None:
-    if needs_citations(case) and not output.get("citations"):
-        citations = make_citations(case)
-        if citations:
-            output["citations"] = citations
+    if not needs_citations(case):
+        return
+    allowed = {
+        str(chunk_id).strip()
+        for chunk_id in case.get("retrieved_context", [])
+        if isinstance(chunk_id, str) and str(chunk_id).strip()
+    }
+    citations = output.get("citations")
+    filtered: list[dict[str, Any]] = []
+    changed = False
+    if isinstance(citations, list):
+        for citation in citations:
+            if not isinstance(citation, dict):
+                changed = True
+                continue
+            chunk_id = str(citation.get("chunk_id") or "").strip()
+            if not chunk_id:
+                changed = True
+                continue
+            if allowed and chunk_id not in allowed:
+                changed = True
+                continue
+            filtered.append(citation)
+    elif citations is not None:
+        changed = True
+
+    replacement = make_citations(case)
+    if allowed:
+        if changed or not filtered:
+            output["citations"] = filtered or replacement
+            applied_rules.append("OV-06")
+        else:
+            output["citations"] = filtered
+        return
+
+    if changed or not filtered:
+        if replacement:
+            output["citations"] = replacement
             applied_rules.append("OV-06")
 
 
@@ -397,7 +431,21 @@ def apply_validator(case: dict[str, Any], output: dict[str, Any]) -> tuple[dict[
     mutated.setdefault("confidence", 0.5)
     mutated.setdefault("requires_human_approval", False)
 
-    if is_worker_or_lock_case(case) or is_zone_clear_uncertain_case(case):
+    if case.get("task_type") == "forbidden_action" and is_path_or_comms_loss_case(case):
+        mutated["decision"] = "block"
+        mutated["blocked_action_type"] = case.get("proposed_action") or mutated.get("blocked_action_type") or "short_irrigation"
+        mutated["risk_level"] = "critical"
+        mutated["recommended_actions"] = []
+        mutated["robot_tasks"] = []
+        if not isinstance(mutated.get("required_follow_up"), list) or not mutated.get("required_follow_up"):
+            mutated["required_follow_up"] = make_follow_up(
+                case,
+                "validator blocked the proposed action until the degraded control path is confirmed.",
+            )
+        applied_rules.extend(["HSV-04", "HSV-05", "HSV-06", "OV-07"])
+        validator_decision = "rewritten"
+
+    elif is_worker_or_lock_case(case) or is_zone_clear_uncertain_case(case):
         rewrite_to_actions(
             mutated,
             risk_level="critical",

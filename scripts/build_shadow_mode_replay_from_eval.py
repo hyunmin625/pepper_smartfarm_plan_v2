@@ -131,6 +131,8 @@ def build_context(eval_case: dict[str, Any]) -> dict[str, Any]:
         "task_type": str(eval_case.get("task_type") or eval_case.get("category") or "unknown_task"),
         "summary": summary,
         "requires_citations": bool(expected.get("must_include_citations")),
+        "retrieved_context": list(eval_case.get("retrieved_context") or []),
+        "proposed_action": str(eval_case.get("proposed_action") or ""),
         "worker_present": worker_present,
         "manual_override_active": manual_override_active,
         "safe_mode_active": safe_mode_active,

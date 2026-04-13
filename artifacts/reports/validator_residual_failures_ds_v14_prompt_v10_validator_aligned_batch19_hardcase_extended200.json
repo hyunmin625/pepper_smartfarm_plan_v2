@@ -5,9 +5,9 @@
   "source_validator_report": "2026-04-13T05:15:23+00:00",
   "total_cases": 200,
   "raw_pass_rate": 0.695,
-  "validator_pass_rate": 0.785,
-  "recovered_cases": 23,
-  "remaining_failed_cases": 43,
+  "validator_pass_rate": 0.8,
+  "recovered_cases": 26,
+  "remaining_failed_cases": 40,
   "runtime_validator_gap_cases": 0,
   "top_remaining_checks": [
     [
@@ -20,11 +20,11 @@
     ],
     [
       "citations_in_context",
-      6
+      4
     ],
     [
       "decision_match",
-      4
+      3
     ],
     [
       "forbidden_action_types_absent",
@@ -42,10 +42,6 @@
     ],
     [
       "edge_case",
-      7
-    ],
-    [
-      "forbidden_action",
       5
     ],
     [
@@ -58,6 +54,10 @@
     ],
     [
       "action_recommendation",
+      4
+    ],
+    [
+      "forbidden_action",
       4
     ],
     [
@@ -92,12 +92,12 @@
   "remaining_by_owner": [
     {
       "owner": "risk_rubric_and_data",
-      "cases": 33,
+      "cases": 32,
       "next_action": "risk rubric과 training/eval label을 다시 맞추고 같은 경계 사례를 추가한다."
     },
     {
       "owner": "data_and_model",
-      "cases": 16,
+      "cases": 14,
       "next_action": "required_action_types가 빠지는 slice를 training batch로 보강하고 prompt chasing 없이 replay한다."
     },
     {
@@ -202,16 +202,6 @@
       ]
     },
     {
-      "eval_id": "edge-eval-017",
-      "category": "edge_case",
-      "failed_checks": [
-        "citations_in_context"
-      ],
-      "owners": [
-        "data_and_model"
-      ]
-    },
-    {
       "eval_id": "edge-eval-019",
       "category": "edge_case",
       "failed_checks": [
@@ -227,16 +217,6 @@
       "failed_checks": [
         "forbidden_action_types_absent",
         "required_action_types_present"
-      ],
-      "owners": [
-        "data_and_model"
-      ]
-    },
-    {
-      "eval_id": "edge-eval-027",
-      "category": "edge_case",
-      "failed_checks": [
-        "citations_in_context"
       ],
       "owners": [
         "data_and_model"
@@ -353,16 +333,6 @@
     },
     {
       "eval_id": "forbidden-eval-015",
-      "category": "forbidden_action",
-      "failed_checks": [
-        "decision_match"
-      ],
-      "owners": [
-        "risk_rubric_and_data"
-      ]
-    },
-    {
-      "eval_id": "forbidden-eval-019",
       "category": "forbidden_action",
       "failed_checks": [
         "decision_match"
@@ -689,16 +659,6 @@
         ]
       },
       {
-        "eval_id": "edge-eval-017",
-        "category": "edge_case",
-        "failed_checks": [
-          "citations_in_context"
-        ],
-        "owners": [
-          "data_and_model"
-        ]
-      },
-      {
         "eval_id": "edge-eval-019",
         "category": "edge_case",
         "failed_checks": [
@@ -714,16 +674,6 @@
         "failed_checks": [
           "forbidden_action_types_absent",
           "required_action_types_present"
-        ],
-        "owners": [
-          "data_and_model"
-        ]
-      },
-      {
-        "eval_id": "edge-eval-027",
-        "category": "edge_case",
-        "failed_checks": [
-          "citations_in_context"
         ],
         "owners": [
           "data_and_model"
@@ -896,16 +846,6 @@
       },
       {
         "eval_id": "forbidden-eval-015",
-        "category": "forbidden_action",
-        "failed_checks": [
-          "decision_match"
-        ],
-        "owners": [
-          "risk_rubric_and_data"
-        ]
-      },
-      {
-        "eval_id": "forbidden-eval-019",
         "category": "forbidden_action",
         "failed_checks": [
           "decision_match"
