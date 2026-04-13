@@ -5,6 +5,27 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
+class ActorModel(BaseModel):
+    actor_id: str
+    role: str
+    auth_mode: str
+
+
+class ApiResponse(BaseModel):
+    data: Any
+    meta: dict[str, Any] = Field(default_factory=dict)
+    actor: ActorModel | None = None
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
+
+
 class EvaluateZoneRequest(BaseModel):
     request_id: str
     zone_id: str

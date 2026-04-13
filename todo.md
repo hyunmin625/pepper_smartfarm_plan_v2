@@ -844,9 +844,9 @@
 - [x] settings 모듈 작성 (`ops-api/ops_api/config.py`)
 - [x] logger 설정 (`ops-api/ops_api/logging.py`, `ops-api/ops_api/app.py`)
 - [x] exception handler 작성 (`ops-api/ops_api/errors.py`, `ops-api/ops_api/app.py`)
-- [ ] response model 작성
-- [ ] auth 방식 정의
-- [ ] role 기반 권한 정의
+- [x] response model 작성 (`ops-api/ops_api/api_models.py`, `ops-api/ops_api/app.py`)
+- [x] auth 방식 정의 (`ops-api/ops_api/auth.py`, `.env.example`)
+- [x] role 기반 권한 정의 (`ops-api/ops_api/auth.py`)
 - [x] OpenAPI 문서 정리 (`ops-api/ops_api/app.py`, `ops-api/README.md`)
 
 ## 12.2 주요 API
@@ -864,7 +864,7 @@
 ## 12.3 테스트
 - [x] API unit test 작성 (`scripts/validate_ops_api_flow.py`)
 - [ ] schema validation test 작성
-- [ ] auth test 작성
+- [x] auth test 작성 (`scripts/validate_ops_api_auth.py`)
 - [ ] error response test 작성
 - [ ] load test 최소 시나리오 작성
 

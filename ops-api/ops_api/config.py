@@ -11,6 +11,8 @@ from .bootstrap import REPO_ROOT
 class Settings:
     database_url: str
     runtime_mode_path: Path
+    auth_mode: str
+    auth_tokens_json: str
     llm_provider: str
     llm_model_id: str
     llm_prompt_version: str
@@ -30,6 +32,8 @@ def load_settings() -> Settings:
                 str(REPO_ROOT / "artifacts" / "runtime" / "ops_api" / "runtime_mode.json"),
             )
         ),
+        auth_mode=os.getenv("OPS_API_AUTH_MODE", "disabled"),
+        auth_tokens_json=os.getenv("OPS_API_AUTH_TOKENS_JSON", ""),
         llm_provider=os.getenv("OPS_API_LLM_PROVIDER", "stub"),
         llm_model_id=os.getenv("OPS_API_MODEL_ID", "pepper-ops-local-stub"),
         llm_prompt_version=os.getenv("OPS_API_PROMPT_VERSION", "sft_v10"),

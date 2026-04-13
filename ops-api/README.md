@@ -3,6 +3,7 @@
 FastAPI 기반 운영 백엔드다.
 
 - `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
+- `ops_api/auth.py`: `viewer/operator/service/admin` 역할과 `disabled/header_token` 인증 모드 정의
 - `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `alerts`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
 - `ops_api/planner.py`: 승인된 action을 `execution-gateway` 요청으로 변환
 - `ops_api/seed.py`: sensor/device/policy seed JSON을 reference catalog로 적재
@@ -17,3 +18,13 @@ python3 scripts/bootstrap_ops_api_reference_data.py
 ```
 
 현재 `OPS_API_DATABASE_URL` 대상 DB에 schema를 만들고 기본 `zones/sensors/devices/policies` reference catalog를 seed한다.
+
+## auth
+
+- 기본값은 `OPS_API_AUTH_MODE=disabled`이고, 로컬 개발에서는 `X-Actor-Id`, `X-Actor-Role`만으로 동작한다.
+- 운영 전환 시 `OPS_API_AUTH_MODE=header_token`으로 바꾸고 `OPS_API_AUTH_TOKENS_JSON`에 `token -> actor_id/role` 맵을 넣는다.
+- 권한은 다음처럼 고정한다.
+  - `viewer`: catalog/runtime read
+  - `operator`: shadow review, approve/execute, robot task write
+  - `service`: evaluate-zone
+  - `admin`: operator 권한 + runtime mode/policy 관리

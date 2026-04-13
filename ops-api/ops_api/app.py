@@ -12,12 +12,15 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .api_models import (
     ApprovalRequest,
+    ApiResponse,
     EvaluateZoneRequest,
+    ErrorResponse,
     ExecuteActionRequest,
     RobotTaskCreateRequest,
     RuntimeModeRequest,
     ShadowReviewRequest,
 )
+from .auth import ActorIdentity, get_authenticated_actor, require_permission
 from .bootstrap import configure_repo_paths
 from .config import Settings, load_settings
 from .database import build_session_factory, init_db
@@ -84,6 +87,18 @@ def _derive_policy_result(validated_output: dict[str, Any], validator_reason_cod
     if validator_reason_codes:
         return "adjusted"
     return "pass"
+
+
+def _actor_model(actor: ActorIdentity | None) -> dict[str, str] | None:
+    return None if actor is None else actor.as_dict()
+
+
+def _ok(data: Any, *, actor: ActorIdentity | None = None, meta: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "data": data,
+        "meta": meta or {},
+        "actor": _actor_model(actor),
+    }
 
 
 def _latest_approval(decision: DecisionRecord) -> ApprovalRecord | None:
@@ -441,8 +456,8 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
                 "risk_level": item["risk_level"],
                 "current_state_summary": item["current_state_summary"],
                 "sensor_quality": item["sensor_quality"],
-                    "created_at": item["created_at"],
-                }
+                "created_at": item["created_at"],
+            }
 
         if item["runtime_mode"] == "approval" and item["status"] == "evaluated":
             approval_pending_count += 1
@@ -529,6 +544,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="Pepper Smartfarm Ops API",
         version="0.2.0",
         description="LLM 의사결정, approval dispatch, shadow review, 운영 카탈로그를 제공하는 백엔드",
+        openapi_tags=[
+            {"name": "system", "description": "health, auth, runtime mode"},
+            {"name": "decisions", "description": "LLM evaluation and history"},
+            {"name": "catalog", "description": "zones, sensors, devices, policies"},
+            {"name": "operations", "description": "approvals, execute, alerts, robot tasks"},
+            {"name": "dashboard", "description": "operator dashboard and shadow review"},
+        ],
     )
     app.state.services = services
     register_exception_handlers(app)
@@ -543,33 +565,47 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         finally:
             session.close()
 
-    @app.get("/health")
+    @app.get("/health", tags=["system"], response_model=ApiResponse)
     def health(services=Depends(get_services)) -> dict[str, Any]:
         mode_state = load_runtime_mode(services.settings.runtime_mode_path)
-        return {"status": "ok", "runtime_mode": mode_state.as_dict()}
+        return _ok({"status": "ok", "runtime_mode": mode_state.as_dict()})
 
-    @app.get("/runtime/mode")
-    def get_runtime_mode(services=Depends(get_services)) -> dict[str, Any]:
-        return load_runtime_mode(services.settings.runtime_mode_path).as_dict()
+    @app.get("/auth/me", tags=["system"], response_model=ApiResponse)
+    def auth_me(actor: ActorIdentity = Depends(get_authenticated_actor)) -> dict[str, Any]:
+        return _ok(actor.as_dict(), actor=actor)
 
-    @app.post("/runtime/mode")
+    @app.get("/runtime/mode", tags=["system"], response_model=ApiResponse)
+    def get_runtime_mode(
+        services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        return _ok(load_runtime_mode(services.settings.runtime_mode_path).as_dict(), actor=actor)
+
+    @app.post("/runtime/mode", tags=["system"], response_model=ApiResponse, responses={403: {"model": ErrorResponse}})
     def set_runtime_mode(
         payload: RuntimeModeRequest,
         services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("manage_runtime_mode")),
     ) -> dict[str, Any]:
         state = save_runtime_mode(
             services.settings.runtime_mode_path,
             mode=payload.mode,
-            actor_id=payload.actor_id,
+            actor_id=actor.actor_id,
             reason=payload.reason,
         )
-        return {"runtime_mode": state.as_dict()}
+        return _ok({"runtime_mode": state.as_dict()}, actor=actor)
 
-    @app.post("/decisions/evaluate-zone")
+    @app.post(
+        "/decisions/evaluate-zone",
+        tags=["decisions"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
     def evaluate_zone(
         payload: EvaluateZoneRequest,
         session: Session = Depends(get_session),
         services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("evaluate_zone")),
     ) -> dict[str, Any]:
         mode_state = load_runtime_mode(services.settings.runtime_mode_path)
         effective_mode = payload.mode or mode_state.mode
@@ -653,49 +689,80 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         session.commit()
         session.refresh(decision)
-        return {
-            "decision_id": decision.id,
-            "runtime_mode": effective_mode,
-            "state_estimate": state_estimate.as_dict(),
-            "validated_output": result.validated_output,
-            "citations": result.validated_output.get("citations", []),
-            "retrieval_context": [chunk.as_prompt_dict() for chunk in result.retrieval_chunks],
-            "validator_reason_codes": result.validator_reason_codes,
-        }
+        return _ok(
+            {
+                "decision_id": decision.id,
+                "runtime_mode": effective_mode,
+                "state_estimate": state_estimate.as_dict(),
+                "validated_output": result.validated_output,
+                "citations": result.validated_output.get("citations", []),
+                "retrieval_context": [chunk.as_prompt_dict() for chunk in result.retrieval_chunks],
+                "validator_reason_codes": result.validator_reason_codes,
+            },
+            actor=actor,
+        )
 
-    @app.get("/decisions")
+    @app.get(
+        "/decisions",
+        tags=["decisions"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
     def list_decisions(
         limit: int = 30,
         session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
         rows = session.execute(select(DecisionRecord).order_by(desc(DecisionRecord.id)).limit(limit)).scalars().all()
-        return {
-            "items": [
-                {
-                    "decision_id": row.id,
-                    "request_id": row.request_id,
-                    "zone_id": row.zone_id,
-                    "task_type": row.task_type,
-                    "runtime_mode": row.runtime_mode,
-                    "status": row.status,
-                    "model_id": row.model_id,
-                    "validated_output": _loads_json(row.validated_output_json, {}),
-                    "citations": _loads_json(row.citations_json, []),
-                    "validator_reason_codes": _loads_json(row.validator_reason_codes_json, []),
-                    "current_state_summary": _loads_json(row.zone_state_json, {}).get("current_state", {}).get("summary", ""),
-                    "created_at": row.created_at.isoformat(),
-                }
-                for row in rows
-            ]
-        }
+        return _ok(
+            {
+                "items": [
+                    {
+                        "decision_id": row.id,
+                        "request_id": row.request_id,
+                        "zone_id": row.zone_id,
+                        "task_type": row.task_type,
+                        "runtime_mode": row.runtime_mode,
+                        "status": row.status,
+                        "model_id": row.model_id,
+                        "validated_output": _loads_json(row.validated_output_json, {}),
+                        "citations": _loads_json(row.citations_json, []),
+                        "validator_reason_codes": _loads_json(row.validator_reason_codes_json, []),
+                        "current_state_summary": _loads_json(row.zone_state_json, {}).get("current_state", {}).get("summary", ""),
+                        "created_at": row.created_at.isoformat(),
+                    }
+                    for row in rows
+                ]
+            },
+            actor=actor,
+            meta={"limit": limit},
+        )
 
-    @app.get("/zones")
-    def list_zones(session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/zones",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_zones(
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_catalog")),
+    ) -> dict[str, Any]:
         rows = session.execute(select(ZoneRecord).order_by(ZoneRecord.zone_id)).scalars().all()
-        return {"items": [_serialize_zone(row) for row in rows]}
+        return _ok({"items": [_serialize_zone(row) for row in rows]}, actor=actor)
 
-    @app.get("/zones/{zone_id}/history")
-    def get_zone_history(zone_id: str, limit: int = 20, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/zones/{zone_id}/history",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def get_zone_history(
+        zone_id: str,
+        limit: int = 20,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
         decision_rows = session.execute(
             select(DecisionRecord)
             .where(DecisionRecord.zone_id == zone_id)
@@ -721,56 +788,93 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             .order_by(desc(RobotTaskRecord.id))
             .limit(limit)
         ).scalars().all()
-        return {
-            "zone_id": zone_id,
-            "decisions": [_build_decision_item(row) for row in decision_rows],
-            "alerts": [_serialize_alert(row) for row in alert_rows],
-            "commands": [
-                {
-                    "id": row.id,
-                    "decision_id": row.decision_id,
-                    "command_kind": row.command_kind,
-                    "target_id": row.target_id,
-                    "action_type": row.action_type,
-                    "status": row.status,
-                    "payload": _loads_json(row.payload_json, {}),
-                    "adapter_result": _loads_json(row.adapter_result_json, {}),
-                    "created_at": row.created_at.isoformat(),
-                }
-                for row in command_rows
-            ],
-            "robot_tasks": [_serialize_robot_task(row) for row in robot_rows],
-        }
+        return _ok(
+            {
+                "zone_id": zone_id,
+                "decisions": [_build_decision_item(row) for row in decision_rows],
+                "alerts": [_serialize_alert(row) for row in alert_rows],
+                "commands": [
+                    {
+                        "id": row.id,
+                        "decision_id": row.decision_id,
+                        "command_kind": row.command_kind,
+                        "target_id": row.target_id,
+                        "action_type": row.action_type,
+                        "status": row.status,
+                        "payload": _loads_json(row.payload_json, {}),
+                        "adapter_result": _loads_json(row.adapter_result_json, {}),
+                        "created_at": row.created_at.isoformat(),
+                    }
+                    for row in command_rows
+                ],
+                "robot_tasks": [_serialize_robot_task(row) for row in robot_rows],
+            },
+            actor=actor,
+            meta={"zone_id": zone_id, "limit": limit},
+        )
 
-    @app.get("/sensors")
-    def list_sensors(zone_id: str | None = None, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/sensors",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_sensors(
+        zone_id: str | None = None,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_catalog")),
+    ) -> dict[str, Any]:
         stmt = select(SensorRecord).order_by(SensorRecord.sensor_id)
         if zone_id:
             stmt = stmt.where(SensorRecord.zone_id == zone_id)
         rows = session.execute(stmt).scalars().all()
-        return {"items": [_serialize_sensor(row) for row in rows]}
+        return _ok({"items": [_serialize_sensor(row) for row in rows]}, actor=actor, meta={"zone_id": zone_id})
 
-    @app.get("/devices")
-    def list_devices(zone_id: str | None = None, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/devices",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_devices(
+        zone_id: str | None = None,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_catalog")),
+    ) -> dict[str, Any]:
         stmt = select(DeviceRecord).order_by(DeviceRecord.device_id)
         if zone_id:
             stmt = stmt.where(DeviceRecord.zone_id == zone_id)
         rows = session.execute(stmt).scalars().all()
-        return {"items": [_serialize_device(row) for row in rows]}
+        return _ok({"items": [_serialize_device(row) for row in rows]}, actor=actor, meta={"zone_id": zone_id})
 
-    @app.get("/policies")
-    def list_policies(enabled_only: bool = False, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/policies",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_policies(
+        enabled_only: bool = False,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_catalog")),
+    ) -> dict[str, Any]:
         stmt = select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)
         if enabled_only:
             stmt = stmt.where(PolicyRecord.enabled.is_(True))
         rows = session.execute(stmt).scalars().all()
-        return {"items": [_serialize_policy(row) for row in rows]}
+        return _ok({"items": [_serialize_policy(row) for row in rows]}, actor=actor, meta={"enabled_only": enabled_only})
 
-    @app.post("/shadow/reviews")
+    @app.post(
+        "/shadow/reviews",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
     def create_shadow_review(
         payload: ShadowReviewRequest,
         session: Session = Depends(get_session),
         services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("review_shadow")),
     ) -> dict[str, Any]:
         decision = session.get(DecisionRecord, payload.decision_id)
         if decision is None:
@@ -778,7 +882,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         runtime_mode = load_runtime_mode(services.settings.runtime_mode_path)
         review = OperatorReviewRecord(
             decision_id=decision.id,
-            actor_id=payload.actor_id,
+            actor_id=actor.actor_id,
             review_mode="shadow_review" if runtime_mode.mode == "shadow" else "posthoc_review",
             agreement_status=payload.agreement_status,
             expected_risk_level=payload.expected_risk_level,
@@ -794,37 +898,63 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else "shadow_reviewed_disagree"
             )
         session.commit()
-        return {
-            "decision_id": decision.id,
-            "review_id": review.id,
-            "agreement_status": payload.agreement_status,
-        }
+        session.refresh(review)
+        return _ok(
+            {
+                "decision_id": decision.id,
+                "review_id": review.id,
+                "agreement_status": payload.agreement_status,
+            },
+            actor=actor,
+        )
 
-    @app.get("/shadow/reviews")
-    def list_shadow_reviews(limit: int = 50, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/shadow/reviews",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_shadow_reviews(
+        limit: int = 50,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
         rows = session.execute(
             select(OperatorReviewRecord).order_by(desc(OperatorReviewRecord.id)).limit(limit)
         ).scalars().all()
-        return {
-            "items": [
-                {
-                    "review_id": row.id,
-                    "decision_id": row.decision_id,
-                    "actor_id": row.actor_id,
-                    "review_mode": row.review_mode,
-                    "agreement_status": row.agreement_status,
-                    "expected_risk_level": row.expected_risk_level,
-                    "expected_actions": _loads_json(row.expected_actions_json, []),
-                    "expected_robot_tasks": _loads_json(row.expected_robot_tasks_json, []),
-                    "note": row.note,
-                    "created_at": row.created_at.isoformat(),
-                }
-                for row in rows
-            ]
-        }
+        return _ok(
+            {
+                "items": [
+                    {
+                        "review_id": row.id,
+                        "decision_id": row.decision_id,
+                        "actor_id": row.actor_id,
+                        "review_mode": row.review_mode,
+                        "agreement_status": row.agreement_status,
+                        "expected_risk_level": row.expected_risk_level,
+                        "expected_actions": _loads_json(row.expected_actions_json, []),
+                        "expected_robot_tasks": _loads_json(row.expected_robot_tasks_json, []),
+                        "note": row.note,
+                        "created_at": row.created_at.isoformat(),
+                    }
+                    for row in rows
+                ]
+            },
+            actor=actor,
+            meta={"limit": limit},
+        )
 
-    @app.get("/zones/{zone_id}/state")
-    def get_zone_state(zone_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/zones/{zone_id}/state",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def get_zone_state(
+        zone_id: str,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
         row = session.execute(
             select(DecisionRecord)
             .where(DecisionRecord.zone_id == zone_id)
@@ -833,45 +963,73 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ).scalar_one_or_none()
         if row is None:
             raise HTTPException(status_code=404, detail="zone state not found")
-        return {
-            "zone_id": zone_id,
-            "zone_state": json.loads(row.zone_state_json),
-            "decision_id": row.id,
-            "updated_at": row.updated_at.isoformat(),
-        }
+        return _ok(
+            {
+                "zone_id": zone_id,
+                "zone_state": json.loads(row.zone_state_json),
+                "decision_id": row.id,
+                "updated_at": row.updated_at.isoformat(),
+            },
+            actor=actor,
+        )
 
-    @app.get("/actions/history")
-    def action_history(limit: int = 50, session: Session = Depends(get_session)) -> dict[str, Any]:
+    @app.get(
+        "/actions/history",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def action_history(
+        limit: int = 50,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
         rows = session.execute(select(DeviceCommandRecord).order_by(desc(DeviceCommandRecord.id)).limit(limit)).scalars().all()
-        return {
-            "items": [
-                {
-                    "id": row.id,
-                    "decision_id": row.decision_id,
-                    "command_kind": row.command_kind,
-                    "target_id": row.target_id,
-                    "action_type": row.action_type,
-                    "status": row.status,
-                    "payload": json.loads(row.payload_json),
-                    "adapter_result": json.loads(row.adapter_result_json),
-                    "created_at": row.created_at.isoformat(),
-                }
-                for row in rows
-            ]
-        }
+        return _ok(
+            {
+                "items": [
+                    {
+                        "id": row.id,
+                        "decision_id": row.decision_id,
+                        "command_kind": row.command_kind,
+                        "target_id": row.target_id,
+                        "action_type": row.action_type,
+                        "status": row.status,
+                        "payload": json.loads(row.payload_json),
+                        "adapter_result": json.loads(row.adapter_result_json),
+                        "created_at": row.created_at.isoformat(),
+                    }
+                    for row in rows
+                ]
+            },
+            actor=actor,
+            meta={"limit": limit},
+        )
 
-    @app.get("/dashboard/data")
+    @app.get(
+        "/dashboard/data",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
     def dashboard_data(
         session: Session = Depends(get_session),
         services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
-        return _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
+        return _ok(_build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path)), actor=actor)
 
-    @app.get("/alerts")
+    @app.get(
+        "/alerts",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
     def list_alerts(
         zone_id: str | None = None,
         status: str | None = None,
         session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
         stmt = select(AlertRecord).order_by(desc(AlertRecord.id))
         if zone_id:
@@ -879,13 +1037,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if status:
             stmt = stmt.where(AlertRecord.status == status)
         rows = session.execute(stmt.limit(50)).scalars().all()
-        return {"items": [_serialize_alert(row) for row in rows]}
+        return _ok({"items": [_serialize_alert(row) for row in rows]}, actor=actor, meta={"zone_id": zone_id, "status": status})
 
-    @app.get("/robot/tasks")
+    @app.get(
+        "/robot/tasks",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
     def list_robot_tasks(
         zone_id: str | None = None,
         status: str | None = None,
         session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
         stmt = select(RobotTaskRecord).order_by(desc(RobotTaskRecord.id))
         if zone_id:
@@ -893,12 +1057,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if status:
             stmt = stmt.where(RobotTaskRecord.status == status)
         rows = session.execute(stmt.limit(50)).scalars().all()
-        return {"items": [_serialize_robot_task(row) for row in rows]}
+        return _ok({"items": [_serialize_robot_task(row) for row in rows]}, actor=actor, meta={"zone_id": zone_id, "status": status})
 
-    @app.post("/robot/tasks")
+    @app.post(
+        "/robot/tasks",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
     def create_robot_task(
         payload: RobotTaskCreateRequest,
         session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("write_robot_tasks")),
     ) -> dict[str, Any]:
         row = RobotTaskRecord(
             decision_id=payload.decision_id,
@@ -912,7 +1082,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             target_json=json.dumps(payload.target, ensure_ascii=False),
             payload_json=json.dumps(
                 {
-                    "actor_id": payload.actor_id,
+                    "actor_id": actor.actor_id,
                     **payload.payload,
                 },
                 ensure_ascii=False,
@@ -921,13 +1091,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         session.add(row)
         session.commit()
         session.refresh(row)
-        return {"task": _serialize_robot_task(row)}
+        return _ok({"task": _serialize_robot_task(row)}, actor=actor)
 
-    @app.post("/actions/approve")
+    @app.post(
+        "/actions/approve",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    )
     def approve_action(
         payload: ApprovalRequest,
         session: Session = Depends(get_session),
         services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("approve_actions")),
     ) -> dict[str, Any]:
         runtime_mode = load_runtime_mode(services.settings.runtime_mode_path)
         if runtime_mode.mode != "approval":
@@ -940,29 +1116,38 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         _record_approval(
             session=session,
             decision_id=decision.id,
-            actor_id=payload.actor_id,
+            actor_id=actor.actor_id,
             approval_status="approved",
             reason=payload.reason,
             payload=payload.model_dump(),
         )
         dispatch_results = _execute_decision_dispatch(
             decision=decision,
-            actor_id=payload.actor_id,
+            actor_id=actor.actor_id,
             services=services,
             session=session,
         )
         session.commit()
-        return {
-            "decision_id": decision.id,
-            "approval_status": "approved",
-            "dispatch_results": dispatch_results,
-        }
+        return _ok(
+            {
+                "decision_id": decision.id,
+                "approval_status": "approved",
+                "dispatch_results": dispatch_results,
+            },
+            actor=actor,
+        )
 
-    @app.post("/actions/execute")
+    @app.post(
+        "/actions/execute",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    )
     def execute_action(
         payload: ExecuteActionRequest,
         session: Session = Depends(get_session),
         services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("execute_actions")),
     ) -> dict[str, Any]:
         runtime_mode = load_runtime_mode(services.settings.runtime_mode_path)
         if runtime_mode.mode != "approval":
@@ -980,35 +1165,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             _record_approval(
                 session=session,
                 decision_id=decision.id,
-                actor_id=payload.actor_id,
+                actor_id=actor.actor_id,
                 approval_status="approved",
                 reason=payload.reason,
                 payload=payload.model_dump(),
             )
         dispatch_results = _execute_decision_dispatch(
             decision=decision,
-            actor_id=payload.actor_id,
+            actor_id=actor.actor_id,
             services=services,
             session=session,
         )
         session.commit()
-        return {
-            "decision_id": decision.id,
-            "approval_status": "approved",
-            "dispatch_results": dispatch_results,
-        }
+        return _ok(
+            {
+                "decision_id": decision.id,
+                "approval_status": "approved",
+                "dispatch_results": dispatch_results,
+            },
+            actor=actor,
+        )
 
-    @app.post("/actions/reject")
+    @app.post(
+        "/actions/reject",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
     def reject_action(
         payload: ApprovalRequest,
         session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("approve_actions")),
     ) -> dict[str, Any]:
         decision = session.get(DecisionRecord, payload.decision_id)
         if decision is None:
             raise HTTPException(status_code=404, detail="decision not found")
         approval = ApprovalRecord(
             decision_id=decision.id,
-            actor_id=payload.actor_id,
+            actor_id=actor.actor_id,
             approval_status="rejected",
             reason=payload.reason,
             approval_payload_json=json.dumps(payload.model_dump(), ensure_ascii=False),
@@ -1016,9 +1210,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         session.add(approval)
         decision.status = "rejected"
         session.commit()
-        return {"decision_id": decision.id, "approval_status": "rejected"}
+        return _ok({"decision_id": decision.id, "approval_status": "rejected"}, actor=actor)
 
-    @app.get("/dashboard", response_class=HTMLResponse)
+    @app.get("/dashboard", tags=["dashboard"], response_class=HTMLResponse)
     def dashboard() -> str:
         return _dashboard_html()
 
@@ -1143,11 +1337,19 @@ def _dashboard_html() -> str:
     </section>
   </main>
   <script>
+    async function apiFetch(url, options) {
+      const res = await fetch(url, options);
+      const body = await res.json();
+      if (!res.ok) {
+        const message = body?.error?.message || body?.detail || 'request failed';
+        throw new Error(message);
+      }
+      return body;
+    }
     async function toggleMode() {
-      const res = await fetch('/runtime/mode');
-      const current = await res.json();
-      const next = current.mode === 'shadow' ? 'approval' : 'shadow';
-      await fetch('/runtime/mode', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ mode: next, actor_id:'dashboard', reason:'dashboard toggle'}) });
+      const current = await apiFetch('/runtime/mode');
+      const next = current.data.mode === 'shadow' ? 'approval' : 'shadow';
+      await apiFetch('/runtime/mode', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ mode: next, actor_id:'dashboard', reason:'dashboard toggle'}) });
       await refreshDashboard();
     }
     async function submitDecision() {
@@ -1159,22 +1361,22 @@ def _dashboard_html() -> str:
         current_state: JSON.parse(document.getElementById('currentState').value),
         sensor_quality: JSON.parse(document.getElementById('sensorQuality').value),
       };
-      await fetch('/decisions/evaluate-zone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      await apiFetch('/decisions/evaluate-zone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
       await refreshDashboard();
     }
     async function approve(decisionId) {
       const reason = window.prompt('승인 사유를 입력하세요.', 'dashboard approve') || '';
-      await fetch('/actions/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
+      await apiFetch('/actions/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
       await refreshDashboard();
     }
     async function reject(decisionId) {
       const reason = window.prompt('거절 사유를 입력하세요.', 'dashboard reject') || '';
-      await fetch('/actions/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
+      await apiFetch('/actions/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
       await refreshDashboard();
     }
     async function review(decisionId, agreementStatus) {
       const note = window.prompt(agreementStatus === 'agree' ? '일치 메모를 입력하세요.' : '불일치 원인을 입력하세요.', '') || '';
-      await fetch('/shadow/reviews', {
+      await apiFetch('/shadow/reviews', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -1216,8 +1418,8 @@ def _dashboard_html() -> str:
     function renderAlerts(items) {
       document.getElementById('alertList').innerHTML = items.map(item => `
         <div class="alert">
-          <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.task_type}</div>
-          <div><span class="badge warn">${item.risk_level}</span>${item.summary || 'summary 없음'}</div>
+          <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.alert_type}</div>
+          <div><span class="badge warn">${item.severity}</span>${item.summary || 'summary 없음'}</div>
           <div class="small">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
         </div>
       `).join('') || '<div>alert가 없습니다.</div>';
@@ -1226,7 +1428,8 @@ def _dashboard_html() -> str:
       document.getElementById('robotList').innerHTML = items.map(item => `
         <div class="robot">
           <div class="meta">#${item.decision_id} · ${item.zone_id}</div>
-          <div><span class="badge">${item.task_type}</span><span class="badge dark">${item.risk_level}</span></div>
+          <div><span class="badge">${item.task_type}</span><span class="badge dark">${item.priority}</span></div>
+          <div class="small">candidate=${item.candidate_id || 'none'} · status=${item.status}</div>
         </div>
       `).join('') || '<div>robot task가 없습니다.</div>';
     }
@@ -1266,8 +1469,8 @@ def _dashboard_html() -> str:
       document.getElementById('decisionList').innerHTML = html || '<div>아직 decision이 없습니다.</div>';
     }
     async function refreshDashboard() {
-      const res = await fetch('/dashboard/data');
-      const data = await res.json();
+      const response = await apiFetch('/dashboard/data');
+      const data = response.data;
       document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
       renderMetrics(data.summary);
       renderZones(data.zones);

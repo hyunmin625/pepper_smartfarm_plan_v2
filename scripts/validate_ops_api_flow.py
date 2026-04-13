@@ -52,6 +52,7 @@ def main() -> int:
         services = app.state.services
         routes = {route.path for route in app.router.routes}
         expected_routes = {
+            "/auth/me",
             "/runtime/mode",
             "/decisions/evaluate-zone",
             "/decisions",

@@ -23,10 +23,11 @@
 13. `docs/offline_shadow_residual_batch17_plan.md`: offline shadow 잔여 `4건`을 batch17 sample로 옮긴 매핑
 14. `docs/synthetic_shadow_day0_batch18_plan.md`: synthetic shadow day0 잔여 `4건`을 batch18 sample로 옮긴 매핑
 15. `docs/runtime_integration_status.md`: orchestrator/state-estimator/API/dashboard 연결 상태
-16. `schedule.md`: 개정 실행 순서와 8주 일정
-17. `todo.md`: 세부 작업 체크리스트
-18. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-19. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+16. `ops-api/README.md`: 운영 API, 역할 권한, seed/bootstrap 절차
+17. `schedule.md`: 개정 실행 순서와 8주 일정
+18. `todo.md`: 세부 작업 체크리스트
+19. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+20. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 

@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### ops-api auth/role + response envelope 마감
+- `ops-api/ops_api/auth.py`를 추가해 `disabled/header_token` 인증 모드와 `viewer/operator/service/admin` 역할 권한을 고정했다.
+- `ops-api/ops_api/api_models.py`에 `ApiResponse`, `ErrorResponse`, `ActorModel`을 추가했고, `ops-api/ops_api/app.py`의 catalog/runtime/operations route 대부분을 공통 response envelope와 permission dependency로 감쌌다.
+- `/auth/me`를 추가했고, 승인/실행/거절/shadow review 기록은 이제 request payload의 `actor_id`가 아니라 인증된 actor 기준으로 저장한다.
+- `ops-api/ops_api/errors.py`에 `HTTPException` handler를 추가해 오류 응답도 `{error:{code,message}}` 형태로 맞췄다.
+- `.env.example`에 `OPS_API_AUTH_MODE`, `OPS_API_AUTH_TOKENS_JSON` 예시를 추가했고, `scripts/validate_ops_api_auth.py`로 header token/role 검증을 따로 닫았다.
+
 ### backend/database 3단계 확장
 - `infra/postgres/001_initial_schema.sql`에 `zones`, `sensors`, `devices`, `policies`, `alerts`, `robot_candidates`, `robot_tasks`를 추가하고 `zone_id`, `created_at`, `device command`, `robot task` 인덱스를 보강했다.
 - `ops-api/ops_api/models.py`를 같은 스키마로 확장해 reference catalog와 운영 테이블을 ORM으로 다루게 했다.

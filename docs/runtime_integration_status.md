@@ -134,7 +134,7 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 
 - OpenAI 실호출 경로와 smoke script는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
 - `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL과 reference seed/bootstrap까지 준비했다. 실 PostgreSQL smoke는 아직 안 돌렸다.
-- auth / role / policy management 전용 화면, real sensor 시계열 차트는 아직 미구현이다.
+- policy management 전용 화면과 real sensor 시계열 차트는 아직 미구현이다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 
 ## 다음 우선순위
@@ -142,4 +142,4 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 1. `OPS_API_LLM_PROVIDER=openai`, `OPS_API_MODEL_ID=champion` 기준 online smoke 실행
 2. sensor-ingestor runtime outbox를 state-estimator raw loader에 직접 연결
 3. approval mode dispatch 결과를 shadow window/report와 한 화면에서 묶기
-4. auth / role / alert endpoint 추가
+4. policy management 화면과 real sensor chart 추가
