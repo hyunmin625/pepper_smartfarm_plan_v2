@@ -4,6 +4,12 @@
 
 ## 2026-04-13
 
+### dashboard zone history sparkline + `/zones/{id}/history` sensor_series
+- `ops-api/ops_api/app.py`의 `/zones/{zone_id}/history` 응답에 `sensor_series`를 추가했다. `_build_sensor_series`가 decision row를 생성 시각 순으로 정렬한 뒤 각 `zone_state_json.current_state`에서 `air_temp_c`, `rh_pct`, `vpd_kpa`, `substrate_moisture_pct`, `substrate_temp_c`, `co2_ppm`, `par_umol_m2_s`, `feed_ec_ds_m`, `drain_ec_ds_m` 9종 지표를 추출해 `[{t, value, decision_id}]` 형태로 누적한다. 시계열 스토리지를 도입하지 않고도 기존 decision log만으로 스파크라인을 그릴 수 있는 최소 브리지.
+- 대시보드 HTML에 `Zone History Chart` 카드를 추가했다. zone 드롭다운과 `Refresh` 버튼, `zoneHistoryCharts` 컨테이너로 구성되고 `refreshZoneHistory()`가 `/zones/{id}/history?limit=30`을 호출해 `renderZoneHistory`가 인라인 SVG `<polyline>` 스파크라인을 지표별로 그린다. min/max/last 값을 텍스트로 오버레이해 스케일이 다른 metric을 같은 viewBox에 표시해도 혼동되지 않도록 했다. 존 리스트가 갱신될 때마다 `syncZoneHistoryOptions`로 select 옵션을 재구성한다.
+- `scripts/validate_ops_api_zone_history.py`를 추가해 3개 invariant를 회귀한다: (1) 빈 DB에서 `sensor_series={}`, `decisions=[]`; (2) 두 건의 `/decisions/evaluate-zone` 호출 후 `sensor_series`가 5개 메트릭에 2 points씩 타임순으로 쌓이고 `air_temp_c`가 정확히 입력값(`26.0 -> 28.5`)을 반영; (3) `GET /dashboard`의 HTML 문자열에 `Zone History Chart / zoneHistoryCharts / renderZoneHistory / refreshZoneHistory / sensor_series` 5개 훅이 모두 포함. 스모크는 `auth_mode="disabled"` + `x-actor-role=service` 헤더로 `evaluate_zone` 권한을 받는다 (service 롤이 유일한 소유자).
+- 16종 smoke (`flow`, `auth`, `error_responses`, `schema_models`, `shadow_mode`, `postgres_smoke`, `zone_history`, `policy_source_db_wiring`, `policy_engine_precheck`, `policy_output_validator`, `state_estimator_policy_flow`, `llm_to_execution_flow`, `execution_dispatcher`, `execution_gateway_flow`, `execution_safe_mode`, `state_estimator_mvp`) 모두 `errors 0`.
+
 ### llm-orchestrator -> planner -> execution-gateway 통합 smoke
 - `scripts/validate_llm_to_execution_flow.py`를 추가해 `LLMOrchestratorService` → `ActionDispatchPlanner` → `ExecutionDispatcher` 경로를 한 프로세스에서 3개 시나리오로 회귀한다. 스모크는 네트워크/DB 없이 stub과 fixture만으로 동작한다.
   - stub baseline: 레포 기본 `StubCompletionClient`가 `action_recommendation` 응답으로 `create_alert` + `request_human_check`를 돌려주는 상황을 재현한다. planner는 두 건 모두 `log_only` plan으로 변환하고 dispatcher에는 도달하지 않아야 한다.

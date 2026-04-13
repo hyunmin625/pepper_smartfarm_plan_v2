@@ -459,6 +459,55 @@ def _execute_decision_dispatch(
     return dispatch_results
 
 
+TRACKED_SENSOR_METRICS: tuple[str, ...] = (
+    "air_temp_c",
+    "rh_pct",
+    "vpd_kpa",
+    "substrate_moisture_pct",
+    "substrate_temp_c",
+    "co2_ppm",
+    "par_umol_m2_s",
+    "feed_ec_ds_m",
+    "drain_ec_ds_m",
+)
+
+
+def _coerce_numeric(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _build_sensor_series(decision_rows: list[DecisionRecord]) -> dict[str, list[dict[str, Any]]]:
+    """Extract a time-ordered sensor series from decision zone_state snapshots.
+
+    Dashboard sparklines render without time-series storage by replaying
+    each decision's captured current_state. Returning older-first makes
+    the client side trivially drawable.
+    """
+    ordered_rows = sorted(decision_rows, key=lambda row: row.created_at)
+    series: dict[str, list[dict[str, Any]]] = {metric: [] for metric in TRACKED_SENSOR_METRICS}
+    for row in ordered_rows:
+        zone_state = _loads_json(row.zone_state_json, {})
+        current_state = zone_state.get("current_state") if isinstance(zone_state, dict) else None
+        if not isinstance(current_state, dict):
+            continue
+        timestamp = row.created_at.isoformat()
+        for metric in TRACKED_SENSOR_METRICS:
+            value = _coerce_numeric(current_state.get(metric))
+            if value is None:
+                continue
+            series[metric].append({"t": timestamp, "value": value, "decision_id": row.id})
+    return {metric: points for metric, points in series.items() if points}
+
+
 def _compute_shadow_window(shadow_audit_path: Path | None) -> dict[str, Any] | None:
     if shadow_audit_path is None or not shadow_audit_path.exists():
         return None
@@ -838,6 +887,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             .order_by(desc(DecisionRecord.id))
             .limit(limit)
         ).scalars().all()
+        sensor_series = _build_sensor_series(decision_rows)
         alert_rows = session.execute(
             select(AlertRecord)
             .where(AlertRecord.zone_id == zone_id)
@@ -860,6 +910,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return _ok(
             {
                 "zone_id": zone_id,
+                "sensor_series": sensor_series,
                 "decisions": [_build_decision_item(row) for row in decision_rows],
                 "alerts": [_serialize_alert(row) for row in alert_rows],
                 "commands": [
@@ -1478,6 +1529,21 @@ def _dashboard_html() -> str:
           </section>
           <section>
             <div class="section-title">
+              <h2>Zone History Chart</h2>
+              <span class="small">decision zone_state에서 재구성</span>
+            </div>
+            <div class="row" style="align-items:center; gap:8px; margin-bottom:10px;">
+              <label style="flex:1; margin:0;">Zone
+                <select id="historyZoneId">
+                  <option value="gh-01-zone-a">gh-01-zone-a</option>
+                </select>
+              </label>
+              <button class="secondary" style="width:auto; margin-top:0;" onclick="refreshZoneHistory()">Refresh</button>
+            </div>
+            <div id="zoneHistoryCharts"></div>
+          </section>
+          <section>
+            <div class="section-title">
               <h2>Real-time Decisions</h2>
               <span class="small">최근 40건</span>
             </div>
@@ -1735,6 +1801,71 @@ def _dashboard_html() -> str:
       renderRobotTasks(data.robot_tasks);
       renderCommands(data.commands);
       renderDecisions(data.runtime_mode.mode, data.decisions);
+      syncZoneHistoryOptions(data.zones || []);
+      await refreshZoneHistory();
+    }
+    function syncZoneHistoryOptions(zones) {
+      const select = document.getElementById('historyZoneId');
+      if (!select) return;
+      const current = select.value;
+      const ids = zones.map(z => z.zone_id).filter(Boolean);
+      if (!ids.includes('gh-01-zone-a')) ids.unshift('gh-01-zone-a');
+      const uniqueIds = Array.from(new Set(ids));
+      select.innerHTML = uniqueIds.map(id => `<option value="${id}">${id}</option>`).join('');
+      if (uniqueIds.includes(current)) select.value = current;
+    }
+    async function refreshZoneHistory() {
+      const select = document.getElementById('historyZoneId');
+      if (!select) return;
+      const zoneId = select.value || 'gh-01-zone-a';
+      try {
+        const body = await apiFetch('/zones/' + encodeURIComponent(zoneId) + '/history?limit=30');
+        renderZoneHistory(body.data || {});
+      } catch (err) {
+        document.getElementById('zoneHistoryCharts').innerHTML = `<div class="small">zone history 조회 실패: ${err.message}</div>`;
+      }
+    }
+    function renderZoneHistory(data) {
+      const series = data.sensor_series || {};
+      const container = document.getElementById('zoneHistoryCharts');
+      const metrics = Object.keys(series);
+      if (metrics.length === 0) {
+        container.innerHTML = '<div class="small">zone decision이 쌓이면 센서 차트가 나타납니다.</div>';
+        return;
+      }
+      container.innerHTML = metrics.map(metric => {
+        const points = series[metric] || [];
+        if (points.length === 0) return '';
+        return `
+          <div style="margin-bottom:10px;">
+            <div class="small">${metric} · points=${points.length}</div>
+            ${renderSparkline(points)}
+          </div>
+        `;
+      }).join('');
+    }
+    function renderSparkline(points) {
+      if (!points || points.length === 0) return '';
+      const values = points.map(p => p.value);
+      const minV = Math.min(...values);
+      const maxV = Math.max(...values);
+      const range = (maxV - minV) || 1;
+      const width = 320;
+      const height = 48;
+      const stepX = points.length > 1 ? width / (points.length - 1) : 0;
+      const coords = points.map((p, i) => {
+        const x = points.length === 1 ? width / 2 : i * stepX;
+        const y = height - ((p.value - minV) / range) * (height - 8) - 4;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const lastValue = values[values.length - 1];
+      return `
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none">
+          <polyline fill="none" stroke="#456b4f" stroke-width="2" points="${coords}" />
+          <text x="${width - 4}" y="12" text-anchor="end" font-size="11" fill="#5b685e">last=${lastValue.toFixed(2)}</text>
+          <text x="4" y="${height - 4}" font-size="11" fill="#5b685e">min=${minV.toFixed(2)} · max=${maxV.toFixed(2)}</text>
+        </svg>
+      `;
     }
     async function togglePolicy(policyId, enabled) {
       await apiFetch('/policies/' + policyId, {
