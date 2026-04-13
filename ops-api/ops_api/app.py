@@ -16,6 +16,7 @@ from .api_models import (
     EvaluateZoneRequest,
     ErrorResponse,
     ExecuteActionRequest,
+    PolicyUpdateRequest,
     RobotTaskCreateRequest,
     ShadowCaptureRequest,
     RuntimeModeRequest,
@@ -425,6 +426,7 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
     zone_rows = session.execute(select(ZoneRecord).order_by(ZoneRecord.zone_id)).scalars().all()
     alert_rows = session.execute(select(AlertRecord).order_by(desc(AlertRecord.id)).limit(30)).scalars().all()
     robot_rows = session.execute(select(RobotTaskRecord).order_by(desc(RobotTaskRecord.id)).limit(30)).scalars().all()
+    policy_rows = session.execute(select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)).scalars().all()
     decision_items = [_build_decision_item(row) for row in rows]
     latest_zone_items: dict[str, dict[str, Any]] = {
         zone.zone_id: {
@@ -495,9 +497,12 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
             "command_count": len(command_rows),
             "alert_count": len(alert_rows),
             "robot_task_count": len(robot_rows),
+            "policy_count": len(policy_rows),
+            "policy_disabled_count": sum(1 for row in policy_rows if not row.enabled),
         },
         "shadow_window": shadow_window_summary,
         "zones": list(latest_zone_items.values()),
+        "policies": [_serialize_policy(row) for row in policy_rows],
         "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
         "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
         "decisions": decision_items,
@@ -867,6 +872,35 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             stmt = stmt.where(PolicyRecord.enabled.is_(True))
         rows = session.execute(stmt).scalars().all()
         return _ok({"items": [_serialize_policy(row) for row in rows]}, actor=actor, meta={"enabled_only": enabled_only})
+
+    @app.post(
+        "/policies/{policy_id}",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def update_policy(
+        policy_id: str,
+        payload: PolicyUpdateRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("manage_policies")),
+    ) -> dict[str, Any]:
+        row = session.execute(select(PolicyRecord).where(PolicyRecord.policy_id == policy_id)).scalar_one_or_none()
+        if row is None:
+            raise HTTPException(status_code=404, detail="policy not found")
+        if payload.enabled is not None:
+            row.enabled = payload.enabled
+        if payload.severity is not None:
+            row.severity = payload.severity
+        if payload.description is not None:
+            row.description = payload.description
+        if payload.trigger_flags is not None:
+            row.trigger_flags_json = json.dumps(payload.trigger_flags, ensure_ascii=False)
+        if payload.enforcement is not None:
+            row.enforcement_json = json.dumps(payload.enforcement, ensure_ascii=False)
+        session.commit()
+        session.refresh(row)
+        return _ok({"policy": _serialize_policy(row)}, actor=actor)
 
     @app.post(
         "/shadow/reviews",
@@ -1368,10 +1402,24 @@ def _dashboard_html() -> str:
         <div class="stack">
           <section>
             <div class="section-title">
+              <h2>Auth Context</h2>
+              <span class="small">current actor / role</span>
+            </div>
+            <div id="authContext"></div>
+          </section>
+          <section>
+            <div class="section-title">
               <h2>Shadow Window</h2>
               <span class="small">real shadow audit summary</span>
             </div>
             <div id="shadowWindow"></div>
+          </section>
+          <section>
+            <div class="section-title">
+              <h2>Policy Management</h2>
+              <span class="small">admin only</span>
+            </div>
+            <div id="policyList"></div>
           </section>
           <section>
             <div class="section-title">
@@ -1509,6 +1557,31 @@ def _dashboard_html() -> str:
         </div>
       `;
     }
+    function renderAuthContext(actor) {
+      if (!actor) {
+        document.getElementById('authContext').innerHTML = '<div class="zone">actor 정보가 없습니다.</div>';
+        return;
+      }
+      document.getElementById('authContext').innerHTML = `
+        <div class="zone">
+          <div><span class="badge dark">${actor.role}</span><span class="badge">${actor.auth_mode}</span></div>
+          <div class="small">actor_id=${actor.actor_id}</div>
+        </div>
+      `;
+    }
+    function renderPolicies(items) {
+      document.getElementById('policyList').innerHTML = items.map(item => `
+        <div class="zone">
+          <div class="meta">${item.policy_id} · ${item.policy_stage}</div>
+          <div><span class="badge ${item.enabled ? '' : 'warn'}">${item.enabled ? 'enabled' : 'disabled'}</span><span class="badge dark">${item.severity}</span></div>
+          <div class="small">${item.description || 'description 없음'}</div>
+          <div class="small">trigger_flags: ${(item.trigger_flags || []).join(', ') || 'none'}</div>
+          <div class="row">
+            <button class="secondary" onclick="togglePolicy('${item.policy_id}', ${item.enabled ? 'false' : 'true'})">${item.enabled ? '비활성화' : '활성화'}</button>
+          </div>
+        </div>
+      `).join('') || '<div>policy가 없습니다.</div>';
+    }
     function renderCommands(items) {
       document.getElementById('commandList').innerHTML = items.map(item => `
         <div class="command">
@@ -1548,13 +1621,23 @@ def _dashboard_html() -> str:
       const response = await apiFetch('/dashboard/data');
       const data = response.data;
       document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
+      renderAuthContext(response.actor);
       renderMetrics(data.summary);
       renderZones(data.zones);
       renderShadowWindow(data.shadow_window);
+      renderPolicies(data.policies || []);
       renderAlerts(data.alerts);
       renderRobotTasks(data.robot_tasks);
       renderCommands(data.commands);
       renderDecisions(data.runtime_mode.mode, data.decisions);
+    }
+    async function togglePolicy(policyId, enabled) {
+      await apiFetch('/policies/' + policyId, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ enabled })
+      });
+      await refreshDashboard();
     }
     refreshDashboard();
     setInterval(refreshDashboard, 5000);

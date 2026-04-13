@@ -65,6 +65,7 @@
   - `GET /sensors`
   - `GET /devices`
   - `GET /policies`
+  - `POST /policies/{policy_id}`
   - `POST /actions/approve`
   - `POST /actions/execute`
   - `POST /actions/reject`
@@ -100,8 +101,10 @@
 
 - `ops-api/ops_api/app.py`의 `/dashboard`
   - zone overview 카드
+  - auth context 카드
   - decision log 표시
   - citations / validator reason 표시
+  - policy management 패널 + enable/disable 토글
   - alert / robot task / execution history 패널
   - shadow window summary 패널
   - runtime mode toggle
@@ -137,21 +140,22 @@ python3 scripts/validate_ops_api_shadow_mode.py
 python3 scripts/validate_ops_api_server_smoke.py
 python3 scripts/validate_ops_api_postgres_smoke.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
+python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
 ```
 
 ## 현재 한계
 
-- OpenAI 실호출 경로와 smoke script는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
+- OpenAI online smoke는 `.env`와 네트워크가 열린 환경에서 `champion -> ds_v11` FT model alias, retrieval, strict JSON, validator 경로까지 통과했다. 다만 CI나 운영 비밀관리 경로에 얹은 상태는 아직 아니다.
 - `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL과 reference seed/bootstrap까지 준비했다. `scripts/validate_ops_api_postgres_smoke.py`도 추가했지만, 이 환경에는 PostgreSQL URL과 driver가 없어 현재는 `blocked` 상태로만 확인했다.
 - `ops-api`의 auth/role, schema validation, error envelope, minimal load scenario, localhost server smoke 테스트는 로컬 스크립트로 닫았다. `scripts/validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄워 HTTP 경로를 통과시켰고, 이 과정에서 `prompt_catalog` 런타임 import 경로 버그도 함께 수정했다.
-- policy management 전용 화면과 real sensor 시계열 차트는 아직 미구현이다.
+- dashboard의 auth context / policy management 패널과 policy enable/disable API는 구현됐지만, real sensor 시계열 차트와 정책 편집의 세부 폼 편집 UI는 아직 없다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 - real shadow log 적재 경로는 열렸지만, 실제 운영 window를 충분히 누적한 상태는 아니다.
 
 ## 다음 우선순위
 
-1. `OPS_API_LLM_PROVIDER=openai`, `OPS_API_MODEL_ID=champion` 기준 online smoke 실행
-2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-3. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
-4. policy management 화면과 real sensor chart 추가
+1. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
+2. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
+3. real sensor 시계열 차트와 zone history 시각화를 dashboard에 추가
+4. `policy-engine`의 policy loader / precheck를 runtime path에 연결

@@ -61,6 +61,7 @@ def main() -> int:
             "/sensors",
             "/devices",
             "/policies",
+            "/policies/{policy_id}",
             "/actions/approve",
             "/actions/execute",
             "/actions/reject",

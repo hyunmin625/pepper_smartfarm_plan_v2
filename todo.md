@@ -923,7 +923,7 @@
 - [x] action 승인 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] alert 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] robot task 화면 설계 (`ops-api/ops_api/app.py`)
-- [ ] policy 관리 화면 설계
+- [x] policy 관리 화면 설계 (`ops-api/ops_api/app.py`, `ops-api/ops_api/api_models.py`)
 
 ## 14.2 시각화
 - [ ] 온도/습도 시계열 차트

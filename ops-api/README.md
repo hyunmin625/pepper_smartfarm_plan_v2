@@ -2,7 +2,7 @@
 
 FastAPI 기반 운영 백엔드다.
 
-- `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `POST /shadow/cases/capture`, `GET /shadow/window`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
+- `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /policies/{policy_id}`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `POST /shadow/cases/capture`, `GET /shadow/window`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
 - `ops_api/auth.py`: `viewer/operator/service/admin` 역할과 `disabled/header_token` 인증 모드 정의
 - `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `alerts`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
 - `ops_api/shadow_mode.py`: shadow audit JSONL 적재/summary 계산 helper
@@ -49,4 +49,5 @@ python3 scripts/validate_ops_api_postgres_smoke.py
 ```
 
 - `validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄운 뒤 localhost HTTP 경로를 점검한다.
+  - 현재 smoke 범위: `GET /auth/me`, `GET/POST /runtime/mode`, `GET /policies`, `POST /policies/{policy_id}`, `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard/data`
 - `validate_ops_api_postgres_smoke.py`는 `OPS_API_POSTGRES_SMOKE_URL` 또는 `OPS_API_DATABASE_URL`가 PostgreSQL URL이고 driver(`psycopg`/`psycopg2`)가 설치돼 있을 때만 실제 smoke를 수행한다. 환경이 없으면 `blocked` 상태로 종료한다.

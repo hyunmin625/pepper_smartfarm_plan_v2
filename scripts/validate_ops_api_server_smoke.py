@@ -117,6 +117,8 @@ def main() -> int:
                 observations["auth_me"] = auth_me
                 if auth_me.get("actor", {}).get("actor_id") != "server-smoke":
                     errors.append("auth/me did not echo actor envelope")
+                if auth_me.get("actor", {}).get("role") != "operator":
+                    errors.append("auth/me did not resolve operator role")
 
                 _, runtime_before = _request_json(f"{base_url}/runtime/mode")
                 observations["runtime_before"] = runtime_before
@@ -131,6 +133,28 @@ def main() -> int:
                 observations["runtime_after"] = runtime_after
                 if runtime_after.get("data", {}).get("runtime_mode", {}).get("mode") != "approval":
                     errors.append("runtime mode toggle to approval failed")
+
+                _, policies_before = _request_json(
+                    f"{base_url}/policies",
+                    headers={"X-Actor-Id": "admin-01", "X-Actor-Role": "admin"},
+                )
+                observations["policies_before"] = policies_before
+                policy_items = policies_before.get("data", {}).get("items", [])
+                if not policy_items:
+                    errors.append("policies endpoint returned no seeded rows")
+                policy_id = policy_items[0]["policy_id"] if policy_items else None
+
+                if isinstance(policy_id, str):
+                    _, policy_update = _request_json(
+                        f"{base_url}/policies/{policy_id}",
+                        method="POST",
+                        payload={"enabled": False},
+                        headers={"X-Actor-Id": "admin-01", "X-Actor-Role": "admin"},
+                    )
+                    observations["policy_update"] = policy_update
+                    updated_enabled = policy_update.get("data", {}).get("policy", {}).get("enabled")
+                    if updated_enabled is not False:
+                        errors.append("policy update did not disable policy")
 
                 decision_status, decision = _request_json(
                     f"{base_url}/decisions/evaluate-zone",
@@ -173,6 +197,10 @@ def main() -> int:
                         errors.append("dashboard summary missing decisions")
                     if summary.get("command_count", 0) < 1:
                         errors.append("dashboard summary missing commands")
+                    if summary.get("policy_count", 0) < 1:
+                        errors.append("dashboard summary missing policy count")
+                    if dashboard.get("actor", {}).get("role") != "admin":
+                        errors.append("dashboard actor envelope missing admin role")
         finally:
             process.terminate()
             try:

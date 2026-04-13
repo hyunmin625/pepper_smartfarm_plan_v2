@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### OpenAI online smoke + policy management/auth dashboard 보강
+- `bash -lc "set -a; source .env >/dev/null 2>&1; set +a; python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10"`로 실제 OpenAI online smoke를 실행했다.
+- 결과는 `champion -> ds_v11` FT model alias 해석, retrieval chunk 주입, strict JSON parse, validator rewrite reason(`HSV-08`)까지 모두 통과였다.
+- `ops-api/ops_api/api_models.py`에 `PolicyUpdateRequest`를 추가하고, `ops-api/ops_api/app.py`에 `POST /policies/{policy_id}`를 연결해 `enabled/severity/description/trigger_flags/enforcement`를 업데이트할 수 있게 했다.
+- `/dashboard`에는 `Auth Context`와 `Policy Management` 패널을 추가해 현재 actor/role/auth mode 확인과 policy enable/disable 토글을 한 화면에서 수행할 수 있게 했다.
+- `scripts/validate_ops_api_server_smoke.py`도 policy list/toggle까지 포함하도록 확장했고, 실제 localhost smoke에서 `errors 0`으로 다시 통과했다.
+
 ### ops-api shadow capture + window summary API 추가
 - `ops-api/ops_api/shadow_mode.py`를 추가해 `llm-orchestrator` shadow audit JSONL을 읽고 rolling window summary를 계산하는 helper를 분리했다.
 - `ops-api/ops_api/app.py`에 `POST /shadow/cases/capture`, `GET /shadow/window`를 추가해 real shadow case 적재와 summary 조회를 운영 API에서 직접 수행할 수 있게 했다.

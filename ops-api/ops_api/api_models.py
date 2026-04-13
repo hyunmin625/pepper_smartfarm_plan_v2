@@ -97,3 +97,11 @@ class RobotTaskCreateRequest(BaseModel):
     status: Literal["pending", "approved", "done", "blocked"] = "pending"
     target: dict[str, Any] = Field(default_factory=dict)
     payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class PolicyUpdateRequest(BaseModel):
+    enabled: bool | None = None
+    severity: str | None = None
+    description: str | None = None
+    trigger_flags: list[str] | None = None
+    enforcement: dict[str, Any] | None = None
