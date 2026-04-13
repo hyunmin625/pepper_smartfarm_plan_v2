@@ -34,13 +34,14 @@
 
 ---
 
-## 즉시 조정 사항 (2026-04-12)
+## 즉시 조정 사항 (2026-04-13)
 
 - 현재 fine-tuning `core24`는 challenger 비교용 append-only 회귀셋으로 유지한다.
-- `extended120` minimum gate는 이미 달성했다. 현재 분포는 `40/16/12/12/8/16/16`이다.
-- 다음 운영 게이트는 champion/challenger를 `core24 + extended120` 기준으로 재평가하는 것이고, 권장 게이트는 `extended160`이다.
-- 현재 in-flight run인 `ds_v10 / prompt_v8`는 최근 sync 기준 `queued`다.
-- 즉시 우선순위는 `새 seed 추가`보다 `extended120 실평가`와 `extended160` 확장이다.
+- `extended200`과 blind holdout `50` frozen coverage는 이미 확보했다. 현재 분포는 `expert 60 / action 28 / forbidden 20 / failure 24 / robot 16 / edge 28 / seasonal 24`, blind holdout은 `50건`이다.
+- 현재 frozen baseline은 `ds_v11`이고 최신 corrective candidate `ds_v14`는 `ds_v11`보다 낮아 승격 실패로 닫았다.
+- 현재 in-flight fine-tuning run은 없다. `docs/model_product_readiness_reassessment.md` 기준 submit freeze를 유지한다.
+- 즉시 우선순위는 `real shadow window` 누적, blind50 validator 잔여 `5건` 축소, extended200 validator 잔여 `42건` 우선순위 batch 설계, synthetic shadow `day0` residual `4건` 해소다.
+- 운영/API 쪽 즉시 우선순위는 real PostgreSQL smoke, dashboard real sensor chart/zone history, policy source versioning/UI 반영이다.
 
 ---
 
@@ -65,7 +66,7 @@
 - 적고추/건고추 재배 매뉴얼, 현장 SOP, 장치 운전 기준 수집 목록 작성
 - offline decision runner 설계
 - eval set 기준 정의
-- `core24 + extended120/160` benchmark 운영 기준 정의
+- `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 운영 기준 정의
 - model/prompt/dataset version 규칙 정의
 - 기존 Q&A → 상태/행동 구조로 재분류
 - 행동추천 JSON 샘플 100개 생성
@@ -105,7 +106,7 @@
 ### 주요 작업
 - train/val JSONL 생성
 - expert judgement eval set 초안 작성
-- eval `core24 + extended120` 운영 기준 반영
+- eval `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 운영 기준 반영
 - state judgement 샘플 작성
 - forbidden action 샘플 작성
 - RAG chunking 전략 정의
@@ -286,7 +287,7 @@
 
 - Week 2: JSON 출력 안정화 전에는 다음 단계 진행 금지
 - Week 2: RAG 검색 품질 기준 없이 하이브리드 판단 운영 금지
-- Week 2: `extended120` 미달 상태에서는 새 fine-tuning submit 기본 중지
+- Week 2: frozen gate 재확인과 real shadow mode 전에는 새 fine-tuning submit 기본 중지
 - Week 3: 센서 품질 플래그 없이 학습 데이터 반영 금지
 - Week 4: 정책 엔진 없이 자동화 금지
 - Week 5: execution-gateway 없이 PLC 연결 금지

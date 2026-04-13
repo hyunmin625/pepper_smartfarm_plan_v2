@@ -21,7 +21,7 @@
 | 적고추 전주기 전문가 지식 구조화 | 완료 | `docs/expert_knowledge_map.md`, `docs/sensor_judgement_matrix.md`, `EXPERT_AI_AGENT_PLAN.md` |
 | RAG 지식베이스 설계와 품질 기준 수립 | 완료 | `docs/rag_indexing_plan.md`, `docs/rag_source_inventory.md`, `schemas/rag_chunk_schema.json`, `data/rag/pepper_expert_seed_chunks.jsonl` |
 | 파인튜닝 seed와 평가셋 준비 | 완료 | `data/examples/*_samples.jsonl`, `data/examples/*_samples_batch2.jsonl`, `data/examples/*_samples_batch3.jsonl`, `evals/expert_judgement_eval_set.jsonl`, `evals/rag_retrieval_eval_set.jsonl` |
-| OpenAI SFT submit 경로 검증 | 완료 | 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl` 실패(`invalid_file_format`) 후 `messages` only 포맷으로 수정했고, 이후 현재 champion `ds_v5/prompt_v5` model `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v5-prompt-v5-eval-v1-20260412-075506:DTbkkFBo`까지 확보했다. `ds_v10/prompt_v8` job `ftjob-LXWpGudJCeyqsH7WMorGHAT2`는 로컬 manifest 기준 `cancelled`이며, 다음 corrective draft `prompt_v9`는 train `180` / validation `14`로 로컬 생성 완료 상태다. |
+| OpenAI SFT submit 경로 검증 | 완료 | 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl` 실패(`invalid_file_format`) 후 `messages` only 포맷으로 수정했다. 현재 frozen baseline은 `ds_v11/prompt_v5_methodfix_batch14` model `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`이고, 최신 corrective candidate `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` run `ftjob-37TzJb1FtgGUghjfyaGqAxkA`는 `succeeded`였지만 `ds_v11`보다 낮아 승격 실패로 닫았다. `ds_v12`/`ds_v13`은 dry-run blocked challenger이며 현재 in-flight submit은 없다. |
 | 모델/프롬프트/데이터셋 버전 관리 체계 설계 | 완료 | `docs/mlops_registry_design.md` |
 | offline runner 설계 | 완료 | `docs/offline_agent_runner_spec.md`, `data/examples/synthetic_sensor_scenarios.jsonl` |
 | shadow mode 보고 체계 정의 | 완료 | `docs/shadow_mode_report_format.md` |
@@ -38,17 +38,16 @@
 
 - 설계 문서, 스키마, seed dataset, eval set, registry 규칙, shadow report 포맷이 모두 존재한다.
 - 따라서 **실측 데이터 없는 상태에서 AI 준비 구축과 MLOps 기반 설계는 완료**로 판정한다.
-- 다음 단계의 중심은 문서 설계가 아니라 `extended160` 기준 승격 게이트 고정, `extended200` 확장, `offline runner 구현`, `policy JSON 작성`이다.
-- `24건` eval만으로는 challenger 승격과 제품화 판단을 하기 어렵다고 재판정했고, 현재는 `core24`를 유지하면서 `extended120` minimum benchmark를 이미 달성했다.
-- `extended120`만으로도 제품화 판단이 부족하다고 재판정했고, blind holdout / safety invariant / field usability / shadow mode를 별도 승격 게이트로 추가했다.
+- 다음 단계의 중심은 문서 설계보다 `real shadow window` 누적, blind50 validator 잔여 `5건` 축소, extended200 validator 잔여 `42건` 우선순위 batch 설계, synthetic shadow `day0` residual `4건` 해소다.
+- `24건` eval은 append-only `core24` 회귀셋으로 유지하고, `extended120` minimum benchmark와 `extended200 + blind_holdout50` frozen coverage는 이미 확보했다.
+- 후속 challenger 비교는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 묶음으로만 수행한다.
+- 현재 frozen baseline은 `ds_v11`이며 결과는 `core24 0.9167`, `extended120 0.7667`, `extended160 0.75`, `extended200 0.7`, `blind_holdout50 raw 0.7`, `blind_holdout50 validator 0.9`, `strict_json_rate 1.0`이다.
+- 최신 corrective candidate `ds_v14`는 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 validator 0.9`로 `ds_v11` baseline을 넘지 못해 승격 실패다.
 - `risk_level` 기준은 `docs/risk_level_rubric.md`로 분리했고, critical slice 감사는 `python3 scripts/report_risk_slice_coverage.py`로 수행한다.
-- 현재 in-flight fine-tuning job은 없다. 최근 corrective challenger `ds_v10 / prompt_v8` (`ftjob-LXWpGudJCeyqsH7WMorGHAT2`)는 로컬 manifest 기준 `cancelled`다.
-- 다음 corrective draft는 로컬 seed `268건`, 추천 split train `220`, validation `48`, eval overlap `0` 상태까지 준비했다.
-- 마지막 완료 모델 `ds_v9` 재평가를 완료했다. 결과는 `core24 0.875`, `extended120 0.7083`, `extended160 0.575`, `blind_holdout24 0.5`, 제품화 게이트 `hold`, `safety_invariant_pass_rate 0.3333`, `field_usability_pass_rate 0.9583`다.
-- 즉 공개 benchmark 개선과 제품 게이트 통과는 분리되어 있고, 후속 challenger도 반드시 같은 조건으로만 비교해야 한다.
-- 사용자 지시 보강은 완료했고 batch12까지 반영했다: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`, `failure_response 36`, `rootzone_diagnosis 9`, `nutrient_risk 7`.
-- 최근 training 분포는 `request_human_check 123`, `create_alert 87`, `pause_automation 44`, `block_action 33`, `enter_safe_mode 16`이다.
-- 남은 데이터 병목보다 더 큰 문제는 새 `extended160` tranche 일반화 실패다. 새 tranche 40건만 보면 `ds_v9` pass rate는 `0.1`이다.
+- 현재 in-flight fine-tuning job은 없다. `docs/model_product_readiness_reassessment.md` 기준 submit freeze를 유지한다.
+- `ds_v12`/`ds_v13`은 real shadow mode 부재와 synthetic shadow `day0 hold` 때문에 blocked challenger로만 유지한다.
+- 남은 제품화 blocker는 blind50 validator 잔여 `5건`, extended200 validator 잔여 `42건`, synthetic shadow `day0` residual `4건`, real shadow mode `not_run`이다.
+- 즉 공개 benchmark 개선과 제품 게이트 통과는 분리되어 있고, 후속 challenger도 반드시 같은 frozen gate와 real shadow 조건으로만 비교해야 한다.
 
 ## 개정 개발 순서
 
@@ -66,8 +65,8 @@
 - RAG 지식베이스 설계: 문서 chunking, 메타데이터, vector store, citation 저장 구조
 - 파인튜닝 데이터 설계: 상태 해석, 행동 추천, 금지 행동, 실패 대응, follow_up, confidence
 - 평가셋 구축: JSON 형식 준수, 금지 행동 차단, 근거 문서 반영률, 보수적 응답, hallucination
-- 평가셋 운영 원칙: 현재 `24건`은 core regression set으로 동결하고, 승격 기본 게이트는 `extended160`, 제품화 판단은 `extended200 + blind_holdout50`에서 판단
-- 제품화 운영 원칙: `extended120/160` 외에 `blind_holdout >= 0.95`, safety invariant fail `0`, field usability fail `0`, shadow mode pass가 추가로 필요
+- 평가셋 운영 원칙: 현재 `24건`은 core regression set으로 동결하고, 후속 challenger 비교는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 묶음으로 수행한다.
+- 제품화 운영 원칙: `extended200 + blind_holdout50`뿐 아니라 `blind_holdout >= 0.95`, safety invariant fail `0`, field usability fail `0`, real shadow mode pass가 동시에 필요하다.
 - 모델/프롬프트 버전 관리: prompt version, model version, dataset version, eval version
 - 의사결정 시뮬레이터: 실제 온실 없이도 센서 상태 JSON을 넣고 LLM 판단을 검증하는 offline runner
 
@@ -130,7 +129,7 @@
 9. 모델 평가: 기존 champion 모델과 후보 모델 비교
 10. 승인 후 배포: shadow mode에서 검증 후 제한 적용
 
-이 단계에서 model 승격과 추가 fine-tuning 재개는 아래 게이트를 먼저 통과해야 한다. 현재 minimum gate는 이미 충족했지만, 제품 수준 재평가 기준으로는 `extended160`만으로 부족하고 `extended200 + blind_holdout50 + policy/output validator`까지 계획을 올려야 한다.
+이 단계에서 model 승격과 추가 fine-tuning 재개는 아래 게이트를 먼저 통과해야 한다. 현재 minimum gate와 frozen coverage는 이미 확보했지만, 제품 수준 재개 기준은 아직 real shadow와 residual 축소까지 포함해 미충족 상태다.
 
 - `python3 scripts/report_eval_set_coverage.py --enforce-minimums`
 - total eval rows `>= 120`
@@ -139,11 +138,11 @@
 - `edge_case >= 16`
 - `seasonal >= 16`
 - 다음 fine-tuning 재개 전 목표:
-  - validation split 강화: `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread`
-  - extended eval `>= 160`, 제품 주장 전 `>= 200`
-  - blind holdout `>= 50`
-  - hard safety rule을 policy/output validator로 외부화
-  - training label mismatch `8건` 선정리
+  - blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data 2`, `data_and_model 3` 기준 targeted fix 여부 확정
+  - extended200 validator 잔여 `42건`에 대해 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2` 우선순위 batch 설계
+  - synthetic shadow `day0` residual `4건`(`create_alert` 누락 `3`, `inspect_crop` enum drift `1`) 해소
+  - real shadow case를 누적해 실제 `promotion_decision` window를 채우고 submit preflight에 연결
+  - `ds_v12` frozen dry-run package와 `ds_v13` next-only candidate 중 실제 submit 후보 결정
 
 ## 4. MLOps 루프
 
@@ -183,7 +182,7 @@ MLOps는 다음 폐쇄 루프로 운영한다.
 - 모델 변경은 eval 결과와 버전 기록 없이 운영에 반영하지 않는다.
 - AI 모델은 통합 제어 시스템 구현 후, shadow mode부터 연결한다.
 - `24건` core regression만으로 challenger를 승격하지 않는다.
-- `extended120` 미달 상태에서는 새 fine-tuning spend보다 eval 확장을 우선한다.
+- frozen gate와 real shadow window가 확보되기 전에는 새 fine-tuning spend보다 잔여 실패 축소와 shadow 검증을 우선한다.
 
 ## 참고 근거
 

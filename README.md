@@ -310,10 +310,10 @@
 1. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
 2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
 3. real sensor 시계열 차트와 zone history 시각화를 dashboard에 추가
-4. `policy-engine` policy source abstraction과 blocked/approval event 저장을 추가
-3. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
-4. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
-5. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
-6. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + batch17 + next-only oversampling challenger 제출 여부를 결정
+4. `policy-engine` policy source versioning과 blocked/approval event UI를 추가
+5. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
+6. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
+7. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
+8. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + batch17 + next-only oversampling challenger 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

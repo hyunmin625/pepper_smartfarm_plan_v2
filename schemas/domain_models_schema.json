@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hyunmin625/pepper_smartfarm_plan_v2/schemas/domain_models_schema.json",
+  "title": "Pepper Smartfarm Domain Models",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {},
+  "$defs": {
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "urgent"]
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["farm_id", "zone_id", "zone_type", "priority", "description"],
+      "properties": {
+        "farm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zone_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zone_type": {
+          "type": "string",
+          "enum": ["crop_zone", "nursery_zone", "buffer_zone", "service_zone", "drying_zone", "storage_zone", "other"]
+        },
+        "priority": {
+          "$ref": "#/$defs/priority"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metadata": {
+          "type": "object"
+        }
+      }
+    },
+    "sensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sensor_id",
+        "zone_id",
+        "sensor_type",
+        "measurement_fields",
+        "unit",
+        "raw_sample_seconds",
+        "ai_aggregation_seconds",
+        "priority",
+        "model_profile",
+        "protocol"
+      ],
+      "properties": {
+        "sensor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zone_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sensor_type": {
+          "type": "string",
+          "enum": [
+            "air_temperature",
+            "relative_humidity",
+            "co2",
+            "par",
+            "solar_radiation",
+            "substrate_moisture",
+            "substrate_temperature",
+            "feed_ec",
+            "feed_ph",
+            "drain_ec",
+            "drain_ph",
+            "drain_rate",
+            "outside_temperature",
+            "outside_relative_humidity",
+            "wind_speed",
+            "rain",
+            "camera",
+            "other"
+          ]
+        },
+        "measurement_fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "raw_sample_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ai_aggregation_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "priority": {
+          "$ref": "#/$defs/priority"
+        },
+        "model_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["modbus_tcp", "mqtt", "rest", "camera_api", "manual", "other"]
+        },
+        "install_location": {
+          "type": ["string", "null"]
+        },
+        "calibration_interval_days": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "redundancy_group": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device_id",
+        "zone_id",
+        "device_type",
+        "priority",
+        "model_profile",
+        "controller_id",
+        "protocol",
+        "control_mode",
+        "response_timeout_seconds",
+        "supported_action_types"
+      ],
+      "properties": {
+        "device_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zone_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "device_type": {
+          "type": "string",
+          "enum": ["fan", "shade", "vent", "irrigation_valve", "fertigation_unit", "heater", "co2_unit", "dehumidifier", "robot", "other"]
+        },
+        "priority": {
+          "$ref": "#/$defs/priority"
+        },
+        "model_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["modbus_tcp", "opcua", "rest", "manual", "other"]
+        },
+        "control_mode": {
+          "type": "string",
+          "enum": ["auto", "manual", "approval", "disabled", "unknown"]
+        },
+        "response_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "supported_action_types": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "safety_interlocks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constraint_id", "severity", "summary", "source"],
+      "properties": {
+        "constraint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "critical", "unknown"]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "enum": ["sensor_quality", "policy", "operator", "device_fault", "site_rule", "other"]
+        },
+        "policy_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "action_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_type", "target_id"],
+      "properties": {
+        "target_type": {
+          "type": "string",
+          "enum": ["zone", "device", "sensor", "robot", "operator", "system"]
+        },
+        "target_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "robot_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "zone_id", "candidate_type", "priority", "status", "target", "summary"],
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zone_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate_type": {
+          "type": "string",
+          "enum": ["ripe_cluster", "disease_suspect", "growth_anomaly", "obstacle", "manual_review"]
+        },
+        "priority": {
+          "$ref": "#/$defs/priority"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "queued", "approved", "rejected", "completed", "cancelled"]
+        },
+        "target": {
+          "$ref": "#/$defs/action_target"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "robot_task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_type", "priority", "approval_required", "reason"],
+      "properties": {
+        "task_type": {
+          "type": "string",
+          "enum": ["harvest_candidate_review", "inspect_crop", "skip_area", "manual_review"]
+        },
+        "candidate_id": {
+          "type": ["string", "null"]
+        },
+        "priority": {
+          "$ref": "#/$defs/priority"
+        },
+        "approval_required": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/action_target"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,438 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hyunmin625/pepper_smartfarm_plan_v2/schemas/system_event_schema.json",
+  "title": "Pepper Smartfarm System Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "emitted_at",
+    "source_service",
+    "farm_id",
+    "severity",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "system_event.v1"
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "sensor.snapshot.updated",
+        "zone.state.updated",
+        "action.requested",
+        "action.blocked",
+        "action.executed",
+        "robot.task.created",
+        "robot.task.failed",
+        "alert.created",
+        "approval.requested"
+      ]
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_service": {
+      "type": "string",
+      "enum": [
+        "sensor_ingestor",
+        "state_estimator",
+        "llm_orchestrator",
+        "policy_engine",
+        "ops_api",
+        "execution_gateway",
+        "plc_adapter",
+        "robot_task_manager"
+      ]
+    },
+    "farm_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warning", "error", "critical"]
+    },
+    "zone_id": {
+      "type": ["string", "null"]
+    },
+    "correlation_ids": {
+      "$ref": "#/$defs/correlation_ids"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "sensor.snapshot.updated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/sensor_snapshot_updated"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "zone.state.updated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/zone_state_updated"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "action.requested"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/action_requested"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "action.blocked"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/action_blocked"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "action.executed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/action_executed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "robot.task.created"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/robot_task_created"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "robot.task.failed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/robot_task_failed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "alert.created"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/alert_created"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "approval.requested"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/approval_requested"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "correlation_ids": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "type": ["string", "null"]
+        },
+        "request_id": {
+          "type": ["string", "null"]
+        },
+        "action_id": {
+          "type": ["string", "null"]
+        },
+        "task_id": {
+          "type": ["string", "null"]
+        },
+        "command_request_id": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "sensor_snapshot_updated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sensor_id", "sensor_type", "measurement_fields", "observed_at", "quality_flag"],
+      "properties": {
+        "sensor_id": {
+          "type": "string"
+        },
+        "sensor_type": {
+          "type": "string"
+        },
+        "measurement_fields": {
+          "type": "object"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "quality_flag": {
+          "type": "string"
+        }
+      }
+    },
+    "zone_state_updated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state_ref"],
+      "properties": {
+        "state_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_version", "state_version", "storage_path"],
+          "properties": {
+            "schema_version": {
+              "type": "string",
+              "const": "state.v1"
+            },
+            "state_version": {
+              "type": "string"
+            },
+            "storage_path": {
+              "type": "string"
+            }
+          }
+        },
+        "state_snapshot": {
+          "$ref": "state_schema.json"
+        }
+      }
+    },
+    "action_requested": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "policy_result", "command_request"],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "policy_result": {
+          "type": "string",
+          "enum": ["pass", "approval_required"]
+        },
+        "command_request": {
+          "$ref": "device_command_request_schema.json"
+        }
+      }
+    },
+    "action_blocked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "action_id", "policy_result", "reason_codes"],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "action_id": {
+          "type": "string"
+        },
+        "policy_result": {
+          "type": "string",
+          "enum": ["blocked", "approval_required"]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "action_executed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "request_id", "device_id", "execution_status"],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "device_id": {
+          "type": "string"
+        },
+        "execution_status": {
+          "type": "string",
+          "enum": ["queued", "dispatched", "completed", "failed", "timeout"]
+        },
+        "readback_summary": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "robot_task_created": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "candidate", "robot_task"],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "candidate": {
+          "$ref": "domain_models_schema.json#/$defs/robot_candidate"
+        },
+        "robot_task": {
+          "$ref": "domain_models_schema.json#/$defs/robot_task"
+        }
+      }
+    },
+    "robot_task_failed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "candidate_id", "failure_code", "reason"],
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "candidate_id": {
+          "type": ["string", "null"]
+        },
+        "failure_code": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "alert_created": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alert_id", "alert_type", "status", "summary"],
+      "properties": {
+        "alert_id": {
+          "type": "string"
+        },
+        "alert_type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "queued", "resolved", "dismissed"]
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "approval_requested": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "approval_id", "approval_scope", "approval_reason"],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "approval_id": {
+          "type": "string"
+        },
+        "approval_scope": {
+          "type": "string",
+          "enum": ["zone", "site", "device", "robot_task", "override"]
+        },
+        "approval_reason": {
+          "type": "string"
+        },
+        "requested_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

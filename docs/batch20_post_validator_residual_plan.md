@@ -73,3 +73,10 @@
 
 - validator 공백은 이미 닫혔으므로, 다음 challenger는 `batch20 + real shadow 누적 로그`가 같이 준비된 뒤에만 검토한다.
 - 우선순위는 여전히 `real shadow window hold/rollback 해소`가 batch20 반영보다 앞선다.
+
+## 결정
+
+- blind50 validator 잔여 `5건`에 대한 targeted fix는 `batch20`으로 확정한다.
+- blind50 전용 추가 prompt variant는 만들지 않는다. `sft_v10` 유지, corrective 범위는 sample과 label 경계만 고정한다.
+- `batch20`의 소비 위치는 `ds_v15` next-only dry-run까지로 제한한다.
+- 실제 submit은 `blind_holdout50 validator >= 0.95`, `synthetic shadow day0 promote`, `real shadow pass`가 모두 충족되기 전까지 열지 않는다.

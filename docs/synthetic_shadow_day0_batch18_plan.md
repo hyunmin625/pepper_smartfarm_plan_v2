@@ -50,3 +50,19 @@
 - batch18 반영 후 `validate_training_examples`, `audit_training_data_consistency`, `report_risk_slice_coverage`, `report_training_sample_stats`를 다시 실행해 반영 상태를 고정한다.
 - `synthetic shadow day0` owner 리포트를 별도로 남겨 `data_and_model`과 `robot_contract_and_model`만 residual로 남도록 추적한다.
 - 실제 후속 challenger는 batch18을 포함할지, 아니면 `ds_v12` dry-run snapshot만 먼저 유지할지 shadow/runtime 기준으로 결정한다.
+
+## 6. hold 해소 기준과 submit 정책
+
+결정:
+
+- `synthetic shadow day0` residual `4건`을 줄이는 canonical corrective path는 계속 `batch18`이다.
+- `ds_v12`는 frozen dry-run snapshot, `ds_v13`은 batch18 비교용 live-head dry-run으로만 유지한다.
+- blind50 `batch20`까지 포함한 최신 next-only candidate는 `ds_v15`지만, 이것도 synthetic shadow `day0`와 real shadow gate가 풀리기 전까지는 submit 후보로 승격하지 않는다.
+- 따라서 현재 단계의 결정은 `submit 후보 선택`이 아니라 `submit 보류`다.
+
+해소 완료 조건:
+
+- `synthetic shadow day0`가 `operator_agreement_rate`와 `promotion_decision` 기준으로 `promote`
+- `blind-action-004`, `blind-expert-003`, `blind-expert-010`에서 `create_alert` 누락 제거
+- `blind-robot-005`에서 `inspect_crop` exact enum drift 제거
+- real shadow window도 `rollback`에서 `pass`로 전환
