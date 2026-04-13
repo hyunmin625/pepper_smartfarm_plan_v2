@@ -1,0 +1,32 @@
+{
+  "models": {
+    "pepper-ops-local-stub": {
+      "provider_hint": "stub",
+      "resolved_model_id": "pepper-ops-local-stub",
+      "prompt_version": "sft_v10",
+      "status": "local_stub",
+      "notes": "Local deterministic stub path for integration validation."
+    },
+    "champion": {
+      "provider_hint": "openai",
+      "resolved_model_id": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+      "prompt_version": "sft_v5",
+      "status": "production_candidate",
+      "notes": "Current frozen baseline champion for runtime evaluation."
+    },
+    "ds_v11_champion": {
+      "provider_hint": "openai",
+      "resolved_model_id": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+      "prompt_version": "sft_v5",
+      "status": "production_candidate",
+      "notes": "Same model as champion; kept as explicit historical alias."
+    },
+    "ds_v14_rejected": {
+      "provider_hint": "openai",
+      "resolved_model_id": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz",
+      "prompt_version": "sft_v10",
+      "status": "rejected_challenger",
+      "notes": "Historical rejected challenger kept for replay and regression comparison."
+    }
+  }
+}

@@ -39,7 +39,7 @@ def main() -> int:
     zone_state["current_state"]["summary"] = scenario["summary"]
 
     service = LLMOrchestratorService.from_model_config(
-        ModelConfig(provider="stub", model_id="pepper-ops-local-stub")
+        ModelConfig(provider="stub", model_id="champion")
     )
     result = service.evaluate(
         OrchestratorRequest(
@@ -54,6 +54,11 @@ def main() -> int:
         errors.append("stub response should parse as JSON object")
     if not result.retrieval_chunks:
         errors.append("retriever should return at least one chunk")
+    tool_names = [tool.name for tool in result.tool_catalog]
+    if "search_cultivation_knowledge" not in tool_names:
+        errors.append("tool registry should expose search_cultivation_knowledge")
+    if "request_human_approval" not in tool_names:
+        errors.append("tool registry should expose request_human_approval")
     citations = result.validated_output.get("citations", [])
     if not citations:
         errors.append("validated output should contain citations")
@@ -64,13 +69,17 @@ def main() -> int:
     ]
     if "request_human_check" not in action_types:
         errors.append("validated output should include request_human_check")
+    if "DTryNJg3" not in result.model_id:
+        errors.append("model alias champion should resolve to ds_v11 frozen model id")
 
     print(
         json.dumps(
             {
                 "request_id": result.request.request_id,
                 "errors": errors,
+                "model_id": result.model_id,
                 "retrieval_chunk_ids": [chunk.chunk_id for chunk in result.retrieval_chunks],
+                "tool_names": tool_names,
                 "validator_reason_codes": result.validator_reason_codes,
                 "action_types_after": action_types,
                 "audit_path": result.audit_path,

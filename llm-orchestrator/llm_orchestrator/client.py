@@ -14,6 +14,8 @@ except Exception:  # pragma: no cover
     APITimeoutError = Exception
     RateLimitError = Exception
 
+from .model_registry import ResolvedModelReference, resolve_model_reference
+
 
 @dataclass(frozen=True)
 class ModelConfig:
@@ -33,6 +35,7 @@ class ModelInvocation:
     provider: str
     attempts: int
     used_repair_prompt: bool = False
+    model_alias: str | None = None
 
 
 class CompletionClient(Protocol):
@@ -43,6 +46,7 @@ class CompletionClient(Protocol):
 class StubCompletionClient:
     def __init__(self, config: ModelConfig) -> None:
         self.config = config
+        self.model_ref = resolve_model_reference(config.model_id)
 
     def complete(self, *, system_prompt: str, user_message: str) -> ModelInvocation:
         payload = json.loads(user_message)
@@ -94,10 +98,23 @@ class StubCompletionClient:
                     {"action_type": "request_human_check", "approval_required": True},
                 ],
             }
-        return ModelInvocation(raw_text=json.dumps(output, ensure_ascii=False), model_id=self.config.model_id, provider="stub", attempts=1)
+        return ModelInvocation(
+            raw_text=json.dumps(output, ensure_ascii=False),
+            model_id=self.model_ref.resolved_model_id,
+            provider="stub",
+            attempts=1,
+            model_alias=self.model_ref.model_alias,
+        )
 
     def repair_json(self, *, original_output: str, task_type: str) -> ModelInvocation:
-        return ModelInvocation(raw_text=original_output, model_id=self.config.model_id, provider="stub", attempts=1, used_repair_prompt=True)
+        return ModelInvocation(
+            raw_text=original_output,
+            model_id=self.model_ref.resolved_model_id,
+            provider="stub",
+            attempts=1,
+            used_repair_prompt=True,
+            model_alias=self.model_ref.model_alias,
+        )
 
 
 class OpenAICompletionClient:
@@ -108,6 +125,7 @@ class OpenAICompletionClient:
         if not api_key:
             raise RuntimeError(f"{config.api_key_env} is not set")
         self.config = config
+        self.model_ref = resolve_model_reference(config.model_id)
         self.client = OpenAI(api_key=api_key, timeout=config.timeout_seconds)
 
     def complete(self, *, system_prompt: str, user_message: str) -> ModelInvocation:
@@ -137,10 +155,11 @@ class OpenAICompletionClient:
                 raw_text = self._call_openai(system_prompt=system_prompt, user_message=user_message)
                 return ModelInvocation(
                     raw_text=raw_text,
-                    model_id=self.config.model_id,
+                    model_id=self.model_ref.resolved_model_id,
                     provider=self.config.provider,
                     attempts=attempt,
                     used_repair_prompt=used_repair_prompt,
+                    model_alias=self.model_ref.model_alias,
                 )
             except Exception as exc:  # pragma: no cover
                 last_error = exc
@@ -153,7 +172,7 @@ class OpenAICompletionClient:
         if hasattr(self.client, "responses"):
             try:
                 response = self.client.responses.create(
-                    model=self.config.model_id,
+                    model=self.model_ref.resolved_model_id,
                     input=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_message},
@@ -167,7 +186,7 @@ class OpenAICompletionClient:
                 pass
 
         response = self.client.chat.completions.create(
-            model=self.config.model_id,
+            model=self.model_ref.resolved_model_id,
             temperature=self.config.temperature,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -187,3 +206,7 @@ def create_completion_client(config: ModelConfig) -> CompletionClient:
 
 def _should_retry_openai_error(exc: Exception) -> bool:
     return isinstance(exc, (RateLimitError, APITimeoutError, APIError))
+
+
+def get_resolved_model_reference(model_id: str) -> ResolvedModelReference:
+    return resolve_model_reference(model_id)

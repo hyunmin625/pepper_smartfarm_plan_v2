@@ -5,6 +5,17 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+SMART_CHARACTER_MAP = str.maketrans(
+    {
+        "“": '"',
+        "”": '"',
+        "‘": "'",
+        "’": "'",
+        "，": ",",
+        "：": ":",
+    }
+)
+
 
 @dataclass(frozen=True)
 class ParsedResponse:
@@ -16,12 +27,51 @@ class ParsedResponse:
 
 
 def strip_markdown_fence(content: str) -> str:
-    stripped = content.strip()
+    stripped = normalize_json_like_text(content)
     if not stripped.startswith("```"):
         return stripped
     stripped = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", stripped)
     stripped = re.sub(r"\s*```$", "", stripped)
     return stripped.strip()
+
+
+def normalize_json_like_text(content: str) -> str:
+    normalized = content.replace("\ufeff", "").translate(SMART_CHARACTER_MAP)
+    normalized = normalized.replace("\u00a0", " ")
+    return normalized.strip()
+
+
+def extract_balanced_json_object(content: str) -> str | None:
+    start = content.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    for index in range(start, len(content)):
+        char = content[index]
+        if escaped:
+            escaped = False
+            continue
+        if char == "\\":
+            escaped = True
+            continue
+        if char == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return content[start : index + 1]
+    return None
+
+
+def remove_trailing_commas(content: str) -> str:
+    return re.sub(r",(\s*[}\]])", r"\1", content)
 
 
 def parse_response(raw_content: str) -> ParsedResponse:
@@ -34,16 +84,21 @@ def parse_response(raw_content: str) -> ParsedResponse:
     else:
         return ParsedResponse(False, False, False, "response_is_not_json_object", None)
 
-    recovered_candidates = [strip_markdown_fence(raw_content)]
-    stripped = recovered_candidates[0]
-    first_brace = stripped.find("{")
-    last_brace = stripped.rfind("}")
-    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-        recovered_candidates.append(stripped[first_brace : last_brace + 1])
+    normalized = normalize_json_like_text(raw_content)
+    recovered_candidates: list[str] = [strip_markdown_fence(normalized)]
+    balanced = extract_balanced_json_object(recovered_candidates[0])
+    if balanced:
+        recovered_candidates.append(balanced)
+    recovered_candidates.extend(remove_trailing_commas(candidate) for candidate in list(recovered_candidates))
 
+    seen: set[str] = set()
     for candidate in recovered_candidates:
+        cleaned = candidate.strip()
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
         try:
-            parsed = json.loads(candidate)
+            parsed = json.loads(cleaned)
         except json.JSONDecodeError:
             continue
         if isinstance(parsed, dict):

@@ -728,7 +728,7 @@
 - [x] prompt renderer 구현 (`llm-orchestrator/llm_orchestrator/service.py`, `llm-orchestrator/llm_orchestrator/prompt_catalog.py`)
 - [x] rag-retriever client 구현 (`llm-orchestrator/llm_orchestrator/retriever.py`)
 - [x] retrieved_context 조합 로직 작성 (`llm-orchestrator/llm_orchestrator/service.py`)
-- [ ] tool registry 구현
+- [x] tool registry 구현 (`llm-orchestrator/llm_orchestrator/tool_registry.py`)
 - [x] structured output parser 구현 (`llm-orchestrator/llm_orchestrator/response_parser.py`)
 - [x] retry 전략 구현 (`llm-orchestrator/llm_orchestrator/client.py`)
 - [x] timeout 전략 구현 (`llm-orchestrator/llm_orchestrator/client.py`)

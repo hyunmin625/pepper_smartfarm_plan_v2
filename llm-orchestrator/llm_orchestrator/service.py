@@ -8,6 +8,7 @@ from .client import CompletionClient, ModelConfig, create_completion_client
 from .prompt_catalog import get_system_prompt
 from .response_parser import ParsedResponse, build_safe_fallback_output, parse_response
 from .retriever import KeywordRagRetriever, RetrievedChunk
+from .tool_registry import ToolDefinition, available_tool_definitions
 from policy_engine.output_validator import ValidatorContext
 
 from .runtime import LLMDecisionEnvelope, ShadowModeMetadata, ShadowModeObservedOutcome, run_output_validator, run_shadow_mode_capture
@@ -50,6 +51,7 @@ class OrchestratorResult:
     parsed_output: dict[str, Any]
     validated_output: dict[str, Any]
     retrieval_chunks: list[RetrievedChunk]
+    tool_catalog: list[ToolDefinition]
     audit_path: str
     validator_reason_codes: list[str]
     used_repair_prompt: bool
@@ -72,6 +74,7 @@ class OrchestratorResult:
             "parsed_output": self.parsed_output,
             "validated_output": self.validated_output,
             "retrieval_chunks": [chunk.as_prompt_dict() for chunk in self.retrieval_chunks],
+            "tool_catalog": [tool.as_catalog_dict() for tool in self.tool_catalog],
             "audit_path": self.audit_path,
             "validator_reason_codes": self.validator_reason_codes,
             "used_repair_prompt": self.used_repair_prompt,
@@ -85,13 +88,21 @@ class LLMOrchestratorService:
         *,
         client: CompletionClient,
         retriever: KeywordRagRetriever | None = None,
+        tool_catalog: list[ToolDefinition] | None = None,
     ) -> None:
         self.client = client
         self.retriever = retriever or KeywordRagRetriever()
+        self.tool_catalog = tool_catalog or available_tool_definitions()
 
     @classmethod
-    def from_model_config(cls, config: ModelConfig, *, retriever: KeywordRagRetriever | None = None) -> "LLMOrchestratorService":
-        return cls(client=create_completion_client(config), retriever=retriever)
+    def from_model_config(
+        cls,
+        config: ModelConfig,
+        *,
+        retriever: KeywordRagRetriever | None = None,
+        tool_catalog: list[ToolDefinition] | None = None,
+    ) -> "LLMOrchestratorService":
+        return cls(client=create_completion_client(config), retriever=retriever, tool_catalog=tool_catalog)
 
     def evaluate(self, request: OrchestratorRequest) -> OrchestratorResult:
         prompt = get_system_prompt(request.prompt_version)
@@ -138,6 +149,7 @@ class LLMOrchestratorService:
             parsed_output=parsed_output,
             validated_output=validated_output,
             retrieval_chunks=retrieval_chunks,
+            tool_catalog=self.tool_catalog,
             audit_path=str(audit_path),
             validator_reason_codes=audit.validator_reason_codes,
             used_repair_prompt=repaired,
@@ -203,6 +215,9 @@ class LLMOrchestratorService:
         )
 
     def _build_user_message(self, request: OrchestratorRequest, retrieval_chunks: list[RetrievedChunk]) -> str:
+        active_constraints = request.zone_state.get("active_constraints")
+        if not isinstance(active_constraints, dict):
+            active_constraints = request.zone_state.get("constraints", {})
         payload = {
             "task_type": request.task_type,
             "input": {
@@ -210,7 +225,8 @@ class LLMOrchestratorService:
                 "zone_id": request.zone_id,
                 "zone_state": request.zone_state,
                 "retrieved_context": [chunk.as_prompt_dict() for chunk in retrieval_chunks],
-                "active_constraints": request.zone_state.get("constraints", {}),
+                "tool_registry": [tool.as_prompt_dict() for tool in self.tool_catalog],
+                "active_constraints": active_constraints,
                 "weather_context": request.zone_state.get("weather_context", {}),
             },
         }

@@ -4,6 +4,14 @@
 
 ## 2026-04-13
 
+### LLM orchestrator tool registry + model alias + smoke path
+- `llm-orchestrator/llm_orchestrator/tool_registry.py`를 추가해 runtime에서 모델에 노출할 capability catalog를 고정했다. 구현된 도구는 `get_zone_state`, `search_cultivation_knowledge`, `get_recent_trend`, `get_active_constraints`, `estimate_growth_stage`, `request_human_approval`, `log_decision`이고, planned 도구는 prompt 노출에서 제외했다.
+- `llm-orchestrator/llm_orchestrator/model_registry.py`와 `artifacts/runtime/llm_orchestrator/model_registry.json`를 추가해 `champion`, `ds_v11_champion`, `ds_v14_rejected` alias를 실제 FT model id로 해석하도록 했다. `client.py`는 이제 alias를 먼저 해석한 뒤 `stub/openai` 공통으로 같은 id를 사용한다.
+- `llm-orchestrator/llm_orchestrator/service.py`는 `tool_registry`를 prompt payload에 함께 주입하고, `active_constraints`를 실제 `zone_state.active_constraints` 우선으로 읽도록 수정했다.
+- `llm-orchestrator/llm_orchestrator/response_parser.py`는 smart quote, trailing comma, prose wrapper가 섞인 응답까지 복구할 수 있도록 보강했다.
+- `scripts/run_llm_orchestrator_smoke.py`를 추가해 `synthetic_sensor_scenarios -> state-estimator -> retriever -> orchestrator -> validator` 전체 경로를 `stub/openai` 공통으로 점검할 수 있게 했다.
+- `scripts/validate_llm_orchestrator_service.py`는 이제 tool registry 노출과 `champion -> ds_v11` alias 해석까지 함께 검증하고, `scripts/validate_llm_response_parser.py`는 malformed JSON recovery 회귀 케이스를 추가로 검증한다.
+
 ### 운영 대시보드 + shadow review/approval UI 확장
 - `ops-api/ops_api/models.py`에 `PolicyEvaluationRecord`, `OperatorReviewRecord`를 추가하고, `infra/postgres/001_initial_schema.sql`도 같은 기준으로 확장했다.
 - `ops-api/ops_api/app.py`는 `POST /shadow/reviews`, `GET /shadow/reviews`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`를 추가했다. `evaluate-zone`에서는 validator 결과를 `policy_evaluations`에 저장하고, `shadow` 모드 운영자 비교 검토는 `operator_reviews`에 저장한다.

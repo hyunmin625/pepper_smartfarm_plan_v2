@@ -44,6 +44,7 @@
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, malformed JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
+- `llm-orchestrator/llm_orchestrator/tool_registry.py`, `llm-orchestrator/llm_orchestrator/model_registry.py`, `scripts/run_llm_orchestrator_smoke.py`를 추가해 `9.4`를 runtime 기준으로 닫았다. 오케스트레이터는 이제 `champion` alias를 실제 FT model id로 풀고, retrieved_context와 tool catalog를 함께 prompt에 주입하며, stub/openai 공통 smoke 진입점도 가진다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
 - 같은 historical baseline `ds_v9` 기준 blind50 validator 잔여 실패는 `12건`이었고, 이는 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉘었다.
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 training slice로 직접 역투영했다.
@@ -53,7 +54,7 @@
 - `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, stress score를 `feature_schema.json` 형태로 계산한다.
 - `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands`, `policy_evaluations`, `operator_reviews` 저장 경로와 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET/POST /runtime/mode`까지 연결했다.
 - `/dashboard`는 `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow agree/disagree`, `approve/reject`를 한 화면으로 묶는다.
-- 로컬에서는 `SQLite + mock PLC adapter`로 end-to-end approval flow를 검증했고, 검증 스크립트는 `scripts/validate_state_estimator_features.py`, `scripts/validate_llm_orchestrator_service.py`, `scripts/validate_ops_api_flow.py`다.
+- 로컬에서는 `SQLite + mock PLC adapter`로 end-to-end approval flow를 검증했고, 검증 스크립트는 `scripts/validate_state_estimator_features.py`, `scripts/validate_llm_orchestrator_service.py`, `scripts/validate_llm_response_parser.py`, `scripts/validate_ops_api_flow.py`다.
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
 - batch17 offline shadow residual `8건`을 추가했다. 대상은 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`이며 `create_alert` 누락, `adjust_fertigation` reflex, `inspect_crop` exact enum drift를 직접 겨냥한다.

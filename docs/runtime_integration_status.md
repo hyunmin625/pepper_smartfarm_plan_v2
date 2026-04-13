@@ -11,18 +11,28 @@
 - `llm-orchestrator/llm_orchestrator/client.py`
   - `stub` / `openai` provider 지원
   - retry / timeout / repair prompt 경로 포함
+  - model alias -> resolved FT model id 해석
 - `llm-orchestrator/llm_orchestrator/retriever.py`
   - `data/rag/*.jsonl` 기반 local keyword retriever
 - `llm-orchestrator/llm_orchestrator/response_parser.py`
   - strict JSON parse
   - markdown fence 제거
   - brace recovery
+  - smart quote / trailing comma / prose wrapper recovery
   - 최종 safe fallback JSON
+- `llm-orchestrator/llm_orchestrator/tool_registry.py`
+  - runtime capability catalog 고정
+- `llm-orchestrator/llm_orchestrator/model_registry.py`
+  - `champion` alias로 frozen FT model id 해석
 - `llm-orchestrator/llm_orchestrator/service.py`
   - prompt version 선택
   - retrieved_context 자동 주입
+  - tool registry 자동 주입
   - citations 자동 보강
   - output validator 자동 연결
+- `scripts/run_llm_orchestrator_smoke.py`
+  - sample scenario 기준 end-to-end smoke 경로
+  - stub / openai provider 공통 진입점
 
 ### 2. state-estimator feature engineering
 
@@ -91,20 +101,22 @@
 python3 scripts/validate_state_estimator_mvp.py
 python3 scripts/validate_state_estimator_features.py
 python3 scripts/validate_llm_orchestrator_service.py
+python3 scripts/validate_llm_response_parser.py
 python3 scripts/validate_ops_api_flow.py
+python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
 ```
 
 ## 현재 한계
 
-- OpenAI 실호출 경로는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
+- OpenAI 실호출 경로와 smoke script는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
 - `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL까지만 준비했다.
 - auth / role / policy management 전용 화면, real sensor 시계열 차트는 아직 미구현이다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 
 ## 다음 우선순위
 
-1. 실제 OpenAI model id와 환경 변수로 orchestrator online smoke test
+1. `OPS_API_LLM_PROVIDER=openai`, `OPS_API_MODEL_ID=champion` 기준 online smoke 실행
 2. sensor-ingestor snapshot을 state-estimator raw loader에 직접 연결
 3. approval mode dispatch 결과를 shadow window/report와 한 화면에서 묶기
 4. auth / role / alert endpoint 추가
