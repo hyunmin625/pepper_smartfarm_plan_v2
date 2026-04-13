@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -22,7 +23,7 @@ from .api_models import (
     RuntimeModeRequest,
     ShadowReviewRequest,
 )
-from .auth import ActorIdentity, get_authenticated_actor, require_permission
+from .auth import ROLE_PERMISSIONS, ActorIdentity, get_authenticated_actor, require_permission
 from .bootstrap import configure_repo_paths
 from .config import Settings, load_settings
 from .database import build_session_factory, init_db
@@ -456,7 +457,21 @@ def _execute_decision_dispatch(
     return dispatch_results
 
 
-def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any]:
+def _compute_shadow_window(shadow_audit_path: Path | None) -> dict[str, Any] | None:
+    if shadow_audit_path is None or not shadow_audit_path.exists():
+        return None
+    try:
+        return build_window_summary_from_paths([shadow_audit_path])
+    except ValueError:
+        return None
+
+
+def _build_dashboard_payload(
+    session: Session,
+    mode_state: Any,
+    *,
+    shadow_audit_path: Path | None = None,
+) -> dict[str, Any]:
     rows = session.execute(select(DecisionRecord).order_by(desc(DecisionRecord.id)).limit(40)).scalars().all()
     command_rows = session.execute(select(DeviceCommandRecord).order_by(desc(DeviceCommandRecord.id)).limit(30)).scalars().all()
     zone_rows = session.execute(select(ZoneRecord).order_by(ZoneRecord.zone_id)).scalars().all()
@@ -519,7 +534,7 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
         if item["latest_shadow_review"] and item["latest_shadow_review"]["agreement_status"] == "agree"
     )
     operator_agreement_rate = round(agree_count / len(agreement_rows), 4) if agreement_rows else None
-    shadow_window_summary = None
+    shadow_window_summary = _compute_shadow_window(shadow_audit_path)
 
     return {
         "runtime_mode": mode_state.as_dict(),
@@ -603,6 +618,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ],
     )
     app.state.services = services
+    app.dependency_overrides[load_settings] = lambda: resolved_settings
     register_exception_handlers(app)
 
     def get_services():
@@ -1056,6 +1072,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         services=Depends(get_services),
         actor: ActorIdentity = Depends(require_permission("review_shadow")),
     ) -> dict[str, Any]:
+        if not payload.append and "manage_runtime_mode" not in ROLE_PERMISSIONS.get(actor.role, set()):
+            raise HTTPException(
+                status_code=403,
+                detail="append=false rotation requires manage_runtime_mode permission",
+            )
         summary = capture_shadow_cases(
             [item.model_dump() for item in payload.cases],
             shadow_audit_log_path=services.settings.shadow_audit_log_path,
@@ -1162,13 +1183,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         services=Depends(get_services),
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
-        payload = _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
-        audit_path = services.settings.shadow_audit_log_path
-        if audit_path.exists():
-            try:
-                payload["shadow_window"] = build_window_summary_from_paths([audit_path])
-            except ValueError:
-                payload["shadow_window"] = None
+        payload = _build_dashboard_payload(
+            session,
+            load_runtime_mode(services.settings.runtime_mode_path),
+            shadow_audit_path=services.settings.shadow_audit_log_path,
+        )
         return _ok(payload, actor=actor)
 
     @app.get(

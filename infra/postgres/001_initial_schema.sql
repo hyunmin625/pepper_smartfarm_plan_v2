@@ -4,9 +4,9 @@ CREATE TABLE IF NOT EXISTS zones (
     zone_type VARCHAR(64) NOT NULL,
     priority VARCHAR(32) NOT NULL,
     description TEXT NOT NULL,
-    metadata_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    metadata_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_zones_zone_type ON zones(zone_type);
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS sensors (
     sensor_id VARCHAR(128) NOT NULL UNIQUE,
     zone_id VARCHAR(128) NOT NULL REFERENCES zones(zone_id) ON DELETE CASCADE,
     sensor_type VARCHAR(64) NOT NULL,
-    measurement_fields_json JSONB NOT NULL,
+    measurement_fields_json TEXT NOT NULL,
     unit VARCHAR(64) NOT NULL,
     raw_sample_seconds INTEGER NOT NULL,
     ai_aggregation_seconds INTEGER NOT NULL,
@@ -26,10 +26,10 @@ CREATE TABLE IF NOT EXISTS sensors (
     install_location TEXT NOT NULL,
     calibration_interval_days INTEGER NOT NULL,
     redundancy_group VARCHAR(128) NOT NULL,
-    quality_flags_json JSONB NOT NULL,
-    metadata_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    quality_flags_json TEXT NOT NULL,
+    metadata_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_sensors_zone_id ON sensors(zone_id);
@@ -47,12 +47,12 @@ CREATE TABLE IF NOT EXISTS devices (
     control_mode VARCHAR(64) NOT NULL,
     response_timeout_seconds INTEGER NOT NULL,
     write_channel_ref TEXT NOT NULL,
-    read_channel_refs_json JSONB NOT NULL,
-    supported_action_types_json JSONB NOT NULL,
-    safety_interlocks_json JSONB NOT NULL,
-    metadata_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    read_channel_refs_json TEXT NOT NULL,
+    supported_action_types_json TEXT NOT NULL,
+    safety_interlocks_json TEXT NOT NULL,
+    metadata_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_devices_zone_id ON devices(zone_id);
@@ -65,11 +65,11 @@ CREATE TABLE IF NOT EXISTS policies (
     severity VARCHAR(32) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     description TEXT NOT NULL,
-    trigger_flags_json JSONB NOT NULL,
-    enforcement_json JSONB NOT NULL,
+    trigger_flags_json TEXT NOT NULL,
+    enforcement_json TEXT NOT NULL,
     source_version VARCHAR(64) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_policies_stage ON policies(policy_stage);
@@ -84,16 +84,16 @@ CREATE TABLE IF NOT EXISTS decisions (
     status VARCHAR(32) NOT NULL,
     model_id VARCHAR(255) NOT NULL,
     prompt_version VARCHAR(64) NOT NULL,
-    raw_output_json JSONB NOT NULL,
-    parsed_output_json JSONB NOT NULL,
-    validated_output_json JSONB NOT NULL,
-    zone_state_json JSONB NOT NULL,
-    citations_json JSONB NOT NULL,
-    retrieval_context_json JSONB NOT NULL,
+    raw_output_json TEXT NOT NULL,
+    parsed_output_json TEXT NOT NULL,
+    validated_output_json TEXT NOT NULL,
+    zone_state_json TEXT NOT NULL,
+    citations_json TEXT NOT NULL,
+    retrieval_context_json TEXT NOT NULL,
     audit_path VARCHAR(512) NOT NULL,
-    validator_reason_codes_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    validator_reason_codes_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_decisions_zone_id ON decisions(zone_id);
@@ -106,8 +106,8 @@ CREATE TABLE IF NOT EXISTS approvals (
     actor_id VARCHAR(128) NOT NULL,
     approval_status VARCHAR(32) NOT NULL,
     reason TEXT NOT NULL,
-    approval_payload_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    approval_payload_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_approvals_decision_id ON approvals(decision_id);
@@ -120,9 +120,9 @@ CREATE TABLE IF NOT EXISTS device_commands (
     target_id VARCHAR(128) NOT NULL,
     action_type VARCHAR(64) NOT NULL,
     status VARCHAR(32) NOT NULL,
-    payload_json JSONB NOT NULL,
-    adapter_result_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    payload_json TEXT NOT NULL,
+    adapter_result_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_device_commands_decision_id ON device_commands(decision_id);
@@ -134,9 +134,9 @@ CREATE TABLE IF NOT EXISTS policy_evaluations (
     decision_id BIGINT NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,
     policy_source VARCHAR(64) NOT NULL,
     policy_result VARCHAR(32) NOT NULL,
-    reason_codes_json JSONB NOT NULL,
-    evaluation_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    reason_codes_json TEXT NOT NULL,
+    evaluation_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_policy_evaluations_decision_id ON policy_evaluations(decision_id);
@@ -148,10 +148,10 @@ CREATE TABLE IF NOT EXISTS policy_events (
     request_id VARCHAR(128) NOT NULL,
     event_type VARCHAR(32) NOT NULL,
     policy_result VARCHAR(32) NOT NULL,
-    policy_ids_json JSONB NOT NULL,
-    reason_codes_json JSONB NOT NULL,
-    payload_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    policy_ids_json TEXT NOT NULL,
+    reason_codes_json TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_policy_events_decision_id ON policy_events(decision_id);
@@ -164,10 +164,10 @@ CREATE TABLE IF NOT EXISTS operator_reviews (
     review_mode VARCHAR(32) NOT NULL,
     agreement_status VARCHAR(32) NOT NULL,
     expected_risk_level VARCHAR(32),
-    expected_actions_json JSONB NOT NULL,
-    expected_robot_tasks_json JSONB NOT NULL,
+    expected_actions_json TEXT NOT NULL,
+    expected_robot_tasks_json TEXT NOT NULL,
     note TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_operator_reviews_decision_id ON operator_reviews(decision_id);
@@ -181,10 +181,10 @@ CREATE TABLE IF NOT EXISTS alerts (
     severity VARCHAR(32) NOT NULL,
     status VARCHAR(32) NOT NULL,
     summary TEXT NOT NULL,
-    validator_reason_codes_json JSONB NOT NULL,
-    payload_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    validator_reason_codes_json TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_alerts_zone_id ON alerts(zone_id);
@@ -198,9 +198,9 @@ CREATE TABLE IF NOT EXISTS robot_candidates (
     candidate_type VARCHAR(64) NOT NULL,
     priority VARCHAR(32) NOT NULL,
     status VARCHAR(32) NOT NULL,
-    payload_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    payload_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_robot_candidates_zone_id ON robot_candidates(zone_id);
@@ -216,10 +216,10 @@ CREATE TABLE IF NOT EXISTS robot_tasks (
     approval_required BOOLEAN NOT NULL DEFAULT FALSE,
     status VARCHAR(32) NOT NULL,
     reason TEXT NOT NULL,
-    target_json JSONB NOT NULL,
-    payload_json JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    target_json TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );
 
 CREATE INDEX IF NOT EXISTS idx_robot_tasks_zone_id ON robot_tasks(zone_id);

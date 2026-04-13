@@ -328,6 +328,7 @@
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
 11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. `real localhost server smoke`, `sensor-ingestor -> state-estimator raw snapshot bridge`, `ops-api shadow case capture/window summary`, `OpenAI online smoke`, `dashboard auth/policy management`, `policy-engine loader/precheck`, `policy event persistence`까지 통과했다. 현재 우선순위는 `real shadow log 누적`, `real PostgreSQL smoke`, `real sensor chart`, `policy source versioning/UI`다.
+12. ops-api shadow window 통합은 `env 격리`(`_redirect_audit_paths` contextmanager), `append=false 회전 권한`(`manage_runtime_mode`), `audit log 파괴 금지`(`*.bak-{ts}` 회전), `None-aware promotion_decision`, `mixed 모델 표기`, `critical 우선 top_disagreements` 6가지 보강까지 통과했다. `validate_ops_api_shadow_mode`가 env 복원과 회전 로그 보존을 직접 회귀한다.
 
 ## 주의할 점
 

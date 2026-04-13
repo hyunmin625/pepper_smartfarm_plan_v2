@@ -1245,24 +1245,26 @@
 - [x] sensor/device inventory 문서 작성 (`docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] sensor-ingestor config/poller profile 초안 작성 (`docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`)
 - [x] sensor 품질 규칙과 ingestor runtime flow 문서 작성 (`docs/sensor_quality_rules_pseudocode.md`, `docs/sensor_ingestor_runtime_flow.md`)
-- [ ] policy 초안 20개 작성
-- [ ] llm-orchestrator 인터페이스 초안 작성
+- [x] policy 초안 20개 작성 (`data/examples/policy_output_validator_rules_seed.json` 20건, `policy-engine/policy_engine/loader.py`, `precheck.py`)
+- [x] llm-orchestrator 인터페이스 초안 작성 (`llm-orchestrator/llm_orchestrator/service.py`, `runtime.py`, `prompt_catalog.py`)
 
 ## 그 다음 주
 - [x] RAG vector store PoC 작성 (`scripts/build_chroma_index.py`, `scripts/rag_chroma_store.py`)
 - [x] 검색 품질 평가셋 작성 (`evals/rag_retrieval_eval_set.jsonl`, `scripts/evaluate_rag_retrieval.py`)
 - [x] sensor-ingestor MVP 작성 (`sensor-ingestor/main.py`, `sensor-ingestor/sensor_ingestor/runtime.py`, `sensor-ingestor/sensor_ingestor/backends.py`, `sensor-ingestor/sensor_ingestor/quality.py`)
-- [ ] state-estimator MVP 작성
-- [ ] policy-engine MVP 작성
+- [x] state-estimator MVP 작성 (`state-estimator/state_estimator/estimator.py`, `feature_builder.py`, `ingestor_bridge.py`, `scripts/validate_state_estimator_mvp.py`)
+- [x] policy-engine MVP 작성 (`policy-engine/policy_engine/loader.py`, `precheck.py`, `scripts/validate_policy_engine_precheck.py`)
 - [x] 파인튜닝 재실행
-- [ ] evaluate-zone API 작성
-- [ ] decision log 저장 구조 구현
+- [x] evaluate-zone API 작성 (`ops-api/ops_api/app.py` `/decisions/evaluate-zone`, `scripts/validate_ops_api_flow.py`)
+- [x] decision log 저장 구조 구현 (`ops-api/ops_api/models.py` `DecisionRecord`, `PolicyEventRecord`, `infra/postgres/001_initial_schema.sql`)
 
 ## 그 다음 단계
 - [x] execution-gateway MVP 구현 (`execution-gateway/execution_gateway/dispatch.py`, `execution-gateway/execution_gateway/state.py`, `scripts/validate_execution_dispatcher.py`)
 - [ ] plc-adapter 테스트 연결
-- [ ] approval UI 초안 작성
-- [ ] shadow mode 운영 개시
+- [x] approval UI 초안 작성 (`ops-api/ops_api/app.py` `_dashboard_html`, `/dashboard`, `/dashboard/data`, shadow window / alert / robot task / policy card)
+- [ ] shadow mode 운영 개시  <!-- ops-api shadow capture/window 경로는 완성됐으나 실제 현장 shadow 로그 누적이 남음 -->
+  - [x] ops-api `/shadow/cases/capture` + `/shadow/window` 엔드포인트 (`ops-api/ops_api/shadow_mode.py`, `scripts/validate_ops_api_shadow_mode.py`)
+  - [ ] real shadow log 누적(현장 의존)
 
 ---
 

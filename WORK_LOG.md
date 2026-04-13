@@ -4,6 +4,25 @@
 
 ## 2026-04-13
 
+### postgres schema 드리프트 해소 + smoke 확장
+- `infra/postgres/001_initial_schema.sql`의 JSONB 32개 → TEXT, TIMESTAMPTZ 21개 → `TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')`로 정렬했다. 이전에는 SQLAlchemy `init_db()`가 만든 (Text, naive DateTime) 스키마와 손수 마이그레이션이 만든 (JSONB, TIMESTAMPTZ) 스키마가 동일 postgres 인스턴스에서 분기되어, 먼저 실행된 쪽의 `CREATE TABLE IF NOT EXISTS` 때문에 나머지 경로는 침묵으로 스킵되고 런타임에 insert/select 형변환 오류가 터질 수 있었다. JSONB 인덱싱 격상은 향후 Alembic 도입 시 다시 다룬다.
+- `scripts/validate_ops_api_postgres_smoke.py`는 이제 postgres URL이 주어질 때 seed 카운트만 확인하는 것이 아니라, `DecisionRecord`/`AlertRecord`/`RobotTaskRecord` insert → commit → select 왕복을 수행하고 `validated_output_json` / `payload_json` / `target_json` 페이로드와 `created_at` datetime 타입이 round-trip하는지 직접 검증한 뒤 smoke row를 삭제해 재실행 안전성을 유지한다. URL이 없으면 기존과 동일하게 `blocked`로 exit 0.
+- 6종 ops-api 스모크 (`flow`, `auth`, `error_responses`, `schema_models`, `shadow_mode`, `postgres_smoke`) 모두 `errors 0` (postgres_smoke는 URL 미설정으로 `blocked=0`).
+
+### ops-api auth dependency injection 회귀 해소
+- `ops-api/ops_api/app.py`의 `create_app`이 `app.dependency_overrides[load_settings] = lambda: resolved_settings`를 등록해, `create_app(settings=...)`로 주입한 Settings가 `get_authenticated_actor`의 `Depends(load_settings)` 체인까지 반영되도록 했다. 이전에는 주입 Settings와 별개로 `load_settings()`가 env 변수를 다시 읽어 테스트/스모크에서 `auth_mode='header_token'`을 적용하려면 `OPS_API_AUTH_MODE` 환경 변수를 강제로 set해야 했다.
+- `scripts/validate_ops_api_auth.py`에 `_verify_dependency_injection` 블록을 추가해 env 변수 없이 `create_app(settings=Settings(auth_mode='header_token', ...))`만으로 `/decisions`가 `no_key -> 401`, `viewer -> 200`, `invalid_token -> 401`을 만족하는지 TestClient 기반 회귀로 검증한다. 사전 조건으로 `OPS_API_AUTH_MODE` / `OPS_API_AUTH_TOKENS_JSON`이 이미 셋업되어 있으면 에러로 플래그해 env 오염을 즉시 감지한다.
+- 회귀 결과: `validate_ops_api_auth`, `validate_ops_api_flow`, `validate_ops_api_error_responses`, `validate_ops_api_schema_models`, `validate_ops_api_shadow_mode` 5종 모두 `errors 0`.
+
+### ops-api shadow window 보강 (env 격리, audit 보호, None-aware 지표)
+- `ops-api/ops_api/shadow_mode.py`에 `_redirect_audit_paths` contextmanager를 추가해 `LLM_OUTPUT_VALIDATOR_SHADOW_LOG_PATH` / `LLM_OUTPUT_VALIDATOR_AUDIT_LOG_PATH` 환경변수를 capture 호출 한정으로만 덮어쓰고 복원하도록 격리했다. 이전에는 첫 capture 이후 동일 프로세스의 모든 shadow write가 해당 경로로 새어나갈 수 있었다.
+- `capture_shadow_cases(append=False)`는 더 이상 audit log를 unlink하지 않고 `_rotate_audit_log`로 `.bak-{ts}` rename을 수행한다. 반환 summary에 `rotated_audit_logs` 경로를 포함한다.
+- `/shadow/cases/capture`는 `payload.append=False` 케이스에 한해 `manage_runtime_mode` 권한을 요구한다. 일반 operator가 audit 이력을 회전시키지 못하도록 분리했다.
+- `safe_ratio`는 분모 0일 때 `None`을 반환하고, `build_window_summary`는 `operator_agreement_rate` / `citation_coverage`가 `None`이면 `promotion_decision="hold"`로 fallback한다. "데이터 없음"과 "100% 불일치=0.0"이 대시보드에서 동일하게 보이던 혼동을 제거했다.
+- 혼합 모델/프롬프트/데이터셋/retrieval profile은 `_distinct_or_mixed`로 집계해 `"mixed"`로 표기하고, `top_disagreements`는 `critical_disagreement` 우선·`created_at` 오름차순으로 정렬해 위험 케이스가 UI 상단에 보이도록 고정했다.
+- `ops-api/ops_api/app.py`의 `_build_dashboard_payload`는 이제 `shadow_audit_path`를 인자로 받아 `_compute_shadow_window`로 계산한 윈도우 요약을 페이로드에 직접 박는다. `/dashboard/data`는 audit path를 그대로 전달하고, dead assignment (`shadow_window_summary = None`)은 제거했다.
+- `scripts/validate_ops_api_shadow_mode.py`에 `safe_ratio(0,0)`, env 복원, `rotate_on_reset` 두 번째 capture까지 검증하는 회귀를 추가했다. 다섯 개 ops-api 스모크 스크립트(`validate_ops_api_flow`, `validate_ops_api_auth`, `validate_ops_api_error_responses`, `validate_ops_api_schema_models`, `validate_ops_api_shadow_mode`) 모두 `errors 0`으로 통과했다.
+
 ### policy event persistence + dashboard wiring 완료
 - `ops-api/ops_api/models.py`와 `infra/postgres/001_initial_schema.sql`에 `policy_events` 저장 모델/테이블을 추가해 `blocked / approval_required` dispatch event를 decision과 분리해 저장할 수 있게 했다.
 - `execution-gateway/execution_gateway/dispatch.py`는 이제 preflight 결과에서 `policy_event`를 만들고 audit row에 함께 남긴다. `blocked`와 `approval_required`를 request id, policy ids, reason code와 함께 보존한다.
