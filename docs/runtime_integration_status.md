@@ -129,6 +129,7 @@ python3 scripts/validate_ops_api_auth.py
 python3 scripts/validate_ops_api_schema_models.py
 python3 scripts/validate_ops_api_error_responses.py
 python3 scripts/validate_ops_api_flow.py
+python3 scripts/validate_ops_api_load_scenario.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
 ```
@@ -137,7 +138,7 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 
 - OpenAI 실호출 경로와 smoke script는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
 - `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL과 reference seed/bootstrap까지 준비했다. 실 PostgreSQL smoke는 아직 안 돌렸다.
-- `ops-api`의 auth/role, schema validation, error envelope 테스트는 로컬 스크립트로 닫았다. 아직 남은 backend 검증은 real PostgreSQL smoke와 load test다.
+- `ops-api`의 auth/role, schema validation, error envelope, minimal load scenario 테스트는 로컬 스크립트로 닫았다. 아직 남은 backend 검증은 real PostgreSQL smoke와 real network/server smoke다.
 - policy management 전용 화면과 real sensor 시계열 차트는 아직 미구현이다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 

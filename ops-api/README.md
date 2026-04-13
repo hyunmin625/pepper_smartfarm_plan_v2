@@ -41,4 +41,5 @@ python3 scripts/validate_ops_api_auth.py
 python3 scripts/validate_ops_api_schema_models.py
 python3 scripts/validate_ops_api_error_responses.py
 python3 scripts/validate_ops_api_flow.py
+python3 scripts/validate_ops_api_load_scenario.py
 ```

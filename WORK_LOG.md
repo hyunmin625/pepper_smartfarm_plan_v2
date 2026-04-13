@@ -14,7 +14,12 @@
 ### ops-api schema/error test 보강
 - `scripts/validate_ops_api_schema_models.py`를 추가해 `EvaluateZoneRequest`, `RuntimeModeRequest`, `ShadowReviewRequest`, `RobotTaskCreateRequest`, `ApiResponse`, `ErrorResponse`의 schema와 validation failure를 점검한다.
 - `scripts/validate_ops_api_error_responses.py`를 추가해 `HTTPException`과 generic exception handler가 모두 표준 `{error:{code,message}}` envelope를 반환하는지 확인한다.
-- 이로써 `todo 12.3`에서 남은 backend 검증은 `load test 최소 시나리오`만 남는다.
+
+### ops-api minimal load scenario 추가
+- `scripts/validate_ops_api_load_scenario.py`를 추가해 `SQLite + stub LLM + mock dispatch` 기준 반복 `evaluate -> persist -> approve -> dispatch` 루프를 최소 부하 시나리오로 검증한다.
+- 현재 시나리오는 `4개 zone/task 조합 x 12 rounds = 48 decisions`를 돌리고, decision/approval/command/robot task row count와 `decision/full-cycle latency p50/p95`를 출력한다.
+- 최신 실행 결과는 `decision_count 48`, `approval_count 48`, `command_count 72`, `robot_task_count 12`, `throughput 28.23 decisions/sec`, `decision p95 26.51ms`, `full-cycle p95 51.28ms`였다.
+- 이로써 `todo 12.3`의 backend 검증 항목은 모두 닫았다. 남은 것은 local validation이 아니라 real PostgreSQL smoke와 real server smoke다.
 
 ### backend/database 3단계 확장
 - `infra/postgres/001_initial_schema.sql`에 `zones`, `sensors`, `devices`, `policies`, `alerts`, `robot_candidates`, `robot_tasks`를 추가하고 `zone_id`, `created_at`, `device command`, `robot task` 인덱스를 보강했다.

@@ -866,7 +866,7 @@
 - [x] schema validation test 작성 (`scripts/validate_ops_api_schema_models.py`)
 - [x] auth test 작성 (`scripts/validate_ops_api_auth.py`)
 - [x] error response test 작성 (`scripts/validate_ops_api_error_responses.py`)
-- [ ] load test 최소 시나리오 작성
+- [x] load test 최소 시나리오 작성 (`scripts/validate_ops_api_load_scenario.py`)
 
 ---
 
