@@ -102,7 +102,7 @@
 - **반응형**: `lg` (1024px) 이상에서는 고정 사이드바 + workspace 2단, 그 이하에서는 사이드바가 오프스크린 drawer로 변환되고 헤더의 햄버거 버튼 + backdrop overlay로 제어한다. 메트릭 그리드는 `grid-cols-2 sm:3 md:4 lg:5`, 스파크라인 그리드는 `grid-cols-1 sm:2 lg:3`, 각 2단·3단 카드는 `lg:` 이상에서만 분할된다. 모바일 390px 폭까지 카드가 자연스럽게 1열로 쌓인다.
 - **AI 어시스턴트 채팅 경로**: `POST /ai/chat` (`read_runtime` 권한). 운영자 질문을 파인튜닝된 orchestrator client에 `complete()`로 전달하고, 응답 JSON을 `_extract_chat_reply`로 자연어 평문으로 변환한다. 대화 히스토리는 클라이언트 메모리에 유지되며 매 호출마다 최근 8턴을 `운영자/AI/시스템` 포맷으로 함께 전송해 context를 보존한다. 안전 가드(system prompt)로 "장치 직접 on/off 금지, 대시보드 승인 경로로만 권고"를 강제한다.
 - UI는 backend 없이 SPA 하나로 동작하되 5초 주기로 `/dashboard/data`를 폴링해 모든 카드를 재렌더한다. 각 뷰 전환은 클라이언트 사이드 토글로 처리하며, 새 데이터는 `fetch('/dashboard/data')` 한 번으로 공유한다.
-- 장기 센서 시계열과 zone history drill-down은 `Grafana` 패널을 `/dashboard`의 `대시보드`/`존 모니터링` 뷰 안에 임베드해 제공한다. native SPA 카드는 최신 상태, 승인, 정책, shadow summary, 수동 실행 같은 write-heavy 운영 기능에 집중한다.
+- 장기 센서 시계열과 zone history drill-down은 `/dashboard`의 `대시보드`/`존 모니터링` 뷰 안에 native 시계열 화면으로 제공한다. 최신 상태, 승인, 정책, shadow summary, 수동 실행 같은 write-heavy 운영 기능과 같은 auth/context를 공유한다.
 - 운영 조작 경로는 API가 이미 제공하는 엔드포인트로만 구성한다: `/decisions/evaluate-zone`, `/actions/approve`, `/actions/reject`, `/actions/execute`, `/shadow/reviews`, `/runtime/mode`, `/policies/{id}` (enable/disable 토글), `/shadow/cases/capture`, `/ai/chat`.
 - 권한은 백엔드 `auth.py`의 `viewer/operator/service/admin` 역할을 그대로 사용하며, `auth_mode=disabled` 로컬 개발에서는 헤더 기반 role override로 뷰를 시연한다. `/ai/chat`은 `viewer` 이상 모두 접근 가능.
 
@@ -134,7 +134,6 @@
 - TimescaleDB
 - PostgreSQL
 - Redis
-- Grafana
 - Object Storage
 - Vector Store 또는 Vector DB
 
@@ -347,7 +346,7 @@ LLM은 다음을 직접 수행하지 않는다.
 
 성과물:
 - 자동 실행 범위 정의
-- 운영자 통합 제어 웹 UI (`ops-api/_dashboard_html`): 한국어 기본, 사이드바 네비게이션, 대시보드/존 모니터링/결정-승인/알림/로봇/장치-제약/정책-이벤트/Shadow Mode/시스템 9개 뷰. 5초 주기 폴링으로 `/dashboard/data` 재렌더링하고, 장기 시계열은 Grafana 패널을 같은 화면에 임베드한다. 운영자가 승인/거절/수동 Execute/문제 사례 태깅/정책 토글/모드 전환을 한 화면에서 수행.
+- 운영자 통합 제어 웹 UI (`ops-api/_dashboard_html`): 한국어 기본, 사이드바 네비게이션, 대시보드/존 모니터링/결정-승인/알림/로봇/장치-제약/정책-이벤트/Shadow Mode/시스템 9개 뷰. 5초 주기 폴링으로 `/dashboard/data` 재렌더링하고, 장기 시계열은 same-page native chart/drill-down으로 제공한다. 운영자가 승인/거절/수동 Execute/문제 사례 태깅/정책 토글/모드 전환을 한 화면에서 수행.
 - 알람 체계
 - KPI 체계
 
@@ -368,7 +367,6 @@ LLM은 다음을 직접 수행하지 않는다.
 ## 6.1 데이터 계층
 - PostgreSQL: 정책/명령/결정/작업 이력
 - TimescaleDB: 센서 raw/snapshot/trend 시계열 canonical 저장소
-- Grafana: TimescaleDB를 읽는 운영자 시계열 시각화 계층
 - Redis: 최신 zone state 캐시
 - Object Storage: 이미지, 캡처, 추론 결과
 - Vector Store/Vector DB: 재배 매뉴얼, 현장 SOP, 품종별 기준, 정책 문서 임베딩 인덱스

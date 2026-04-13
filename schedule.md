@@ -41,7 +41,7 @@
 - 현재 frozen baseline은 `ds_v11`이고 최신 corrective candidate `ds_v14`는 `ds_v11`보다 낮아 승격 실패로 닫았다.
 - 현재 in-flight fine-tuning run은 없다. `docs/model_product_readiness_reassessment.md` 기준 submit freeze를 유지한다.
 - 즉시 우선순위는 `real shadow window` 누적, blind50 validator 잔여 `5건` 축소, extended200 validator 잔여 `42건` 우선순위 batch 설계, synthetic shadow `day0` residual `4건` 해소다.
-- 운영/API 쪽 즉시 우선순위는 real PostgreSQL smoke, `TimescaleDB + Grafana` 기반 real sensor chart/zone history의 통합관제 웹 반영, policy source versioning/UI 반영이다.
+- 운영/API 쪽 즉시 우선순위는 real PostgreSQL smoke, `TimescaleDB` 기반 real sensor chart/zone history의 통합관제 웹 반영, policy source versioning/UI 반영이다.
 
 ---
 
@@ -215,21 +215,21 @@
 
 ### 목표
 - 운영자가 상태, 추천, 승인, 알람, 로그를 확인할 수 있게 만들기
-- 시계열 장기 조회는 `Grafana`를 통합관제 웹에 붙여 제공하기
+- 시계열 장기 조회를 통합관제 웹 안에서 제공하기
 
 ### 주요 작업
 - zone overview 화면
-- `Grafana` 기반 실시간/장기 센서 차트
+- native 실시간/장기 센서 차트
 - decision log 화면
 - action 승인/거절 화면
 - alert 화면
 - policy 조회 화면
 - 수동 override 기록 화면
-- 통합관제 웹과 `Grafana` embed 연동
+- 통합관제 웹 시계열 drill-down 연동
 
 ### 완료 기준
 - 운영 대시보드 MVP 동작
-- `Grafana` 시계열 패널이 통합관제 웹에서 열림
+- 통합관제 웹에서 장기 시계열 차트가 열림
 - 승인/거절 기록 저장
 - 주요 로그 조회 가능
 

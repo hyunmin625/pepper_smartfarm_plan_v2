@@ -111,7 +111,7 @@
 - 비전 데이터: 작물 이미지, 과실 숙도, 병징 의심, 잎 상태, 수확 후보
 - 운영 이벤트: 관수 실행, 차광 변경, 환기 변경, 작업자 개입, 알람, 수동 override
 
-각 데이터는 `zone_id`, `sensor_id`, `timestamp`, `value`, `unit`, `quality_flag`, `source`, `calibration_version`을 포함한다. canonical 시계열 저장소는 `TimescaleDB`로 고정하고, 운영자 시계열 시각화는 `Grafana`를 스마트팜 통합관제 웹에 임베드하는 방식으로 진행한다.
+각 데이터는 `zone_id`, `sensor_id`, `timestamp`, `value`, `unit`, `quality_flag`, `source`, `calibration_version`을 포함한다. canonical 시계열 저장소는 `TimescaleDB`로 고정하고, 운영자 시계열 화면은 스마트팜 통합관제 웹 안에서 직접 제공하는 방향으로 진행한다.
 
 현재 단계에서는 zone 구조, naming 규칙, sample_rate, quality_flag 기준, must_have/should_have 우선순위에 더해 설치 수량 가정, protocol, calibration 주기, model_profile, poller profile, connection, binding group, publish target까지 문서화했다. 배지 조건은 `Grodan Delta 6.5` 육묘 block과 `Grodan GT Master` 본재배 slab를 기본 전제로 두고, 근권 센서/배액 판단/관수 펄스 정책도 이 환경을 기준으로 설계한다. 핵심 센서 8종의 1차 상용 모델 shortlist는 `docs/sensor_model_shortlist.md`에 정리했고, 최종 발주 모델과 PLC 주소 체계는 다음 구현 단계에서 확정한다.
 

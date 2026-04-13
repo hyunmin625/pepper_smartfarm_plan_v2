@@ -19,7 +19,7 @@
 - `snapshot_pipeline`: 1분 snapshot, 5/30분 trend, retention 기준
 - `health_config`: heartbeat, lag alarm, metrics namespace
 - 로컬 개발에서는 실제 broker/DB 대신 `.env.example`의 `SENSOR_INGESTOR_*_OUTBOX_PATH`를 사용해 file-backed outbox로 기록한다.
-- 운영 배포 기준 canonical timeseries DB는 `TimescaleDB`이며, `snapshot_pipeline` 산출물은 이후 `Grafana` 패널 datasource로 사용한다.
+- 운영 배포 기준 canonical timeseries DB는 `TimescaleDB`이며, `snapshot_pipeline` 산출물은 이후 통합관제 웹 시계열 조회 경로의 기준 데이터가 된다.
 
 ## 3. Poller Profile 기준
 
@@ -71,4 +71,4 @@ Profile은 transport 동작만 가진다. 센서별 해석은 binding group의 `
 4. `publisher`: MQTT/topic, timeseries measurement, object store route로 분기
 5. `health`: heartbeat, lag, coverage 누락 감시
 
-다음 후속 작업은 실제 MQTT broker, 실제 `TimescaleDB` writer, snapshot/trend scheduler를 backend로 연결하고, `Grafana` datasource/panel이 같은 schema를 읽도록 정렬하는 것이다.
+다음 후속 작업은 실제 MQTT broker, 실제 `TimescaleDB` writer, snapshot/trend scheduler를 backend로 연결하고, 통합관제 웹 시계열 조회가 같은 schema를 읽도록 정렬하는 것이다.

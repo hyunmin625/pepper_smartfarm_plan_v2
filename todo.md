@@ -956,11 +956,11 @@
 - [x] 주석/운영 메모 UI (`ops-api/ops_api/app.py`)
 - [x] 문제 사례 태깅 UI (`ops-api/ops_api/app.py` `flagCase()` JS → `POST /shadow/reviews` with `flag:` prefix, `scripts/validate_ops_api_dashboard_section14.py` operator_review 회귀)
 
-## 14.4 Grafana 통합
-- [x] TimescaleDB datasource provisioning 설계 (`docs/grafana_integration_design.md`, `infra/grafana/README.md`)
-- [x] Grafana dashboard/panel JSON 버전관리 구조 설계 (`docs/grafana_integration_design.md`, `infra/grafana/README.md`)
-- [x] `/dashboard` 존 모니터링 뷰에 Grafana panel embed 설계 (`docs/grafana_integration_design.md`)
-- [x] 통합관제 role/auth와 Grafana read-only 접근 정책 정리 (`docs/grafana_integration_design.md`)
+## 14.4 시계열 대시보드 통합
+- [x] TimescaleDB backend/query 경계 설계 (`docs/timeseries_storage_dashboard_plan.md`, `docs/timescaledb_schema_design.md`)
+- [x] 통합관제 웹 시계열 카드/드릴다운 화면 분리 기준 정리 (`docs/timeseries_storage_dashboard_plan.md`)
+- [x] `/dashboard` 존 모니터링 뷰 시계열 drill-down 설계 (`docs/timeseries_storage_dashboard_plan.md`)
+- [x] 통합관제 role/auth 문맥에서 read-only 시계열 조회 정책 정리 (`docs/timeseries_storage_dashboard_plan.md`)
 
 ---
 

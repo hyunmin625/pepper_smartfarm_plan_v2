@@ -73,7 +73,7 @@ for poller_profile in enabled_profiles:
 
 - `mqtt-sensor-raw`, `mqtt-device-state`: 실시간 downstream 구독용
 - `tsdb-sensor-raw`, `tsdb-device-state`: 원시 이력 저장
-- `tsdb-sensor-snapshot`: 1분 snapshot과 5/30분 trend 입력, 이후 `TimescaleDB` continuous aggregate / `Grafana` panel source
+- `tsdb-sensor-snapshot`: 1분 snapshot과 5/30분 trend 입력, 이후 `TimescaleDB` continuous aggregate / 통합관제 웹 시계열 조회 source
 - `object-store-vision`: 이미지 원본 저장, MQTT에는 메타데이터만 전송
 - 로컬 개발에서는 위 publish가 각각 `mqtt_outbox.jsonl`, `timeseries_outbox.lp`, `object_store_outbox.jsonl`에 기록된다.
 
@@ -99,5 +99,5 @@ for poller_profile in enabled_profiles:
 2. 실제 MQTT broker 연결
 3. 실제 `TimescaleDB` writer 연결
 4. snapshot/trend scheduler와 continuous aggregate 정책 고도화
-5. `Grafana` datasource/panel이 same schema를 읽도록 연동
+5. 통합관제 웹 시계열 조회가 same schema를 읽도록 연동
 6. anomaly alert를 alert service와 연동

@@ -129,7 +129,7 @@ SELECT create_hypertable(
 
 - `ops-api /zones/{zone_id}/history`와 dashboard fallback sparkline source
 - AI 입력용 zone state replay source
-- Grafana panel에서 자주 쓰는 핵심 지표의 low-cardinality quick source
+- 통합관제 웹 시계열 카드에서 자주 쓰는 핵심 지표의 low-cardinality quick source
 
 ## 5. Continuous aggregate / downsampling
 
@@ -226,7 +226,7 @@ SELECT add_compression_policy('zone_state_snapshots', INTERVAL '30 days');
 
 - `sensor-ingestor`는 normalized record를 받아 `sensor_readings`로 fan-out insert 한다.
 - `state-estimator`는 1분 단위 zone snapshot을 `zone_state_snapshots`에 기록한다.
-- `ops-api`와 `Grafana`는 raw hypertable보다 snapshot/aggregate를 우선 조회하고, 필요 시 raw drill-down으로 내려간다.
+- `ops-api`와 통합관제 웹 시계열 화면은 raw hypertable보다 snapshot/aggregate를 우선 조회하고, 필요 시 raw drill-down으로 내려간다.
 
 ## 9. 이번 설계로 닫히는 항목
 
