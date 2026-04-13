@@ -46,6 +46,7 @@ from .models import (
 )
 from .planner import ActionDispatchPlanner
 from .runtime_mode import load_runtime_mode, save_runtime_mode
+from .policy_source import DbPolicySource
 from .seed import bootstrap_reference_data
 from .shadow_mode import build_window_summary_from_paths, capture_shadow_cases
 
@@ -54,6 +55,7 @@ configure_repo_paths()
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from execution_gateway.dispatch import ExecutionDispatcher  # noqa: E402
 from llm_orchestrator import LLMOrchestratorService, ModelConfig, OrchestratorRequest  # noqa: E402
+from policy_engine import set_active_policy_source  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
 
 
@@ -583,6 +585,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     session_factory = build_session_factory(resolved_settings.database_url)
     init_db(session_factory)
     bootstrap_reference_data(session_factory)
+    set_active_policy_source(DbPolicySource(session_factory))
     current_mode = load_runtime_mode(resolved_settings.runtime_mode_path)
     save_runtime_mode(
         resolved_settings.runtime_mode_path,

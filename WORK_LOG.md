@@ -4,6 +4,14 @@
 
 ## 2026-04-13
 
+### policy source abstraction + 라이브 toggle 회귀
+- `policy-engine/policy_engine/loader.py`에 `PolicySource` Protocol과 `FilePolicySource` / `StaticPolicySource` 두 구현, 그리고 프로세스 전역 스위치 `set_active_policy_source()` / `get_active_policy_source()`를 도입했다. `load_enabled_policy_rules()`는 명시적 `path`가 주어지지 않았고 active source가 등록되어 있으면 그쪽으로 위임한다. 기존 파일 기반 동작은 active source가 None일 때 그대로 유지된다.
+- `ops-api/ops_api/policy_source.py`를 추가해 `DbPolicySource(session_factory)`가 `PolicyRecord` 테이블을 직접 읽고 `policy_row_to_rule()`로 JSON seed와 같은 rule dict 모양으로 변환한다. 각 호출은 short-lived session이라 `PATCH /policies/{id}` 편집이 다음 precheck 평가에 즉시 반영된다.
+- `create_app`은 `bootstrap_reference_data()` 직후 `set_active_policy_source(DbPolicySource(session_factory))`를 호출해, ops-api가 기동된 환경에서는 `execution-gateway.guards`의 `evaluate_device_policy_precheck` / `evaluate_override_policy_precheck` 경로가 자동으로 DB 정책을 사용한다. 독립 CLI 실행은 여전히 파일 기반 fallback을 탄다.
+- `scripts/validate_policy_source_db_wiring.py`를 추가해 TestClient로 `create_app`을 띄운 뒤 `HSV-01` (`worker_present` 하드 안전 규칙) 을 `/policies/HSV-01` PATCH로 disable → precheck에서 사라지고 `policy_result=pass`로 바뀌는지, 재활성화하면 다시 `blocked`로 돌아오는지 end-to-end로 회귀한다. Seed 파일 기준 20개 rule, DB 경유 20개 rule을 모두 검증했다.
+- `scripts/validate_execution_safe_mode.py`는 이전에 `policy_engine` 모듈이 `sys.path`에 없어 import error로 실패했던 pre-existing bug가 있었다. `policy-engine` 경로를 추가해 복구했다. (내 policy source 변경과 무관하게 이미 빨간 상태였음.)
+- 9종 smoke `validate_ops_api_flow`, `validate_ops_api_auth`, `validate_ops_api_error_responses`, `validate_ops_api_schema_models`, `validate_ops_api_shadow_mode`, `validate_ops_api_postgres_smoke`, `validate_policy_source_db_wiring`, `validate_policy_engine_precheck`, `validate_policy_output_validator` 모두 `errors 0`. execution-gateway 3종 `validate_execution_dispatcher`, `validate_execution_gateway_flow`, `validate_execution_safe_mode`도 통과.
+
 ### postgres schema 드리프트 해소 + smoke 확장
 - `infra/postgres/001_initial_schema.sql`의 JSONB 32개 → TEXT, TIMESTAMPTZ 21개 → `TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')`로 정렬했다. 이전에는 SQLAlchemy `init_db()`가 만든 (Text, naive DateTime) 스키마와 손수 마이그레이션이 만든 (JSONB, TIMESTAMPTZ) 스키마가 동일 postgres 인스턴스에서 분기되어, 먼저 실행된 쪽의 `CREATE TABLE IF NOT EXISTS` 때문에 나머지 경로는 침묵으로 스킵되고 런타임에 insert/select 형변환 오류가 터질 수 있었다. JSONB 인덱싱 격상은 향후 Alembic 도입 시 다시 다룬다.
 - `scripts/validate_ops_api_postgres_smoke.py`는 이제 postgres URL이 주어질 때 seed 카운트만 확인하는 것이 아니라, `DecisionRecord`/`AlertRecord`/`RobotTaskRecord` insert → commit → select 왕복을 수행하고 `validated_output_json` / `payload_json` / `target_json` 페이로드와 `created_at` datetime 타입이 round-trip하는지 직접 검증한 뒤 smoke row를 삭제해 재실행 안전성을 유지한다. URL이 없으면 기존과 동일하게 `blocked`로 exit 0.
