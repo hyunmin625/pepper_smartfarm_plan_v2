@@ -109,6 +109,7 @@
 - [x] `scripts/validate_execution_safe_mode.py`의 `policy_engine` sys.path pre-existing 버그 수정
 - [x] Stitch `WebUI/stitch_ui_v1.zip` 레퍼런스 기반 대시보드 전면 재디자인 + 반응형: Tailwind CDN + Pretendard/Noto Sans KR + Material Symbols, 농경 사령부 컬러, `lg:` breakpoint 이상 고정 사이드바 / 이하 오프스크린 drawer + 햄버거 토글, 메트릭/스파크라인 그리드 반응형, 루트 `/` → `/dashboard` 307 리다이렉트 (`ops-api/ops_api/app.py` `_dashboard_html`)
 - [x] AI 어시스턴트 채팅 뷰 + 백엔드: 사이드바 10번째 메뉴, split-pane (좌 chat + quick prompt + Enter 단축키, 우 실시간 관제 카드 + 최근 dispatch + 3×3 zone health), `POST /ai/chat` (`read_runtime` 권한, `ChatMessageRequest`/`ChatRequest`, `_build_chat_system_prompt`/`_render_chat_history`/`_extract_chat_reply` 헬퍼), 클라이언트 메모리 히스토리 + 매 호출마다 최근 8턴 context 전송, `scripts/validate_ops_api_ai_chat.py` 6 invariant 회귀
+- [x] AI 어시스턴트 채팅 경로를 결정 경로와 분리 + DB grounding: `Settings.chat_provider/chat_model_id` 필드 + `AppServices.chat_client` 별도 `CompletionClient`, `/ai/chat`이 `_detect_zone_hint` + `_build_chat_grounding_context`로 최신 decision/alert/sensor_readings/active policies를 DB에서 조회해 `task_type="chat"` payload로 파인튜닝 모델에 전달, `{"reply": "..."}` 단일 JSON 출력 강제. `OPS_API_CHAT_MODEL_ID=ft:gpt-4.1-mini-...ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz` (ds_v14 chat-friendly) 지정 준비. `StubCompletionClient`에 chat task_type 분기, `validate_ops_api_ai_chat`에 4 invariant 추가 (총 10 invariant), 기존 8개 smoke의 `Settings(...)` 호출에 chat_provider/chat_model_id 필드 추가 (`ops-api/ops_api/config.py`, `ops-api/ops_api/app.py`, `llm-orchestrator/llm_orchestrator/client.py`, `.env.example`, `scripts/validate_ops_api_ai_chat.py`)
 
 ---
 
@@ -534,8 +535,8 @@
 - [x] timestamp 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
 - [x] device command 조회 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
 - [x] robot task 조회 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
-- [ ] partition 필요성 검토
-- [ ] 보관 주기 정책 검토
+- [x] partition 필요성 검토 (`docs/timescaledb_schema_design.md`)
+- [x] 보관 주기 정책 검토 (`docs/timescaledb_schema_design.md`)
 
 ## 5.3 시계열 저장소
 - [x] TimescaleDB vs InfluxDB 결정 (`docs/timeseries_storage_dashboard_plan.md`)
@@ -546,7 +547,7 @@
 - [x] 압축 정책 작성 (`docs/timescaledb_schema_design.md`)
 
 ## 5.4 마이그레이션/시드
-- [ ] migration 초기화
+- [x] migration 초기화 (`ops-api/ops_api/database.py`, `scripts/apply_ops_api_migrations.py`, `scripts/bootstrap_ops_api_reference_data.py`)
 - [x] seed 데이터 작성 (`ops-api/ops_api/seed.py`, `scripts/bootstrap_ops_api_reference_data.py`)
 - [x] 기본 zone 등록 (`data/examples/sensor_catalog_seed.json`, `ops-api/ops_api/seed.py`)
 - [x] 기본 sensor 등록 (`data/examples/sensor_catalog_seed.json`, `ops-api/ops_api/seed.py`)

@@ -4,6 +4,34 @@
 
 ## 2026-04-14
 
+### AI 어시스턴트 채팅 경로 분리 + DB grounding + chat task_type
+- 사용자 피드백: "AI 어시스턴트는 파인튜닝한 스마트팜 농업전문가를 붙여야지" + 지정 모델 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`. 결정 경로(`evaluate_zone`)는 `ds_v11` frozen baseline 유지, AI 어시스턴트만 이 ds_v14 chat-friendly 파인튜닝으로 분리.
+- `ops-api/ops_api/config.py`의 `Settings`에 `chat_provider`, `chat_model_id` 두 필드를 추가. 환경변수 `OPS_API_CHAT_PROVIDER` / `OPS_API_CHAT_MODEL_ID`로 제어하고, 미지정 시 `OPS_API_LLM_PROVIDER` / `OPS_API_MODEL_ID`로 fallback해 기존 테스트 환경 호환성 유지.
+- `AppServices`에 `chat_client: CompletionClient` 필드 추가. `create_app()`에서 `create_completion_client(ModelConfig(provider=chat_provider, model_id=chat_model_id, ...))`로 별도 인스턴스를 만들고, 결정 경로의 `LLMOrchestratorService.client`와 독립된 CompletionClient임을 확인.
+- `/ai/chat` 엔드포인트를 **DB grounding + chat task_type** 구조로 전면 재작성:
+  - `_detect_zone_hint()`가 사용자 발화에서 `gh-01-zone-a`, `zone-a`, `A구역`, `zone a` 등 다양한 한국어/영어 표기로부터 zone_id를 추출. context의 `zone_hint`가 우선.
+  - `_build_chat_grounding_context()`가 해당 zone의 최신 `DecisionRecord`(+`current_state`+`validated_output.recommended_actions`), 최근 `AlertRecord` 3건, 최근 `SensorReadingRecord` 16건에서 metric별 latest snapshot, 상위 enabled `PolicyRecord` 8건을 DB에서 조회해 context dict로 합친다.
+  - user_message payload는 `{"task_type": "chat", "input": {"zone_id": ..., "latest_user_message": ..., "chat_history": ..., "context": {...grounding}, "instruction": "..."}}` 구조로 보내고, 출력 형식을 `{"reply": "한국어 자연어 답변"}` 단일 객체로 제약해 파인튜닝 모델이 결정 JSON 모드가 아니라 대화 모드로 답하도록 명시적으로 유도.
+  - `services.chat_client.complete()` 호출로 변경 (더 이상 `services.orchestrator.client`를 쓰지 않음 — 결정 경로와 완전 분리).
+  - 응답에 `grounding_keys`, `zone_hint` 디버깅 필드 노출.
+- `_build_chat_system_prompt()`를 7가지 규칙이 담긴 구조화 프롬프트로 교체: 한국어 고정, 2~5문장 제약, context 숫자 그대로 인용, 없을 때 명시, 장치 직접 on/off 금지, 안전 규칙(HSV-01~10, operator_present, manual_override, safe_mode) 위반 금지, 출력 형식 `{"reply": "..."}` 단일 JSON 강제, 결정 JSON 템플릿 사용 금지.
+- `llm-orchestrator/llm_orchestrator/client.py`의 `StubCompletionClient`에 `task_type == "chat"` 분기 추가. 실제 모델 키 없이도 dev 환경에서 자연스러운 한국어 stub 응답을 반환: `[stub 응답] 방금 '<질문>' ... {zone_id} 최근 risk_level은 ... 실제 파인튜닝된 적고추 온실 전문가 모델이 연결되면 ...` 형태로 grounding context를 echo. 기존 결정 task_type 분기는 그대로.
+- 기존 8개 smoke 파일(postgres_smoke/policy_source_db_wiring/dashboard_section14/auth/zone_history/timeseries/sse_stream/shadow_runner_gate)의 `Settings(...)` 호출에 `chat_provider="stub"`, `chat_model_id="pepper-ops-local-stub-chat"` 추가. `@dataclass(frozen=True)`라 누락 시 TypeError 발생.
+- `scripts/validate_ops_api_ai_chat.py`를 확장해 4가지 신규 invariant 회귀: (1) reply.content가 자연어여야 하고 '{'로 시작하면 안 됨 (JSON unwrap 검증), (2) `zone_hint`가 context의 zone_hint로 정확히 해석, (3) `grounding_keys`에 `active_policies` 포함 (DB 연결 확인), (4) free-form 사용자 발화 "zone-a 현재 EC 수치 알려줘"가 context 없이도 `gh-01-zone-a`로 매핑. 기존 6개 invariant는 그대로 유지.
+- `.env.example`에 `OPS_API_LLM_PROVIDER/OPS_API_MODEL_ID` (ds_v11 baseline decision path)와 `OPS_API_CHAT_PROVIDER/OPS_API_CHAT_MODEL_ID` (ds_v14 chat-friendly AI 어시스턴트 path) 두 쌍을 문서화. 주석에 specific fine-tuned model ID를 명시.
+- 23종 smoke 모두 `errors 0`.
+
+### 데이터베이스 설계 섹션 5 완료
+- `docs/timescaledb_schema_design.md`에 `partition 필요성 검토`와 `보관 주기 정책 검토`의 결론을 명시했다. 결론은 운영 canonical 테이블에는 별도 declarative partition을 도입하지 않고, 시계열 계층은 `TimescaleDB hypertable` chunking을 partition 전략으로 사용한다는 것이다.
+- retention도 같은 문서에 운영/감사 canonical 테이블과 시계열 계층을 분리해 적었다. 자동 retention은 `sensor_readings 180일`, `zone_state_snapshots 365일`, `zone_metric_5m 365일`, `zone_metric_30m 730일`로 고정하고, 운영 canonical 테이블은 archive/export 정책으로 따로 다룬다.
+- 이 기준으로 `todo.md`의 `5.2 partition 필요성 검토`, `5.2 보관 주기 정책 검토`를 완료 처리했다. 결과적으로 `#5 데이터베이스 설계 및 구축` 전체가 닫혔다.
+
+### PostgreSQL migration 초기화 + 우선순위 드리프트 정리
+- `ops-api/ops_api/database.py`에 PostgreSQL 전용 migration 적용 경로를 추가했다. `init_db()`는 이제 SQLite에서는 기존 `Base.metadata.create_all()`을 유지하고, PostgreSQL에서는 `infra/postgres/001_initial_schema.sql` → `002_timescaledb_sensor_readings.sql`을 순서대로 실행한 뒤 ORM `create_all`을 fallback 안전망으로만 사용한다. SQL splitter는 단일 인용부호를 인지해 statement 경계를 자르고, comment-only chunk는 건너뛴다.
+- `scripts/apply_ops_api_migrations.py`를 추가해 운영 DB에 migration만 독립 적용할 수 있게 했다. `OPS_API_DATABASE_URL`이 PostgreSQL이 아니면 `blocked`, PostgreSQL이면 canonical migration 2개를 적용하고 적용 경로를 JSON으로 출력한다.
+- `scripts/bootstrap_ops_api_reference_data.py`는 같은 `init_db()` 루틴을 타므로 PostgreSQL에서 `migration -> seed` 순서가 자동으로 보장된다. `ops-api/README.md` bootstrap 절차도 `apply_ops_api_migrations.py`와 함께 갱신했다.
+- `README.md`, `PROJECT_STATUS.md`, `todo.md`, `docs/native_realtime_dashboard_plan.md`를 최신 상태로 맞췄다. 더 이상 `TimescaleDB actual writer + native 시계열 구현`을 다음 우선순위로 적지 않고, `real shadow log`, `real PostgreSQL smoke`, `policy source versioning/UI`, `blind50/extended200 residual` 순서로 정리했다. `5.4 migration 초기화`는 완료로 닫았다.
+
 ### Native Realtime Phase 3 + 4: SSE endpoint + uPlot 구역 모니터링 + 23 smoke
 - ops-api에 `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m` 엔드포인트를 추가했다 (`read_runtime` 권한). interval에 따라 sensor_readings raw / `_group_timeseries` 5m·30m bucket aggregation으로 라우팅한다. 운영 환경에서는 PostgreSQL+TimescaleDB의 `zone_metric_5m`/`zone_metric_30m` continuous aggregate를 직접 조회하고, sqlite 테스트 환경은 raw 위에 on-the-fly bucket을 돌려 같은 응답 모양을 유지한다. 잘못된 interval/from>=to는 400, header_token 모드에서 viewer 토큰 미입력은 401, viewer 토큰 첨부 시 200으로 회귀.
 - ops-api에 `GET /zones/{zone_id}/stream` Server-Sent Events 엔드포인트를 추가했다 (`read_runtime` 권한). FastAPI `StreamingResponse` + async generator 패턴으로 구성되며, 연결 시 (1) `event: ready` 메타 → (2) bootstrap_seconds 윈도우 만큼의 `event: bootstrap` 행 → (3) `event: bootstrap_complete` → (4) `RealtimeBroker.subscribe(zone_id=...)` 큐에서 들어오는 `event: reading` 무한 루프로 진행한다. 15초 무이벤트 시 `: keepalive` 코멘트로 connection liveness 유지. SSE 헤더는 `text/event-stream + Cache-Control: no-cache, no-transform + X-Accel-Buffering: no`로 nginx 등 reverse proxy buffering까지 차단.

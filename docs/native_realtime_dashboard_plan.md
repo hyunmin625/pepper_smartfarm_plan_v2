@@ -84,8 +84,7 @@
 
 ### 보존(아카이브)
 - `docs/timeseries_storage_dashboard_plan.md`의 1·2·3·4·6장(저장소 결정과 데이터 계층 기준)은 유효
-- `docs/grafana_integration_design.md`는 "deferred"로 표기. 향후 엔지니어 전용 ad-hoc 분석 도구가 필요해질 때 동일 TimescaleDB를 datasource로 재사용할 수 있다.
-- `infra/grafana/`도 동일하게 deferred 표기. 디렉터리 자체는 보존.
+- 과거 Grafana 임베드 문서는 업스트림 정리 커밋 `914c8ee`에서 삭제됐다. 향후 엔지니어 전용 ad-hoc 분석 도구가 다시 필요해지면 동일 TimescaleDB를 datasource로 새 설계를 연다.
 
 ### 새로 여는 항목
 - 14.5 (or 14.4 아래) "native realtime sensor stream" 작업: `/stream` 엔드포인트, sensor-ingestor pubsub, uPlot 통합, SSE smoke
@@ -100,5 +99,4 @@
 
 - `docs/timescaledb_schema_design.md` — 시계열 스토리지 (유효, 유지)
 - `docs/timeseries_storage_dashboard_plan.md` — 저장 결정 (유효), Grafana 임베드 부분만 본 문서로 supersede
-- `docs/grafana_integration_design.md` — deferred (역사적 기록 보존)
-- `infra/grafana/README.md` — deferred (역사적 기록 보존)
+- `docs/timescaledb_schema_design.md` — raw/snapshot/downsampling/compression DDL 기준

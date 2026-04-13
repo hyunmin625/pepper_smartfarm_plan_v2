@@ -37,6 +37,8 @@ def _settings(*, auth_mode: str, auth_tokens_json: str = "") -> Settings:
         llm_prompt_version="sft_v10",
         llm_timeout_seconds=30.0,
         llm_max_retries=3,
+        chat_provider="stub",
+        chat_model_id="pepper-ops-local-stub-chat",
     )
 
 
@@ -142,6 +144,8 @@ def _verify_dependency_injection(errors: list[str]) -> dict[str, int]:
             llm_prompt_version="sft_v10",
             llm_timeout_seconds=5.0,
             llm_max_retries=1,
+            chat_provider="stub",
+            chat_model_id="pepper-ops-local-stub-chat",
         )
         app = create_app(settings=settings)
         client = TestClient(app)

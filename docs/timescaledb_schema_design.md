@@ -19,6 +19,20 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 - `zones.zone_id`, `sensors.sensor_id`, `devices.device_id`는 기존 reference catalog와 동일한 식별자를 사용한다.
 - 시간 컬럼은 모두 UTC 기준 `TIMESTAMP WITHOUT TIME ZONE`으로 통일한다.
 
+### 2.1 partition 필요성 검토 결론
+
+- 일반 PostgreSQL declarative partition은 현재 열지 않는다.
+- 운영 canonical 테이블(`zones`, `sensors`, `devices`, `policies`, `alerts`, `approvals`, `robot_tasks`)은 현재 규모와 조회 패턴상 단일 테이블 + 보조 인덱스로 충분하다.
+- 시계열 계층은 별도 partition 설계 대신 `TimescaleDB hypertable`의 time-range chunking을 canonical partition 전략으로 사용한다.
+- 현재 chunk 기준은 `sensor_readings=1일`, `zone_state_snapshots=7일`이다. 즉 `partition 필요성 검토`는 "직접 partition 테이블을 또 만들지 않고, Timescale chunking으로 닫는다"는 결론이다.
+
+### 2.2 보관 주기 정책 검토 결론
+
+- retention은 시계열 계층별로 분리하고, 운영 canonical 테이블에는 자동 삭제 정책을 걸지 않는다.
+- 이유는 운영/감사 데이터(`decisions`, `approvals`, `policy_events`, `operator_reviews`, `device_commands`)가 추후 shadow replay, 사고 조사, 승인 이력 추적의 기준이 되기 때문이다.
+- 자동 보관 주기는 `sensor_readings raw 180일`, `zone_state_snapshots 365일`, `zone_metric_5m 365일`, `zone_metric_30m 730일`로 고정한다.
+- 장기 보관이 필요한 운영 canonical 테이블은 retention이 아니라 별도 archive/export 정책으로 다룬다.
+
 ## 3. Raw hypertable
 
 ### 3.1 `sensor_readings`
@@ -230,6 +244,8 @@ SELECT add_compression_policy('zone_state_snapshots', INTERVAL '30 days');
 
 ## 9. 이번 설계로 닫히는 항목
 
+- `partition 필요성 검토`
+- `보관 주기 정책 검토`
 - `sensor_readings hypertable 스키마 작성`
 - `zone_state_snapshots 스키마 작성`
 - `retention policy 작성`

@@ -3,14 +3,14 @@
 
 Both paths create ops-api database schemas:
 
-- ``init_db()`` calls ``Base.metadata.create_all`` which stamps tables
-  derived from SQLAlchemy ``Mapped[...]`` declarations.
-- ``psql -f infra/postgres/001_initial_schema.sql`` applies the hand
-  written migration.
+- sqlite/local tests use ``init_db() -> Base.metadata.create_all`` from
+  SQLAlchemy ``Mapped[...]`` declarations.
+- real PostgreSQL bootstrap uses ``infra/postgres/001_initial_schema.sql``
+  and ``002_timescaledb_sensor_readings.sql`` in canonical order.
 
 When the two disagree on a column's type or nullability the test
 environment (sqlite + create_all) silently disagrees with production
-(postgres + migration). This smoke parses the migration file and
+(postgres + SQL migrations). This smoke parses the migration files and
 compares every (table, column) pair against the live SQLAlchemy
 metadata. Any difference produces a failure so the gap is caught in
 CI rather than at production insert time.

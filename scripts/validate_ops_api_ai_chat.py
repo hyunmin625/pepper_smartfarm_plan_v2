@@ -50,6 +50,8 @@ def _make_settings(tmp_path: Path, auth_mode: str = "disabled") -> Settings:
         llm_prompt_version="sft_v10",
         llm_timeout_seconds=5.0,
         llm_max_retries=1,
+        chat_provider="stub",
+        chat_model_id="pepper-ops-local-stub-chat",
     )
 
 
@@ -87,13 +89,41 @@ def main() -> int:
             errors.append(f"single turn should 200, got {single.status_code}")
         else:
             body = single.json().get("data") or {}
-            reply = (body.get("reply") or {}).get("content")
+            reply = (body.get("reply") or {}).get("content") or ""
             if not reply:
                 errors.append("reply.content should be non-empty")
+            if reply.strip().startswith("{"):
+                errors.append(
+                    "chat reply should be natural language, not raw JSON — "
+                    "_extract_chat_reply should unwrap the {\"reply\": ...} wrapper"
+                )
             if body.get("provider") != "stub":
                 errors.append(f"provider should be stub, got {body.get('provider')}")
             if not body.get("model_id"):
                 errors.append("model_id should be populated")
+            if body.get("zone_hint") != "gh-01-zone-a":
+                errors.append(
+                    f"zone_hint should auto-detect from context, got {body.get('zone_hint')}"
+                )
+            grounding_keys = body.get("grounding_keys") or []
+            if "active_policies" not in grounding_keys:
+                errors.append(
+                    f"grounding_keys should include active_policies, got {grounding_keys}"
+                )
+
+        # 자연어 zone 추출: "zone-a" 텍스트로도 context 없이 감지되어야 함
+        freeform = client.post(
+            "/ai/chat",
+            json={"messages": [{"role": "user", "content": "zone-a 현재 EC 수치 알려줘"}]},
+        )
+        if freeform.status_code != 200:
+            errors.append(f"freeform zone mention should 200, got {freeform.status_code}")
+        else:
+            body = freeform.json().get("data") or {}
+            if body.get("zone_hint") != "gh-01-zone-a":
+                errors.append(
+                    f"free-form 'zone-a' should map to gh-01-zone-a, got {body.get('zone_hint')}"
+                )
 
         multi = client.post(
             "/ai/chat",

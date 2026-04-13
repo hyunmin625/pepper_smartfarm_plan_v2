@@ -10,15 +10,21 @@ FastAPI 기반 운영 백엔드다.
 - `ops_api/seed.py`: sensor/device/policy seed JSON을 reference catalog로 적재
 - `ops_api/logging.py`, `ops_api/errors.py`: logger와 공통 예외 응답 경로
 - 기본 검증 환경은 `SQLite + mock PLC adapter`
-- 운영 전환용 PostgreSQL DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)에 둔다.
+- 운영 전환용 PostgreSQL/TimescaleDB DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1), [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)에 둔다.
 
 ## bootstrap
+
+```bash
+python3 scripts/apply_ops_api_migrations.py
+```
+
+운영용 PostgreSQL에서는 `infra/postgres/001_initial_schema.sql` → `002_timescaledb_sensor_readings.sql` 순서로 canonical migration을 적용한다. SQLite 개발 환경은 기존처럼 SQLAlchemy `create_all` 경로를 사용한다.
 
 ```bash
 python3 scripts/bootstrap_ops_api_reference_data.py
 ```
 
-현재 `OPS_API_DATABASE_URL` 대상 DB에 schema를 만들고 기본 `zones/sensors/devices/policies` reference catalog를 seed한다.
+현재 `OPS_API_DATABASE_URL` 대상 DB에 schema를 만든 뒤 기본 `zones/sensors/devices/policies` reference catalog를 seed한다. PostgreSQL이면 SQL migration을 먼저 적용하고, SQLite면 `create_all` fallback을 사용한다.
 
 ## auth
 

@@ -71,7 +71,39 @@ class StubCompletionClient:
             "follow_up": [{"type": "trend_review", "zone_id": zone_id}],
             "required_follow_up": [{"type": "operator_review", "zone_id": zone_id}],
         }
-        if task_type == "forbidden_action":
+        if task_type == "chat":
+            # Chat mode: the fine-tuned pepper greenhouse expert should
+            # reply in natural Korean grounded in the supplied context.
+            # The stub here approximates that behavior so dev/test
+            # environments do not need a live OpenAI key to exercise the
+            # AI 어시스턴트 view. Production points this path at the
+            # fine-tuned orchestrator client via OPS_API_LLM_PROVIDER=openai.
+            latest_user = str(payload.get("input", {}).get("latest_user_message") or "")
+            context = payload.get("input", {}).get("context") or {}
+            zone_snapshot = context.get("zone_snapshot") or {}
+            current_state = zone_snapshot.get("current_state") or {}
+            risk_level = zone_snapshot.get("risk_level") or "정상 범위"
+            summary_parts: list[str] = []
+            summary_parts.append(f"[stub 응답] 방금 '{latest_user[:80]}' 질문을 받았습니다.")
+            if zone_id and zone_id != "unknown-zone":
+                summary_parts.append(f"{zone_id} 최근 risk_level은 {risk_level}입니다.")
+            if current_state:
+                metric_line = ", ".join(
+                    f"{k}={v}" for k, v in list(current_state.items())[:4] if isinstance(v, (int, float))
+                )
+                if metric_line:
+                    summary_parts.append(f"최근 센서 스냅샷: {metric_line}.")
+            summary_parts.append(
+                "실제 파인튜닝된 적고추 온실 전문가 모델이 연결되면 도메인 근거에 기반한 한국어 답변이 제공됩니다."
+            )
+            reply_text = " ".join(summary_parts)
+            output = {
+                "reply": reply_text,
+                "zone_id": zone_id,
+                "context_keys": sorted(list(context.keys())),
+                "mode": "chat_stub",
+            }
+        elif task_type == "forbidden_action":
             output = {
                 **common,
                 "decision": "approval_required",

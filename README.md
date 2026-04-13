@@ -105,7 +105,7 @@
 - `ops-api`는 `policy_evaluations`, `operator_reviews`를 별도 저장해 shadow→approval 전환에 필요한 운영자 검토와 validator 결과를 같이 남긴다.
 - approval dispatch 경로는 이제 `policy_events`도 저장한다. `zone_state` 제약을 dispatch raw payload로 다시 전파하고, `blocked / approval_required` 이벤트를 `/policies/events`와 dashboard summary에서 바로 볼 수 있다.
 - `POST /policies/{policy_id}`와 dashboard의 `Auth Context`/`Policy Management` 패널을 추가해 현재 actor/role 확인과 policy enable/disable 토글까지 운영 화면에서 수행할 수 있게 했다.
-- PostgreSQL DDL도 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)로 고정했고, 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
+- PostgreSQL DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1), [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)로 고정했고, [scripts/apply_ops_api_migrations.py](/home/user/pepper-smartfarm-plan-v2/scripts/apply_ops_api_migrations.py:1)로 canonical 적용 순서를 초기화한다. 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
 - `scripts/validate_ops_api_server_smoke.py`로 실제 `uvicorn` localhost HTTP smoke도 통과했고, smoke 범위에 `GET /auth/me`, `GET /policies`, `POST /policies/{policy_id}`까지 포함했다.
 - `bash -lc "set -a; source .env >/dev/null 2>&1; set +a; python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10"` 기준 OpenAI online smoke도 통과했다. `champion` alias는 현재 `ds_v11` FT model id로 해석되고, retrieval/strict JSON/validator 경로가 실제 응답으로 검증됐다.
 - `policy-engine/policy_engine/loader.py`, `precheck.py`를 추가해 dispatch 직전 seed policy를 다시 평가하도록 연결했다. 현재 `HSV-04` 관수 경로 degraded block, `HSV-09` fertigation approval escalation이 `execution-gateway` preflight에서 실제로 강제된다.
@@ -233,7 +233,8 @@
 - `state-estimator/state_estimator/features.py`: VPD/DLI/trend/rootzone stress feature builder
 - `llm-orchestrator/llm_orchestrator/service.py`: prompt + retrieval + JSON recovery + validator facade
 - `ops-api/ops_api/app.py`: approval mode backend와 dashboard
-- `infra/postgres/001_initial_schema.sql`: `decisions`, `approvals`, `device_commands` PostgreSQL schema
+- `infra/postgres/001_initial_schema.sql`, `infra/postgres/002_timescaledb_sensor_readings.sql`: 운영 PostgreSQL + TimescaleDB schema
+- `scripts/apply_ops_api_migrations.py`: PostgreSQL migration 적용 진입점
 - `data/examples/device_profile_registry_seed.json`: 장치 타입별 `Device Profile` seed registry
 - `data/examples/device_site_override_seed.json`: `gh-01` 예시 controller/channel binding seed
 - `data/examples/device_channel_address_registry_seed.json`: `channel_ref -> Modbus address` seed registry
@@ -312,11 +313,10 @@
 
 1. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
 2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-3. TimescaleDB actual writer와 통합관제 웹 native realtime 시계열을 연결하기 (`SSE + uPlot`, `docs/native_realtime_dashboard_plan.md`)
-4. `policy-engine` policy source versioning과 blocked/approval event UI를 추가
-5. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
-6. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
-7. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
-8. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + batch17 + next-only oversampling challenger 제출 여부를 결정
+3. `policy-engine` policy source versioning과 blocked/approval event UI를 추가
+4. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
+5. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
+6. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
+7. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + batch17 + next-only oversampling challenger 제출 여부를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

@@ -60,6 +60,7 @@ configure_repo_paths()
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from execution_gateway.dispatch import ExecutionDispatcher  # noqa: E402
 from llm_orchestrator import LLMOrchestratorService, ModelConfig, OrchestratorRequest  # noqa: E402
+from llm_orchestrator.client import CompletionClient, create_completion_client  # noqa: E402
 from policy_engine import set_active_policy_source  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
 
@@ -75,6 +76,7 @@ class AppServices:
     dispatcher: ExecutionDispatcher
     planner: ActionDispatchPlanner
     realtime_broker: "RealtimeBroker"
+    chat_client: CompletionClient
 
 
 def _loads_json(raw: str | None, default: Any) -> Any:
@@ -794,6 +796,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         actor_id=current_mode.actor_id,
         reason=current_mode.reason,
     )
+    chat_client = create_completion_client(
+        ModelConfig(
+            provider=resolved_settings.chat_provider,
+            model_id=resolved_settings.chat_model_id,
+            timeout_seconds=resolved_settings.llm_timeout_seconds,
+            max_retries=resolved_settings.llm_max_retries,
+        )
+    )
     services = AppServices(
         settings=resolved_settings,
         session_factory=session_factory,
@@ -808,6 +818,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         dispatcher=ExecutionDispatcher.default(adapter_kind="mock"),
         planner=ActionDispatchPlanner(),
         realtime_broker=RealtimeBroker(),
+        chat_client=chat_client,
     )
 
     app = FastAPI(
@@ -1730,6 +1741,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     def ai_chat(
         payload: ChatRequest,
+        session: Session = Depends(get_session),
         services=Depends(get_services),
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
@@ -1742,23 +1754,35 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if last_user is None:
             raise HTTPException(status_code=400, detail="at least one user message is required")
 
+        zone_hint = _detect_zone_hint(last_user.content, payload.context)
+        grounding_context = _build_chat_grounding_context(
+            session=session,
+            zone_id=zone_hint,
+            extra_context=payload.context or {},
+        )
         system_prompt = payload.system_prompt or _build_chat_system_prompt()
         history_text = _render_chat_history(payload.messages[:-1])
         user_payload = json.dumps(
             {
-                "chat_history": history_text,
-                "latest_user_message": last_user.content,
-                "context": payload.context or {},
-                "instruction": (
-                    "위 대화 흐름을 고려해 적고추 온실 운영 관점의 한국어 답변을 작성해라. "
-                    "가능하면 구체적 수치와 제안 액션을 포함하고, JSON 형식이 아닌 자연어로 답한다."
-                ),
+                "task_type": "chat",
+                "input": {
+                    "zone_id": zone_hint or grounding_context.get("zone_id"),
+                    "latest_user_message": last_user.content,
+                    "chat_history": history_text,
+                    "context": grounding_context,
+                    "instruction": (
+                        "운영자의 질문에 적고추 온실 운영 관점에서 한국어 자연어로 답한다. "
+                        "주어진 context의 숫자와 최근 결정/정책을 근거로 쓰고, 없으면 일반 재배 지식을 사용한다. "
+                        "장치 직접 on/off 명령은 금지 — 대시보드 승인 경로로만 권고한다. "
+                        "응답 형식은 {\"reply\": \"여기에 한국어 자연어 답변\"} JSON 한 객체로 반환한다."
+                    ),
+                },
             },
             ensure_ascii=False,
             sort_keys=True,
             indent=2,
         )
-        invocation = services.orchestrator.client.complete(
+        invocation = services.chat_client.complete(
             system_prompt=system_prompt,
             user_message=user_payload,
         )
@@ -1769,9 +1793,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "model_id": invocation.model_id,
                 "provider": invocation.provider,
                 "attempts": invocation.attempts,
+                "grounding_keys": sorted(list(grounding_context.keys())),
+                "zone_hint": zone_hint,
             },
             actor=actor,
-            meta={"system_prompt_id": "chat_v1"},
+            meta={"system_prompt_id": "chat_v2"},
         )
 
     @app.get("/dashboard", tags=["dashboard"], response_class=HTMLResponse)
@@ -1787,13 +1813,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 def _build_chat_system_prompt() -> str:
     return (
-        "너는 'iFarm 통합제어 (적고추 온실 스마트팜)' 시스템의 운영 보조 AI 어시스턴트다. "
-        "역할은 파인튜닝된 재배 의사결정 모델을 기반으로, 운영자의 질문에 대해 "
-        "현재 센서 상태와 기존 정책/규칙을 참고해 한국어로 답변하는 것이다. "
-        "절대 안전 규칙을 위반하는 제안을 하지 않는다. "
-        "장치 직접 on/off 명령을 내릴 수 없다는 점을 분명히 하고, 대신 운영자가 "
-        "대시보드에서 승인/거절할 수 있는 형태로 권고한다. "
-        "답변은 짧고 명확하게, 가능하면 숫자와 근거를 제시한다."
+        "너는 'iFarm 통합제어 (적고추 온실 스마트팜)' 시스템의 운영 어시스턴트다. "
+        "본체는 적고추 재배 도메인에 파인튜닝된 언어 모델이고, 이 경로에서는 결정 JSON이 아니라 "
+        "운영자와의 **자연어 대화**로 상태 설명, 권고, 운영 조언을 제공한다. "
+        "\n\n역할과 규칙:\n"
+        "- 답변 언어는 **한국어**. 전문 용어(EC, VPD, PAR, DLI 등)는 한국어 설명과 함께 병기한다.\n"
+        "- 답변 길이는 2~5문장으로 짧고 명확하게. 필요하면 bullet list.\n"
+        "- 입력에 포함된 `context`의 숫자·최근 결정·활성 정책을 근거로 답하고, 숫자를 그대로 인용한다.\n"
+        "- context가 비어 있거나 해당 값이 없으면 일반 적고추 재배 지식으로 답하되 '현재 시스템에 해당 데이터가 없다'고 명시한다.\n"
+        "- 장치 직접 on/off 지시 금지. 대신 'approval 모드에서 dashboard에서 승인 후 실행'을 권고한다.\n"
+        "- 안전 규칙(HSV-01~10, operator_present, manual_override, safe_mode)을 위반하는 제안 금지.\n"
+        "- 출력 형식: 반드시 `{\"reply\": \"여기에 한국어 답변\"}` 단일 JSON 객체 한 개. 다른 키 없음. 결정 JSON 템플릿 사용 금지."
     )
 
 
@@ -1803,6 +1833,125 @@ def _render_chat_history(messages) -> str:
         role = "운영자" if msg.role == "user" else ("AI" if msg.role == "assistant" else "시스템")
         lines.append(f"{role}: {msg.content}")
     return "\n".join(lines) if lines else "(이전 대화 없음)"
+
+
+def _detect_zone_hint(user_text: str, context: dict[str, Any] | None) -> str | None:
+    """Best-effort zone_id extraction from the user message or context hint."""
+
+    if isinstance(context, dict):
+        hint = context.get("zone_id") or context.get("zone_hint")
+        if isinstance(hint, str) and hint.strip():
+            return hint.strip()
+    if not isinstance(user_text, str):
+        return None
+    import re
+
+    match = re.search(r"gh-\d{2}-[a-z0-9\-]+", user_text)
+    if match:
+        return match.group(0)
+    # Common Korean shorthand like "zone-a", "A구역"
+    if "zone-a" in user_text.lower():
+        return "gh-01-zone-a"
+    if "zone-b" in user_text.lower():
+        return "gh-01-zone-b"
+    for shorthand, mapped in (("a구역", "gh-01-zone-a"), ("b구역", "gh-01-zone-b"), ("zone a", "gh-01-zone-a"), ("zone b", "gh-01-zone-b")):
+        if shorthand in user_text.lower():
+            return mapped
+    return None
+
+
+def _build_chat_grounding_context(
+    *,
+    session: Session,
+    zone_id: str | None,
+    extra_context: dict[str, Any],
+) -> dict[str, Any]:
+    """Pull the latest decision, sensor snapshot, and policy highlights for
+    the referenced zone so the fine-tuned chat model can ground its reply."""
+
+    context: dict[str, Any] = {
+        "zone_id": zone_id,
+        "operator_context": extra_context,
+    }
+    if zone_id:
+        latest_decision = session.execute(
+            select(DecisionRecord)
+            .where(DecisionRecord.zone_id == zone_id)
+            .order_by(desc(DecisionRecord.id))
+            .limit(1)
+        ).scalar_one_or_none()
+        if latest_decision is not None:
+            zone_state = _loads_json(latest_decision.zone_state_json, {})
+            current_state = zone_state.get("current_state") if isinstance(zone_state, dict) else None
+            validated = _loads_json(latest_decision.validated_output_json, {})
+            context["zone_snapshot"] = {
+                "decision_id": latest_decision.id,
+                "task_type": latest_decision.task_type,
+                "runtime_mode": latest_decision.runtime_mode,
+                "status": latest_decision.status,
+                "risk_level": validated.get("risk_level") if isinstance(validated, dict) else None,
+                "current_state": current_state or {},
+                "summary": (current_state or {}).get("summary"),
+                "recommended_actions": validated.get("recommended_actions") if isinstance(validated, dict) else None,
+                "created_at": latest_decision.created_at.isoformat() if latest_decision.created_at else None,
+            }
+        recent_alerts = session.execute(
+            select(AlertRecord)
+            .where(AlertRecord.zone_id == zone_id)
+            .order_by(desc(AlertRecord.id))
+            .limit(3)
+        ).scalars().all()
+        if recent_alerts:
+            context["recent_alerts"] = [
+                {
+                    "alert_type": row.alert_type,
+                    "severity": row.severity,
+                    "status": row.status,
+                    "summary": row.summary,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+                for row in recent_alerts
+            ]
+    try:
+        sensor_rows = session.execute(
+            select(SensorReadingRecord)
+            .where(SensorReadingRecord.zone_id == zone_id)
+            .order_by(desc(SensorReadingRecord.measured_at))
+            .limit(16)
+        ).scalars().all() if zone_id else []
+    except Exception:
+        sensor_rows = []
+    if sensor_rows:
+        latest_metrics: dict[str, Any] = {}
+        for row in sensor_rows:
+            if row.metric_name in latest_metrics:
+                continue
+            latest_metrics[row.metric_name] = {
+                "value": row.metric_value_double if row.metric_value_double is not None else row.metric_value_text,
+                "measured_at": row.measured_at.isoformat() if row.measured_at else None,
+                "quality_flag": row.quality_flag,
+            }
+        context["latest_sensor_readings"] = latest_metrics
+    try:
+        enabled_policies = session.execute(
+            select(PolicyRecord)
+            .where(PolicyRecord.enabled.is_(True))
+            .order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)
+            .limit(8)
+        ).scalars().all()
+    except Exception:
+        enabled_policies = []
+    if enabled_policies:
+        context["active_policies"] = [
+            {
+                "policy_id": row.policy_id,
+                "stage": row.policy_stage,
+                "severity": row.severity,
+                "description": row.description,
+            }
+            for row in enabled_policies
+        ]
+    return context
 
 
 def _extract_chat_reply(raw_text: str) -> str:
