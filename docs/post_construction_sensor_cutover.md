@@ -27,6 +27,8 @@
    - VPD, DLI, rootzone trend를 실제 데이터 기준으로 재계산한다.
 8. AI 입력 전환
    - `shadow mode`에서 실측 데이터만 사용한 판단 로그를 축적한다.
+   - `scripts/run_shadow_mode_capture_cases.py`로 일자별 shadow audit를 적재한다.
+   - `scripts/build_shadow_mode_window_report.py`로 2일 이상 rolling window 요약을 만든다.
 9. rollback 준비
    - 품질 기준 미달 시 `.env`와 config를 이전 shadow-only 설정으로 되돌린다.
 
@@ -45,3 +47,4 @@
 - `docs/sensor_ingestor_config_spec.md`
 - `docs/sensor_ingestor_runtime_flow.md`
 - `docs/shadow_mode_report_format.md`
+- `docs/real_shadow_mode_runbook.md`

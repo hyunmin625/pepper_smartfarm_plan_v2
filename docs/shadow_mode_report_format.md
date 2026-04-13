@@ -77,6 +77,9 @@
 - summary builder: `scripts/build_shadow_mode_report.py`
 - sample/runtime validation: `scripts/validate_shadow_mode_runtime.py`, `data/examples/shadow_mode_runtime_cases.jsonl`
 - offline replay helper: `scripts/build_shadow_mode_replay_from_eval.py`
+- real shadow capture runner: `scripts/run_shadow_mode_capture_cases.py`
+- rolling window summary: `scripts/build_shadow_mode_window_report.py`
+- post-construction runbook: `docs/real_shadow_mode_runbook.md`
 
 ## offline replay 사용 원칙
 
