@@ -931,7 +931,7 @@
 
 ## 14.1 기본 화면 정의
 - [x] zone overview 화면 설계 (`ops-api/ops_api/app.py`)
-- [x] real-time sensor 화면 설계 (`ops-api/ops_api/app.py` Zone History Chart 카드, `/zones/{zone_id}/history` `sensor_series`, `scripts/validate_ops_api_zone_history.py`)
+- [x] real-time sensor 화면 설계 (`ops-api/ops_api/app.py` Zone Realtime Chart 카드 + uPlot 11 인스턴스 + `/zones/{zone_id}/stream` SSE + `/zones/{zone_id}/timeseries` bootstrap, `scripts/validate_ops_api_sse_stream.py`, `scripts/validate_ops_api_timeseries.py`, `scripts/validate_ops_api_zone_history.py`)
 - [x] decision 로그 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] action 승인 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] alert 화면 설계 (`ops-api/ops_api/app.py`)
@@ -970,11 +970,15 @@
 - [x] sensor-ingestor TimescaleDB writer 경로: `sensor-ingestor/sensor_ingestor/timeseries_writer.py` `TimeseriesWriter` + `SensorIngestorService.__init__(timeseries_writer=...)` + `run_once()`에서 publisher 직후 `_timeseries_write` 호출
 - [x] `scripts/validate_sensor_timeseries_writer.py`: writer 6 invariant + broker fan-out + zone 필터 + overflow 회귀
 - [x] `scripts/validate_postgres_schema_drift.py`를 두 SQL 파일(`001` + `002`) 동시 파싱으로 확장, Float 타입 매핑 추가
-- [ ] ops-api `GET /zones/{zone_id}/stream` (SSE, `read_runtime` 권한): 연결 시 최근 5분 bootstrap + sensor-ingestor pubsub에서 신규 reading streaming, 자동 disconnect 정리
-- [ ] ops-api `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m`: interval에 따라 `sensor_readings` raw / `zone_metric_5m` / `zone_metric_30m` 자동 라우팅
-- [ ] iFarm 대시보드 `존 모니터링` 뷰 uPlot 통합: 11개 지표 SVG 스파크라인을 uPlot 인스턴스로 교체, EventSource 기반 streaming, 60s/5m/30m/6h/24h 롤링 윈도우 selector, 자동 재연결 + 백오프
-- [ ] `scripts/validate_ops_api_sse_stream.py` 회귀: TestClient async generator로 연결 → 이벤트 시퀀스 검증 → reconnect 시 bootstrap 재발송 검증
-- [ ] `scripts/validate_ops_api_timeseries.py` 회귀: interval별 hypertable 라우팅, raw/5m/30m 결과 일관성, 권한 401/200 경로
+- [x] `ops-api/ops_api/realtime_broker.py` cross-loop/cross-thread safety 보강: subscriber loop 캡처 + `loop.call_soon_threadsafe` dispatch + `threading.RLock` 경계
+- [x] `AppServices.realtime_broker` 필드 + `create_app` 단일 instance 부착
+- [x] ops-api `GET /zones/{zone_id}/stream` (SSE, `read_runtime` 권한): ready → bootstrap(최근 N초 sensor_readings) → bootstrap_complete → broker.subscribe 기반 reading 무한 루프, 15s keepalive 코멘트, `text/event-stream + Cache-Control: no-cache + X-Accel-Buffering: no` 헤더
+- [x] ops-api `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m`: interval에 따라 raw / on-the-fly bucket(production: `zone_metric_5m`/`zone_metric_30m`) 라우팅, 잘못된 interval/from>=to 400, header_token viewer 경로 200
+- [x] iFarm 대시보드 `구역 모니터링` 뷰 uPlot 통합: 11개 지표 SVG 스파크라인을 `uPlot 1.6.30` 캔버스 11 인스턴스로 교체, `EventSource('/zones/{id}/stream')` 기반 streaming, 60s/5m/30m/6h/24h 롤링 윈도우 selector, 윈도우 변경 시 `bootstrapTimeseries` 재시드, 지수 백오프 자동 재연결, `streamStatus` chip, `존 → 구역` 표기 통일
+- [x] `scripts/validate_ops_api_sse_stream.py` 회귀: ready 1 + bootstrap 4 + bootstrap_complete 1 + reading 3 시나리오, zone-b broadcast 격리, `text/event-stream` content-type, header_token 401, 7 invariant
+- [x] `scripts/validate_ops_api_timeseries.py` 회귀: raw / 1m bucket / metric filter / from-to clamp / 잘못된 interval 400 / from>=to 400 / header_token 401·200, 7 invariant
+- [x] `scripts/validate_ops_api_zone_history.py` hook 목록 업데이트 (Phase 4 마크업 정렬: `Zone Realtime Chart`, `bootstrapTimeseries`, `openStream`, `TRACKED_METRICS`, `historyWindow`, `uPlot`)
+- [x] `validate_ops_api_flow` expected_routes에 `/zones/{zone_id}/timeseries`, `/zones/{zone_id}/stream` 추가
 
 ---
 

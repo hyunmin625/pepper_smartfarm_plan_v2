@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
-from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import desc, select
+from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from sqlalchemy import asc, desc, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from .api_models import (
@@ -42,12 +44,14 @@ from .models import (
     PolicyRecord,
     RobotCandidateRecord,
     RobotTaskRecord,
+    SensorReadingRecord,
     SensorRecord,
     ZoneRecord,
 )
 from .planner import ActionDispatchPlanner
 from .runtime_mode import load_runtime_mode, save_runtime_mode
 from .policy_source import DbPolicySource
+from .realtime_broker import RealtimeBroker
 from .seed import bootstrap_reference_data
 from .shadow_mode import build_window_summary_from_paths, capture_shadow_cases
 
@@ -70,6 +74,7 @@ class AppServices:
     orchestrator: LLMOrchestratorService
     dispatcher: ExecutionDispatcher
     planner: ActionDispatchPlanner
+    realtime_broker: "RealtimeBroker"
 
 
 def _loads_json(raw: str | None, default: Any) -> Any:
@@ -534,6 +539,119 @@ def _compute_shadow_window(shadow_audit_path: Path | None) -> dict[str, Any] | N
         return None
 
 
+def _parse_iso(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        text = value.replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is not None:
+        return parsed.astimezone(tz=None).replace(tzinfo=None)
+    return parsed
+
+
+def _group_timeseries(
+    rows: list[SensorReadingRecord],
+    *,
+    bucket_seconds: int,
+) -> dict[str, list[dict[str, Any]]]:
+    """Bucket sensor readings by metric_name and (optionally) by time bucket.
+
+    Production deployments will route 5m/30m queries to the
+    ``zone_metric_5m`` / ``zone_metric_30m`` continuous aggregates from
+    migration 002. Here we provide a portable fallback that aggregates on
+    the fly so the smoke tests can run against sqlite without
+    TimescaleDB.
+    """
+
+    series: dict[str, list[dict[str, Any]]] = {}
+    if bucket_seconds <= 0:
+        for row in rows:
+            metric = row.metric_name
+            point = {
+                "t": row.measured_at.isoformat() if row.measured_at else None,
+                "value": row.metric_value_double,
+                "value_text": row.metric_value_text,
+                "quality_flag": row.quality_flag,
+                "source_id": row.source_id,
+            }
+            series.setdefault(metric, []).append(point)
+        return series
+
+    bucket_accumulator: dict[tuple[str, datetime], list[float]] = {}
+    bucket_quality: dict[tuple[str, datetime], str] = {}
+    for row in rows:
+        if row.metric_value_double is None or row.measured_at is None:
+            continue
+        epoch = int(row.measured_at.timestamp())
+        bucket_epoch = epoch - (epoch % bucket_seconds)
+        bucket_start = datetime.utcfromtimestamp(bucket_epoch)
+        key = (row.metric_name, bucket_start)
+        bucket_accumulator.setdefault(key, []).append(row.metric_value_double)
+        bucket_quality[key] = row.quality_flag
+    for (metric, bucket_start), values in sorted(bucket_accumulator.items()):
+        avg = sum(values) / len(values)
+        series.setdefault(metric, []).append(
+            {
+                "t": bucket_start.isoformat(),
+                "value": avg,
+                "min": min(values),
+                "max": max(values),
+                "sample_count": len(values),
+                "quality_flag": bucket_quality.get((metric, bucket_start)),
+            }
+        )
+    return series
+
+
+def _read_recent_sensor_readings(
+    *,
+    session_factory: sessionmaker[Session],
+    zone_id: str,
+    seconds: int,
+    limit: int = 600,
+) -> list[dict[str, Any]]:
+    """Return the most recent sensor_readings rows for SSE bootstrap."""
+
+    cutoff = datetime.utcnow() - timedelta(seconds=seconds)
+    session = session_factory()
+    try:
+        rows = session.execute(
+            select(SensorReadingRecord)
+            .where(
+                SensorReadingRecord.zone_id == zone_id,
+                SensorReadingRecord.measured_at >= cutoff,
+                SensorReadingRecord.record_kind == "sensor",
+            )
+            .order_by(asc(SensorReadingRecord.measured_at))
+            .limit(limit)
+        ).scalars().all()
+    finally:
+        session.close()
+    return [
+        {
+            "measured_at": row.measured_at.isoformat() if row.measured_at else None,
+            "site_id": row.site_id,
+            "zone_id": row.zone_id,
+            "record_kind": row.record_kind,
+            "source_id": row.source_id,
+            "source_type": row.source_type,
+            "metric_name": row.metric_name,
+            "value_double": row.metric_value_double,
+            "value_text": row.metric_value_text,
+            "quality_flag": row.quality_flag,
+        }
+        for row in rows
+    ]
+
+
+def _sse_event(event_name: str, payload: dict[str, Any]) -> bytes:
+    body = json.dumps(payload, ensure_ascii=False, default=str)
+    return (f"event: {event_name}\ndata: {body}\n\n").encode("utf-8")
+
+
 def _build_dashboard_payload(
     session: Session,
     mode_state: Any,
@@ -689,6 +807,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
         dispatcher=ExecutionDispatcher.default(adapter_kind="mock"),
         planner=ActionDispatchPlanner(),
+        realtime_broker=RealtimeBroker(),
     )
 
     app = FastAPI(
@@ -965,6 +1084,114 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             },
             actor=actor,
             meta={"zone_id": zone_id, "limit": limit},
+        )
+
+    @app.get(
+        "/zones/{zone_id}/timeseries",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def get_zone_timeseries(
+        zone_id: str,
+        metric: list[str] | None = Query(default=None),
+        from_: str | None = Query(default=None, alias="from"),
+        to: str | None = Query(default=None),
+        interval: str = Query(default="raw"),
+        limit: int = Query(default=2000, ge=1, le=20000),
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        if interval not in {"raw", "1m", "5m", "30m"}:
+            raise HTTPException(status_code=400, detail="interval must be one of raw|1m|5m|30m")
+        from_ts = _parse_iso(from_) or (datetime.utcnow() - timedelta(hours=1))
+        to_ts = _parse_iso(to) or datetime.utcnow()
+        if from_ts >= to_ts:
+            raise HTTPException(status_code=400, detail="from must be earlier than to")
+        # Phase 3 read path: interval -> hypertable. The 5m and 30m
+        # branches degrade to raw aggregation on sqlite where the
+        # continuous aggregate views from migration 002 are absent;
+        # in production PostgreSQL+TimescaleDB they would target
+        # zone_metric_5m / zone_metric_30m directly.
+        stmt = (
+            select(SensorReadingRecord)
+            .where(
+                SensorReadingRecord.zone_id == zone_id,
+                SensorReadingRecord.measured_at >= from_ts,
+                SensorReadingRecord.measured_at <= to_ts,
+                SensorReadingRecord.record_kind == "sensor",
+            )
+            .order_by(asc(SensorReadingRecord.measured_at))
+            .limit(limit)
+        )
+        if metric:
+            stmt = stmt.where(SensorReadingRecord.metric_name.in_(metric))
+        rows = session.execute(stmt).scalars().all()
+        bucket_seconds = {"raw": 0, "1m": 60, "5m": 300, "30m": 1800}[interval]
+        series = _group_timeseries(rows, bucket_seconds=bucket_seconds)
+        return _ok(
+            {
+                "zone_id": zone_id,
+                "interval": interval,
+                "from": from_ts.isoformat(),
+                "to": to_ts.isoformat(),
+                "metric_count": len(series),
+                "series": series,
+            },
+            actor=actor,
+            meta={"zone_id": zone_id, "metric_filter": metric, "row_count": len(rows)},
+        )
+
+    @app.get(
+        "/zones/{zone_id}/stream",
+        tags=["catalog"],
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    async def get_zone_stream(
+        zone_id: str,
+        bootstrap_seconds: int = Query(default=300, ge=0, le=3600),
+        services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> StreamingResponse:
+        broker: RealtimeBroker = services.realtime_broker
+        session_factory = services.session_factory
+
+        async def event_source() -> AsyncIterator[bytes]:
+            yield _sse_event(
+                "ready",
+                {
+                    "zone_id": zone_id,
+                    "actor_id": actor.actor_id,
+                    "role": actor.role,
+                    "bootstrap_seconds": bootstrap_seconds,
+                },
+            )
+            if bootstrap_seconds > 0:
+                bootstrap = _read_recent_sensor_readings(
+                    session_factory=session_factory,
+                    zone_id=zone_id,
+                    seconds=bootstrap_seconds,
+                )
+                for record in bootstrap:
+                    yield _sse_event("bootstrap", record)
+                yield _sse_event("bootstrap_complete", {"count": len(bootstrap)})
+            async with broker.subscribe(zone_id=zone_id) as queue:
+                while True:
+                    try:
+                        record = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    except asyncio.TimeoutError:
+                        yield b": keepalive\n\n"
+                        continue
+                    yield _sse_event("reading", record)
+
+        return StreamingResponse(
+            event_source(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
         )
 
     @app.get(
@@ -1606,6 +1833,8 @@ def _dashboard_html() -> str:
   <title>iFarm 통합제어 · 적고추 온실 스마트팜</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
   <script>
@@ -1687,7 +1916,7 @@ def _dashboard_html() -> str:
       </a>
       <a data-view="zones" class="nav-link">
         <span class="material-symbols-outlined text-[20px]">thermostat</span>
-        <span>존 모니터링</span>
+        <span>구역 모니터링</span>
       </a>
       <a data-view="decisions" class="nav-link">
         <span class="material-symbols-outlined text-[20px]">psychology</span>
@@ -1761,7 +1990,7 @@ def _dashboard_html() -> str:
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-5">
         <div class="card lg:col-span-3">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-ink">존 상태 요약</h3>
+            <h3 class="text-sm font-bold text-ink">구역 상태 요약</h3>
             <span class="text-[11px] text-muted uppercase tracking-wider">Real-Time Environmental Monitoring</span>
           </div>
           <div id="zoneList" class="space-y-3"></div>
@@ -1790,26 +2019,34 @@ def _dashboard_html() -> str:
       </div>
     </section>
 
-    <!-- 존 모니터링 -->
+    <!-- 구역 모니터링 -->
     <section class="view" data-view="zones">
       <div class="card mb-5">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
-            <p class="text-[11px] tracking-wider uppercase text-primary font-bold mb-1">Zone 시계열</p>
-            <h3 class="text-lg font-bold text-ink">Zone History Chart</h3>
-            <p class="text-[11px] text-muted mt-1">decision zone_state 기반 11개 지표 스파크라인</p>
+            <p class="text-[11px] tracking-wider uppercase text-primary font-bold mb-1">Zone 실시간 시계열</p>
+            <h3 class="text-lg font-bold text-ink">Zone Realtime Chart</h3>
+            <p class="text-[11px] text-muted mt-1">TimescaleDB / SSE 기반 초단위 실시간 · uPlot canvas 렌더링</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <select id="historyZoneId" class="bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs">
               <option value="gh-01-zone-a">gh-01-zone-a</option>
             </select>
+            <select id="historyWindow" class="bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs">
+              <option value="60">최근 60초</option>
+              <option value="300" selected>최근 5분</option>
+              <option value="1800">최근 30분</option>
+              <option value="21600">최근 6시간</option>
+              <option value="86400">최근 24시간</option>
+            </select>
+            <span id="streamStatus" class="chip chip-dark">disconnected</span>
             <button onclick="refreshZoneHistory()" class="bg-primary text-white text-xs font-semibold rounded-lg px-4 py-2 flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">refresh</span>
               <span>Refresh</span>
             </button>
           </div>
         </div>
-        <div id="zoneHistoryCharts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="zoneHistoryCharts" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
       </div>
       <div class="card">
         <div class="flex items-center justify-between mb-4">
@@ -2042,7 +2279,7 @@ def _dashboard_html() -> str:
   <script>
     const VIEW_TITLES = {
       overview: ['대시보드', '전체 운영 현황 요약'],
-      zones: ['존 모니터링', 'Zone 시계열 · 최신 스냅샷'],
+      zones: ['구역 모니터링', '구역 시계열 · 최신 스냅샷'],
       decisions: ['결정 / 승인', 'LLM 결정 요청과 승인 흐름'],
       ai_chat: ['AI 어시스턴트', '파인튜닝된 AI와 대화하며 관리'],
       alerts: ['알림', 'validator · risk · policy 알림'],
@@ -2435,61 +2672,193 @@ def _dashboard_html() -> str:
       const ids = (zones || []).map(z => z.zone_id).filter(Boolean);
       if (!ids.includes('gh-01-zone-a')) ids.unshift('gh-01-zone-a');
       const uniqueIds = Array.from(new Set(ids));
+      const previousSelection = current || 'gh-01-zone-a';
       select.innerHTML = uniqueIds.map(id => `<option value="${id}">${id}</option>`).join('');
-      if (uniqueIds.includes(current)) select.value = current;
+      if (uniqueIds.includes(previousSelection)) select.value = previousSelection;
+    }
+
+    // ===== uPlot realtime charts (Phase 4 native renderer) =====
+    const TRACKED_METRICS = [
+      'air_temp_c', 'rh_pct', 'vpd_kpa', 'substrate_moisture_pct', 'substrate_temp_c',
+      'co2_ppm', 'par_umol_m2_s', 'feed_ec_ds_m', 'drain_ec_ds_m', 'feed_ph', 'drain_ph',
+    ];
+    const realtimeState = {
+      zoneId: null,
+      windowSeconds: 300,
+      charts: new Map(),  // metric -> { plot, data: [xs, ys], lastValue, container }
+      eventSource: null,
+      reconnectTimer: null,
+      reconnectAttempts: 0,
+    };
+    function nowMs() { return Date.now(); }
+    function setStreamStatus(state, label) {
+      const chip = document.getElementById('streamStatus');
+      if (!chip) return;
+      chip.classList.remove('chip-dark', 'chip-warn', 'chip-enabled', 'chip-critical');
+      const map = { connected: 'chip-enabled', connecting: 'chip-warn', disconnected: 'chip-dark', error: 'chip-critical' };
+      chip.classList.add(map[state] || 'chip-dark');
+      chip.textContent = label || state;
+    }
+    function destroyRealtimeCharts() {
+      for (const entry of realtimeState.charts.values()) {
+        try { entry.plot.destroy(); } catch (_) {}
+      }
+      realtimeState.charts.clear();
+      const container = document.getElementById('zoneHistoryCharts');
+      if (container) container.innerHTML = '';
+    }
+    function ensureRealtimeChart(metric) {
+      if (typeof uPlot === 'undefined') return null;
+      if (realtimeState.charts.has(metric)) return realtimeState.charts.get(metric);
+      const container = document.getElementById('zoneHistoryCharts');
+      if (!container) return null;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'bg-surface-low rounded-xl p-4';
+      wrapper.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] uppercase tracking-wider text-muted font-bold">${metric}</span>
+          <span class="text-lg font-bold text-primary" data-role="last">--</span>
+        </div>
+        <div data-role="plot" style="height:120px;"></div>
+        <div class="text-[10px] text-muted mt-2" data-role="meta">stream 대기 중</div>
+      `;
+      container.appendChild(wrapper);
+      const plotMount = wrapper.querySelector('[data-role="plot"]');
+      const opts = {
+        width: plotMount.clientWidth || 320,
+        height: 120,
+        scales: { x: { time: true } },
+        legend: { show: false },
+        cursor: { drag: { x: false, y: false }, points: { show: false } },
+        axes: [
+          { stroke: '#5b685e', grid: { stroke: 'rgba(193,200,192,0.3)' }, ticks: { show: false }, size: 28 },
+          { stroke: '#5b685e', grid: { stroke: 'rgba(193,200,192,0.3)' }, size: 36 },
+        ],
+        series: [
+          {},
+          { stroke: '#2d5338', width: 2, fill: 'rgba(45,83,56,0.12)', points: { show: false } },
+        ],
+      };
+      const plot = new uPlot(opts, [[], []], plotMount);
+      const entry = { plot, xs: [], ys: [], wrapper, mount: plotMount };
+      realtimeState.charts.set(metric, entry);
+      window.addEventListener('resize', () => {
+        try { plot.setSize({ width: plotMount.clientWidth || 320, height: 120 }); } catch (_) {}
+      }, { passive: true });
+      return entry;
+    }
+    function pushPoint(metric, ts, value) {
+      const entry = ensureRealtimeChart(metric);
+      if (!entry) return;
+      entry.xs.push(ts);
+      entry.ys.push(value);
+      const cutoff = ts - realtimeState.windowSeconds;
+      while (entry.xs.length && entry.xs[0] < cutoff) {
+        entry.xs.shift();
+        entry.ys.shift();
+      }
+      try {
+        entry.plot.setData([entry.xs.slice(), entry.ys.slice()]);
+      } catch (_) {}
+      const last = entry.wrapper.querySelector('[data-role="last"]');
+      if (last) last.textContent = typeof value === 'number' ? value.toFixed(2) : value;
+      const meta = entry.wrapper.querySelector('[data-role="meta"]');
+      if (meta && entry.ys.length) {
+        const min = Math.min.apply(null, entry.ys);
+        const max = Math.max.apply(null, entry.ys);
+        meta.textContent = `MIN ${min.toFixed(2)} · MAX ${max.toFixed(2)} · points=${entry.ys.length}`;
+      }
+    }
+    function ingestRecord(record) {
+      if (!record || !record.metric_name) return;
+      const value = record.value_double != null ? record.value_double : record.metric_value_double;
+      if (typeof value !== 'number') return;
+      const ts = record.measured_at ? Math.floor(new Date(record.measured_at).getTime() / 1000) : Math.floor(nowMs() / 1000);
+      pushPoint(record.metric_name, ts, value);
+    }
+    async function bootstrapTimeseries(zoneId) {
+      const windowSeconds = realtimeState.windowSeconds;
+      const to = new Date();
+      const from = new Date(to.getTime() - windowSeconds * 1000);
+      const interval = windowSeconds <= 600 ? 'raw' : windowSeconds <= 21600 ? '1m' : '5m';
+      try {
+        const body = await apiFetch(
+          '/zones/' + encodeURIComponent(zoneId) + '/timeseries?interval=' + interval +
+          '&from=' + encodeURIComponent(from.toISOString().replace('Z', '')) +
+          '&to=' + encodeURIComponent(to.toISOString().replace('Z', '')) + '&limit=2000'
+        );
+        const data = body.data || {};
+        const series = data.series || {};
+        for (const metric of TRACKED_METRICS) {
+          const points = series[metric] || [];
+          for (const point of points) {
+            const ts = point.t ? Math.floor(new Date(point.t).getTime() / 1000) : null;
+            const value = point.value != null ? point.value : point.avg;
+            if (ts != null && typeof value === 'number') pushPoint(metric, ts, value);
+          }
+        }
+      } catch (err) {
+        const container = document.getElementById('zoneHistoryCharts');
+        if (container && container.children.length === 0) {
+          container.innerHTML = `<div class="placeholder col-span-full">bootstrap 실패: ${err.message}</div>`;
+        }
+      }
+    }
+    function closeStream() {
+      if (realtimeState.eventSource) {
+        try { realtimeState.eventSource.close(); } catch (_) {}
+        realtimeState.eventSource = null;
+      }
+      if (realtimeState.reconnectTimer) {
+        clearTimeout(realtimeState.reconnectTimer);
+        realtimeState.reconnectTimer = null;
+      }
+    }
+    function openStream(zoneId) {
+      closeStream();
+      setStreamStatus('connecting', 'connecting');
+      const url = '/zones/' + encodeURIComponent(zoneId) + '/stream?bootstrap_seconds=' + Math.min(realtimeState.windowSeconds, 1800);
+      let source;
+      try { source = new EventSource(url); }
+      catch (err) { setStreamStatus('error', 'error'); scheduleReconnect(zoneId); return; }
+      realtimeState.eventSource = source;
+      source.addEventListener('ready', () => {
+        setStreamStatus('connected', 'live');
+        realtimeState.reconnectAttempts = 0;
+      });
+      source.addEventListener('bootstrap', (evt) => {
+        try { ingestRecord(JSON.parse(evt.data)); } catch (_) {}
+      });
+      source.addEventListener('reading', (evt) => {
+        try { ingestRecord(JSON.parse(evt.data)); } catch (_) {}
+      });
+      source.addEventListener('bootstrap_complete', () => {
+        setStreamStatus('connected', 'live');
+      });
+      source.onerror = () => {
+        setStreamStatus('error', 'reconnecting');
+        scheduleReconnect(zoneId);
+      };
+    }
+    function scheduleReconnect(zoneId) {
+      closeStream();
+      realtimeState.reconnectAttempts += 1;
+      const delay = Math.min(15000, 500 * Math.pow(2, realtimeState.reconnectAttempts));
+      realtimeState.reconnectTimer = setTimeout(() => openStream(zoneId), delay);
     }
     async function refreshZoneHistory() {
       const select = document.getElementById('historyZoneId');
+      const windowSelect = document.getElementById('historyWindow');
       if (!select) return;
       const zoneId = select.value || 'gh-01-zone-a';
-      try {
-        const body = await apiFetch('/zones/' + encodeURIComponent(zoneId) + '/history?limit=30');
-        renderZoneHistory(body.data || {});
-      } catch (err) {
-        document.getElementById('zoneHistoryCharts').innerHTML = `<div class="placeholder">zone history 조회 실패: ${err.message}</div>`;
-      }
-    }
-    function renderZoneHistory(data) {
-      const series = data.sensor_series || {};
-      const container = document.getElementById('zoneHistoryCharts');
-      const metrics = Object.keys(series);
-      if (metrics.length === 0) { container.innerHTML = '<div class="placeholder col-span-full">zone decision이 쌓이면 센서 차트가 나타납니다.</div>'; return; }
-      container.innerHTML = metrics.map(metric => {
-        const points = series[metric] || [];
-        if (points.length === 0) return '';
-        const values = points.map(p => p.value);
-        const last = values[values.length - 1];
-        const min = Math.min(...values);
-        const max = Math.max(...values);
-        return `
-          <div class="bg-surface-low rounded-xl p-4">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-[10px] uppercase tracking-wider text-muted font-bold">${metric}</span>
-              <span class="text-lg font-bold text-primary">${typeof last === 'number' ? last.toFixed(2) : last}</span>
-            </div>
-            ${renderSparkline(points)}
-            <div class="text-[10px] text-muted mt-2">MIN ${min.toFixed(2)} · MAX ${max.toFixed(2)} · points=${points.length}</div>
-          </div>
-        `;
-      }).join('');
-    }
-    function renderSparkline(points) {
-      if (!points || points.length === 0) return '';
-      const values = points.map(p => p.value);
-      const minV = Math.min(...values);
-      const maxV = Math.max(...values);
-      const range = (maxV - minV) || 1;
-      const width = 320;
-      const height = 48;
-      const stepX = points.length > 1 ? width / (points.length - 1) : 0;
-      const coords = points.map((p, i) => {
-        const x = points.length === 1 ? width / 2 : i * stepX;
-        const y = height - ((p.value - minV) / range) * (height - 8) - 4;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(' ');
-      return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none">
-        <polyline fill="none" stroke="#2d5338" stroke-width="2" points="${coords}" />
-      </svg>`;
+      const windowSeconds = parseInt(windowSelect ? windowSelect.value : '300', 10) || 300;
+      realtimeState.zoneId = zoneId;
+      realtimeState.windowSeconds = windowSeconds;
+      destroyRealtimeCharts();
+      // Pre-create chart cards so the layout doesn't jump while bootstrap loads.
+      for (const metric of TRACKED_METRICS) ensureRealtimeChart(metric);
+      await bootstrapTimeseries(zoneId);
+      openStream(zoneId);
     }
 
     // ===== AI Chat =====
@@ -2527,7 +2896,7 @@ def _dashboard_html() -> str:
       const host = document.getElementById('chatMessages');
       if (!host) return;
       if (chatState.messages.length === 0) {
-        host.innerHTML = `<div class="text-center text-muted text-xs py-6"><span class="chip chip-dark">오늘의 운용 로그 시작</span></div><div class="chat-bubble-ai mx-auto max-w-md">안녕하세요. iFarm 통합제어 AI 어시스턴트입니다. 현재 존 상태, 정책, 결정을 질문하시면 파인튜닝된 모델이 답변합니다. 하단 빠른 질문 버튼도 활용해보세요.</div>`;
+        host.innerHTML = `<div class="text-center text-muted text-xs py-6"><span class="chip chip-dark">오늘의 운용 로그 시작</span></div><div class="chat-bubble-ai mx-auto max-w-md">안녕하세요. iFarm 통합제어 AI 어시스턴트입니다. 현재 구역 상태, 정책, 결정을 질문하시면 파인튜닝된 모델이 답변합니다. 하단 빠른 질문 버튼도 활용해보세요.</div>`;
         return;
       }
       host.innerHTML = chatState.messages.map(msg => {
@@ -2664,6 +3033,14 @@ def _dashboard_html() -> str:
             sendChatMessage();
           }
         });
+      }
+      const zoneSelect = document.getElementById('historyZoneId');
+      if (zoneSelect) {
+        zoneSelect.addEventListener('change', () => refreshZoneHistory());
+      }
+      const windowSelect = document.getElementById('historyWindow');
+      if (windowSelect) {
+        windowSelect.addEventListener('change', () => refreshZoneHistory());
       }
     }
     setupNav();

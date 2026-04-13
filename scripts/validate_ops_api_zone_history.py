@@ -143,12 +143,19 @@ def main() -> int:
         dashboard_html = client.get("/dashboard")
         dashboard_html.raise_for_status()
         html = dashboard_html.text
+        # Phase 4 replaced the sparkline view with a uPlot + SSE based realtime
+        # chart. The /zones/{id}/history endpoint still serves sensor_series for
+        # offline tools, so we keep the endpoint check above and update the
+        # dashboard hook list to the new realtime renderer surface.
         required_hooks = (
-            "Zone History Chart",
+            "Zone Realtime Chart",
             "zoneHistoryCharts",
-            "renderZoneHistory",
             "refreshZoneHistory",
-            "sensor_series",
+            "bootstrapTimeseries",
+            "openStream",
+            "TRACKED_METRICS",
+            "historyWindow",
+            "uPlot",
         )
         for hook in required_hooks:
             if hook not in html:

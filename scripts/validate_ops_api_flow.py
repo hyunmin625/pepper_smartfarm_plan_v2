@@ -75,6 +75,8 @@ def main() -> int:
             "/shadow/cases/capture",
             "/shadow/window",
             "/ai/chat",
+            "/zones/{zone_id}/timeseries",
+            "/zones/{zone_id}/stream",
         }
         for expected_route in expected_routes:
             if expected_route not in routes:

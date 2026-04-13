@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import threading
 from dataclasses import dataclass, field
 from typing import Any, AsyncIterator
 
@@ -40,6 +41,7 @@ DEFAULT_QUEUE_SIZE = 256
 class _Subscriber:
     zone_id: str | None
     queue: asyncio.Queue
+    loop: asyncio.AbstractEventLoop
     dropped: int = 0
 
 
@@ -60,7 +62,7 @@ class RealtimeBroker:
 
     max_queue: int = DEFAULT_QUEUE_SIZE
     _subscribers: list[_Subscriber] = field(default_factory=list)
-    _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    _lock: threading.RLock = field(default_factory=threading.RLock)
 
     async def publish(self, record: dict[str, Any]) -> int:
         """Fan out a single record to every interested subscriber.
@@ -68,59 +70,80 @@ class RealtimeBroker:
         Returns the number of subscribers that actually received the
         record (excludes those whose zone filter did not match).
         """
+        return await asyncio.to_thread(self._publish_sync, record)
+
+    def _publish_sync(self, record: dict[str, Any]) -> int:
+        """Thread-safe fan-out used by both async and sync publishers.
+
+        Each subscriber's queue lives on the loop that called
+        ``subscribe()``. We dispatch the put via
+        ``loop.call_soon_threadsafe`` so callers outside that loop can
+        deliver records correctly, and so concurrent publishers do not
+        race against subscriber bookkeeping.
+        """
         delivered = 0
-        async with self._lock:
+        with self._lock:
             targets = list(self._subscribers)
         zone_id = record.get("zone_id")
         for subscriber in targets:
             if subscriber.zone_id is not None and subscriber.zone_id != zone_id:
                 continue
+            self._enqueue(subscriber, record)
+            delivered += 1
+        return delivered
+
+    def _enqueue(self, subscriber: "_Subscriber", record: dict[str, Any]) -> None:
+        loop = subscriber.loop
+        if loop.is_closed():
+            return
+
+        def deliver() -> None:
             try:
                 subscriber.queue.put_nowait(record)
-                delivered += 1
             except asyncio.QueueFull:
                 with contextlib.suppress(asyncio.QueueEmpty):
                     subscriber.queue.get_nowait()
                 with contextlib.suppress(asyncio.QueueFull):
                     subscriber.queue.put_nowait(record)
                 subscriber.dropped += 1
-                delivered += 1
-        return delivered
+
+        try:
+            loop.call_soon_threadsafe(deliver)
+        except RuntimeError:
+            # Loop has shut down between the snapshot and the call.
+            return
 
     def publish_nowait(self, record: dict[str, Any]) -> int:
         """Synchronous publish for callers running outside an event loop.
 
         Used by the sensor-ingestor writer when invoked from a sync
-        runtime. Internally schedules the publish on the running loop if
-        one exists, otherwise falls back to a fresh loop call.
+        runtime, and by smoke tests that publish from background
+        threads. Always dispatches via ``call_soon_threadsafe`` so the
+        target queue's loop is never violated.
         """
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-        if loop is not None and loop.is_running():
-            asyncio.run_coroutine_threadsafe(self.publish(record), loop)
-            return 0
-        try:
-            return asyncio.run(self.publish(record))
-        except RuntimeError:
-            return 0
+        return self._publish_sync(record)
 
     @contextlib.asynccontextmanager
     async def subscribe(self, *, zone_id: str | None = None) -> AsyncIterator[asyncio.Queue]:
-        subscriber = _Subscriber(zone_id=zone_id, queue=asyncio.Queue(maxsize=self.max_queue))
-        async with self._lock:
+        loop = asyncio.get_running_loop()
+        subscriber = _Subscriber(
+            zone_id=zone_id,
+            queue=asyncio.Queue(maxsize=self.max_queue),
+            loop=loop,
+        )
+        with self._lock:
             self._subscribers.append(subscriber)
         try:
             yield subscriber.queue
         finally:
-            async with self._lock:
+            with self._lock:
                 if subscriber in self._subscribers:
                     self._subscribers.remove(subscriber)
 
     async def subscriber_count(self) -> int:
-        async with self._lock:
+        with self._lock:
             return len(self._subscribers)
 
     def subscriber_count_sync(self) -> int:
-        return len(self._subscribers)
+        with self._lock:
+            return len(self._subscribers)
