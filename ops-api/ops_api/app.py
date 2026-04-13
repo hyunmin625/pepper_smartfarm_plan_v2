@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -9,19 +10,36 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from .api_models import ApprovalRequest, EvaluateZoneRequest, RuntimeModeRequest, ShadowReviewRequest
+from .api_models import (
+    ApprovalRequest,
+    EvaluateZoneRequest,
+    ExecuteActionRequest,
+    RobotTaskCreateRequest,
+    RuntimeModeRequest,
+    ShadowReviewRequest,
+)
 from .bootstrap import configure_repo_paths
 from .config import Settings, load_settings
 from .database import build_session_factory, init_db
+from .errors import register_exception_handlers
+from .logging import configure_logging
 from .models import (
     ApprovalRecord,
+    AlertRecord,
     DecisionRecord,
+    DeviceRecord,
     DeviceCommandRecord,
     OperatorReviewRecord,
     PolicyEvaluationRecord,
+    PolicyRecord,
+    RobotCandidateRecord,
+    RobotTaskRecord,
+    SensorRecord,
+    ZoneRecord,
 )
 from .planner import ActionDispatchPlanner
 from .runtime_mode import load_runtime_mode, save_runtime_mode
+from .seed import bootstrap_reference_data
 
 configure_repo_paths()
 
@@ -29,6 +47,9 @@ from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandReq
 from execution_gateway.dispatch import ExecutionDispatcher  # noqa: E402
 from llm_orchestrator import LLMOrchestratorService, ModelConfig, OrchestratorRequest  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -136,13 +157,274 @@ def _build_decision_item(decision: DecisionRecord) -> dict[str, Any]:
     }
 
 
+def _serialize_zone(row: ZoneRecord) -> dict[str, Any]:
+    return {
+        "zone_id": row.zone_id,
+        "zone_type": row.zone_type,
+        "priority": row.priority,
+        "description": row.description,
+        "metadata": _loads_json(row.metadata_json, {}),
+        "created_at": row.created_at.isoformat(),
+        "updated_at": row.updated_at.isoformat(),
+    }
+
+
+def _serialize_sensor(row: SensorRecord) -> dict[str, Any]:
+    return {
+        "sensor_id": row.sensor_id,
+        "zone_id": row.zone_id,
+        "sensor_type": row.sensor_type,
+        "measurement_fields": _loads_json(row.measurement_fields_json, []),
+        "unit": row.unit,
+        "raw_sample_seconds": row.raw_sample_seconds,
+        "ai_aggregation_seconds": row.ai_aggregation_seconds,
+        "priority": row.priority,
+        "model_profile": row.model_profile,
+        "protocol": row.protocol,
+        "install_location": row.install_location,
+        "calibration_interval_days": row.calibration_interval_days,
+        "redundancy_group": row.redundancy_group,
+        "quality_flags": _loads_json(row.quality_flags_json, []),
+        "metadata": _loads_json(row.metadata_json, {}),
+    }
+
+
+def _serialize_device(row: DeviceRecord) -> dict[str, Any]:
+    return {
+        "device_id": row.device_id,
+        "zone_id": row.zone_id,
+        "device_type": row.device_type,
+        "priority": row.priority,
+        "model_profile": row.model_profile,
+        "controller_id": row.controller_id,
+        "protocol": row.protocol,
+        "control_mode": row.control_mode,
+        "response_timeout_seconds": row.response_timeout_seconds,
+        "write_channel_ref": row.write_channel_ref,
+        "read_channel_refs": _loads_json(row.read_channel_refs_json, []),
+        "supported_action_types": _loads_json(row.supported_action_types_json, []),
+        "safety_interlocks": _loads_json(row.safety_interlocks_json, []),
+        "metadata": _loads_json(row.metadata_json, {}),
+    }
+
+
+def _serialize_policy(row: PolicyRecord) -> dict[str, Any]:
+    return {
+        "policy_id": row.policy_id,
+        "policy_stage": row.policy_stage,
+        "severity": row.severity,
+        "enabled": row.enabled,
+        "description": row.description,
+        "trigger_flags": _loads_json(row.trigger_flags_json, []),
+        "enforcement": _loads_json(row.enforcement_json, {}),
+        "source_version": row.source_version,
+        "updated_at": row.updated_at.isoformat(),
+    }
+
+
+def _serialize_alert(row: AlertRecord) -> dict[str, Any]:
+    return {
+        "alert_id": row.id,
+        "decision_id": row.decision_id,
+        "zone_id": row.zone_id,
+        "alert_type": row.alert_type,
+        "severity": row.severity,
+        "status": row.status,
+        "summary": row.summary,
+        "validator_reason_codes": _loads_json(row.validator_reason_codes_json, []),
+        "payload": _loads_json(row.payload_json, {}),
+        "created_at": row.created_at.isoformat(),
+        "updated_at": row.updated_at.isoformat(),
+    }
+
+
+def _serialize_robot_task(row: RobotTaskRecord) -> dict[str, Any]:
+    return {
+        "task_id": row.id,
+        "decision_id": row.decision_id,
+        "zone_id": row.zone_id,
+        "candidate_id": row.candidate_id,
+        "task_type": row.task_type,
+        "priority": row.priority,
+        "approval_required": row.approval_required,
+        "status": row.status,
+        "reason": row.reason,
+        "target": _loads_json(row.target_json, {}),
+        "payload": _loads_json(row.payload_json, {}),
+        "created_at": row.created_at.isoformat(),
+        "updated_at": row.updated_at.isoformat(),
+    }
+
+
+def _refresh_alerts_for_decision(
+    *,
+    session: Session,
+    decision: DecisionRecord,
+    validated_output: dict[str, Any],
+    validator_reason_codes: list[str],
+    zone_state: dict[str, Any],
+) -> None:
+    session.query(AlertRecord).filter(AlertRecord.decision_id == decision.id).delete()
+    risk_level = str(validated_output.get("risk_level") or "unknown")
+    should_alert = risk_level in {"high", "critical", "unknown"} or bool(validator_reason_codes)
+    if not should_alert:
+        return
+    summary = str(
+        validated_output.get("situation_summary")
+        or zone_state.get("current_state", {}).get("summary")
+        or f"{decision.task_type} alert"
+    )
+    session.add(
+        AlertRecord(
+            decision_id=decision.id,
+            zone_id=decision.zone_id,
+            alert_type=decision.task_type,
+            severity=risk_level,
+            status="open",
+            summary=summary,
+            validator_reason_codes_json=json.dumps(validator_reason_codes, ensure_ascii=False),
+            payload_json=json.dumps(
+                {
+                    "validated_output": validated_output,
+                    "zone_state": zone_state,
+                },
+                ensure_ascii=False,
+            ),
+        )
+    )
+
+
+def _refresh_robot_records_for_decision(
+    *,
+    session: Session,
+    decision: DecisionRecord,
+    candidates: list[dict[str, Any]],
+    validated_output: dict[str, Any],
+) -> None:
+    session.query(RobotCandidateRecord).filter(RobotCandidateRecord.decision_id == decision.id).delete()
+    session.query(RobotTaskRecord).filter(RobotTaskRecord.decision_id == decision.id).delete()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = str(candidate.get("candidate_id") or "").strip()
+        if not candidate_id:
+            continue
+        existing = (
+            session.query(RobotCandidateRecord)
+            .filter(RobotCandidateRecord.candidate_id == candidate_id)
+            .one_or_none()
+        )
+        record = existing or RobotCandidateRecord(candidate_id=candidate_id)
+        record.decision_id = decision.id
+        record.zone_id = decision.zone_id
+        record.candidate_type = str(candidate.get("candidate_type") or "crop_candidate")
+        record.priority = str(candidate.get("priority") or "medium")
+        record.status = str(candidate.get("status") or "observed")
+        record.payload_json = json.dumps(candidate, ensure_ascii=False)
+        if existing is None:
+            session.add(record)
+    for task in validated_output.get("robot_tasks", []):
+        if not isinstance(task, dict):
+            continue
+        session.add(
+            RobotTaskRecord(
+                decision_id=decision.id,
+                zone_id=decision.zone_id,
+                candidate_id=(str(task.get("candidate_id")) if task.get("candidate_id") is not None else None),
+                task_type=str(task.get("task_type") or "manual_review"),
+                priority=str(task.get("priority") or "medium"),
+                approval_required=bool(task.get("approval_required", False)),
+                status="pending",
+                reason=str(task.get("reason") or ""),
+                target_json=json.dumps(task.get("target", {}), ensure_ascii=False),
+                payload_json=json.dumps(task, ensure_ascii=False),
+            )
+        )
+
+
+def _record_approval(
+    *,
+    session: Session,
+    decision_id: int,
+    actor_id: str,
+    approval_status: str,
+    reason: str,
+    payload: dict[str, Any],
+) -> ApprovalRecord:
+    record = ApprovalRecord(
+        decision_id=decision_id,
+        actor_id=actor_id,
+        approval_status=approval_status,
+        reason=reason,
+        approval_payload_json=json.dumps(payload, ensure_ascii=False),
+    )
+    session.add(record)
+    session.flush()
+    return record
+
+
+def _execute_decision_dispatch(
+    *,
+    decision: DecisionRecord,
+    actor_id: str,
+    services: AppServices,
+    session: Session,
+) -> list[dict[str, Any]]:
+    validated_output = json.loads(decision.validated_output_json)
+    plans = services.planner.plan(
+        decision_id=decision.id,
+        request_id=decision.request_id,
+        zone_id=decision.zone_id,
+        validated_output=validated_output,
+        actor_id=actor_id,
+    )
+    dispatch_results: list[dict[str, Any]] = []
+    for plan in plans:
+        if plan.kind == "device_command":
+            dispatch_result = services.dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(plan.payload)).as_dict()
+        elif plan.kind == "control_override":
+            dispatch_result = services.dispatcher.dispatch_control_override(ControlOverrideRequest.from_dict(plan.payload)).as_dict()
+        else:
+            dispatch_result = {"status": "logged_only", "allow_dispatch": False, "reasons": ["non_dispatchable_action"]}
+        dispatch_results.append(dispatch_result)
+        session.add(
+            DeviceCommandRecord(
+                decision_id=decision.id,
+                command_kind=plan.kind,
+                target_id=plan.target_id,
+                action_type=plan.action_type,
+                status=str(dispatch_result.get("status") or "logged_only"),
+                payload_json=json.dumps(plan.payload, ensure_ascii=False),
+                adapter_result_json=json.dumps(dispatch_result, ensure_ascii=False),
+            )
+        )
+    decision.status = "approved_executed"
+    return dispatch_results
+
+
 def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any]:
     rows = session.execute(select(DecisionRecord).order_by(desc(DecisionRecord.id)).limit(40)).scalars().all()
     command_rows = session.execute(select(DeviceCommandRecord).order_by(desc(DeviceCommandRecord.id)).limit(30)).scalars().all()
+    zone_rows = session.execute(select(ZoneRecord).order_by(ZoneRecord.zone_id)).scalars().all()
+    alert_rows = session.execute(select(AlertRecord).order_by(desc(AlertRecord.id)).limit(30)).scalars().all()
+    robot_rows = session.execute(select(RobotTaskRecord).order_by(desc(RobotTaskRecord.id)).limit(30)).scalars().all()
     decision_items = [_build_decision_item(row) for row in rows]
-    latest_zone_items: dict[str, dict[str, Any]] = {}
-    alerts: list[dict[str, Any]] = []
-    robot_tasks: list[dict[str, Any]] = []
+    latest_zone_items: dict[str, dict[str, Any]] = {
+        zone.zone_id: {
+            "zone_id": zone.zone_id,
+            "zone_type": zone.zone_type,
+            "priority": zone.priority,
+            "description": zone.description,
+            "decision_id": None,
+            "task_type": None,
+            "status": "catalog_only",
+            "risk_level": None,
+            "current_state_summary": "",
+            "sensor_quality": {},
+            "created_at": zone.updated_at.isoformat(),
+        }
+        for zone in zone_rows
+    }
     approval_pending_count = 0
     shadow_review_pending_count = 0
     blocked_action_count = 0
@@ -159,8 +441,8 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
                 "risk_level": item["risk_level"],
                 "current_state_summary": item["current_state_summary"],
                 "sensor_quality": item["sensor_quality"],
-                "created_at": item["created_at"],
-            }
+                    "created_at": item["created_at"],
+                }
 
         if item["runtime_mode"] == "approval" and item["status"] == "evaluated":
             approval_pending_count += 1
@@ -173,31 +455,6 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
             blocked_action_count += 1
         if "enter_safe_mode" in item["recommended_action_types"]:
             safe_mode_count += 1
-
-        if item["risk_level"] in {"high", "critical", "unknown"} or item["validator_reason_codes"]:
-            alerts.append(
-                {
-                    "decision_id": item["decision_id"],
-                    "zone_id": item["zone_id"],
-                    "task_type": item["task_type"],
-                    "risk_level": item["risk_level"],
-                    "status": item["status"],
-                    "summary": item["current_state_summary"],
-                    "validator_reason_codes": item["validator_reason_codes"],
-                    "created_at": item["created_at"],
-                }
-            )
-
-        for task_type in item["robot_task_types"]:
-            robot_tasks.append(
-                {
-                    "decision_id": item["decision_id"],
-                    "zone_id": item["zone_id"],
-                    "task_type": task_type,
-                    "risk_level": item["risk_level"],
-                    "created_at": item["created_at"],
-                }
-            )
 
     agreement_rows = [item for item in decision_items if item["latest_shadow_review"]]
     agree_count = sum(
@@ -218,10 +475,12 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
             "operator_disagreement_count": disagreement_count,
             "operator_agreement_rate": operator_agreement_rate,
             "command_count": len(command_rows),
+            "alert_count": len(alert_rows),
+            "robot_task_count": len(robot_rows),
         },
         "zones": list(latest_zone_items.values()),
-        "alerts": alerts[:12],
-        "robot_tasks": robot_tasks[:12],
+        "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
+        "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
         "decisions": decision_items,
         "commands": [
             {
@@ -239,9 +498,11 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
+    configure_logging()
     resolved_settings = settings or load_settings()
     session_factory = build_session_factory(resolved_settings.database_url)
     init_db(session_factory)
+    bootstrap_reference_data(session_factory)
     current_mode = load_runtime_mode(resolved_settings.runtime_mode_path)
     save_runtime_mode(
         resolved_settings.runtime_mode_path,
@@ -264,8 +525,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         planner=ActionDispatchPlanner(),
     )
 
-    app = FastAPI(title="Pepper Smartfarm Ops API", version="0.1.0")
+    app = FastAPI(
+        title="Pepper Smartfarm Ops API",
+        version="0.2.0",
+        description="LLM 의사결정, approval dispatch, shadow review, 운영 카탈로그를 제공하는 백엔드",
+    )
     app.state.services = services
+    register_exception_handlers(app)
 
     def get_services():
         return app.state.services
@@ -372,6 +638,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 ),
             )
         )
+        _refresh_alerts_for_decision(
+            session=session,
+            decision=decision,
+            validated_output=result.validated_output,
+            validator_reason_codes=result.validator_reason_codes,
+            zone_state=zone_state,
+        )
+        _refresh_robot_records_for_decision(
+            session=session,
+            decision=decision,
+            candidates=payload.candidates,
+            validated_output=result.validated_output,
+        )
         session.commit()
         session.refresh(decision)
         return {
@@ -409,6 +688,83 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 for row in rows
             ]
         }
+
+    @app.get("/zones")
+    def list_zones(session: Session = Depends(get_session)) -> dict[str, Any]:
+        rows = session.execute(select(ZoneRecord).order_by(ZoneRecord.zone_id)).scalars().all()
+        return {"items": [_serialize_zone(row) for row in rows]}
+
+    @app.get("/zones/{zone_id}/history")
+    def get_zone_history(zone_id: str, limit: int = 20, session: Session = Depends(get_session)) -> dict[str, Any]:
+        decision_rows = session.execute(
+            select(DecisionRecord)
+            .where(DecisionRecord.zone_id == zone_id)
+            .order_by(desc(DecisionRecord.id))
+            .limit(limit)
+        ).scalars().all()
+        alert_rows = session.execute(
+            select(AlertRecord)
+            .where(AlertRecord.zone_id == zone_id)
+            .order_by(desc(AlertRecord.id))
+            .limit(limit)
+        ).scalars().all()
+        command_rows = session.execute(
+            select(DeviceCommandRecord)
+            .join(DecisionRecord, DeviceCommandRecord.decision_id == DecisionRecord.id)
+            .where(DecisionRecord.zone_id == zone_id)
+            .order_by(desc(DeviceCommandRecord.id))
+            .limit(limit)
+        ).scalars().all()
+        robot_rows = session.execute(
+            select(RobotTaskRecord)
+            .where(RobotTaskRecord.zone_id == zone_id)
+            .order_by(desc(RobotTaskRecord.id))
+            .limit(limit)
+        ).scalars().all()
+        return {
+            "zone_id": zone_id,
+            "decisions": [_build_decision_item(row) for row in decision_rows],
+            "alerts": [_serialize_alert(row) for row in alert_rows],
+            "commands": [
+                {
+                    "id": row.id,
+                    "decision_id": row.decision_id,
+                    "command_kind": row.command_kind,
+                    "target_id": row.target_id,
+                    "action_type": row.action_type,
+                    "status": row.status,
+                    "payload": _loads_json(row.payload_json, {}),
+                    "adapter_result": _loads_json(row.adapter_result_json, {}),
+                    "created_at": row.created_at.isoformat(),
+                }
+                for row in command_rows
+            ],
+            "robot_tasks": [_serialize_robot_task(row) for row in robot_rows],
+        }
+
+    @app.get("/sensors")
+    def list_sensors(zone_id: str | None = None, session: Session = Depends(get_session)) -> dict[str, Any]:
+        stmt = select(SensorRecord).order_by(SensorRecord.sensor_id)
+        if zone_id:
+            stmt = stmt.where(SensorRecord.zone_id == zone_id)
+        rows = session.execute(stmt).scalars().all()
+        return {"items": [_serialize_sensor(row) for row in rows]}
+
+    @app.get("/devices")
+    def list_devices(zone_id: str | None = None, session: Session = Depends(get_session)) -> dict[str, Any]:
+        stmt = select(DeviceRecord).order_by(DeviceRecord.device_id)
+        if zone_id:
+            stmt = stmt.where(DeviceRecord.zone_id == zone_id)
+        rows = session.execute(stmt).scalars().all()
+        return {"items": [_serialize_device(row) for row in rows]}
+
+    @app.get("/policies")
+    def list_policies(enabled_only: bool = False, session: Session = Depends(get_session)) -> dict[str, Any]:
+        stmt = select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)
+        if enabled_only:
+            stmt = stmt.where(PolicyRecord.enabled.is_(True))
+        rows = session.execute(stmt).scalars().all()
+        return {"items": [_serialize_policy(row) for row in rows]}
 
     @app.post("/shadow/reviews")
     def create_shadow_review(
@@ -513,19 +869,59 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/alerts")
     def list_alerts(
+        zone_id: str | None = None,
+        status: str | None = None,
         session: Session = Depends(get_session),
-        services=Depends(get_services),
     ) -> dict[str, Any]:
-        payload = _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
-        return {"items": payload["alerts"]}
+        stmt = select(AlertRecord).order_by(desc(AlertRecord.id))
+        if zone_id:
+            stmt = stmt.where(AlertRecord.zone_id == zone_id)
+        if status:
+            stmt = stmt.where(AlertRecord.status == status)
+        rows = session.execute(stmt.limit(50)).scalars().all()
+        return {"items": [_serialize_alert(row) for row in rows]}
 
     @app.get("/robot/tasks")
     def list_robot_tasks(
+        zone_id: str | None = None,
+        status: str | None = None,
         session: Session = Depends(get_session),
-        services=Depends(get_services),
     ) -> dict[str, Any]:
-        payload = _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
-        return {"items": payload["robot_tasks"]}
+        stmt = select(RobotTaskRecord).order_by(desc(RobotTaskRecord.id))
+        if zone_id:
+            stmt = stmt.where(RobotTaskRecord.zone_id == zone_id)
+        if status:
+            stmt = stmt.where(RobotTaskRecord.status == status)
+        rows = session.execute(stmt.limit(50)).scalars().all()
+        return {"items": [_serialize_robot_task(row) for row in rows]}
+
+    @app.post("/robot/tasks")
+    def create_robot_task(
+        payload: RobotTaskCreateRequest,
+        session: Session = Depends(get_session),
+    ) -> dict[str, Any]:
+        row = RobotTaskRecord(
+            decision_id=payload.decision_id,
+            zone_id=payload.zone_id,
+            candidate_id=payload.candidate_id,
+            task_type=payload.task_type,
+            priority=payload.priority,
+            approval_required=payload.approval_required,
+            status=payload.status,
+            reason=payload.reason,
+            target_json=json.dumps(payload.target, ensure_ascii=False),
+            payload_json=json.dumps(
+                {
+                    "actor_id": payload.actor_id,
+                    **payload.payload,
+                },
+                ensure_ascii=False,
+            ),
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return {"task": _serialize_robot_task(row)}
 
     @app.post("/actions/approve")
     def approve_action(
@@ -541,46 +937,60 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="decision not found")
         if decision.status == "rejected":
             raise HTTPException(status_code=409, detail="decision already rejected")
-
-        approval = ApprovalRecord(
+        _record_approval(
+            session=session,
             decision_id=decision.id,
             actor_id=payload.actor_id,
             approval_status="approved",
             reason=payload.reason,
-            approval_payload_json=json.dumps(payload.model_dump(), ensure_ascii=False),
+            payload=payload.model_dump(),
         )
-        session.add(approval)
-
-        validated_output = json.loads(decision.validated_output_json)
-        plans = services.planner.plan(
-            decision_id=decision.id,
-            request_id=decision.request_id,
-            zone_id=decision.zone_id,
-            validated_output=validated_output,
+        dispatch_results = _execute_decision_dispatch(
+            decision=decision,
             actor_id=payload.actor_id,
+            services=services,
+            session=session,
         )
-        dispatch_results: list[dict[str, Any]] = []
-        for plan in plans:
-            if plan.kind == "device_command":
-                dispatch_result = services.dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(plan.payload)).as_dict()
-            elif plan.kind == "control_override":
-                dispatch_result = services.dispatcher.dispatch_control_override(ControlOverrideRequest.from_dict(plan.payload)).as_dict()
-            else:
-                dispatch_result = {"status": "logged_only", "allow_dispatch": False, "reasons": ["non_dispatchable_action"]}
-            dispatch_results.append(dispatch_result)
-            session.add(
-                DeviceCommandRecord(
-                    decision_id=decision.id,
-                    command_kind=plan.kind,
-                    target_id=plan.target_id,
-                    action_type=plan.action_type,
-                    status=str(dispatch_result.get("status") or "logged_only"),
-                    payload_json=json.dumps(plan.payload, ensure_ascii=False),
-                    adapter_result_json=json.dumps(dispatch_result, ensure_ascii=False),
-                )
-            )
+        session.commit()
+        return {
+            "decision_id": decision.id,
+            "approval_status": "approved",
+            "dispatch_results": dispatch_results,
+        }
 
-        decision.status = "approved_executed"
+    @app.post("/actions/execute")
+    def execute_action(
+        payload: ExecuteActionRequest,
+        session: Session = Depends(get_session),
+        services=Depends(get_services),
+    ) -> dict[str, Any]:
+        runtime_mode = load_runtime_mode(services.settings.runtime_mode_path)
+        if runtime_mode.mode != "approval":
+            raise HTTPException(status_code=409, detail="runtime mode must be approval to execute actions")
+        decision = session.get(DecisionRecord, payload.decision_id)
+        if decision is None:
+            raise HTTPException(status_code=404, detail="decision not found")
+        if decision.status == "rejected":
+            raise HTTPException(status_code=409, detail="decision already rejected")
+        if decision.status == "approved_executed":
+            raise HTTPException(status_code=409, detail="decision already executed")
+
+        latest_approval = _latest_approval(decision)
+        if latest_approval is None or latest_approval.approval_status != "approved":
+            _record_approval(
+                session=session,
+                decision_id=decision.id,
+                actor_id=payload.actor_id,
+                approval_status="approved",
+                reason=payload.reason,
+                payload=payload.model_dump(),
+            )
+        dispatch_results = _execute_decision_dispatch(
+            decision=decision,
+            actor_id=payload.actor_id,
+            services=services,
+            session=session,
+        )
         session.commit()
         return {
             "decision_id": decision.id,

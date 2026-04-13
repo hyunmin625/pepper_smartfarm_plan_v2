@@ -58,9 +58,15 @@
 
 - `ops-api/ops_api/app.py`
   - `POST /decisions/evaluate-zone`
+  - `GET /zones`
+  - `GET /zones/{zone_id}/history`
   - `GET /decisions`
   - `GET /zones/{zone_id}/state`
+  - `GET /sensors`
+  - `GET /devices`
+  - `GET /policies`
   - `POST /actions/approve`
+  - `POST /actions/execute`
   - `POST /actions/reject`
   - `POST /shadow/reviews`
   - `GET /shadow/reviews`
@@ -70,14 +76,25 @@
   - `GET /dashboard/data`
   - `GET /alerts`
   - `GET /robot/tasks`
+  - `POST /robot/tasks`
 - `ops-api/ops_api/models.py`
+  - `zones`
+  - `sensors`
+  - `devices`
+  - `policies`
   - `decisions`
   - `approvals`
   - `device_commands`
+  - `alerts`
+  - `robot_candidates`
+  - `robot_tasks`
   - `policy_evaluations`
   - `operator_reviews`
+- `ops-api/ops_api/seed.py`
+  - startup bootstrap
+  - `sensor_catalog_seed`, `device_profile_registry_seed`, `device_site_override_seed`, `policy_output_validator_rules_seed` 적재
 - `infra/postgres/001_initial_schema.sql`
-  - PostgreSQL DDL
+  - PostgreSQL DDL + catalog/index
 
 ### 4. Approval UI
 
@@ -107,6 +124,7 @@ python3 scripts/validate_state_estimator_features.py
 python3 scripts/validate_state_estimator_raw_loader.py
 python3 scripts/validate_llm_orchestrator_service.py
 python3 scripts/validate_llm_response_parser.py
+python3 scripts/bootstrap_ops_api_reference_data.py
 python3 scripts/validate_ops_api_flow.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
@@ -115,7 +133,7 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 ## 현재 한계
 
 - OpenAI 실호출 경로와 smoke script는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
-- `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL까지만 준비했다.
+- `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL과 reference seed/bootstrap까지 준비했다. 실 PostgreSQL smoke는 아직 안 돌렸다.
 - auth / role / policy management 전용 화면, real sensor 시계열 차트는 아직 미구현이다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 

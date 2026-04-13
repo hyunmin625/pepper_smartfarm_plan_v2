@@ -16,12 +16,19 @@ class EvaluateZoneRequest(BaseModel):
     device_status: dict[str, Any] = Field(default_factory=dict)
     weather_context: dict[str, Any] = Field(default_factory=dict)
     constraints: dict[str, Any] = Field(default_factory=dict)
+    candidates: list[dict[str, Any]] = Field(default_factory=list)
     prompt_version: str = "sft_v10"
     mode: Literal["shadow", "approval"] | None = None
     retrieval_limit: int = 5
 
 
 class ApprovalRequest(BaseModel):
+    decision_id: int
+    actor_id: str
+    reason: str = ""
+
+
+class ExecuteActionRequest(BaseModel):
     decision_id: int
     actor_id: str
     reason: str = ""
@@ -41,3 +48,17 @@ class RuntimeModeRequest(BaseModel):
     mode: Literal["shadow", "approval"]
     actor_id: str = "operator"
     reason: str = ""
+
+
+class RobotTaskCreateRequest(BaseModel):
+    zone_id: str
+    actor_id: str
+    task_type: str
+    priority: Literal["low", "medium", "high", "critical"] = "medium"
+    reason: str
+    candidate_id: str | None = None
+    decision_id: int | None = None
+    approval_required: bool = False
+    status: Literal["pending", "approved", "done", "blocked"] = "pending"
+    target: dict[str, Any] = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)

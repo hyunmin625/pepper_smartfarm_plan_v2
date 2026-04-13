@@ -505,22 +505,22 @@
 # 5. 데이터베이스 설계 및 구축
 
 ## 5.1 PostgreSQL 스키마
-- [ ] zones 테이블 작성
-- [ ] sensors 테이블 작성
-- [ ] devices 테이블 작성
-- [ ] policies 테이블 작성
-- [ ] llm_decisions 테이블 작성
-- [ ] device_commands 테이블 작성
-- [ ] alerts 테이블 작성
-- [ ] approvals 테이블 작성
-- [ ] robot_candidates 테이블 작성
-- [ ] robot_tasks 테이블 작성
+- [x] zones 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] sensors 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] devices 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] policies 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] decisions / llm_decisions canonical 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] device_commands 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] alerts 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] approvals 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] robot_candidates 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
+- [x] robot_tasks 테이블 작성 (`infra/postgres/001_initial_schema.sql`, `ops-api/ops_api/models.py`)
 
 ## 5.2 인덱스 및 성능
-- [ ] zone_id 인덱스 설정
-- [ ] timestamp 인덱스 설정
-- [ ] device command 조회 인덱스 설정
-- [ ] robot task 조회 인덱스 설정
+- [x] zone_id 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
+- [x] timestamp 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
+- [x] device command 조회 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
+- [x] robot task 조회 인덱스 설정 (`infra/postgres/001_initial_schema.sql`)
 - [ ] partition 필요성 검토
 - [ ] 보관 주기 정책 검토
 
@@ -534,12 +534,12 @@
 
 ## 5.4 마이그레이션/시드
 - [ ] migration 초기화
-- [ ] seed 데이터 작성
-- [ ] 기본 zone 등록
-- [ ] 기본 sensor 등록
-- [ ] 기본 device 등록
-- [ ] 기본 policy 등록
-- [ ] 기본 enum/reference 데이터 등록
+- [x] seed 데이터 작성 (`ops-api/ops_api/seed.py`, `scripts/bootstrap_ops_api_reference_data.py`)
+- [x] 기본 zone 등록 (`data/examples/sensor_catalog_seed.json`, `ops-api/ops_api/seed.py`)
+- [x] 기본 sensor 등록 (`data/examples/sensor_catalog_seed.json`, `ops-api/ops_api/seed.py`)
+- [x] 기본 device 등록 (`data/examples/sensor_catalog_seed.json`, `data/examples/device_site_override_seed.json`, `ops-api/ops_api/seed.py`)
+- [x] 기본 policy 등록 (`data/examples/policy_output_validator_rules_seed.json`, `ops-api/ops_api/seed.py`)
+- [x] 기본 enum/reference 데이터 등록 (`data/examples/device_profile_registry_seed.json`, `ops-api/ops_api/seed.py`)
 
 ---
 
@@ -842,27 +842,27 @@
 ## 12.1 공통 백엔드
 - [x] FastAPI 프로젝트 초기화 (`ops-api/ops_api/app.py`)
 - [x] settings 모듈 작성 (`ops-api/ops_api/config.py`)
-- [ ] logger 설정
-- [ ] exception handler 작성
+- [x] logger 설정 (`ops-api/ops_api/logging.py`, `ops-api/ops_api/app.py`)
+- [x] exception handler 작성 (`ops-api/ops_api/errors.py`, `ops-api/ops_api/app.py`)
 - [ ] response model 작성
 - [ ] auth 방식 정의
 - [ ] role 기반 권한 정의
-- [ ] OpenAPI 문서 정리
+- [x] OpenAPI 문서 정리 (`ops-api/ops_api/app.py`, `ops-api/README.md`)
 
 ## 12.2 주요 API
-- [ ] GET /zones
+- [x] GET /zones (`ops-api/ops_api/app.py`)
 - [x] GET /zones/{zone_id}/state (`ops-api/ops_api/app.py`)
-- [ ] GET /zones/{zone_id}/history
+- [x] GET /zones/{zone_id}/history (`ops-api/ops_api/app.py`)
 - [x] POST /decisions/evaluate-zone (`ops-api/ops_api/app.py`)
-- [ ] POST /actions/execute
+- [x] POST /actions/execute (`ops-api/ops_api/app.py`)
 - [x] POST /actions/approve (`ops-api/ops_api/app.py`)
 - [x] GET /actions/history (`ops-api/ops_api/app.py`)
-- [ ] GET /alerts
-- [ ] GET /policies
-- [ ] POST /robot/tasks
+- [x] GET /alerts (`ops-api/ops_api/app.py`)
+- [x] GET /policies (`ops-api/ops_api/app.py`)
+- [x] POST /robot/tasks (`ops-api/ops_api/app.py`)
 
 ## 12.3 테스트
-- [ ] API unit test 작성
+- [x] API unit test 작성 (`scripts/validate_ops_api_flow.py`)
 - [ ] schema validation test 작성
 - [ ] auth test 작성
 - [ ] error response test 작성

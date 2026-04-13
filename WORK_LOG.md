@@ -4,6 +4,14 @@
 
 ## 2026-04-13
 
+### backend/database 3단계 확장
+- `infra/postgres/001_initial_schema.sql`에 `zones`, `sensors`, `devices`, `policies`, `alerts`, `robot_candidates`, `robot_tasks`를 추가하고 `zone_id`, `created_at`, `device command`, `robot task` 인덱스를 보강했다.
+- `ops-api/ops_api/models.py`를 같은 스키마로 확장해 reference catalog와 운영 테이블을 ORM으로 다루게 했다.
+- `ops-api/ops_api/seed.py`와 `scripts/bootstrap_ops_api_reference_data.py`를 추가해 `sensor_catalog_seed`, `device_profile_registry_seed`, `device_site_override_seed`, `policy_output_validator_rules_seed`를 DB reference data로 자동 적재하도록 만들었다.
+- `ops-api/ops_api/app.py`는 `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/execute`, `POST /robot/tasks`를 추가했고 `evaluate-zone` 시 alert/robot task도 DB에 저장하도록 바꿨다.
+- `ops-api/ops_api/logging.py`, `ops-api/ops_api/errors.py`를 추가해 logger와 공통 예외 응답 경로를 넣었다.
+- `python3 -m py_compile ops-api/ops_api/*.py scripts/bootstrap_ops_api_reference_data.py scripts/validate_ops_api_flow.py`, `python3 scripts/validate_ops_api_flow.py`를 실행했고 errors `0`, seeded counts `zones 5 / sensors 29 / devices 20 / policies 20`을 확인했다.
+
 ### state-estimator feature engineering 보강
 - `state-estimator/state_estimator/features.py`를 확장해 `1분 평균`, `10분 변화율`, `co2_1m_avg_ppm`, `par_10m_delta_umol_m2_s`, `substrate_moisture_10m_delta_pct`, `climate_stress_score`, `rootzone_stress_score`를 추가했다.
 - 같은 파일에 raw sensor/device runtime row를 현재 snapshot 형식으로 올리는 `build_snapshot_from_raw_records`, `build_zone_state_from_raw_records`, `validate_feature_snapshot`를 구현했다.

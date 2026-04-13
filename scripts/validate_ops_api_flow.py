@@ -23,10 +23,16 @@ from ops_api.app import _build_dashboard_payload, create_app  # noqa: E402
 from ops_api.config import load_settings  # noqa: E402
 from ops_api.models import (  # noqa: E402
     ApprovalRecord,
+    AlertRecord,
     DecisionRecord,
+    DeviceRecord,
     DeviceCommandRecord,
     OperatorReviewRecord,
     PolicyEvaluationRecord,
+    PolicyRecord,
+    RobotTaskRecord,
+    SensorRecord,
+    ZoneRecord,
 )
 from ops_api.runtime_mode import load_runtime_mode, save_runtime_mode  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
@@ -48,7 +54,14 @@ def main() -> int:
         expected_routes = {
             "/runtime/mode",
             "/decisions/evaluate-zone",
+            "/decisions",
+            "/zones",
+            "/zones/{zone_id}/history",
+            "/sensors",
+            "/devices",
+            "/policies",
             "/actions/approve",
+            "/actions/execute",
             "/actions/reject",
             "/actions/history",
             "/dashboard",
@@ -100,6 +113,19 @@ def main() -> int:
 
         session = services.session_factory()
         try:
+            zone_count = session.query(ZoneRecord).count()
+            sensor_count = session.query(SensorRecord).count()
+            device_count = session.query(DeviceRecord).count()
+            policy_count_seed = session.query(PolicyRecord).count()
+            if zone_count < 1:
+                errors.append("expected seeded zones")
+            if sensor_count < 1:
+                errors.append("expected seeded sensors")
+            if device_count < 1:
+                errors.append("expected seeded devices")
+            if policy_count_seed < 1:
+                errors.append("expected seeded policies")
+
             decision = DecisionRecord(
                 request_id="ops-api-001",
                 zone_id="gh-01-zone-a",
@@ -159,6 +185,35 @@ def main() -> int:
                     note="integration shadow review",
                 )
             )
+            session.add(
+                AlertRecord(
+                    decision_id=decision.id,
+                    zone_id=decision.zone_id,
+                    alert_type=decision.task_type,
+                    severity=result.validated_output.get("risk_level", "unknown"),
+                    status="open",
+                    summary=result.validated_output.get("situation_summary", "integration alert"),
+                    validator_reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
+                    payload_json=json.dumps(result.validated_output, ensure_ascii=False),
+                )
+            )
+            session.add(
+                RobotTaskRecord(
+                    decision_id=decision.id,
+                    zone_id=decision.zone_id,
+                    candidate_id="integration-candidate-01",
+                    task_type="inspect_crop",
+                    priority="medium",
+                    approval_required=False,
+                    status="pending",
+                    reason="integration robot check",
+                    target_json=json.dumps(
+                        {"target_type": "candidate", "target_id": "integration-candidate-01"},
+                        ensure_ascii=False,
+                    ),
+                    payload_json=json.dumps({"actor_id": "operator-01"}, ensure_ascii=False),
+                )
+            )
 
             plans = services.planner.plan(
                 decision_id=decision.id,
@@ -199,6 +254,8 @@ def main() -> int:
             command_count = session.query(DeviceCommandRecord).count()
             policy_count = session.query(PolicyEvaluationRecord).count()
             review_count = session.query(OperatorReviewRecord).count()
+            alert_count = session.query(AlertRecord).count()
+            robot_task_count = session.query(RobotTaskRecord).count()
             if decision_count != 1:
                 errors.append(f"expected 1 decision row, found {decision_count}")
             if approval_count != 1:
@@ -209,6 +266,10 @@ def main() -> int:
                 errors.append(f"expected 1 policy evaluation row, found {policy_count}")
             if review_count != 1:
                 errors.append(f"expected 1 operator review row, found {review_count}")
+            if alert_count != 1:
+                errors.append(f"expected 1 alert row, found {alert_count}")
+            if robot_task_count != 1:
+                errors.append(f"expected 1 robot task row, found {robot_task_count}")
 
             dashboard_payload = _build_dashboard_payload(
                 session,
@@ -220,8 +281,12 @@ def main() -> int:
                 errors.append("dashboard command count mismatch")
             if dashboard_payload["summary"]["operator_agreement_rate"] != 1.0:
                 errors.append("dashboard operator agreement rate mismatch")
-            if len(dashboard_payload["zones"]) != 1:
+            if len(dashboard_payload["zones"]) < 1:
                 errors.append("dashboard zone overview mismatch")
+            if dashboard_payload["summary"]["alert_count"] < 1:
+                errors.append("dashboard alert count mismatch")
+            if dashboard_payload["summary"]["robot_task_count"] < 1:
+                errors.append("dashboard robot task count mismatch")
 
             print(
                 json.dumps(
@@ -234,6 +299,14 @@ def main() -> int:
                         "command_count": command_count,
                         "policy_count": policy_count,
                         "review_count": review_count,
+                        "alert_count": alert_count,
+                        "robot_task_count": robot_task_count,
+                        "seeded_counts": {
+                            "zones": zone_count,
+                            "sensors": sensor_count,
+                            "devices": device_count,
+                            "policies": policy_count_seed,
+                        },
                         "dashboard_summary": dashboard_payload["summary"],
                         "dispatch_statuses": dispatch_statuses,
                     },
