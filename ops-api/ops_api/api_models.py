@@ -65,6 +65,20 @@ class ShadowReviewRequest(BaseModel):
     expected_robot_tasks: list[str] = Field(default_factory=list)
 
 
+class ShadowCaptureCaseRequest(BaseModel):
+    request_id: str
+    task_type: str
+    context: dict[str, Any]
+    output: dict[str, Any]
+    metadata: dict[str, Any]
+    observed: dict[str, Any]
+
+
+class ShadowCaptureRequest(BaseModel):
+    append: bool = True
+    cases: list[ShadowCaptureCaseRequest] = Field(default_factory=list)
+
+
 class RuntimeModeRequest(BaseModel):
     mode: Literal["shadow", "approval"]
     actor_id: str = "operator"

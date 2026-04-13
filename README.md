@@ -96,6 +96,7 @@
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
 - `llm-orchestrator/llm_orchestrator/tool_registry.py`, `model_registry.py`, `scripts/run_llm_orchestrator_smoke.py`를 추가해 runtime capability catalog, `champion` alias 기반 FT model 해석, stub/openai 공통 smoke 경로를 고정했다.
 - `ops-api/ops_api/app.py`를 추가해 `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks`, `GET/POST /runtime/mode`를 제공하는 FastAPI backend를 만들었다.
+- `ops-api/ops_api/shadow_mode.py`, `POST /shadow/cases/capture`, `GET /shadow/window`를 추가해 real shadow case 적재와 rolling summary 조회를 운영 API에서 직접 수행할 수 있게 했다.
 - backend/database 3단계 보강 완료: `zones/sensors/devices/policies/alerts/robot_candidates/robot_tasks` 스키마와 seed bootstrap, logger/exception handler, catalog/history API를 연결했고 `scripts/bootstrap_ops_api_reference_data.py`, `scripts/validate_ops_api_flow.py`로 검증한다.
 - 운영 대시보드는 `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow review`, `approve/reject`를 한 화면으로 묶는다.
 - `ops-api`는 `policy_evaluations`, `operator_reviews`를 별도 저장해 shadow→approval 전환에 필요한 운영자 검토와 validator 결과를 같이 남긴다.

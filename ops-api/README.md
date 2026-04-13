@@ -2,9 +2,10 @@
 
 FastAPI 기반 운영 백엔드다.
 
-- `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
+- `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `POST /shadow/cases/capture`, `GET /shadow/window`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
 - `ops_api/auth.py`: `viewer/operator/service/admin` 역할과 `disabled/header_token` 인증 모드 정의
 - `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `alerts`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
+- `ops_api/shadow_mode.py`: shadow audit JSONL 적재/summary 계산 helper
 - `ops_api/planner.py`: 승인된 action을 `execution-gateway` 요청으로 변환
 - `ops_api/seed.py`: sensor/device/policy seed JSON을 reference catalog로 적재
 - `ops_api/logging.py`, `ops_api/errors.py`: logger와 공통 예외 응답 경로
@@ -42,6 +43,7 @@ python3 scripts/validate_ops_api_schema_models.py
 python3 scripts/validate_ops_api_error_responses.py
 python3 scripts/validate_ops_api_flow.py
 python3 scripts/validate_ops_api_load_scenario.py
+python3 scripts/validate_ops_api_shadow_mode.py
 python3 scripts/validate_ops_api_server_smoke.py
 python3 scripts/validate_ops_api_postgres_smoke.py
 ```

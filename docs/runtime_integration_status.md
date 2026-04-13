@@ -103,6 +103,7 @@
   - decision log 표시
   - citations / validator reason 표시
   - alert / robot task / execution history 패널
+  - shadow window summary 패널
   - runtime mode toggle
   - shadow agree / disagree 버튼
   - approve / reject 버튼
@@ -113,6 +114,7 @@
 - runtime mode 저장: `artifacts/runtime/ops_api/runtime_mode.json`
 - shadow mode: decision 생성과 저장만 수행
 - shadow review: 운영자가 AI 추천과 실제 판단의 일치/불일치를 기록
+- `POST /shadow/cases/capture`, `GET /shadow/window`로 real shadow case 적재와 rolling summary 조회를 API에서 직접 수행
 - approval mode: 승인된 action만 planner를 거쳐 `execution-gateway`로 전달
 - 현재 dispatch backend는 `mock PLC adapter`
 
@@ -131,6 +133,7 @@ python3 scripts/validate_ops_api_schema_models.py
 python3 scripts/validate_ops_api_error_responses.py
 python3 scripts/validate_ops_api_flow.py
 python3 scripts/validate_ops_api_load_scenario.py
+python3 scripts/validate_ops_api_shadow_mode.py
 python3 scripts/validate_ops_api_server_smoke.py
 python3 scripts/validate_ops_api_postgres_smoke.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
@@ -144,10 +147,11 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 - `ops-api`의 auth/role, schema validation, error envelope, minimal load scenario, localhost server smoke 테스트는 로컬 스크립트로 닫았다. `scripts/validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄워 HTTP 경로를 통과시켰고, 이 과정에서 `prompt_catalog` 런타임 import 경로 버그도 함께 수정했다.
 - policy management 전용 화면과 real sensor 시계열 차트는 아직 미구현이다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
+- real shadow log 적재 경로는 열렸지만, 실제 운영 window를 충분히 누적한 상태는 아니다.
 
 ## 다음 우선순위
 
 1. `OPS_API_LLM_PROVIDER=openai`, `OPS_API_MODEL_ID=champion` 기준 online smoke 실행
 2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-3. approval mode dispatch 결과를 shadow window/report와 한 화면에서 묶기
+3. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
 4. policy management 화면과 real sensor chart 추가

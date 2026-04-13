@@ -327,7 +327,7 @@
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
-11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. `real localhost server smoke`와 `sensor-ingestor -> state-estimator raw snapshot bridge`도 통과했다. 현재 우선순위는 `real shadow log`, `real PostgreSQL smoke`, `OpenAI online smoke`, `policy management/auth UI`다.
+11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. `real localhost server smoke`, `sensor-ingestor -> state-estimator raw snapshot bridge`, `ops-api shadow case capture/window summary`도 통과했다. 현재 우선순위는 `real shadow log 누적`, `real PostgreSQL smoke`, `OpenAI online smoke`, `policy management/auth UI`다.
 
 ## 주의할 점
 

@@ -4,6 +4,12 @@
 
 ## 2026-04-13
 
+### ops-api shadow capture + window summary API 추가
+- `ops-api/ops_api/shadow_mode.py`를 추가해 `llm-orchestrator` shadow audit JSONL을 읽고 rolling window summary를 계산하는 helper를 분리했다.
+- `ops-api/ops_api/app.py`에 `POST /shadow/cases/capture`, `GET /shadow/window`를 추가해 real shadow case 적재와 summary 조회를 운영 API에서 직접 수행할 수 있게 했다.
+- `/dashboard`에도 shadow window summary 패널을 추가해 운영자가 approval/alert/command와 함께 agreement, critical disagreement, promotion decision을 한 화면에서 볼 수 있게 했다.
+- `scripts/validate_ops_api_shadow_mode.py`를 추가해 day0 seed case 4건 기준 `decision_count 4`, `operator_agreement_rate 1.0`, `critical_disagreement_count 0`, `promotion_decision promote`를 확인했다.
+
 ### sensor-ingestor -> state-estimator raw snapshot bridge 추가
 - `state-estimator/state_estimator/ingestor_bridge.py`를 추가해 `sensor-ingestor` MQTT outbox JSONL을 그대로 읽고 zone 기준으로 묶은 뒤 snapshot/zone_state를 만들 수 있게 했다.
 - `scripts/validate_sensor_to_state_estimator_integration.py`를 추가해 `sensor-ingestor`를 실제로 한 번 돌린 뒤 outbox에서 `gh-01-zone-a` snapshot과 derived feature를 복원하는 통합 경로를 검증했다.

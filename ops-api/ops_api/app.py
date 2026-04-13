@@ -17,6 +17,7 @@ from .api_models import (
     ErrorResponse,
     ExecuteActionRequest,
     RobotTaskCreateRequest,
+    ShadowCaptureRequest,
     RuntimeModeRequest,
     ShadowReviewRequest,
 )
@@ -43,6 +44,7 @@ from .models import (
 from .planner import ActionDispatchPlanner
 from .runtime_mode import load_runtime_mode, save_runtime_mode
 from .seed import bootstrap_reference_data
+from .shadow_mode import build_window_summary_from_paths, capture_shadow_cases
 
 configure_repo_paths()
 
@@ -478,6 +480,7 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
         if item["latest_shadow_review"] and item["latest_shadow_review"]["agreement_status"] == "agree"
     )
     operator_agreement_rate = round(agree_count / len(agreement_rows), 4) if agreement_rows else None
+    shadow_window_summary = None
 
     return {
         "runtime_mode": mode_state.as_dict(),
@@ -493,6 +496,7 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
             "alert_count": len(alert_rows),
             "robot_task_count": len(robot_rows),
         },
+        "shadow_window": shadow_window_summary,
         "zones": list(latest_zone_items.values()),
         "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
         "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
@@ -944,6 +948,50 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             meta={"limit": limit},
         )
 
+    @app.post(
+        "/shadow/cases/capture",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def capture_shadow_runtime_cases(
+        payload: ShadowCaptureRequest,
+        services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("review_shadow")),
+    ) -> dict[str, Any]:
+        summary = capture_shadow_cases(
+            [item.model_dump() for item in payload.cases],
+            shadow_audit_log_path=services.settings.shadow_audit_log_path,
+            validator_audit_log_path=services.settings.validator_audit_log_path,
+            append=payload.append,
+        )
+        return _ok(
+            {
+                "captured_case_count": len(payload.cases),
+                "shadow_window": summary,
+            },
+            actor=actor,
+        )
+
+    @app.get(
+        "/shadow/window",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def get_shadow_window_summary(
+        services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        audit_path = services.settings.shadow_audit_log_path
+        if not audit_path.exists():
+            raise HTTPException(status_code=404, detail="shadow audit log not found")
+        try:
+            summary = build_window_summary_from_paths([audit_path])
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return _ok(summary, actor=actor)
+
     @app.get(
         "/zones/{zone_id}/state",
         tags=["catalog"],
@@ -1017,7 +1065,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         services=Depends(get_services),
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
-        return _ok(_build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path)), actor=actor)
+        payload = _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
+        audit_path = services.settings.shadow_audit_log_path
+        if audit_path.exists():
+            try:
+                payload["shadow_window"] = build_window_summary_from_paths([audit_path])
+            except ValueError:
+                payload["shadow_window"] = None
+        return _ok(payload, actor=actor)
 
     @app.get(
         "/alerts",
@@ -1313,6 +1368,13 @@ def _dashboard_html() -> str:
         <div class="stack">
           <section>
             <div class="section-title">
+              <h2>Shadow Window</h2>
+              <span class="small">real shadow audit summary</span>
+            </div>
+            <div id="shadowWindow"></div>
+          </section>
+          <section>
+            <div class="section-title">
               <h2>Alerts</h2>
               <span class="small">high / critical / unknown / validator</span>
             </div>
@@ -1433,6 +1495,20 @@ def _dashboard_html() -> str:
         </div>
       `).join('') || '<div>robot task가 없습니다.</div>';
     }
+    function renderShadowWindow(summary) {
+      if (!summary) {
+        document.getElementById('shadowWindow').innerHTML = '<div class="zone">shadow window가 아직 없습니다.</div>';
+        return;
+      }
+      document.getElementById('shadowWindow').innerHTML = `
+        <div class="zone">
+          <div><span class="badge ${summary.promotion_decision === 'rollback' ? 'warn' : 'dark'}">${summary.promotion_decision}</span></div>
+          <div class="small">decision=${summary.decision_count} · agreement=${summary.operator_agreement_rate} · critical_disagreement=${summary.critical_disagreement_count}</div>
+          <div class="small">citation=${summary.citation_coverage} · retrieval=${summary.retrieval_hit_rate} · policy_mismatch=${summary.policy_mismatch_count}</div>
+          <div class="small">window=${summary.window_start || 'n/a'} ~ ${summary.window_end || 'n/a'}</div>
+        </div>
+      `;
+    }
     function renderCommands(items) {
       document.getElementById('commandList').innerHTML = items.map(item => `
         <div class="command">
@@ -1474,6 +1550,7 @@ def _dashboard_html() -> str:
       document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
       renderMetrics(data.summary);
       renderZones(data.zones);
+      renderShadowWindow(data.shadow_window);
       renderAlerts(data.alerts);
       renderRobotTasks(data.robot_tasks);
       renderCommands(data.commands);

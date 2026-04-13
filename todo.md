@@ -933,6 +933,7 @@
 - [ ] 현재 제약 조건 카드
 - [x] 최근 결정 카드 (`ops-api/ops_api/app.py`)
 - [x] blocked/rejected 명령 리스트 (`ops-api/ops_api/app.py`)
+- [x] shadow window summary 카드 (`ops-api/ops_api/app.py`, `ops-api/ops_api/shadow_mode.py`)
 - [ ] robot candidate 리스트
 
 ## 14.3 운영 기능
@@ -1129,6 +1130,7 @@
 - [x] 운영자 수동 비교 검토 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] 추천 적합도 기록 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`)
 - [x] 오판 사례 수집 (`scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py`)
+- [x] real shadow case API 적재/조회 (`ops-api/ops_api/app.py`, `ops-api/ops_api/shadow_mode.py`, `scripts/validate_ops_api_shadow_mode.py`)
 
 ## 20.2 Approval Mode
 - [x] 모든 액션 승인 후 실행 (`ops-api/ops_api/app.py`, `ops-api/ops_api/planner.py`)

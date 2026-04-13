@@ -13,6 +13,8 @@ class Settings:
     runtime_mode_path: Path
     auth_mode: str
     auth_tokens_json: str
+    shadow_audit_log_path: Path
+    validator_audit_log_path: Path
     llm_provider: str
     llm_model_id: str
     llm_prompt_version: str
@@ -34,6 +36,18 @@ def load_settings() -> Settings:
         ),
         auth_mode=os.getenv("OPS_API_AUTH_MODE", "disabled"),
         auth_tokens_json=os.getenv("OPS_API_AUTH_TOKENS_JSON", ""),
+        shadow_audit_log_path=Path(
+            os.getenv(
+                "OPS_API_SHADOW_AUDIT_LOG_PATH",
+                str(REPO_ROOT / "artifacts" / "runtime" / "llm_orchestrator" / "shadow_mode_audit.jsonl"),
+            )
+        ),
+        validator_audit_log_path=Path(
+            os.getenv(
+                "OPS_API_VALIDATOR_AUDIT_LOG_PATH",
+                str(REPO_ROOT / "artifacts" / "runtime" / "llm_orchestrator" / "output_validator_audit.jsonl"),
+            )
+        ),
         llm_provider=os.getenv("OPS_API_LLM_PROVIDER", "stub"),
         llm_model_id=os.getenv("OPS_API_MODEL_ID", "pepper-ops-local-stub"),
         llm_prompt_version=os.getenv("OPS_API_PROMPT_VERSION", "sft_v10"),
