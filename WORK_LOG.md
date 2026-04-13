@@ -4,6 +4,21 @@
 
 ## 2026-04-13
 
+### runtime integration stack 구현
+- `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, rootzone/climate/crop stress score를 계산하는 feature builder를 구현했다.
+- `state-estimator/state_estimator/estimator.py`는 기존 MVP unknown/critical 승격 규칙을 유지하면서 `build_state_snapshot`, `build_zone_state_payload`로 LLM 입력용 zone state를 직접 조합하도록 확장했다.
+- `llm-orchestrator/llm_orchestrator/client.py`, `retriever.py`, `response_parser.py`, `prompt_catalog.py`, `service.py`를 추가해 `prompt version 선택 -> local RAG retrieval -> model 호출 -> malformed JSON recovery -> output validator 연결` 경로를 실제 서비스 계층으로 묶었다.
+- `ops-api/ops_api/`를 새로 추가해 FastAPI backend skeleton, SQLAlchemy 모델, runtime mode 저장, approval planner, inline dashboard를 구현했다. 핵심 엔드포인트는 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /actions/reject`, `GET /actions/history`, `GET /dashboard`, `GET/POST /runtime/mode`다.
+- `infra/postgres/001_initial_schema.sql`로 PostgreSQL 기준 `decisions`, `approvals`, `device_commands` DDL을 고정했다. 로컬 검증은 `SQLite + mock PLC adapter`로 수행했다.
+- 구현 범위와 한계는 `docs/runtime_integration_status.md`에 정리했다. 현재는 real OpenAI smoke test, auth/role, real PostgreSQL 연결, sensor-ingestor raw snapshot 직결은 아직 남겨 두었다.
+
+### runtime integration 로컬 검증
+- `python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py scripts/validate_state_estimator_features.py scripts/validate_llm_orchestrator_service.py scripts/validate_ops_api_flow.py`로 모듈 import/구문 검증을 다시 통과시켰다.
+- `python3 scripts/validate_state_estimator_features.py` 기준 합성 케이스에서 `VPD`, `heat stress`, `rootzone stress`, `sensor reliability` 계산이 기대 범위에 들어오는 것을 확인했다.
+- `python3 scripts/validate_llm_orchestrator_service.py` 기준 retrieved chunk 결합, citation 보강, validator reason code 부착, malformed JSON recovery 경로를 확인했다.
+- `python3 scripts/validate_ops_api_flow.py` 기준 실제 ASGI client 없이도 app 생성, route 등록, decision 저장, approval 저장, planner 기반 dispatch, runtime mode persistence가 모두 통과했다.
+- 이 환경에서는 `fastapi.testclient.TestClient`가 단순 예제에서도 hang돼 API 검증은 `SQLite` 세션과 app/service 직접 호출 기반으로 닫았다. 따라서 현재 검증은 “로컬 wiring 확인”이며, 추후 실제 ASGI 서버 smoke test와 real DB smoke test가 별도로 필요하다.
+
 ### real shadow mode capture / window report 경로 추가
 - `scripts/run_shadow_mode_capture_cases.py`를 추가해 실제 운영 또는 review case JSONL을 shadow audit log에 append하거나 일자별로 새로 적재할 수 있게 했다.
 - `scripts/build_shadow_mode_window_report.py`를 추가해 여러 shadow audit log를 rolling window 기준으로 합산하고 `promotion_decision`까지 바로 계산할 수 있게 했다.

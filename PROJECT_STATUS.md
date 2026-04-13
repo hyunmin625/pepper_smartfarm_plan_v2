@@ -35,12 +35,16 @@
 - `ds_v14` draft는 source training `352`, train `843`, validation `61`, format error `0`이다. 하지만 `artifacts/reports/challenger_submit_preflight_ds_v14_real_shadow.md` 기준 아직 `blocked`이며 blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real shadow mode rollback`이다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
+- `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, malformed JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
 - 같은 historical baseline `ds_v9` 기준 blind50 validator 잔여 실패는 `12건`이었고, 이는 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉘었다.
 - `docs/blind50_residual_batch14_plan.md`와 batch14 sample `12건`으로 blind50 잔여 `12건`을 training slice로 직접 역투영했다.
 - `scripts/build_openai_sft_datasets.py`와 `scripts/report_risk_slice_coverage.py`는 기본 경로 사용 시 stale `combined_training_samples.jsonl`이 아니라 `training_sample_files()`를 직접 읽는다.
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 reject한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
+- `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, stress score를 `feature_schema.json` 형태로 계산한다.
+- `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands` 저장 경로, `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard`, `GET/POST /runtime/mode`까지 연결했다.
+- 로컬에서는 `SQLite + mock PLC adapter`로 end-to-end approval flow를 검증했고, 검증 스크립트는 `scripts/validate_state_estimator_features.py`, `scripts/validate_llm_orchestrator_service.py`, `scripts/validate_ops_api_flow.py`다.
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
 - batch17 offline shadow residual `8건`을 추가했다. 대상은 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005`이며 `create_alert` 누락, `adjust_fertigation` reflex, `inspect_crop` exact enum drift를 직접 겨냥한다.
@@ -307,6 +311,7 @@
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
+11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 다음 구현 우선순위는 새 submit보다 `real shadow log`, `auth/role`, `실 OpenAI smoke test`, `sensor-ingestor raw snapshot 직결`이다.
 
 ## 주의할 점
 

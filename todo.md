@@ -605,33 +605,33 @@
 # 7. 상태 추정(state-estimator)
 
 ## 7.1 특징량 정의
-- [ ] VPD 계산식 검증
-- [ ] DLI 계산 방식 정의
+- [x] VPD 계산식 검증 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`)
+- [x] DLI 계산 방식 정의 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`)
 - [ ] 1분 평균 정의
-- [ ] 5분 평균 정의
+- [x] 5분 평균 정의 (`state-estimator/state_estimator/features.py`)
 - [ ] 10분 변화율 정의
-- [ ] 30분 변화율 정의
-- [ ] 관수 후 회복률 정의
-- [ ] 배액률 정의
-- [ ] 스트레스 점수 정의
-- [ ] 생육 단계 반영 방식 정의
+- [x] 30분 변화율 정의 (`state-estimator/state_estimator/features.py`)
+- [x] 관수 후 회복률 정의 (`state-estimator/state_estimator/features.py`)
+- [x] 배액률 정의 (`state-estimator/state_estimator/features.py`)
+- [x] 스트레스 점수 정의 (`state-estimator/state_estimator/features.py`)
+- [x] 생육 단계 반영 방식 정의 (`state-estimator/state_estimator/features.py`)
 
 ## 7.2 feature builder 구현
 - [ ] raw sensor loader 작성
-- [ ] aggregation 함수 작성
-- [ ] VPD calculator 작성
-- [ ] trend calculator 작성
-- [ ] stress score calculator 작성
-- [ ] substrate recovery calculator 작성
+- [x] aggregation 함수 작성 (`state-estimator/state_estimator/features.py`)
+- [x] VPD calculator 작성 (`state-estimator/state_estimator/features.py`)
+- [x] trend calculator 작성 (`state-estimator/state_estimator/features.py`)
+- [x] stress score calculator 작성 (`state-estimator/state_estimator/features.py`)
+- [x] substrate recovery calculator 작성 (`state-estimator/state_estimator/features.py`)
 - [ ] derived feature validator 작성
-- [ ] snapshot serializer 작성
+- [x] snapshot serializer 작성 (`state-estimator/state_estimator/features.py`, `scripts/validate_state_estimator_features.py`)
 
 ## 7.3 zone state 생성
-- [ ] current_state 조합
-- [ ] derived_features 조합
-- [ ] device_status 조합
-- [ ] constraints placeholder 조합
-- [ ] weather context 조합
+- [x] current_state 조합 (`state-estimator/state_estimator/features.py`, `state-estimator/state_estimator/estimator.py`)
+- [x] derived_features 조합 (`state-estimator/state_estimator/features.py`)
+- [x] device_status 조합 (`state-estimator/state_estimator/features.py`)
+- [x] constraints placeholder 조합 (`state-estimator/state_estimator/features.py`)
+- [x] weather context 조합 (`state-estimator/state_estimator/features.py`)
 - [ ] final state schema validation
 - [ ] snapshot DB 저장
 - [ ] state updated event 발행
@@ -723,19 +723,19 @@
 - [x] log_decision 정의 (`docs/agent_tool_design.md`)
 
 ## 9.4 llm-orchestrator 구현
-- [ ] API client 구성
-- [ ] model config 구조 작성
-- [ ] prompt renderer 구현
-- [ ] rag-retriever client 구현
-- [ ] retrieved_context 조합 로직 작성
+- [x] API client 구성 (`llm-orchestrator/llm_orchestrator/client.py`)
+- [x] model config 구조 작성 (`llm-orchestrator/llm_orchestrator/client.py`)
+- [x] prompt renderer 구현 (`llm-orchestrator/llm_orchestrator/service.py`, `llm-orchestrator/llm_orchestrator/prompt_catalog.py`)
+- [x] rag-retriever client 구현 (`llm-orchestrator/llm_orchestrator/retriever.py`)
+- [x] retrieved_context 조합 로직 작성 (`llm-orchestrator/llm_orchestrator/service.py`)
 - [ ] tool registry 구현
-- [ ] structured output parser 구현
-- [ ] retry 전략 구현
-- [ ] timeout 전략 구현
-- [ ] malformed JSON 복구 전략 구현
-- [ ] citations 저장 로직 구현
-- [ ] decision logger 구현
-- [ ] evaluation endpoint 작성
+- [x] structured output parser 구현 (`llm-orchestrator/llm_orchestrator/response_parser.py`)
+- [x] retry 전략 구현 (`llm-orchestrator/llm_orchestrator/client.py`)
+- [x] timeout 전략 구현 (`llm-orchestrator/llm_orchestrator/client.py`)
+- [x] malformed JSON 복구 전략 구현 (`llm-orchestrator/llm_orchestrator/response_parser.py`, `llm-orchestrator/llm_orchestrator/client.py`)
+- [x] citations 저장 로직 구현 (`llm-orchestrator/llm_orchestrator/service.py`, `ops-api/ops_api/models.py`)
+- [x] decision logger 구현 (`ops-api/ops_api/app.py`, `ops-api/ops_api/models.py`)
+- [x] evaluation endpoint 작성 (`ops-api/ops_api/app.py`)
 
 ## 9.5 응답 검증
 - [ ] action_type enum 검증
@@ -840,8 +840,8 @@
 # 12. API 서버 / 백엔드
 
 ## 12.1 공통 백엔드
-- [ ] FastAPI 프로젝트 초기화
-- [ ] settings 모듈 작성
+- [x] FastAPI 프로젝트 초기화 (`ops-api/ops_api/app.py`)
+- [x] settings 모듈 작성 (`ops-api/ops_api/config.py`)
 - [ ] logger 설정
 - [ ] exception handler 작성
 - [ ] response model 작성
@@ -851,12 +851,12 @@
 
 ## 12.2 주요 API
 - [ ] GET /zones
-- [ ] GET /zones/{zone_id}/state
+- [x] GET /zones/{zone_id}/state (`ops-api/ops_api/app.py`)
 - [ ] GET /zones/{zone_id}/history
-- [ ] POST /decisions/evaluate-zone
+- [x] POST /decisions/evaluate-zone (`ops-api/ops_api/app.py`)
 - [ ] POST /actions/execute
-- [ ] POST /actions/approve
-- [ ] GET /actions/history
+- [x] POST /actions/approve (`ops-api/ops_api/app.py`)
+- [x] GET /actions/history (`ops-api/ops_api/app.py`)
 - [ ] GET /alerts
 - [ ] GET /policies
 - [ ] POST /robot/tasks
@@ -902,13 +902,13 @@
 - [ ] safe mode 진입 알람
 
 ## 13.4 감사 체계
-- [ ] decision trace 저장
-- [ ] source state 저장
+- [x] decision trace 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
+- [x] source state 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [ ] policy evaluation 결과 저장
-- [ ] final execution 결과 저장
+- [x] final execution 결과 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [ ] operator override 저장
-- [ ] approval action 저장
-- [ ] 모델/프롬프트 버전 저장
+- [x] approval action 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
+- [x] 모델/프롬프트 버전 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 
 ---
 
@@ -917,8 +917,8 @@
 ## 14.1 기본 화면 정의
 - [ ] zone overview 화면 설계
 - [ ] real-time sensor 화면 설계
-- [ ] decision 로그 화면 설계
-- [ ] action 승인 화면 설계
+- [x] decision 로그 화면 설계 (`ops-api/ops_api/app.py`)
+- [x] action 승인 화면 설계 (`ops-api/ops_api/app.py`)
 - [ ] alert 화면 설계
 - [ ] robot task 화면 설계
 - [ ] policy 관리 화면 설계
@@ -935,8 +935,8 @@
 
 ## 14.3 운영 기능
 - [ ] 수동 명령 입력 UI
-- [ ] 자동/수동 모드 전환 UI
-- [ ] 승인/거절 UI
+- [x] 자동/수동 모드 전환 UI (`ops-api/ops_api/app.py`)
+- [x] 승인/거절 UI (`ops-api/ops_api/app.py`)
 - [ ] 주석/운영 메모 UI
 - [ ] 문제 사례 태깅 UI
 
@@ -1122,15 +1122,15 @@
 # 20. 단계적 운영 전환
 
 ## 20.1 Shadow Mode
-- [ ] LLM은 추천만 생성
-- [ ] 실제 장치 제어 없음
+- [x] LLM은 추천만 생성 (`ops-api/ops_api/app.py`, `llm-orchestrator/llm_orchestrator/runtime.py`)
+- [x] 실제 장치 제어 없음 (`ops-api/ops_api/app.py`)
 - [ ] 운영자 수동 비교 검토
-- [ ] 추천 적합도 기록
-- [ ] 오판 사례 수집
+- [x] 추천 적합도 기록 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`)
+- [x] 오판 사례 수집 (`scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py`)
 
 ## 20.2 Approval Mode
-- [ ] 모든 액션 승인 후 실행
-- [ ] 승인/거절 이유 기록
+- [x] 모든 액션 승인 후 실행 (`ops-api/ops_api/app.py`, `ops-api/ops_api/planner.py`)
+- [x] 승인/거절 이유 기록 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [ ] 과도한 승인 요청 분석
 - [ ] 승인 기준 튜닝
 

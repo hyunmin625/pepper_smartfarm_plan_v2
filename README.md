@@ -22,10 +22,11 @@
 12. `docs/blind50_residual_batch14_plan.md`: blind50 validator 잔여 `12건`을 batch14 sample로 옮긴 매핑
 13. `docs/offline_shadow_residual_batch17_plan.md`: offline shadow 잔여 `4건`을 batch17 sample로 옮긴 매핑
 14. `docs/synthetic_shadow_day0_batch18_plan.md`: synthetic shadow day0 잔여 `4건`을 batch18 sample로 옮긴 매핑
-15. `schedule.md`: 개정 실행 순서와 8주 일정
-16. `todo.md`: 세부 작업 체크리스트
-17. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-18. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+15. `docs/runtime_integration_status.md`: orchestrator/state-estimator/API/dashboard 연결 상태
+16. `schedule.md`: 개정 실행 순서와 8주 일정
+17. `todo.md`: 세부 작업 체크리스트
+18. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+19. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -82,6 +83,10 @@
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 연결했다.
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 차단한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
+- `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, stress score를 `feature_schema.json` 형태로 계산한다.
+- `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
+- `ops-api/ops_api/app.py`를 추가해 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard`, `GET/POST /runtime/mode`를 제공하는 FastAPI backend skeleton을 만들었다.
+- PostgreSQL DDL도 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)로 고정했고, 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10`이며, 모두 safety/failure 오판을 직접 겨냥한다.
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 1.0`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.
 - 다만 validator를 붙여도 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
@@ -199,9 +204,14 @@
 - `docs/execution_gateway_flow.md`: execution-gateway 검증 단계와 preflight 기준
 - `docs/execution_dispatcher_runtime.md`: dispatcher, control state store, audit log runtime 기준
 - `docs/approval_governance.md`: 위험도별 승인 체계와 timeout/fallback 기준
+- `docs/runtime_integration_status.md`: orchestrator/state-estimator/API/dashboard 연결 상태와 한계
 - `execution-gateway/execution_gateway/dispatch.py`: preflight 통과 요청을 adapter/state transition으로 dispatch
 - `execution-gateway/execution_gateway/state.py`: estop/manual_override/safe_mode/auto_mode 상태 저장소
 - `scripts/validate_execution_dispatcher.py`: dispatcher와 audit log 경로 검증
+- `state-estimator/state_estimator/features.py`: VPD/DLI/trend/rootzone stress feature builder
+- `llm-orchestrator/llm_orchestrator/service.py`: prompt + retrieval + JSON recovery + validator facade
+- `ops-api/ops_api/app.py`: approval mode backend와 dashboard
+- `infra/postgres/001_initial_schema.sql`: `decisions`, `approvals`, `device_commands` PostgreSQL schema
 - `data/examples/device_profile_registry_seed.json`: 장치 타입별 `Device Profile` seed registry
 - `data/examples/device_site_override_seed.json`: `gh-01` 예시 controller/channel binding seed
 - `data/examples/device_channel_address_registry_seed.json`: `channel_ref -> Modbus address` seed registry

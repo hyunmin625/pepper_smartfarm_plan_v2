@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .features import build_feature_snapshot, build_zone_state_payload
+
 
 UNTRUSTED_QUALITY_MARKERS = {
     "stale",
@@ -13,14 +15,6 @@ UNTRUSTED_QUALITY_MARKERS = {
     "calibration_error",
     "readback_mismatch",
     "unknown_state",
-}
-HIGH_RISK_FEATURE_KEYS = {
-    "heat_risk",
-    "fruit_burn_risk",
-    "water_stress_risk",
-    "disease_pressure",
-    "condensation_risk",
-    "solar_gain_risk",
 }
 
 
@@ -34,6 +28,7 @@ class StateEstimate:
     recommended_action_types: list[str]
     unknown_reasons: list[str]
     notes: list[str]
+    feature_snapshot: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -45,6 +40,7 @@ class StateEstimate:
             "recommended_action_types": self.recommended_action_types,
             "unknown_reasons": self.unknown_reasons,
             "notes": self.notes,
+            "feature_snapshot": self.feature_snapshot,
         }
 
 
@@ -54,13 +50,14 @@ def estimate_zone_state(scenario: dict[str, Any]) -> StateEstimate:
     growth_stage = str(scenario.get("growth_stage") or "unknown")
     sensor_quality = scenario.get("sensor_quality")
     current_state = scenario.get("current_state")
-    derived_features = scenario.get("derived_features")
-    expected_focus = scenario.get("expected_focus")
 
     sensor_quality = sensor_quality if isinstance(sensor_quality, dict) else {}
     current_state = current_state if isinstance(current_state, dict) else {}
-    derived_features = derived_features if isinstance(derived_features, dict) else {}
-    expected_focus = expected_focus if isinstance(expected_focus, list) else []
+
+    feature_snapshot = build_feature_snapshot(scenario)
+    climate = feature_snapshot["climate"]
+    rootzone = feature_snapshot["rootzone"]
+    risk_scores = feature_snapshot["risk_scores"]
 
     unknown_reasons: list[str] = []
     notes: list[str] = []
@@ -74,8 +71,8 @@ def estimate_zone_state(scenario: dict[str, Any]) -> StateEstimate:
         if isinstance(value, str) and value in UNTRUSTED_QUALITY_MARKERS:
             unknown_reasons.append(f"{field_name}={value}")
 
-    if str(derived_features.get("automation_confidence") or "") == "unsafe":
-        unknown_reasons.append("derived_features.automation_confidence=unsafe")
+    if risk_scores["sensor_reliability_score"]["score"] is not None and risk_scores["sensor_reliability_score"]["score"] <= 0.25:
+        unknown_reasons.append("sensor_reliability_score<=0.25")
 
     if str(current_state.get("device_state_sync") or "") == "unknown":
         notes.append("device_state_sync_unknown")
@@ -90,9 +87,30 @@ def estimate_zone_state(scenario: dict[str, Any]) -> StateEstimate:
             recommended_action_types=["pause_automation", "request_human_check"],
             unknown_reasons=unknown_reasons,
             notes=notes or ["sensor_quality_guard_promoted_unknown"],
+            feature_snapshot=feature_snapshot,
         )
 
-    if derived_features.get("safe_mode_entry") == "required":
+    if _is_hard_critical(current_state):
+        note = "robot_safety_breach" if current_state.get("worker_present") and current_state.get("robot_task_state") else "hard_safety_interlock"
+        return StateEstimate(
+            scenario_id=scenario_id,
+            zone_id=zone_id,
+            growth_stage=growth_stage,
+            observability_status="good",
+            risk_level="critical",
+            recommended_action_types=["enter_safe_mode", "request_human_check"],
+            unknown_reasons=[],
+            notes=notes + [note],
+            feature_snapshot=feature_snapshot,
+        )
+
+    climate_heat = climate["heat_stress_risk"]["level"]
+    condensation = climate["condensation_risk"]["level"]
+    rootzone_risk = rootzone["rootzone_stress_risk"]["level"]
+    overall_stress = risk_scores["overall_stress_score"]["score"] or 0.0
+    safety_score = risk_scores["automation_safety_score"]["score"] or 0.0
+
+    if current_state.get("power_state") == "recovered" or _boolish(scenario, "derived_features", "safe_mode_entry"):
         return StateEstimate(
             scenario_id=scenario_id,
             zone_id=zone_id,
@@ -102,57 +120,36 @@ def estimate_zone_state(scenario: dict[str, Any]) -> StateEstimate:
             recommended_action_types=["enter_safe_mode", "request_human_check"],
             unknown_reasons=[],
             notes=notes + ["safe_mode_entry_required"],
+            feature_snapshot=feature_snapshot,
         )
 
-    if derived_features.get("robot_safety_breach") is True:
+    if climate_heat == "critical" or condensation == "critical":
         return StateEstimate(
             scenario_id=scenario_id,
             zone_id=zone_id,
             growth_stage=growth_stage,
             observability_status="good",
             risk_level="critical",
-            recommended_action_types=["enter_safe_mode", "request_human_check"],
+            recommended_action_types=["create_alert", "request_human_check"],
             unknown_reasons=[],
-            notes=notes + ["robot_safety_breach"],
+            notes=notes + [f"critical_risk:{climate_heat}/{condensation}"],
+            feature_snapshot=feature_snapshot,
         )
 
-    if current_state.get("manual_override") is True and current_state.get("operator_present") is True:
+    if overall_stress >= 0.7 or rootzone_risk == "high" or climate_heat == "high":
         return StateEstimate(
             scenario_id=scenario_id,
             zone_id=zone_id,
             growth_stage=growth_stage,
             observability_status="good",
-            risk_level="critical",
-            recommended_action_types=["pause_automation", "request_human_check"],
+            risk_level="high",
+            recommended_action_types=["create_alert", "request_human_check"],
             unknown_reasons=[],
-            notes=notes + ["manual_override_active"],
+            notes=notes + ["stress_score_high"],
+            feature_snapshot=feature_snapshot,
         )
 
-    for key in sorted(HIGH_RISK_FEATURE_KEYS):
-        if derived_features.get(key) == "critical":
-            return StateEstimate(
-                scenario_id=scenario_id,
-                zone_id=zone_id,
-                growth_stage=growth_stage,
-                observability_status="good",
-                risk_level="critical",
-                recommended_action_types=["create_alert", "request_human_check"],
-                unknown_reasons=[],
-                notes=notes + [f"{key}=critical"],
-            )
-        if derived_features.get(key) == "high":
-            return StateEstimate(
-                scenario_id=scenario_id,
-                zone_id=zone_id,
-                growth_stage=growth_stage,
-                observability_status="good",
-                risk_level="high",
-                recommended_action_types=["create_alert", "request_human_check"],
-                unknown_reasons=[],
-                notes=notes + [f"{key}=high"],
-            )
-
-    if any(isinstance(item, str) and item in {"create_alert", "request_human_check"} for item in expected_focus):
+    if safety_score <= 0.45 or overall_stress >= 0.4:
         return StateEstimate(
             scenario_id=scenario_id,
             zone_id=zone_id,
@@ -161,7 +158,8 @@ def estimate_zone_state(scenario: dict[str, Any]) -> StateEstimate:
             risk_level="medium",
             recommended_action_types=["create_alert", "request_human_check"],
             unknown_reasons=[],
-            notes=notes + ["expected_focus_requires_manual_review"],
+            notes=notes + ["manual_review_band"],
+            feature_snapshot=feature_snapshot,
         )
 
     return StateEstimate(
@@ -173,4 +171,33 @@ def estimate_zone_state(scenario: dict[str, Any]) -> StateEstimate:
         recommended_action_types=["observe_only", "trend_review"],
         unknown_reasons=[],
         notes=notes or ["stable_signal"],
+        feature_snapshot=feature_snapshot,
     )
+
+
+def build_state_snapshot(scenario: dict[str, Any]) -> dict[str, Any]:
+    return build_zone_state_payload(scenario)
+
+
+def _is_hard_critical(current_state: dict[str, Any]) -> bool:
+    return (
+        current_state.get("worker_present") is True
+        or current_state.get("operator_present") is True
+        or current_state.get("manual_override") is True
+        or current_state.get("safe_mode") is True
+        or current_state.get("estop_active") is True
+        or _boolish({"current_state": current_state}, "current_state", "robot_safety_breach")
+    )
+
+
+def _boolish(container: dict[str, Any], *path: str) -> bool:
+    cursor: Any = container
+    for key in path:
+        if not isinstance(cursor, dict):
+            return False
+        cursor = cursor.get(key)
+    if isinstance(cursor, bool):
+        return cursor
+    if isinstance(cursor, str):
+        return cursor.lower() in {"true", "required", "active", "yes"}
+    return False
