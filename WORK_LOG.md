@@ -4,6 +4,15 @@
 
 ## 2026-04-13
 
+### 운영자 통합 제어 웹 UI 재구성 + 루트 리다이렉트 + PLAN 반영
+- `ops-api/ops_api/app.py`의 `_dashboard_html()`을 사이드바 네비게이션 + 9개 뷰로 전면 재구성했다. 한국어 기본 (`title="적고추 온실 스마트팜 통합 제어"`), 사이드바 메뉴는 `대시보드 / 존 모니터링 / 결정 / 승인 / 알림 / 로봇 / 장치 / 제약 / 정책 / 이벤트 / Shadow Mode / 시스템` 9개. 단일 SPA에서 JS `showView()`가 `.view` 섹션 display를 토글하고, `VIEW_TITLES` 테이블이 헤더 제목/부제를 매핑한다.
+- `GET /` 루트가 `/dashboard`로 307 리다이렉트된다 (`dashboard_root_redirect`). 이전엔 루트 접속 시 `{"detail":"Not Found"}`만 반환되어 운영자가 혼동할 수 있었다.
+- 대시보드 metric 카드가 10 → 14로 확장되고 라벨이 전부 한국어(`결정 수 / 승인 대기 / Shadow 리뷰 대기 / 차단된 결정 / Safe Mode 추천 / Operator 불일치 / 일치율 / 실행 명령 / Policy Event / Policy Block / Alerts / Robot Task / Robot Candidate / Policy (enabled/total)`)로 표시된다.
+- 신규 렌더러와 마운트 포인트: `alertListOverview`/`commandListOverview`(overview 뷰 미니 카드), `zoneListDetailed`(zones 뷰 상세), `shadowWindowDetail`(shadow 뷰 8-slot 카드), `runtimeInfo`(시스템 뷰 auth 요약), `authContextMini`(사이드바 푸터 mini). 기존 `renderZones/renderAlerts/renderCommands/renderShadowWindow/renderAuthContext`를 멀티 마운트 포인트로 분기했다.
+- CSS는 sidebar 240px 고정 + workspace flex, 어두운 사이드바(`--sidebar:#1d2a1f`) + 크림 배경 유지. `.view{display:none}` + `.view.active{display:block}`로 뷰 전환, 1100px 미만에서 grid-columns를 1fr로 무너뜨려 모바일 fallback.
+- `PLAN.md`에 운영자 통합 제어 웹 UI를 1급 시민으로 반영했다: (1) 2.1 주요 기능에 `E. 운영자 통합 제어 웹 UI` 섹션을 추가해 한국어 기본 / 사이드바 / 9개 메뉴 / 5초 폴링 / 권한 매핑을 명세했고, (2) 3.1 아키텍처에 `5) 운영자 통합 제어 웹 UI 계층`을 추가해 ops-api dashboard가 시스템의 "운영자 얼굴"임을 명시했으며, (3) Phase 8 단계적 현장 적용의 성과물에 실제 구현 경로(`ops-api/_dashboard_html`)와 9개 뷰 목록을 고정했다.
+- ops-api 서버를 재기동하고 `/` → `/dashboard` 리다이렉트와 9개 메뉴 렌더를 `curl`로 검증했다. 19종 smoke 모두 `errors 0`.
+
 ### Approval Dashboard 섹션 14 완결 (robot candidate / device status / constraints / pH / 수동 execute / 문제 사례 태깅)
 - `ops-api/ops_api/app.py`의 `TRACKED_SENSOR_METRICS`에 `feed_ph`, `drain_ph`를 추가해 Zone History Chart sparkline이 pH 2종도 표시하도록 했다. 기존 9개 + pH 2개 = 11종 지표.
 - `_serialize_robot_candidate`와 `/robot/candidates` (`read_runtime` 권한, zone_id/status 필터 지원) 엔드포인트를 추가하고, `_build_dashboard_payload`에 `robot_candidates` 리스트와 `summary.robot_candidate_count`를 노출했다.

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -1498,6 +1498,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def dashboard() -> str:
         return _dashboard_html()
 
+    @app.get("/", include_in_schema=False)
+    def dashboard_root_redirect() -> RedirectResponse:
+        return RedirectResponse(url="/dashboard", status_code=307)
+
     return app
 
 
@@ -1506,182 +1510,258 @@ def _dashboard_html() -> str:
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>Pepper Smartfarm Approval Dashboard</title>
+  <title>적고추 온실 스마트팜 통합 제어</title>
   <style>
-    :root { --bg:#f4f1e8; --ink:#1d2a1f; --card:#fffdf7; --line:#d8d1c3; --accent:#456b4f; --warn:#8a4a2f; --muted:#657d6a; --critical:#7a2f21; }
-    body { margin:0; font-family: 'Noto Sans KR', sans-serif; background:linear-gradient(180deg,#f0eadf 0%,#f7f4ec 100%); color:var(--ink); }
-    header { padding:24px 28px; border-bottom:1px solid var(--line); background:rgba(255,255,255,0.6); backdrop-filter: blur(8px); }
-    main { display:grid; grid-template-columns: 400px 1fr; gap:20px; padding:20px; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 8px 30px rgba(44,60,47,0.06); }
-    h1,h2,h3 { margin:0 0 12px; }
+    :root { --bg:#f4f1e8; --ink:#1d2a1f; --card:#fffdf7; --line:#d8d1c3; --accent:#456b4f; --accent-dark:#2f4a36; --warn:#8a4a2f; --muted:#657d6a; --critical:#7a2f21; --sidebar:#1d2a1f; --sidebar-ink:#f4f1e8; --sidebar-hover:#2f4a36; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family: 'Noto Sans KR', 'Segoe UI', sans-serif; background:linear-gradient(180deg,#f0eadf 0%,#f7f4ec 100%); color:var(--ink); min-height:100vh; }
+    h1,h2,h3,h4 { margin:0 0 12px; }
     label { display:block; font-size:13px; margin:8px 0 4px; color:#4a5b4d; }
-    input, select, textarea, button { width:100%; box-sizing:border-box; border-radius:12px; border:1px solid var(--line); padding:10px 12px; font:inherit; }
-    textarea { min-height:120px; resize:vertical; }
-    button { background:var(--accent); color:white; cursor:pointer; border:none; margin-top:10px; }
+    input, select, textarea, button { width:100%; box-sizing:border-box; border-radius:10px; border:1px solid var(--line); padding:10px 12px; font:inherit; }
+    textarea { min-height:110px; resize:vertical; }
+    button { background:var(--accent); color:white; cursor:pointer; border:none; margin-top:8px; }
     button.secondary { background:#657d6a; }
     button.warn { background:var(--warn); }
-    .mode { display:inline-block; padding:6px 10px; border-radius:999px; background:#e3ecd9; color:#28523a; font-weight:700; }
-    .grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+    button.ghost { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+    .app { display:grid; grid-template-columns: 240px 1fr; min-height:100vh; }
+    .sidebar { background:var(--sidebar); color:var(--sidebar-ink); padding:24px 0; display:flex; flex-direction:column; gap:14px; position:sticky; top:0; height:100vh; }
+    .brand { padding:0 24px 14px; border-bottom:1px solid #2d3a2e; }
+    .brand h1 { font-size:17px; margin:0; color:#f4f1e8; line-height:1.3; }
+    .brand .brand-sub { font-size:11px; color:#9fb1a3; margin-top:4px; letter-spacing:0.5px; }
+    .sidebar nav { display:flex; flex-direction:column; gap:2px; padding:8px 12px; flex:1; overflow-y:auto; }
+    .sidebar nav a { color:#d3ddd4; text-decoration:none; padding:10px 14px; border-radius:10px; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:8px; transition:background 0.15s; }
+    .sidebar nav a:hover { background:var(--sidebar-hover); color:white; }
+    .sidebar nav a.active { background:var(--accent); color:white; font-weight:700; }
+    .sidebar nav .nav-sub { font-size:10px; color:#9fb1a3; margin-left:auto; font-weight:400; }
+    .sidebar-foot { padding:14px 24px; border-top:1px solid #2d3a2e; font-size:12px; color:#c3cdc4; }
+    .sidebar-foot .mode-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .sidebar-foot button { margin-top:6px; font-size:12px; padding:6px 10px; }
+    .mode { display:inline-block; padding:4px 10px; border-radius:999px; background:#e3ecd9; color:#28523a; font-weight:700; font-size:11px; }
+    .workspace { padding:24px 28px; min-width:0; }
+    .workspace-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:20px; }
+    .workspace-header h2 { font-size:22px; margin:0; }
+    .workspace-header .sub { font-size:12px; color:var(--muted); margin-top:4px; }
+    .view { display:none; }
+    .view.active { display:block; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 8px 28px rgba(44,60,47,0.06); margin-bottom:16px; }
+    .card h3 { font-size:15px; color:var(--accent-dark); }
+    .section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; }
+    .two-col { display:grid; grid-template-columns: 1.1fr 0.9fr; gap:16px; }
+    .three-col { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:14px; }
+    .grid { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:12px; margin-bottom:16px; }
     .metric { padding:14px; border-radius:14px; border:1px solid var(--line); background:#faf7ef; }
-    .metric strong { display:block; font-size:24px; margin-top:6px; }
-    .content-grid { display:grid; grid-template-columns: 1.1fr 0.9fr; gap:16px; }
-    .stack { display:grid; gap:16px; }
-    .decision { padding:14px; border:1px solid var(--line); border-radius:14px; margin-bottom:12px; }
-    .decision pre { white-space:pre-wrap; word-break:break-word; background:#f6f3ea; padding:10px; border-radius:10px; }
-    .meta { font-size:12px; color:#5b685e; margin-bottom:8px; }
+    .metric strong { display:block; font-size:22px; margin-top:4px; color:var(--accent-dark); }
     .row { display:flex; gap:8px; }
     .row > * { flex:1; }
-    .zone, .alert, .robot, .command { padding:12px; border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:#fbf8f1; }
-    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; background:#eef4e7; color:#28523a; margin-right:6px; }
+    .decision { padding:14px; border:1px solid var(--line); border-radius:14px; margin-bottom:12px; background:#fffdf7; }
+    .decision pre { white-space:pre-wrap; word-break:break-word; background:#f6f3ea; padding:10px; border-radius:10px; font-size:11px; max-height:220px; overflow-y:auto; }
+    .decision-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .decision-actions button { width:auto; margin-top:0; padding:8px 14px; font-size:12px; }
+    .meta { font-size:12px; color:#5b685e; margin-bottom:6px; }
+    .zone, .alert, .robot, .command { padding:12px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:#fbf8f1; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; background:#eef4e7; color:#28523a; margin-right:6px; }
     .badge.warn { background:#f7e5db; color:#7a2f21; }
     .badge.dark { background:#ece8dd; color:#4b544d; }
-    .decision-actions { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px; margin-top:10px; }
-    .section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .badge.critical { background:#7a2f21; color:white; }
     .small { font-size:12px; color:#5b685e; }
-    @media (max-width: 1200px) {
-      main, .content-grid, .grid { grid-template-columns: 1fr; }
+    .placeholder { padding:20px; text-align:center; color:#9ba89f; font-size:13px; }
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position:static; height:auto; }
+      .two-col, .three-col, .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Approval Dashboard</h1>
-    <div>현재 모드: <span id="modeBadge" class="mode">loading</span></div>
-  </header>
-  <main>
-    <section class="card">
-      <h2>Decision Request</h2>
-      <label>Zone</label>
-      <input id="zoneId" value="gh-01-zone-a" />
-      <label>Task</label>
-      <select id="taskType">
-        <option value="state_judgement">state_judgement</option>
-        <option value="action_recommendation">action_recommendation</option>
-        <option value="failure_response">failure_response</option>
-        <option value="robot_task_prioritization">robot_task_prioritization</option>
-        <option value="forbidden_action">forbidden_action</option>
-      </select>
-      <label>Growth Stage</label>
-      <input id="growthStage" value="fruiting" />
-      <label>Current State JSON</label>
-      <textarea id="currentState">{ "air_temp_c": 31.5, "rh_pct": 88.0, "substrate_moisture_pct": 24.0, "ripe_fruit_count": 72 }</textarea>
-      <label>Sensor Quality JSON</label>
-      <textarea id="sensorQuality">{ "overall": "good" }</textarea>
-      <div class="row">
-        <button onclick="submitDecision()">Evaluate</button>
-        <button class="secondary" onclick="toggleMode()">Toggle Mode</button>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>적고추 온실 스마트팜</h1>
+        <div class="brand-sub">Pepper Smartfarm · 통합 제어</div>
       </div>
-      <p class="small">shadow 모드에서는 운영자가 일치/불일치를 기록하고, approval 모드에서는 승인 후에만 dispatch가 실행됩니다.</p>
-    </section>
-    <section class="card">
-      <div class="grid" id="metricGrid"></div>
-      <div class="content-grid">
-        <div class="stack">
-          <section>
-            <div class="section-title">
-              <h2>Zone Overview</h2>
-              <span class="small">latest by zone</span>
-            </div>
+      <nav id="sidebarNav">
+        <a data-view="overview" class="active">대시보드</a>
+        <a data-view="zones">존 모니터링</a>
+        <a data-view="decisions">결정 / 승인</a>
+        <a data-view="alerts">알림</a>
+        <a data-view="robot">로봇</a>
+        <a data-view="devices">장치 / 제약</a>
+        <a data-view="policies">정책 / 이벤트</a>
+        <a data-view="shadow">Shadow Mode</a>
+        <a data-view="system">시스템</a>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="mode-row">운영 모드: <span id="modeBadge" class="mode">loading</span></div>
+        <div id="authContextMini" class="small" style="color:#c3cdc4;"></div>
+        <button class="secondary" onclick="toggleMode()">모드 전환</button>
+      </div>
+    </aside>
+    <main class="workspace">
+      <div class="workspace-header">
+        <div>
+          <h2 id="viewTitle">대시보드</h2>
+          <div class="sub" id="viewSub">전체 운영 현황 요약</div>
+        </div>
+        <div id="authContext"></div>
+      </div>
+
+      <section class="view active" data-view="overview">
+        <div class="grid" id="metricGrid"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title"><h3>존 상태 요약</h3><span class="small">최신 risk_level</span></div>
             <div id="zoneList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Zone History Chart</h2>
-              <span class="small">decision zone_state에서 재구성</span>
-            </div>
-            <div class="row" style="align-items:center; gap:8px; margin-bottom:10px;">
-              <label style="flex:1; margin:0;">Zone
-                <select id="historyZoneId">
-                  <option value="gh-01-zone-a">gh-01-zone-a</option>
-                </select>
-              </label>
-              <button class="secondary" style="width:auto; margin-top:0;" onclick="refreshZoneHistory()">Refresh</button>
-            </div>
-            <div id="zoneHistoryCharts"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Real-time Decisions</h2>
-              <span class="small">최근 40건</span>
-            </div>
-            <div id="decisionList"></div>
-          </section>
-        </div>
-        <div class="stack">
-          <section>
-            <div class="section-title">
-              <h2>Auth Context</h2>
-              <span class="small">current actor / role</span>
-            </div>
-            <div id="authContext"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Shadow Window</h2>
-              <span class="small">real shadow audit summary</span>
-            </div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h3>Shadow Window</h3><span class="small">real shadow audit summary</span></div>
             <div id="shadowWindow"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Policy Management</h2>
-              <span class="small">admin only</span>
-            </div>
-            <div id="policyList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Alerts</h2>
-              <span class="small">high / critical / unknown / validator</span>
-            </div>
-            <div id="alertList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Robot Tasks</h2>
-              <span class="small">최근 추천된 작업</span>
-            </div>
-            <div id="robotList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Robot Candidates</h2>
-              <span class="small">vision/operator 후보</span>
-            </div>
-            <div id="robotCandidateList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Device Status</h2>
-              <span class="small">zone별 최신 device_status</span>
-            </div>
-            <div id="deviceStatusList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Active Constraints</h2>
-              <span class="small">current zone constraints</span>
-            </div>
-            <div id="activeConstraintsList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Policy Events</h2>
-              <span class="small">blocked / approval escalation</span>
-            </div>
-            <div id="policyEventList"></div>
-          </section>
-          <section>
-            <div class="section-title">
-              <h2>Execution History</h2>
-              <span class="small">최근 dispatch</span>
-            </div>
-            <div id="commandList"></div>
-          </section>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title"><h3>최근 알림</h3><span class="small">high / critical / unknown / validator</span></div>
+            <div id="alertListOverview"></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h3>최근 실행</h3><span class="small">최근 dispatch</span></div>
+            <div id="commandListOverview"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="zones">
+        <div class="card">
+          <div class="section-title">
+            <h3>Zone History Chart</h3>
+            <span class="small">decision zone_state 기반 시계열 · 11개 지표</span>
+          </div>
+          <div class="row" style="align-items:center; gap:8px; margin-bottom:10px;">
+            <label style="flex:1; margin:0;">Zone
+              <select id="historyZoneId">
+                <option value="gh-01-zone-a">gh-01-zone-a</option>
+              </select>
+            </label>
+            <button class="secondary" style="width:auto; margin-top:0;" onclick="refreshZoneHistory()">Refresh</button>
+          </div>
+          <div id="zoneHistoryCharts"></div>
+        </div>
+        <div class="card">
+          <div class="section-title"><h3>Zone Overview</h3><span class="small">전체 존 목록</span></div>
+          <div id="zoneListDetailed"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="decisions">
+        <div class="card">
+          <h3>신규 Decision 요청</h3>
+          <div class="two-col">
+            <div>
+              <label>Zone</label>
+              <input id="zoneId" value="gh-01-zone-a" />
+              <label>Task</label>
+              <select id="taskType">
+                <option value="state_judgement">state_judgement</option>
+                <option value="action_recommendation">action_recommendation</option>
+                <option value="failure_response">failure_response</option>
+                <option value="robot_task_prioritization">robot_task_prioritization</option>
+                <option value="forbidden_action">forbidden_action</option>
+              </select>
+              <label>Growth Stage</label>
+              <input id="growthStage" value="fruiting" />
+            </div>
+            <div>
+              <label>Current State JSON</label>
+              <textarea id="currentState">{ "air_temp_c": 27.5, "rh_pct": 71.0, "substrate_moisture_pct": 54.0, "co2_ppm": 430, "feed_ph": 5.9 }</textarea>
+              <label>Sensor Quality JSON</label>
+              <textarea id="sensorQuality">{ "overall": "good" }</textarea>
+            </div>
+          </div>
+          <div class="row">
+            <button onclick="submitDecision()">Evaluate</button>
+            <button class="secondary" onclick="toggleMode()">모드 전환</button>
+          </div>
+          <p class="small">shadow 모드에서는 운영자가 일치/불일치를 기록하고, approval 모드에서는 승인 후에만 dispatch가 실행됩니다.</p>
+        </div>
+        <div class="card">
+          <div class="section-title"><h3>Real-time Decisions</h3><span class="small">최근 40건</span></div>
+          <div id="decisionList"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="alerts">
+        <div class="card">
+          <div class="section-title"><h3>Alerts</h3><span class="small">high / critical / unknown / validator</span></div>
+          <div id="alertList"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="robot">
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title"><h3>Robot Tasks</h3><span class="small">LLM이 추천한 작업</span></div>
+            <div id="robotList"></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h3>Robot Candidates</h3><span class="small">vision/operator 후보</span></div>
+            <div id="robotCandidateList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="devices">
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title"><h3>Device Status</h3><span class="small">zone별 최신 device_status</span></div>
+            <div id="deviceStatusList"></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h3>Active Constraints</h3><span class="small">현재 활성 제약</span></div>
+            <div id="activeConstraintsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="policies">
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title"><h3>Policy Management</h3><span class="small">admin only · DB live</span></div>
+            <div id="policyList"></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h3>Policy Events</h3><span class="small">blocked / approval escalation</span></div>
+            <div id="policyEventList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="shadow">
+        <div class="card">
+          <div class="section-title"><h3>Shadow Window Summary</h3><span class="small">real shadow audit rolling window</span></div>
+          <div id="shadowWindowDetail"></div>
+        </div>
+        <div class="card">
+          <div class="section-title"><h3>Shadow Review 가이드</h3><span class="small">shadow 모드 decision 카드에서 직접 일치/불일치 기록</span></div>
+          <div class="small">
+            shadow 모드에서는 결정/승인 메뉴의 decision 카드에 <b>일치</b>, <b>불일치</b> 버튼이 노출됩니다.
+            capture 파이프라인은 <code>scripts/push_shadow_cases_to_ops_api.py</code>를 통해 외부에서 주입합니다.
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="system">
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title"><h3>Execution History</h3><span class="small">최근 dispatch</span></div>
+            <div id="commandList"></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><h3>Runtime Info</h3><span class="small">auth / config</span></div>
+            <div id="runtimeInfo"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
   <script>
     async function apiFetch(url, options) {
       const res = await fetch(url, options);
@@ -1763,18 +1843,46 @@ def _dashboard_html() -> str:
       });
       await refreshDashboard();
     }
+    const VIEW_TITLES = {
+      overview: ['대시보드', '전체 운영 현황 요약'],
+      zones: ['존 모니터링', 'Zone 시계열 · 최신 스냅샷'],
+      decisions: ['결정 / 승인', 'LLM 결정 요청과 승인 흐름'],
+      alerts: ['알림', 'validator · risk · policy 알림'],
+      robot: ['로봇', 'Robot Tasks 및 Candidate'],
+      devices: ['장치 / 제약', '장치 상태와 활성 제약'],
+      policies: ['정책 / 이벤트', 'Policy live toggle과 이벤트 로그'],
+      shadow: ['Shadow Mode', 'real shadow window 요약'],
+      system: ['시스템', 'execution history · runtime'],
+    };
+    function showView(name) {
+      const titleEl = document.getElementById('viewTitle');
+      const subEl = document.getElementById('viewSub');
+      const [title, sub] = VIEW_TITLES[name] || VIEW_TITLES.overview;
+      titleEl.textContent = title;
+      subEl.textContent = sub;
+      document.querySelectorAll('.view').forEach(view => {
+        view.classList.toggle('active', view.dataset.view === name);
+      });
+      document.querySelectorAll('#sidebarNav a').forEach(link => {
+        link.classList.toggle('active', link.dataset.view === name);
+      });
+    }
     function renderMetrics(summary) {
       const metrics = [
-        ['Decision', summary.decision_count],
-        ['Approval Pending', summary.approval_pending_count],
-        ['Shadow Review Pending', summary.shadow_review_pending_count],
-        ['Blocked Actions', summary.blocked_action_count],
-        ['Safe Mode', summary.safe_mode_count],
-        ['Operator Disagree', summary.operator_disagreement_count],
-        ['Agreement Rate', summary.operator_agreement_rate ?? 'n/a'],
-        ['Commands', summary.command_count],
-        ['Policy Events', summary.policy_event_count],
-        ['Policy Blocked', summary.policy_blocked_count],
+        ['결정 수', summary.decision_count],
+        ['승인 대기', summary.approval_pending_count],
+        ['Shadow 리뷰 대기', summary.shadow_review_pending_count],
+        ['차단된 결정', summary.blocked_action_count],
+        ['Safe Mode 추천', summary.safe_mode_count],
+        ['Operator 불일치', summary.operator_disagreement_count],
+        ['일치율', summary.operator_agreement_rate ?? 'n/a'],
+        ['실행 명령', summary.command_count],
+        ['Policy Event', summary.policy_event_count],
+        ['Policy Block', summary.policy_blocked_count],
+        ['Alerts', summary.alert_count],
+        ['Robot Task', summary.robot_task_count],
+        ['Robot Candidate', summary.robot_candidate_count ?? 0],
+        ['Policy (enabled/total)', `${(summary.policy_count ?? 0) - (summary.policy_disabled_count ?? 0)}/${summary.policy_count ?? 0}`],
       ];
       document.getElementById('metricGrid').innerHTML = metrics.map(([label, value]) => `
         <div class="metric">
@@ -1784,22 +1892,38 @@ def _dashboard_html() -> str:
       `).join('');
     }
     function renderZones(zones) {
-      document.getElementById('zoneList').innerHTML = zones.map(zone => `
+      const html = (zones || []).map(zone => `
         <div class="zone">
-          <div class="meta">${zone.zone_id} · ${zone.task_type} · ${zone.status}</div>
-          <div><span class="badge ${zone.risk_level === 'critical' ? 'warn' : 'dark'}">${zone.risk_level}</span>${zone.current_state_summary || 'summary 없음'}</div>
-          <div class="small">sensor_quality: ${JSON.stringify(zone.sensor_quality)}</div>
+          <div class="meta">${zone.zone_id} · ${zone.task_type || '-'} · ${zone.status}</div>
+          <div><span class="badge ${zone.risk_level === 'critical' ? 'critical' : (zone.risk_level === 'high' ? 'warn' : 'dark')}">${zone.risk_level || '-'}</span>${zone.current_state_summary || 'summary 없음'}</div>
+          <div class="small">sensor_quality: ${JSON.stringify(zone.sensor_quality || {})}</div>
         </div>
-      `).join('') || '<div>zone snapshot이 없습니다.</div>';
+      `).join('') || '<div class="placeholder">zone snapshot이 없습니다.</div>';
+      const zoneList = document.getElementById('zoneList');
+      if (zoneList) zoneList.innerHTML = html;
+      const zoneDetailed = document.getElementById('zoneListDetailed');
+      if (zoneDetailed) zoneDetailed.innerHTML = html;
     }
     function renderAlerts(items) {
-      document.getElementById('alertList').innerHTML = items.map(item => `
+      const html = (items || []).map(item => `
         <div class="alert">
           <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.alert_type}</div>
-          <div><span class="badge warn">${item.severity}</span>${item.summary || 'summary 없음'}</div>
+          <div><span class="badge ${item.severity === 'critical' ? 'critical' : 'warn'}">${item.severity}</span>${item.summary || 'summary 없음'}</div>
           <div class="small">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
         </div>
-      `).join('') || '<div>alert가 없습니다.</div>';
+      `).join('') || '<div class="placeholder">alert가 없습니다.</div>';
+      const fullList = document.getElementById('alertList');
+      if (fullList) fullList.innerHTML = html;
+      const overviewList = document.getElementById('alertListOverview');
+      if (overviewList) {
+        const topHtml = (items || []).slice(0, 5).map(item => `
+          <div class="alert">
+            <div class="meta">#${item.decision_id} · ${item.zone_id}</div>
+            <div><span class="badge ${item.severity === 'critical' ? 'critical' : 'warn'}">${item.severity}</span>${(item.summary || '').slice(0, 80)}</div>
+          </div>
+        `).join('') || '<div class="placeholder">alert가 없습니다.</div>';
+        overviewList.innerHTML = topHtml;
+      }
     }
     function renderRobotTasks(items) {
       document.getElementById('robotList').innerHTML = items.map(item => `
@@ -1864,30 +1988,66 @@ def _dashboard_html() -> str:
       }).join('');
     }
     function renderShadowWindow(summary) {
-      if (!summary) {
-        document.getElementById('shadowWindow').innerHTML = '<div class="zone">shadow window가 아직 없습니다.</div>';
-        return;
-      }
-      document.getElementById('shadowWindow').innerHTML = `
+      const html = summary ? `
         <div class="zone">
-          <div><span class="badge ${summary.promotion_decision === 'rollback' ? 'warn' : 'dark'}">${summary.promotion_decision}</span></div>
+          <div><span class="badge ${summary.promotion_decision === 'rollback' ? 'critical' : (summary.promotion_decision === 'hold' ? 'warn' : 'dark')}">${summary.promotion_decision}</span></div>
           <div class="small">decision=${summary.decision_count} · agreement=${summary.operator_agreement_rate} · critical_disagreement=${summary.critical_disagreement_count}</div>
           <div class="small">citation=${summary.citation_coverage} · retrieval=${summary.retrieval_hit_rate} · policy_mismatch=${summary.policy_mismatch_count}</div>
           <div class="small">window=${summary.window_start || 'n/a'} ~ ${summary.window_end || 'n/a'}</div>
-        </div>
-      `;
+        </div>` : '<div class="placeholder">shadow window가 아직 없습니다. capture 실행 필요.</div>';
+      const mini = document.getElementById('shadowWindow');
+      if (mini) mini.innerHTML = html;
+      const detail = document.getElementById('shadowWindowDetail');
+      if (detail) {
+        detail.innerHTML = summary ? `
+          <div class="zone">
+            <div class="row" style="margin-bottom:10px;">
+              <div><span class="small">promotion_decision</span><br><span class="badge ${summary.promotion_decision === 'rollback' ? 'critical' : (summary.promotion_decision === 'hold' ? 'warn' : 'dark')}">${summary.promotion_decision}</span></div>
+              <div><span class="small">model_id</span><br>${summary.model_id || 'n/a'}</div>
+              <div><span class="small">prompt_id</span><br>${summary.prompt_id || 'n/a'}</div>
+              <div><span class="small">dataset_id</span><br>${summary.dataset_id || 'n/a'}</div>
+            </div>
+            <div class="row" style="margin-bottom:10px;">
+              <div><span class="small">decision_count</span><br><b>${summary.decision_count}</b></div>
+              <div><span class="small">operator_agreement_rate</span><br><b>${summary.operator_agreement_rate}</b></div>
+              <div><span class="small">critical_disagreement</span><br><b>${summary.critical_disagreement_count}</b></div>
+              <div><span class="small">citation_coverage</span><br><b>${summary.citation_coverage}</b></div>
+            </div>
+            <div class="small">window=${summary.window_start || 'n/a'} ~ ${summary.window_end || 'n/a'}</div>
+            <div class="small">policy_mismatch=${summary.policy_mismatch_count} · retrieval_hit_rate=${summary.retrieval_hit_rate}</div>
+          </div>
+        ` : '<div class="placeholder">shadow window가 아직 없습니다.</div>';
+      }
     }
     function renderAuthContext(actor) {
+      const main = document.getElementById('authContext');
+      const mini = document.getElementById('authContextMini');
       if (!actor) {
-        document.getElementById('authContext').innerHTML = '<div class="zone">actor 정보가 없습니다.</div>';
+        if (main) main.innerHTML = '<div class="small">actor 정보가 없습니다.</div>';
+        if (mini) mini.innerHTML = '';
         return;
       }
-      document.getElementById('authContext').innerHTML = `
-        <div class="zone">
-          <div><span class="badge dark">${actor.role}</span><span class="badge">${actor.auth_mode}</span></div>
-          <div class="small">actor_id=${actor.actor_id}</div>
-        </div>
-      `;
+      if (main) {
+        main.innerHTML = `
+          <div style="text-align:right;">
+            <span class="badge dark">${actor.role}</span><span class="badge">${actor.auth_mode}</span>
+            <div class="small" style="margin-top:4px;">actor_id=${actor.actor_id}</div>
+          </div>
+        `;
+      }
+      if (mini) {
+        mini.innerHTML = `<div>${actor.actor_id} · ${actor.role}</div>`;
+      }
+      const runtimeInfo = document.getElementById('runtimeInfo');
+      if (runtimeInfo) {
+        runtimeInfo.innerHTML = `
+          <div class="zone">
+            <div class="small">actor_id: <b>${actor.actor_id}</b></div>
+            <div class="small">role: <b>${actor.role}</b></div>
+            <div class="small">auth_mode: <b>${actor.auth_mode}</b></div>
+          </div>
+        `;
+      }
     }
     function renderPolicies(items) {
       document.getElementById('policyList').innerHTML = items.map(item => `
@@ -1913,12 +2073,23 @@ def _dashboard_html() -> str:
       `).join('') || '<div>policy event가 없습니다.</div>';
     }
     function renderCommands(items) {
-      document.getElementById('commandList').innerHTML = items.map(item => `
+      const html = (items || []).map(item => `
         <div class="command">
           <div class="meta">#${item.decision_id} · ${item.target_id}</div>
           <div><span class="badge">${item.action_type}</span><span class="badge dark">${item.status}</span></div>
         </div>
-      `).join('') || '<div>dispatch 기록이 없습니다.</div>';
+      `).join('') || '<div class="placeholder">dispatch 기록이 없습니다.</div>';
+      const main = document.getElementById('commandList');
+      if (main) main.innerHTML = html;
+      const overview = document.getElementById('commandListOverview');
+      if (overview) {
+        overview.innerHTML = (items || []).slice(0, 5).map(item => `
+          <div class="command">
+            <div class="meta">#${item.decision_id} · ${item.target_id}</div>
+            <div><span class="badge">${item.action_type}</span><span class="badge dark">${item.status}</span></div>
+          </div>
+        `).join('') || '<div class="placeholder">dispatch 기록이 없습니다.</div>';
+      }
     }
     function renderDecisions(mode, items) {
       const html = items.map(item => `
@@ -2042,6 +2213,17 @@ def _dashboard_html() -> str:
       });
       await refreshDashboard();
     }
+    function setupNav() {
+      document.querySelectorAll('#sidebarNav a').forEach(link => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          showView(link.dataset.view);
+          if (link.dataset.view === 'zones') refreshZoneHistory();
+        });
+      });
+    }
+    setupNav();
+    showView('overview');
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
