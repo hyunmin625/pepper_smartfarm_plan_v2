@@ -9,11 +9,17 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from .api_models import ApprovalRequest, EvaluateZoneRequest, RuntimeModeRequest
+from .api_models import ApprovalRequest, EvaluateZoneRequest, RuntimeModeRequest, ShadowReviewRequest
 from .bootstrap import configure_repo_paths
 from .config import Settings, load_settings
 from .database import build_session_factory, init_db
-from .models import ApprovalRecord, DecisionRecord, DeviceCommandRecord
+from .models import (
+    ApprovalRecord,
+    DecisionRecord,
+    DeviceCommandRecord,
+    OperatorReviewRecord,
+    PolicyEvaluationRecord,
+)
 from .planner import ActionDispatchPlanner
 from .runtime_mode import load_runtime_mode, save_runtime_mode
 
@@ -32,6 +38,204 @@ class AppServices:
     orchestrator: LLMOrchestratorService
     dispatcher: ExecutionDispatcher
     planner: ActionDispatchPlanner
+
+
+def _loads_json(raw: str | None, default: Any) -> Any:
+    if not raw:
+        return default
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return default
+
+
+def _derive_policy_result(validated_output: dict[str, Any], validator_reason_codes: list[str]) -> str:
+    decision = str(validated_output.get("decision") or "")
+    if decision in {"block", "approval_required"}:
+        return decision
+    recommended_actions = validated_output.get("recommended_actions")
+    if isinstance(recommended_actions, list):
+        for action in recommended_actions:
+            if isinstance(action, dict) and bool(action.get("approval_required")):
+                return "approval_required"
+    if any(code.startswith("HSV-") for code in validator_reason_codes):
+        return "block"
+    if validator_reason_codes:
+        return "adjusted"
+    return "pass"
+
+
+def _latest_approval(decision: DecisionRecord) -> ApprovalRecord | None:
+    if not decision.approvals:
+        return None
+    return max(decision.approvals, key=lambda row: row.id)
+
+
+def _latest_shadow_review(decision: DecisionRecord) -> OperatorReviewRecord | None:
+    shadow_reviews = [row for row in decision.operator_reviews if row.review_mode == "shadow_review"]
+    if not shadow_reviews:
+        return None
+    return max(shadow_reviews, key=lambda row: row.id)
+
+
+def _build_decision_item(decision: DecisionRecord) -> dict[str, Any]:
+    validated_output = _loads_json(decision.validated_output_json, {})
+    zone_state = _loads_json(decision.zone_state_json, {})
+    citations = _loads_json(decision.citations_json, [])
+    validator_reason_codes = _loads_json(decision.validator_reason_codes_json, [])
+    latest_approval = _latest_approval(decision)
+    latest_shadow_review = _latest_shadow_review(decision)
+    recommended_actions = validated_output.get("recommended_actions")
+    robot_tasks = validated_output.get("robot_tasks")
+    current_state = zone_state.get("current_state", {})
+    risk_level = str(validated_output.get("risk_level") or "unknown")
+    return {
+        "decision_id": decision.id,
+        "request_id": decision.request_id,
+        "zone_id": decision.zone_id,
+        "task_type": decision.task_type,
+        "runtime_mode": decision.runtime_mode,
+        "status": decision.status,
+        "model_id": decision.model_id,
+        "prompt_version": decision.prompt_version,
+        "validated_output": validated_output,
+        "citations": citations,
+        "validator_reason_codes": validator_reason_codes,
+        "risk_level": risk_level,
+        "recommended_action_types": [
+            str(action.get("action_type") or "")
+            for action in (recommended_actions if isinstance(recommended_actions, list) else [])
+            if isinstance(action, dict)
+        ],
+        "robot_task_types": [
+            str(task.get("task_type") or "")
+            for task in (robot_tasks if isinstance(robot_tasks, list) else [])
+            if isinstance(task, dict)
+        ],
+        "current_state_summary": str(current_state.get("summary") or ""),
+        "sensor_quality": zone_state.get("sensor_quality", {}),
+        "zone_state": zone_state,
+        "latest_approval": None
+        if latest_approval is None
+        else {
+            "approval_status": latest_approval.approval_status,
+            "actor_id": latest_approval.actor_id,
+            "reason": latest_approval.reason,
+            "created_at": latest_approval.created_at.isoformat(),
+        },
+        "latest_shadow_review": None
+        if latest_shadow_review is None
+        else {
+            "agreement_status": latest_shadow_review.agreement_status,
+            "actor_id": latest_shadow_review.actor_id,
+            "note": latest_shadow_review.note,
+            "expected_risk_level": latest_shadow_review.expected_risk_level,
+            "created_at": latest_shadow_review.created_at.isoformat(),
+        },
+        "created_at": decision.created_at.isoformat(),
+    }
+
+
+def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any]:
+    rows = session.execute(select(DecisionRecord).order_by(desc(DecisionRecord.id)).limit(40)).scalars().all()
+    command_rows = session.execute(select(DeviceCommandRecord).order_by(desc(DeviceCommandRecord.id)).limit(30)).scalars().all()
+    decision_items = [_build_decision_item(row) for row in rows]
+    latest_zone_items: dict[str, dict[str, Any]] = {}
+    alerts: list[dict[str, Any]] = []
+    robot_tasks: list[dict[str, Any]] = []
+    approval_pending_count = 0
+    shadow_review_pending_count = 0
+    blocked_action_count = 0
+    safe_mode_count = 0
+    disagreement_count = 0
+
+    for item in decision_items:
+        if item["zone_id"] not in latest_zone_items:
+            latest_zone_items[item["zone_id"]] = {
+                "zone_id": item["zone_id"],
+                "decision_id": item["decision_id"],
+                "task_type": item["task_type"],
+                "status": item["status"],
+                "risk_level": item["risk_level"],
+                "current_state_summary": item["current_state_summary"],
+                "sensor_quality": item["sensor_quality"],
+                "created_at": item["created_at"],
+            }
+
+        if item["runtime_mode"] == "approval" and item["status"] == "evaluated":
+            approval_pending_count += 1
+        if item["runtime_mode"] == "shadow" and item["status"] == "evaluated":
+            shadow_review_pending_count += 1
+        if item["latest_shadow_review"] and item["latest_shadow_review"]["agreement_status"] == "disagree":
+            disagreement_count += 1
+
+        if item["validated_output"].get("decision") == "block":
+            blocked_action_count += 1
+        if "enter_safe_mode" in item["recommended_action_types"]:
+            safe_mode_count += 1
+
+        if item["risk_level"] in {"high", "critical", "unknown"} or item["validator_reason_codes"]:
+            alerts.append(
+                {
+                    "decision_id": item["decision_id"],
+                    "zone_id": item["zone_id"],
+                    "task_type": item["task_type"],
+                    "risk_level": item["risk_level"],
+                    "status": item["status"],
+                    "summary": item["current_state_summary"],
+                    "validator_reason_codes": item["validator_reason_codes"],
+                    "created_at": item["created_at"],
+                }
+            )
+
+        for task_type in item["robot_task_types"]:
+            robot_tasks.append(
+                {
+                    "decision_id": item["decision_id"],
+                    "zone_id": item["zone_id"],
+                    "task_type": task_type,
+                    "risk_level": item["risk_level"],
+                    "created_at": item["created_at"],
+                }
+            )
+
+    agreement_rows = [item for item in decision_items if item["latest_shadow_review"]]
+    agree_count = sum(
+        1
+        for item in agreement_rows
+        if item["latest_shadow_review"] and item["latest_shadow_review"]["agreement_status"] == "agree"
+    )
+    operator_agreement_rate = round(agree_count / len(agreement_rows), 4) if agreement_rows else None
+
+    return {
+        "runtime_mode": mode_state.as_dict(),
+        "summary": {
+            "decision_count": len(decision_items),
+            "approval_pending_count": approval_pending_count,
+            "shadow_review_pending_count": shadow_review_pending_count,
+            "blocked_action_count": blocked_action_count,
+            "safe_mode_count": safe_mode_count,
+            "operator_disagreement_count": disagreement_count,
+            "operator_agreement_rate": operator_agreement_rate,
+            "command_count": len(command_rows),
+        },
+        "zones": list(latest_zone_items.values()),
+        "alerts": alerts[:12],
+        "robot_tasks": robot_tasks[:12],
+        "decisions": decision_items,
+        "commands": [
+            {
+                "id": row.id,
+                "decision_id": row.decision_id,
+                "command_kind": row.command_kind,
+                "target_id": row.target_id,
+                "action_type": row.action_type,
+                "status": row.status,
+                "created_at": row.created_at.isoformat(),
+            }
+            for row in command_rows
+        ],
+    }
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -152,6 +356,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             validator_reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
         )
         session.add(decision)
+        session.flush()
+        session.add(
+            PolicyEvaluationRecord(
+                decision_id=decision.id,
+                policy_source="output_validator",
+                policy_result=_derive_policy_result(result.validated_output, result.validator_reason_codes),
+                reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
+                evaluation_json=json.dumps(
+                    {
+                        "validated_output": result.validated_output,
+                        "state_estimate": state_estimate.as_dict(),
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        )
         session.commit()
         session.refresh(decision)
         return {
@@ -180,8 +400,67 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "runtime_mode": row.runtime_mode,
                     "status": row.status,
                     "model_id": row.model_id,
-                    "validated_output": json.loads(row.validated_output_json),
-                    "citations": json.loads(row.citations_json),
+                    "validated_output": _loads_json(row.validated_output_json, {}),
+                    "citations": _loads_json(row.citations_json, []),
+                    "validator_reason_codes": _loads_json(row.validator_reason_codes_json, []),
+                    "current_state_summary": _loads_json(row.zone_state_json, {}).get("current_state", {}).get("summary", ""),
+                    "created_at": row.created_at.isoformat(),
+                }
+                for row in rows
+            ]
+        }
+
+    @app.post("/shadow/reviews")
+    def create_shadow_review(
+        payload: ShadowReviewRequest,
+        session: Session = Depends(get_session),
+        services=Depends(get_services),
+    ) -> dict[str, Any]:
+        decision = session.get(DecisionRecord, payload.decision_id)
+        if decision is None:
+            raise HTTPException(status_code=404, detail="decision not found")
+        runtime_mode = load_runtime_mode(services.settings.runtime_mode_path)
+        review = OperatorReviewRecord(
+            decision_id=decision.id,
+            actor_id=payload.actor_id,
+            review_mode="shadow_review" if runtime_mode.mode == "shadow" else "posthoc_review",
+            agreement_status=payload.agreement_status,
+            expected_risk_level=payload.expected_risk_level,
+            expected_actions_json=json.dumps(payload.expected_actions, ensure_ascii=False),
+            expected_robot_tasks_json=json.dumps(payload.expected_robot_tasks, ensure_ascii=False),
+            note=payload.note,
+        )
+        session.add(review)
+        if decision.runtime_mode == "shadow" and decision.status == "evaluated":
+            decision.status = (
+                "shadow_reviewed_agree"
+                if payload.agreement_status == "agree"
+                else "shadow_reviewed_disagree"
+            )
+        session.commit()
+        return {
+            "decision_id": decision.id,
+            "review_id": review.id,
+            "agreement_status": payload.agreement_status,
+        }
+
+    @app.get("/shadow/reviews")
+    def list_shadow_reviews(limit: int = 50, session: Session = Depends(get_session)) -> dict[str, Any]:
+        rows = session.execute(
+            select(OperatorReviewRecord).order_by(desc(OperatorReviewRecord.id)).limit(limit)
+        ).scalars().all()
+        return {
+            "items": [
+                {
+                    "review_id": row.id,
+                    "decision_id": row.decision_id,
+                    "actor_id": row.actor_id,
+                    "review_mode": row.review_mode,
+                    "agreement_status": row.agreement_status,
+                    "expected_risk_level": row.expected_risk_level,
+                    "expected_actions": _loads_json(row.expected_actions_json, []),
+                    "expected_robot_tasks": _loads_json(row.expected_robot_tasks_json, []),
+                    "note": row.note,
                     "created_at": row.created_at.isoformat(),
                 }
                 for row in rows
@@ -224,6 +503,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 for row in rows
             ]
         }
+
+    @app.get("/dashboard/data")
+    def dashboard_data(
+        session: Session = Depends(get_session),
+        services=Depends(get_services),
+    ) -> dict[str, Any]:
+        return _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
+
+    @app.get("/alerts")
+    def list_alerts(
+        session: Session = Depends(get_session),
+        services=Depends(get_services),
+    ) -> dict[str, Any]:
+        payload = _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
+        return {"items": payload["alerts"]}
+
+    @app.get("/robot/tasks")
+    def list_robot_tasks(
+        session: Session = Depends(get_session),
+        services=Depends(get_services),
+    ) -> dict[str, Any]:
+        payload = _build_dashboard_payload(session, load_runtime_mode(services.settings.runtime_mode_path))
+        return {"items": payload["robot_tasks"]}
 
     @app.post("/actions/approve")
     def approve_action(
@@ -320,10 +622,10 @@ def _dashboard_html() -> str:
   <meta charset="utf-8" />
   <title>Pepper Smartfarm Approval Dashboard</title>
   <style>
-    :root { --bg:#f4f1e8; --ink:#1d2a1f; --card:#fffdf7; --line:#d8d1c3; --accent:#456b4f; --warn:#8a4a2f; }
+    :root { --bg:#f4f1e8; --ink:#1d2a1f; --card:#fffdf7; --line:#d8d1c3; --accent:#456b4f; --warn:#8a4a2f; --muted:#657d6a; --critical:#7a2f21; }
     body { margin:0; font-family: 'Noto Sans KR', sans-serif; background:linear-gradient(180deg,#f0eadf 0%,#f7f4ec 100%); color:var(--ink); }
     header { padding:24px 28px; border-bottom:1px solid var(--line); background:rgba(255,255,255,0.6); backdrop-filter: blur(8px); }
-    main { display:grid; grid-template-columns: 420px 1fr; gap:20px; padding:20px; }
+    main { display:grid; grid-template-columns: 400px 1fr; gap:20px; padding:20px; }
     .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 8px 30px rgba(44,60,47,0.06); }
     h1,h2,h3 { margin:0 0 12px; }
     label { display:block; font-size:13px; margin:8px 0 4px; color:#4a5b4d; }
@@ -331,12 +633,28 @@ def _dashboard_html() -> str:
     textarea { min-height:120px; resize:vertical; }
     button { background:var(--accent); color:white; cursor:pointer; border:none; margin-top:10px; }
     button.secondary { background:#657d6a; }
+    button.warn { background:var(--warn); }
     .mode { display:inline-block; padding:6px 10px; border-radius:999px; background:#e3ecd9; color:#28523a; font-weight:700; }
+    .grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+    .metric { padding:14px; border-radius:14px; border:1px solid var(--line); background:#faf7ef; }
+    .metric strong { display:block; font-size:24px; margin-top:6px; }
+    .content-grid { display:grid; grid-template-columns: 1.1fr 0.9fr; gap:16px; }
+    .stack { display:grid; gap:16px; }
     .decision { padding:14px; border:1px solid var(--line); border-radius:14px; margin-bottom:12px; }
     .decision pre { white-space:pre-wrap; word-break:break-word; background:#f6f3ea; padding:10px; border-radius:10px; }
     .meta { font-size:12px; color:#5b685e; margin-bottom:8px; }
     .row { display:flex; gap:8px; }
     .row > * { flex:1; }
+    .zone, .alert, .robot, .command { padding:12px; border:1px solid var(--line); border-radius:14px; margin-bottom:10px; background:#fbf8f1; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; background:#eef4e7; color:#28523a; margin-right:6px; }
+    .badge.warn { background:#f7e5db; color:#7a2f21; }
+    .badge.dark { background:#ece8dd; color:#4b544d; }
+    .decision-actions { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px; margin-top:10px; }
+    .section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .small { font-size:12px; color:#5b685e; }
+    @media (max-width: 1200px) {
+      main, .content-grid, .grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -367,24 +685,60 @@ def _dashboard_html() -> str:
         <button onclick="submitDecision()">Evaluate</button>
         <button class="secondary" onclick="toggleMode()">Toggle Mode</button>
       </div>
+      <p class="small">shadow 모드에서는 운영자가 일치/불일치를 기록하고, approval 모드에서는 승인 후에만 dispatch가 실행됩니다.</p>
     </section>
     <section class="card">
-      <h2>Real-time Decisions</h2>
-      <div id="decisionList"></div>
+      <div class="grid" id="metricGrid"></div>
+      <div class="content-grid">
+        <div class="stack">
+          <section>
+            <div class="section-title">
+              <h2>Zone Overview</h2>
+              <span class="small">latest by zone</span>
+            </div>
+            <div id="zoneList"></div>
+          </section>
+          <section>
+            <div class="section-title">
+              <h2>Real-time Decisions</h2>
+              <span class="small">최근 40건</span>
+            </div>
+            <div id="decisionList"></div>
+          </section>
+        </div>
+        <div class="stack">
+          <section>
+            <div class="section-title">
+              <h2>Alerts</h2>
+              <span class="small">high / critical / unknown / validator</span>
+            </div>
+            <div id="alertList"></div>
+          </section>
+          <section>
+            <div class="section-title">
+              <h2>Robot Tasks</h2>
+              <span class="small">최근 추천된 작업</span>
+            </div>
+            <div id="robotList"></div>
+          </section>
+          <section>
+            <div class="section-title">
+              <h2>Execution History</h2>
+              <span class="small">최근 dispatch</span>
+            </div>
+            <div id="commandList"></div>
+          </section>
+        </div>
+      </div>
     </section>
   </main>
   <script>
-    async function loadMode() {
-      const res = await fetch('/runtime/mode');
-      const data = await res.json();
-      document.getElementById('modeBadge').textContent = data.mode;
-    }
     async function toggleMode() {
       const res = await fetch('/runtime/mode');
       const current = await res.json();
       const next = current.mode === 'shadow' ? 'approval' : 'shadow';
       await fetch('/runtime/mode', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ mode: next, actor_id:'dashboard', reason:'dashboard toggle'}) });
-      await loadMode();
+      await refreshDashboard();
     }
     async function submitDecision() {
       const body = {
@@ -396,35 +750,124 @@ def _dashboard_html() -> str:
         sensor_quality: JSON.parse(document.getElementById('sensorQuality').value),
       };
       await fetch('/decisions/evaluate-zone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      await refreshDecisions();
+      await refreshDashboard();
     }
     async function approve(decisionId) {
-      await fetch('/actions/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason:'dashboard approve'}) });
-      await refreshDecisions();
+      const reason = window.prompt('승인 사유를 입력하세요.', 'dashboard approve') || '';
+      await fetch('/actions/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
+      await refreshDashboard();
     }
     async function reject(decisionId) {
-      await fetch('/actions/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason:'dashboard reject'}) });
-      await refreshDecisions();
+      const reason = window.prompt('거절 사유를 입력하세요.', 'dashboard reject') || '';
+      await fetch('/actions/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
+      await refreshDashboard();
     }
-    async function refreshDecisions() {
-      const res = await fetch('/decisions?limit=20');
-      const data = await res.json();
-      const html = data.items.map(item => `
+    async function review(decisionId, agreementStatus) {
+      const note = window.prompt(agreementStatus === 'agree' ? '일치 메모를 입력하세요.' : '불일치 원인을 입력하세요.', '') || '';
+      await fetch('/shadow/reviews', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          decision_id: decisionId,
+          actor_id:'dashboard-operator',
+          agreement_status: agreementStatus,
+          note
+        })
+      });
+      await refreshDashboard();
+    }
+    function renderMetrics(summary) {
+      const metrics = [
+        ['Decision', summary.decision_count],
+        ['Approval Pending', summary.approval_pending_count],
+        ['Shadow Review Pending', summary.shadow_review_pending_count],
+        ['Blocked Actions', summary.blocked_action_count],
+        ['Safe Mode', summary.safe_mode_count],
+        ['Operator Disagree', summary.operator_disagreement_count],
+        ['Agreement Rate', summary.operator_agreement_rate ?? 'n/a'],
+        ['Commands', summary.command_count],
+      ];
+      document.getElementById('metricGrid').innerHTML = metrics.map(([label, value]) => `
+        <div class="metric">
+          <div class="small">${label}</div>
+          <strong>${value}</strong>
+        </div>
+      `).join('');
+    }
+    function renderZones(zones) {
+      document.getElementById('zoneList').innerHTML = zones.map(zone => `
+        <div class="zone">
+          <div class="meta">${zone.zone_id} · ${zone.task_type} · ${zone.status}</div>
+          <div><span class="badge ${zone.risk_level === 'critical' ? 'warn' : 'dark'}">${zone.risk_level}</span>${zone.current_state_summary || 'summary 없음'}</div>
+          <div class="small">sensor_quality: ${JSON.stringify(zone.sensor_quality)}</div>
+        </div>
+      `).join('') || '<div>zone snapshot이 없습니다.</div>';
+    }
+    function renderAlerts(items) {
+      document.getElementById('alertList').innerHTML = items.map(item => `
+        <div class="alert">
+          <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.task_type}</div>
+          <div><span class="badge warn">${item.risk_level}</span>${item.summary || 'summary 없음'}</div>
+          <div class="small">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
+        </div>
+      `).join('') || '<div>alert가 없습니다.</div>';
+    }
+    function renderRobotTasks(items) {
+      document.getElementById('robotList').innerHTML = items.map(item => `
+        <div class="robot">
+          <div class="meta">#${item.decision_id} · ${item.zone_id}</div>
+          <div><span class="badge">${item.task_type}</span><span class="badge dark">${item.risk_level}</span></div>
+        </div>
+      `).join('') || '<div>robot task가 없습니다.</div>';
+    }
+    function renderCommands(items) {
+      document.getElementById('commandList').innerHTML = items.map(item => `
+        <div class="command">
+          <div class="meta">#${item.decision_id} · ${item.target_id}</div>
+          <div><span class="badge">${item.action_type}</span><span class="badge dark">${item.status}</span></div>
+        </div>
+      `).join('') || '<div>dispatch 기록이 없습니다.</div>';
+    }
+    function renderDecisions(mode, items) {
+      const html = items.map(item => `
         <div class="decision">
           <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.task_type} · ${item.status}</div>
+          <div class="meta">risk=${item.risk_level || 'unknown'} · model=${item.model_id} · prompt=${item.prompt_version}</div>
+          <div class="meta">summary: ${item.current_state_summary || 'none'}</div>
           <pre>${JSON.stringify(item.validated_output, null, 2)}</pre>
-          <div class="meta">citations: ${item.citations.map(c => c.chunk_id).join(', ') || 'none'}</div>
-          <div class="row">
-            <button onclick="approve(${item.decision_id})">승인</button>
-            <button class="secondary" onclick="reject(${item.decision_id})">거절</button>
+          <div class="meta">citations: ${(item.citations || []).map(c => c.chunk_id).join(', ') || 'none'}</div>
+          <div class="meta">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
+          <div class="decision-actions">
+            ${mode === 'approval' && item.runtime_mode === 'approval' && item.status === 'evaluated' ? `
+              <button onclick="approve(${item.decision_id})">승인</button>
+              <button class="secondary" onclick="reject(${item.decision_id})">거절</button>
+            ` : ''}
+            ${mode === 'shadow' && item.runtime_mode === 'shadow' && item.status === 'evaluated' ? `
+              <button onclick="review(${item.decision_id}, 'agree')">일치</button>
+              <button class="warn" onclick="review(${item.decision_id}, 'disagree')">불일치</button>
+            ` : ''}
+          </div>
+          <div class="small">
+            approval=${item.latest_approval ? item.latest_approval.approval_status : 'none'}
+            · shadow_review=${item.latest_shadow_review ? item.latest_shadow_review.agreement_status : 'none'}
           </div>
         </div>
       `).join('');
       document.getElementById('decisionList').innerHTML = html || '<div>아직 decision이 없습니다.</div>';
-      await loadMode();
     }
-    refreshDecisions();
-    setInterval(refreshDecisions, 5000);
+    async function refreshDashboard() {
+      const res = await fetch('/dashboard/data');
+      const data = await res.json();
+      document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
+      renderMetrics(data.summary);
+      renderZones(data.zones);
+      renderAlerts(data.alerts);
+      renderRobotTasks(data.robot_tasks);
+      renderCommands(data.commands);
+      renderDecisions(data.runtime_mode.mode, data.decisions);
+    }
+    refreshDashboard();
+    setInterval(refreshDashboard, 5000);
   </script>
 </body>
 </html>"""

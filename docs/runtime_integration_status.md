@@ -48,28 +48,40 @@
   - `GET /zones/{zone_id}/state`
   - `POST /actions/approve`
   - `POST /actions/reject`
+  - `POST /shadow/reviews`
+  - `GET /shadow/reviews`
   - `GET /actions/history`
   - `GET/POST /runtime/mode`
   - `GET /dashboard`
+  - `GET /dashboard/data`
+  - `GET /alerts`
+  - `GET /robot/tasks`
 - `ops-api/ops_api/models.py`
   - `decisions`
   - `approvals`
   - `device_commands`
+  - `policy_evaluations`
+  - `operator_reviews`
 - `infra/postgres/001_initial_schema.sql`
   - PostgreSQL DDL
 
 ### 4. Approval UI
 
 - `ops-api/ops_api/app.py`의 `/dashboard`
+  - zone overview 카드
   - decision log 표시
-  - citations 표시
+  - citations / validator reason 표시
+  - alert / robot task / execution history 패널
   - runtime mode toggle
+  - shadow agree / disagree 버튼
   - approve / reject 버튼
+  - note prompt 기반 운영 메모
 
 ### 5. Shadow -> Approval Mode 경로
 
 - runtime mode 저장: `artifacts/runtime/ops_api/runtime_mode.json`
 - shadow mode: decision 생성과 저장만 수행
+- shadow review: 운영자가 AI 추천과 실제 판단의 일치/불일치를 기록
 - approval mode: 승인된 action만 planner를 거쳐 `execution-gateway`로 전달
 - 현재 dispatch backend는 `mock PLC adapter`
 
@@ -87,7 +99,7 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 
 - OpenAI 실호출 경로는 구현했지만, 이 환경에서는 실제 네트워크 호출 검증을 하지 않았다.
 - `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL까지만 준비했다.
-- auth / role / alerts / policy management / robot task endpoint는 아직 미구현이다.
+- auth / role / policy management 전용 화면, real sensor 시계열 차트는 아직 미구현이다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 
 ## 다음 우선순위

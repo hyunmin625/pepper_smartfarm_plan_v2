@@ -904,7 +904,7 @@
 ## 13.4 감사 체계
 - [x] decision trace 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] source state 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
-- [ ] policy evaluation 결과 저장
+- [x] policy evaluation 결과 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] final execution 결과 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [ ] operator override 저장
 - [x] approval action 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
@@ -915,12 +915,12 @@
 # 14. 프론트엔드/운영 대시보드
 
 ## 14.1 기본 화면 정의
-- [ ] zone overview 화면 설계
+- [x] zone overview 화면 설계 (`ops-api/ops_api/app.py`)
 - [ ] real-time sensor 화면 설계
 - [x] decision 로그 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] action 승인 화면 설계 (`ops-api/ops_api/app.py`)
-- [ ] alert 화면 설계
-- [ ] robot task 화면 설계
+- [x] alert 화면 설계 (`ops-api/ops_api/app.py`)
+- [x] robot task 화면 설계 (`ops-api/ops_api/app.py`)
 - [ ] policy 관리 화면 설계
 
 ## 14.2 시각화
@@ -929,15 +929,15 @@
 - [ ] 함수율/EC/pH 시계열 차트
 - [ ] 장치 상태 카드
 - [ ] 현재 제약 조건 카드
-- [ ] 최근 결정 카드
-- [ ] blocked/rejected 명령 리스트
+- [x] 최근 결정 카드 (`ops-api/ops_api/app.py`)
+- [x] blocked/rejected 명령 리스트 (`ops-api/ops_api/app.py`)
 - [ ] robot candidate 리스트
 
 ## 14.3 운영 기능
 - [ ] 수동 명령 입력 UI
 - [x] 자동/수동 모드 전환 UI (`ops-api/ops_api/app.py`)
 - [x] 승인/거절 UI (`ops-api/ops_api/app.py`)
-- [ ] 주석/운영 메모 UI
+- [x] 주석/운영 메모 UI (`ops-api/ops_api/app.py`)
 - [ ] 문제 사례 태깅 UI
 
 ---
@@ -1124,7 +1124,7 @@
 ## 20.1 Shadow Mode
 - [x] LLM은 추천만 생성 (`ops-api/ops_api/app.py`, `llm-orchestrator/llm_orchestrator/runtime.py`)
 - [x] 실제 장치 제어 없음 (`ops-api/ops_api/app.py`)
-- [ ] 운영자 수동 비교 검토
+- [x] 운영자 수동 비교 검토 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] 추천 적합도 기록 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/build_shadow_mode_report.py`)
 - [x] 오판 사례 수집 (`scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py`)
 

@@ -27,6 +27,16 @@ class ApprovalRequest(BaseModel):
     reason: str = ""
 
 
+class ShadowReviewRequest(BaseModel):
+    decision_id: int
+    actor_id: str
+    agreement_status: Literal["agree", "disagree"]
+    note: str = ""
+    expected_risk_level: str | None = None
+    expected_actions: list[str] = Field(default_factory=list)
+    expected_robot_tasks: list[str] = Field(default_factory=list)
+
+
 class RuntimeModeRequest(BaseModel):
     mode: Literal["shadow", "approval"]
     actor_id: str = "operator"

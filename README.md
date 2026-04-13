@@ -92,7 +92,9 @@
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
 - `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, stress score를 `feature_schema.json` 형태로 계산한다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
-- `ops-api/ops_api/app.py`를 추가해 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard`, `GET/POST /runtime/mode`를 제공하는 FastAPI backend skeleton을 만들었다.
+- `ops-api/ops_api/app.py`를 추가해 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET/POST /runtime/mode`를 제공하는 FastAPI backend를 만들었다.
+- 운영 대시보드는 `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow review`, `approve/reject`를 한 화면으로 묶는다.
+- `ops-api`는 `policy_evaluations`, `operator_reviews`를 별도 저장해 shadow→approval 전환에 필요한 운영자 검토와 validator 결과를 같이 남긴다.
 - PostgreSQL DDL도 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)로 고정했고, 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10`이며, 모두 safety/failure 오판을 직접 겨냥한다.
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 1.0`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.

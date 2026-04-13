@@ -36,6 +36,8 @@ class DecisionRecord(Base):
 
     approvals: Mapped[list["ApprovalRecord"]] = relationship(back_populates="decision")
     device_commands: Mapped[list["DeviceCommandRecord"]] = relationship(back_populates="decision")
+    policy_evaluations: Mapped[list["PolicyEvaluationRecord"]] = relationship(back_populates="decision")
+    operator_reviews: Mapped[list["OperatorReviewRecord"]] = relationship(back_populates="decision")
 
 
 class ApprovalRecord(Base):
@@ -66,3 +68,34 @@ class DeviceCommandRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     decision: Mapped[DecisionRecord] = relationship(back_populates="device_commands")
+
+
+class PolicyEvaluationRecord(Base):
+    __tablename__ = "policy_evaluations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    decision_id: Mapped[int] = mapped_column(ForeignKey("decisions.id"), index=True)
+    policy_source: Mapped[str] = mapped_column(String(64))
+    policy_result: Mapped[str] = mapped_column(String(32))
+    reason_codes_json: Mapped[str] = mapped_column(Text)
+    evaluation_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    decision: Mapped[DecisionRecord] = relationship(back_populates="policy_evaluations")
+
+
+class OperatorReviewRecord(Base):
+    __tablename__ = "operator_reviews"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    decision_id: Mapped[int] = mapped_column(ForeignKey("decisions.id"), index=True)
+    actor_id: Mapped[str] = mapped_column(String(128))
+    review_mode: Mapped[str] = mapped_column(String(32))
+    agreement_status: Mapped[str] = mapped_column(String(32))
+    expected_risk_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    expected_actions_json: Mapped[str] = mapped_column(Text)
+    expected_robot_tasks_json: Mapped[str] = mapped_column(Text)
+    note: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    decision: Mapped[DecisionRecord] = relationship(back_populates="operator_reviews")

@@ -19,9 +19,15 @@ sys.path.insert(0, str(REPO_ROOT / "policy-engine"))
 
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from llm_orchestrator import OrchestratorRequest  # noqa: E402
-from ops_api.app import create_app  # noqa: E402
+from ops_api.app import _build_dashboard_payload, create_app  # noqa: E402
 from ops_api.config import load_settings  # noqa: E402
-from ops_api.models import ApprovalRecord, DecisionRecord, DeviceCommandRecord  # noqa: E402
+from ops_api.models import (  # noqa: E402
+    ApprovalRecord,
+    DecisionRecord,
+    DeviceCommandRecord,
+    OperatorReviewRecord,
+    PolicyEvaluationRecord,
+)
 from ops_api.runtime_mode import load_runtime_mode, save_runtime_mode  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
 
@@ -39,14 +45,19 @@ def main() -> int:
         app = create_app(load_settings())
         services = app.state.services
         routes = {route.path for route in app.router.routes}
-        for expected_route in {
+        expected_routes = {
             "/runtime/mode",
             "/decisions/evaluate-zone",
             "/actions/approve",
             "/actions/reject",
             "/actions/history",
             "/dashboard",
-        }:
+            "/dashboard/data",
+            "/alerts",
+            "/robot/tasks",
+            "/shadow/reviews",
+        }
+        for expected_route in expected_routes:
             if expected_route not in routes:
                 errors.append(f"missing route {expected_route}")
 
@@ -118,6 +129,36 @@ def main() -> int:
                 approval_payload_json=json.dumps({"decision_id": decision.id}, ensure_ascii=False),
             )
             session.add(approval)
+            session.add(
+                PolicyEvaluationRecord(
+                    decision_id=decision.id,
+                    policy_source="output_validator",
+                    policy_result="approval_required",
+                    reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
+                    evaluation_json=json.dumps(
+                        {
+                            "validated_output": result.validated_output,
+                            "state_estimate": state_estimate.as_dict(),
+                        },
+                        ensure_ascii=False,
+                    ),
+                )
+            )
+            session.add(
+                OperatorReviewRecord(
+                    decision_id=decision.id,
+                    actor_id="operator-01",
+                    review_mode="shadow_review",
+                    agreement_status="agree",
+                    expected_risk_level=result.validated_output.get("risk_level"),
+                    expected_actions_json=json.dumps(
+                        [action.get("action_type") for action in result.validated_output.get("recommended_actions", []) if isinstance(action, dict)],
+                        ensure_ascii=False,
+                    ),
+                    expected_robot_tasks_json=json.dumps([], ensure_ascii=False),
+                    note="integration shadow review",
+                )
+            )
 
             plans = services.planner.plan(
                 decision_id=decision.id,
@@ -156,29 +197,44 @@ def main() -> int:
             decision_count = session.query(DecisionRecord).count()
             approval_count = session.query(ApprovalRecord).count()
             command_count = session.query(DeviceCommandRecord).count()
+            policy_count = session.query(PolicyEvaluationRecord).count()
+            review_count = session.query(OperatorReviewRecord).count()
             if decision_count != 1:
                 errors.append(f"expected 1 decision row, found {decision_count}")
             if approval_count != 1:
                 errors.append(f"expected 1 approval row, found {approval_count}")
             if command_count < 1:
                 errors.append("expected at least 1 device command row")
+            if policy_count != 1:
+                errors.append(f"expected 1 policy evaluation row, found {policy_count}")
+            if review_count != 1:
+                errors.append(f"expected 1 operator review row, found {review_count}")
+
+            dashboard_payload = _build_dashboard_payload(
+                session,
+                load_runtime_mode(services.settings.runtime_mode_path),
+            )
+            if dashboard_payload["summary"]["decision_count"] != 1:
+                errors.append("dashboard decision count mismatch")
+            if dashboard_payload["summary"]["command_count"] < 1:
+                errors.append("dashboard command count mismatch")
+            if dashboard_payload["summary"]["operator_agreement_rate"] != 1.0:
+                errors.append("dashboard operator agreement rate mismatch")
+            if len(dashboard_payload["zones"]) != 1:
+                errors.append("dashboard zone overview mismatch")
 
             print(
                 json.dumps(
                     {
                         "errors": errors,
-                        "registered_routes": sorted(expected for expected in routes if expected in {
-                            "/runtime/mode",
-                            "/decisions/evaluate-zone",
-                            "/actions/approve",
-                            "/actions/reject",
-                            "/actions/history",
-                            "/dashboard",
-                        }),
+                        "registered_routes": sorted(expected for expected in routes if expected in expected_routes),
                         "runtime_mode": runtime_mode.as_dict(),
                         "decision_count": decision_count,
                         "approval_count": approval_count,
                         "command_count": command_count,
+                        "policy_count": policy_count,
+                        "review_count": review_count,
+                        "dashboard_summary": dashboard_payload["summary"],
                         "dispatch_statuses": dispatch_statuses,
                     },
                     ensure_ascii=False,

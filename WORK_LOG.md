@@ -4,6 +4,12 @@
 
 ## 2026-04-13
 
+### 운영 대시보드 + shadow review/approval UI 확장
+- `ops-api/ops_api/models.py`에 `PolicyEvaluationRecord`, `OperatorReviewRecord`를 추가하고, `infra/postgres/001_initial_schema.sql`도 같은 기준으로 확장했다.
+- `ops-api/ops_api/app.py`는 `POST /shadow/reviews`, `GET /shadow/reviews`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`를 추가했다. `evaluate-zone`에서는 validator 결과를 `policy_evaluations`에 저장하고, `shadow` 모드 운영자 비교 검토는 `operator_reviews`에 저장한다.
+- `/dashboard` 화면도 다시 구성했다. `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow agree/disagree`, `approve/reject`가 한 화면에서 동작한다.
+- `python3 scripts/validate_ops_api_flow.py`, `python3 scripts/validate_llm_orchestrator_service.py`, `python3 -m py_compile ops-api/ops_api/*.py scripts/validate_ops_api_flow.py`를 다시 실행했고 오류 `0`을 확인했다.
+
 ### ds_v15 batch20 hard-case challenger dry-run package 준비
 - `python3 scripts/build_openai_sft_datasets.py --system-prompt-version sft_v10 --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --oversample-task-type safety_policy=5 --oversample-task-type failure_response=5 --oversample-task-type sensor_fault=5 --oversample-task-type robot_task_prioritization=3 --train-output artifacts/fine_tuning/openai_sft_train_prompt_v10_validator_aligned_batch20_hardcase.jsonl --validation-output artifacts/fine_tuning/openai_sft_validation_prompt_v10_validator_aligned_batch20_hardcase.jsonl`로 batch20 live head 기준 `ds_v15` dry-run package를 생성했다.
 - 결과는 source training `360`, train `855`, validation `61`, eval overlap `0`이다. oversampling summary는 `safety_policy 49 -> 245`, `failure_response 43 -> 215`, `sensor_fault 23 -> 115`, `robot_task_prioritization 48 -> 144`다.

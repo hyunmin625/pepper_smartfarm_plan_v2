@@ -51,7 +51,8 @@
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 reject한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
 - `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, stress score를 `feature_schema.json` 형태로 계산한다.
-- `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands` 저장 경로, `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard`, `GET/POST /runtime/mode`까지 연결했다.
+- `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands`, `policy_evaluations`, `operator_reviews` 저장 경로와 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET/POST /runtime/mode`까지 연결했다.
+- `/dashboard`는 `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow agree/disagree`, `approve/reject`를 한 화면으로 묶는다.
 - 로컬에서는 `SQLite + mock PLC adapter`로 end-to-end approval flow를 검증했고, 검증 스크립트는 `scripts/validate_state_estimator_features.py`, `scripts/validate_llm_orchestrator_service.py`, `scripts/validate_ops_api_flow.py`다.
 - batch15 hard-case `10건`과 `docs/hard_case_oversampling_plan.md`를 추가했다. 후속 challenger가 필요할 때만 `safety_policy=5`, `failure_response=5`, `sensor_fault=5`, `robot_task_prioritization=3`의 train-only oversampling을 검토한다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/communication loss 10`이며 모두 safety/failure 오판을 직접 겨냥한다.
