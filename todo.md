@@ -23,6 +23,7 @@
 - [Execution Gateway Command Contract](docs/execution_gateway_command_contract.md)
 - [Execution Gateway Override Contract](docs/execution_gateway_override_contract.md)
 - [Execution Gateway Flow](docs/execution_gateway_flow.md)
+- [System Schema Design](docs/system_schema_design.md)
 - [Site Scope Baseline](docs/site_scope_baseline.md)
 - [Seasonal Operation Ranges](docs/seasonal_operation_ranges.md)
 - [Sensor Model Shortlist](docs/sensor_model_shortlist.md)
@@ -465,50 +466,50 @@
 # 4. 시스템 스키마 설계
 
 ## 4.1 공통 도메인 모델
-- [ ] Zone 모델 정의
-- [ ] Sensor 모델 정의
-- [ ] Device 모델 정의
-- [ ] Constraint 모델 정의
-- [ ] Decision 모델 정의
-- [ ] Action 모델 정의
-- [ ] RobotCandidate 모델 정의
-- [ ] RobotTask 모델 정의
+- [x] Zone 모델 정의 (`schemas/domain_models_schema.json`, `ops-api/ops_api/models.py`)
+- [x] Sensor 모델 정의 (`schemas/domain_models_schema.json`, `ops-api/ops_api/models.py`)
+- [x] Device 모델 정의 (`schemas/domain_models_schema.json`, `ops-api/ops_api/models.py`)
+- [x] Constraint 모델 정의 (`schemas/domain_models_schema.json`, `schemas/state_schema.json`)
+- [x] Decision 모델 정의 (`schemas/decision_schema.json`, `ops-api/ops_api/models.py`)
+- [x] Action 모델 정의 (`schemas/action_schema.json`, `docs/system_schema_design.md`)
+- [x] RobotCandidate 모델 정의 (`schemas/domain_models_schema.json`, `ops-api/ops_api/models.py`)
+- [x] RobotTask 모델 정의 (`schemas/domain_models_schema.json`, `schemas/action_schema.json`, `ops-api/ops_api/models.py`)
 
 ## 4.2 상태 스키마 설계
-- [ ] current_state 필드 목록 확정
-- [ ] derived_features 필드 목록 확정
-- [ ] device_status 필드 목록 확정
-- [ ] constraints 필드 목록 확정
-- [ ] sensor_quality 필드 목록 확정
-- [ ] weather_context 필드 목록 확정
-- [ ] growth_stage 필드 목록 확정
-- [ ] enum 값 정리
-- [ ] JSON schema 작성
-- [ ] 예제 payload 작성
+- [x] current_state 필드 목록 확정 (`schemas/state_schema.json`, `docs/system_schema_design.md`)
+- [x] derived_features 필드 목록 확정 (`schemas/feature_schema.json`, `docs/system_schema_design.md`)
+- [x] device_status 필드 목록 확정 (`schemas/state_schema.json`, `data/examples/zone_state_payload_samples.jsonl`)
+- [x] constraints 필드 목록 확정 (`schemas/state_schema.json`, `schemas/domain_models_schema.json`)
+- [x] sensor_quality 필드 목록 확정 (`schemas/sensor_quality_schema.json`, `docs/system_schema_design.md`)
+- [x] weather_context 필드 목록 확정 (`docs/system_schema_design.md`, `schemas/state_schema.json`)
+- [x] growth_stage 필드 목록 확정 (`schemas/state_schema.json`)
+- [x] enum 값 정리 (`schemas/state_schema.json`, `schemas/feature_schema.json`, `schemas/sensor_quality_schema.json`)
+- [x] JSON schema 작성 (`schemas/state_schema.json`, `scripts/validate_zone_state_payloads.py`)
+- [x] 예제 payload 작성 (`data/examples/zone_state_payload_samples.jsonl`)
 
 ## 4.3 액션 스키마 설계
-- [ ] action_type 목록 확정
-- [ ] 장치별 parameter schema 설계
-- [ ] irrigation schema 설계
-- [ ] shade schema 설계
-- [ ] vent schema 설계
-- [ ] fan schema 설계
-- [ ] heating schema 설계
-- [ ] co2 schema 설계
-- [ ] robot task schema 설계
-- [ ] follow_up schema 설계
-- [ ] decision schema 작성
+- [x] action_type 목록 확정 (`schemas/action_schema.json`, `docs/system_schema_design.md`)
+- [x] 장치별 parameter schema 설계 (`docs/device_command_mapping_matrix.md`, `schemas/device_command_request_schema.json`)
+- [x] irrigation schema 설계 (`schemas/action_schema.json`, `docs/device_command_mapping_matrix.md`)
+- [x] shade schema 설계 (`schemas/action_schema.json`, `docs/device_command_mapping_matrix.md`)
+- [x] vent schema 설계 (`schemas/action_schema.json`, `docs/device_command_mapping_matrix.md`)
+- [x] fan schema 설계 (`schemas/action_schema.json`, `docs/device_command_mapping_matrix.md`)
+- [x] heating schema 설계 (`schemas/action_schema.json`, `docs/device_command_mapping_matrix.md`)
+- [x] co2 schema 설계 (`schemas/action_schema.json`, `docs/device_command_mapping_matrix.md`)
+- [x] robot task schema 설계 (`schemas/action_schema.json`, `schemas/domain_models_schema.json`)
+- [x] follow_up schema 설계 (`schemas/action_schema.json`)
+- [x] decision schema 작성 (`schemas/decision_schema.json`, `data/examples/decision_payload_samples.jsonl`, `scripts/validate_decision_payloads.py`)
 
 ## 4.4 이벤트 스키마 설계
-- [ ] sensor.snapshot.updated schema
-- [ ] zone.state.updated schema
-- [ ] action.requested schema
-- [ ] action.blocked schema
-- [ ] action.executed schema
-- [ ] robot.task.created schema
-- [ ] robot.task.failed schema
-- [ ] alert.created schema
-- [ ] approval.requested schema
+- [x] sensor.snapshot.updated schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] zone.state.updated schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] action.requested schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] action.blocked schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] action.executed schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] robot.task.created schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] robot.task.failed schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] alert.created schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`)
+- [x] approval.requested schema (`schemas/system_event_schema.json`, `data/examples/system_event_samples.jsonl`, `scripts/validate_system_events.py`)
 
 ---
 

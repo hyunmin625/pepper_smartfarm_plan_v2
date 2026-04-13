@@ -90,7 +90,7 @@
 - `python3 scripts/validate_system_events.py`
 - `python3 scripts/validate_device_command_requests.py`
 - `python3 scripts/validate_control_override_requests.py`
-- `rg "TODO|TBD" README.md PROJECT_STATUS.md AI_MLOPS_PLAN.md schedule.md todo.md docs/system_schema_design.md`
+- `rg -n "미정|보류" README.md PROJECT_STATUS.md AI_MLOPS_PLAN.md schedule.md todo.md docs/system_schema_design.md`
 
 ## 7. Completion Mapping
 
