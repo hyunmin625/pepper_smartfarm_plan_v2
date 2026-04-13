@@ -161,6 +161,22 @@ class PolicyEvaluationRecord(Base):
     decision: Mapped[DecisionRecord] = relationship(back_populates="policy_evaluations")
 
 
+class PolicyEventRecord(Base):
+    __tablename__ = "policy_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    decision_id: Mapped[int | None] = mapped_column(ForeignKey("decisions.id"), index=True, nullable=True)
+    request_id: Mapped[str] = mapped_column(String(128), index=True)
+    event_type: Mapped[str] = mapped_column(String(32), index=True)
+    policy_result: Mapped[str] = mapped_column(String(32), index=True)
+    policy_ids_json: Mapped[str] = mapped_column(Text)
+    reason_codes_json: Mapped[str] = mapped_column(Text)
+    payload_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    decision: Mapped[DecisionRecord | None] = relationship()
+
+
 class OperatorReviewRecord(Base):
     __tablename__ = "operator_reviews"
 

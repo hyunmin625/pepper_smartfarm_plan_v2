@@ -35,6 +35,7 @@ from .models import (
     DeviceRecord,
     DeviceCommandRecord,
     OperatorReviewRecord,
+    PolicyEventRecord,
     PolicyEvaluationRecord,
     PolicyRecord,
     RobotCandidateRecord,
@@ -256,6 +257,20 @@ def _serialize_alert(row: AlertRecord) -> dict[str, Any]:
     }
 
 
+def _serialize_policy_event(row: PolicyEventRecord) -> dict[str, Any]:
+    return {
+        "event_id": row.id,
+        "decision_id": row.decision_id,
+        "request_id": row.request_id,
+        "event_type": row.event_type,
+        "policy_result": row.policy_result,
+        "policy_ids": _loads_json(row.policy_ids_json, []),
+        "reason_codes": _loads_json(row.reason_codes_json, []),
+        "payload": _loads_json(row.payload_json, {}),
+        "created_at": row.created_at.isoformat(),
+    }
+
+
 def _serialize_robot_task(row: RobotTaskRecord) -> dict[str, Any]:
     return {
         "task_id": row.id,
@@ -389,11 +404,13 @@ def _execute_decision_dispatch(
     session: Session,
 ) -> list[dict[str, Any]]:
     validated_output = json.loads(decision.validated_output_json)
+    zone_state = json.loads(decision.zone_state_json)
     plans = services.planner.plan(
         decision_id=decision.id,
         request_id=decision.request_id,
         zone_id=decision.zone_id,
         validated_output=validated_output,
+        zone_state=zone_state,
         actor_id=actor_id,
     )
     dispatch_results: list[dict[str, Any]] = []
@@ -416,6 +433,25 @@ def _execute_decision_dispatch(
                 adapter_result_json=json.dumps(dispatch_result, ensure_ascii=False),
             )
         )
+        policy_event = dispatch_result.get("policy_event")
+        if isinstance(policy_event, dict):
+            session.add(
+                PolicyEventRecord(
+                    decision_id=decision.id,
+                    request_id=str(policy_event.get("request_id") or decision.request_id),
+                    event_type=str(policy_event.get("event_type") or "policy_event"),
+                    policy_result=str(policy_event.get("policy_result") or "pass"),
+                    policy_ids_json=json.dumps(policy_event.get("policy_ids", []), ensure_ascii=False),
+                    reason_codes_json=json.dumps(policy_event.get("reason_codes", []), ensure_ascii=False),
+                    payload_json=json.dumps(
+                        {
+                            "dispatch_request": plan.payload,
+                            "dispatch_result": dispatch_result,
+                        },
+                        ensure_ascii=False,
+                    ),
+                )
+            )
     decision.status = "approved_executed"
     return dispatch_results
 
@@ -427,6 +463,7 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
     alert_rows = session.execute(select(AlertRecord).order_by(desc(AlertRecord.id)).limit(30)).scalars().all()
     robot_rows = session.execute(select(RobotTaskRecord).order_by(desc(RobotTaskRecord.id)).limit(30)).scalars().all()
     policy_rows = session.execute(select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)).scalars().all()
+    policy_event_rows = session.execute(select(PolicyEventRecord).order_by(desc(PolicyEventRecord.id)).limit(30)).scalars().all()
     decision_items = [_build_decision_item(row) for row in rows]
     latest_zone_items: dict[str, dict[str, Any]] = {
         zone.zone_id: {
@@ -499,10 +536,14 @@ def _build_dashboard_payload(session: Session, mode_state: Any) -> dict[str, Any
             "robot_task_count": len(robot_rows),
             "policy_count": len(policy_rows),
             "policy_disabled_count": sum(1 for row in policy_rows if not row.enabled),
+            "policy_event_count": len(policy_event_rows),
+            "policy_blocked_count": sum(1 for row in policy_event_rows if row.event_type == "blocked"),
+            "policy_approval_count": sum(1 for row in policy_event_rows if row.event_type == "approval_required"),
         },
         "shadow_window": shadow_window_summary,
         "zones": list(latest_zone_items.values()),
         "policies": [_serialize_policy(row) for row in policy_rows],
+        "policy_events": [_serialize_policy_event(row) for row in policy_event_rows[:12]],
         "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
         "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
         "decisions": decision_items,
@@ -872,6 +913,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             stmt = stmt.where(PolicyRecord.enabled.is_(True))
         rows = session.execute(stmt).scalars().all()
         return _ok({"items": [_serialize_policy(row) for row in rows]}, actor=actor, meta={"enabled_only": enabled_only})
+
+    @app.get(
+        "/policies/events",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_policy_events(
+        limit: int = 50,
+        event_type: str | None = None,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        stmt = select(PolicyEventRecord).order_by(desc(PolicyEventRecord.id)).limit(limit)
+        if event_type:
+            stmt = stmt.where(PolicyEventRecord.event_type == event_type)
+        rows = session.execute(stmt).scalars().all()
+        return _ok(
+            {"items": [_serialize_policy_event(row) for row in rows]},
+            actor=actor,
+            meta={"limit": limit, "event_type": event_type},
+        )
 
     @app.post(
         "/policies/{policy_id}",
@@ -1437,6 +1500,13 @@ def _dashboard_html() -> str:
           </section>
           <section>
             <div class="section-title">
+              <h2>Policy Events</h2>
+              <span class="small">blocked / approval escalation</span>
+            </div>
+            <div id="policyEventList"></div>
+          </section>
+          <section>
+            <div class="section-title">
               <h2>Execution History</h2>
               <span class="small">최근 dispatch</span>
             </div>
@@ -1508,6 +1578,8 @@ def _dashboard_html() -> str:
         ['Operator Disagree', summary.operator_disagreement_count],
         ['Agreement Rate', summary.operator_agreement_rate ?? 'n/a'],
         ['Commands', summary.command_count],
+        ['Policy Events', summary.policy_event_count],
+        ['Policy Blocked', summary.policy_blocked_count],
       ];
       document.getElementById('metricGrid').innerHTML = metrics.map(([label, value]) => `
         <div class="metric">
@@ -1582,6 +1654,16 @@ def _dashboard_html() -> str:
         </div>
       `).join('') || '<div>policy가 없습니다.</div>';
     }
+    function renderPolicyEvents(items) {
+      document.getElementById('policyEventList').innerHTML = items.map(item => `
+        <div class="zone">
+          <div class="meta">${item.request_id} · decision=${item.decision_id || 'none'}</div>
+          <div><span class="badge ${item.event_type === 'blocked' ? 'warn' : 'dark'}">${item.event_type}</span><span class="badge dark">${item.policy_result}</span></div>
+          <div class="small">policy_ids: ${(item.policy_ids || []).join(', ') || 'none'}</div>
+          <div class="small">reasons: ${(item.reason_codes || []).join(', ') || 'none'}</div>
+        </div>
+      `).join('') || '<div>policy event가 없습니다.</div>';
+    }
     function renderCommands(items) {
       document.getElementById('commandList').innerHTML = items.map(item => `
         <div class="command">
@@ -1626,6 +1708,7 @@ def _dashboard_html() -> str:
       renderZones(data.zones);
       renderShadowWindow(data.shadow_window);
       renderPolicies(data.policies || []);
+      renderPolicyEvents(data.policy_events || []);
       renderAlerts(data.alerts);
       renderRobotTasks(data.robot_tasks);
       renderCommands(data.commands);

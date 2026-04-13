@@ -201,6 +201,14 @@ def main() -> int:
                         errors.append("dashboard summary missing policy count")
                     if dashboard.get("actor", {}).get("role") != "admin":
                         errors.append("dashboard actor envelope missing admin role")
+
+                    _, policy_events = _request_json(
+                        f"{base_url}/policies/events",
+                        headers={"X-Actor-Id": "admin-01", "X-Actor-Role": "admin"},
+                    )
+                    observations["policy_events_response"] = policy_events
+                    if not isinstance(policy_events.get("data", {}).get("items", []), list):
+                        errors.append("policies/events did not return item list envelope")
         finally:
             process.terminate()
             try:

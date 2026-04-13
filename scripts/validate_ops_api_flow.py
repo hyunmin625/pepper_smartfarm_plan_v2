@@ -17,9 +17,8 @@ sys.path.insert(0, str(REPO_ROOT / "execution-gateway"))
 sys.path.insert(0, str(REPO_ROOT / "llm-orchestrator"))
 sys.path.insert(0, str(REPO_ROOT / "policy-engine"))
 
-from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from llm_orchestrator import OrchestratorRequest  # noqa: E402
-from ops_api.app import _build_dashboard_payload, create_app  # noqa: E402
+from ops_api.app import _build_dashboard_payload, _execute_decision_dispatch, create_app  # noqa: E402
 from ops_api.config import load_settings  # noqa: E402
 from ops_api.models import (  # noqa: E402
     ApprovalRecord,
@@ -28,6 +27,7 @@ from ops_api.models import (  # noqa: E402
     DeviceRecord,
     DeviceCommandRecord,
     OperatorReviewRecord,
+    PolicyEventRecord,
     PolicyEvaluationRecord,
     PolicyRecord,
     RobotTaskRecord,
@@ -61,6 +61,7 @@ def main() -> int:
             "/sensors",
             "/devices",
             "/policies",
+            "/policies/events",
             "/policies/{policy_id}",
             "/actions/approve",
             "/actions/execute",
@@ -101,9 +102,14 @@ def main() -> int:
         }
         state_estimate = estimate_zone_state(snapshot)
         zone_state = build_zone_state_payload(snapshot)
-        zone_state["active_constraints"] = {}
+        zone_state["active_constraints"] = {
+            "irrigation_path_degraded": True,
+            "rootzone_sensor_conflict": True,
+        }
         zone_state["state_estimate"] = state_estimate.as_dict()
         zone_state["current_state"]["summary"] = "fruiting heat and humidity review"
+        zone_state["current_state"]["irrigation_path_degraded"] = True
+        zone_state["current_state"]["rootzone_sensor_conflict"] = True
 
         result = services.orchestrator.evaluate(
             OrchestratorRequest(
@@ -117,6 +123,22 @@ def main() -> int:
 
         session = services.session_factory()
         try:
+            validated_output = dict(result.validated_output)
+            validated_output["recommended_actions"] = [
+                {
+                    "action_id": "ops-api-validate-short-irrigation",
+                    "action_type": "short_irrigation",
+                    "approval_required": False,
+                    "target": {"target_type": "zone", "target_id": "gh-01-zone-a"},
+                },
+                {
+                    "action_id": "ops-api-validate-adjust-fertigation",
+                    "action_type": "adjust_fertigation",
+                    "approval_required": False,
+                    "target": {"target_type": "zone", "target_id": "gh-01-zone-a"},
+                },
+            ]
+
             zone_count = session.query(ZoneRecord).count()
             sensor_count = session.query(SensorRecord).count()
             device_count = session.query(DeviceRecord).count()
@@ -140,9 +162,9 @@ def main() -> int:
                 prompt_version="sft_v10",
                 raw_output_json=json.dumps({"raw_text": result.raw_text}, ensure_ascii=False),
                 parsed_output_json=json.dumps(result.parsed_output, ensure_ascii=False),
-                validated_output_json=json.dumps(result.validated_output, ensure_ascii=False),
+                validated_output_json=json.dumps(validated_output, ensure_ascii=False),
                 zone_state_json=json.dumps(zone_state, ensure_ascii=False),
-                citations_json=json.dumps(result.validated_output.get("citations", []), ensure_ascii=False),
+                citations_json=json.dumps(validated_output.get("citations", []), ensure_ascii=False),
                 retrieval_context_json=json.dumps([chunk.as_prompt_dict() for chunk in result.retrieval_chunks], ensure_ascii=False),
                 audit_path=result.audit_path,
                 validator_reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
@@ -167,7 +189,7 @@ def main() -> int:
                     reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
                     evaluation_json=json.dumps(
                         {
-                            "validated_output": result.validated_output,
+                            "validated_output": validated_output,
                             "state_estimate": state_estimate.as_dict(),
                         },
                         ensure_ascii=False,
@@ -181,8 +203,8 @@ def main() -> int:
                     review_mode="shadow_review",
                     agreement_status="agree",
                     expected_risk_level=result.validated_output.get("risk_level"),
-                    expected_actions_json=json.dumps(
-                        [action.get("action_type") for action in result.validated_output.get("recommended_actions", []) if isinstance(action, dict)],
+                expected_actions_json=json.dumps(
+                        [action.get("action_type") for action in validated_output.get("recommended_actions", []) if isinstance(action, dict)],
                         ensure_ascii=False,
                     ),
                     expected_robot_tasks_json=json.dumps([], ensure_ascii=False),
@@ -198,7 +220,7 @@ def main() -> int:
                     status="open",
                     summary=result.validated_output.get("situation_summary", "integration alert"),
                     validator_reason_codes_json=json.dumps(result.validator_reason_codes, ensure_ascii=False),
-                    payload_json=json.dumps(result.validated_output, ensure_ascii=False),
+                payload_json=json.dumps(validated_output, ensure_ascii=False),
                 )
             )
             session.add(
@@ -219,44 +241,23 @@ def main() -> int:
                 )
             )
 
-            plans = services.planner.plan(
-                decision_id=decision.id,
-                request_id=decision.request_id,
-                zone_id=decision.zone_id,
-                validated_output=json.loads(decision.validated_output_json),
+            dispatch_results = _execute_decision_dispatch(
+                decision=decision,
                 actor_id="operator-01",
+                services=services,
+                session=session,
             )
-            if not plans:
-                errors.append("planner should generate at least one dispatch plan")
+            dispatch_statuses = [str(item.get("status") or "unknown") for item in dispatch_results]
+            if not dispatch_results:
+                errors.append("dispatch should generate at least one execution result")
 
-            dispatch_statuses: list[str] = []
-            for plan in plans:
-                if plan.kind == "device_command":
-                    dispatch_result = services.dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(plan.payload)).as_dict()
-                elif plan.kind == "control_override":
-                    dispatch_result = services.dispatcher.dispatch_control_override(ControlOverrideRequest.from_dict(plan.payload)).as_dict()
-                else:
-                    dispatch_result = {"status": "logged_only"}
-                dispatch_statuses.append(str(dispatch_result.get("status") or "unknown"))
-                session.add(
-                    DeviceCommandRecord(
-                        decision_id=decision.id,
-                        command_kind=plan.kind,
-                        target_id=plan.target_id,
-                        action_type=plan.action_type,
-                        status=str(dispatch_result.get("status") or "unknown"),
-                        payload_json=json.dumps(plan.payload, ensure_ascii=False),
-                        adapter_result_json=json.dumps(dispatch_result, ensure_ascii=False),
-                    )
-                )
-
-            decision.status = "approved_executed"
             session.commit()
 
             decision_count = session.query(DecisionRecord).count()
             approval_count = session.query(ApprovalRecord).count()
             command_count = session.query(DeviceCommandRecord).count()
             policy_count = session.query(PolicyEvaluationRecord).count()
+            policy_event_count = session.query(PolicyEventRecord).count()
             review_count = session.query(OperatorReviewRecord).count()
             alert_count = session.query(AlertRecord).count()
             robot_task_count = session.query(RobotTaskRecord).count()
@@ -268,6 +269,8 @@ def main() -> int:
                 errors.append("expected at least 1 device command row")
             if policy_count != 1:
                 errors.append(f"expected 1 policy evaluation row, found {policy_count}")
+            if policy_event_count < 2:
+                errors.append(f"expected at least 2 policy event rows, found {policy_event_count}")
             if review_count != 1:
                 errors.append(f"expected 1 operator review row, found {review_count}")
             if alert_count != 1:
@@ -291,6 +294,10 @@ def main() -> int:
                 errors.append("dashboard alert count mismatch")
             if dashboard_payload["summary"]["robot_task_count"] < 1:
                 errors.append("dashboard robot task count mismatch")
+            if dashboard_payload["summary"]["policy_event_count"] < 2:
+                errors.append("dashboard policy event count mismatch")
+            if dashboard_payload["summary"]["policy_blocked_count"] < 1:
+                errors.append("dashboard policy blocked count mismatch")
 
             print(
                 json.dumps(
@@ -302,6 +309,7 @@ def main() -> int:
                         "approval_count": approval_count,
                         "command_count": command_count,
                         "policy_count": policy_count,
+                        "policy_event_count": policy_event_count,
                         "review_count": review_count,
                         "alert_count": alert_count,
                         "robot_task_count": robot_task_count,

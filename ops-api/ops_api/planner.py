@@ -23,6 +23,21 @@ DEVICE_TYPE_BY_ACTION = {
     "adjust_fertigation": "nutrient_mixer",
 }
 
+POLICY_FLAG_FIELDS = (
+    "worker_present",
+    "manual_override_active",
+    "safe_mode_active",
+    "estop_active",
+    "irrigation_path_degraded",
+    "source_water_path_degraded",
+    "dry_room_path_degraded",
+    "climate_control_degraded",
+    "rootzone_sensor_conflict",
+    "zone_clearance_uncertain",
+    "aisle_slip_hazard",
+    "sensor_quality_blocked",
+)
+
 
 @dataclass(frozen=True)
 class PlannedDispatch:
@@ -45,9 +60,11 @@ class ActionDispatchPlanner:
         request_id: str,
         zone_id: str,
         validated_output: dict[str, Any],
+        zone_state: dict[str, Any] | None,
         actor_id: str,
     ) -> list[PlannedDispatch]:
         plans: list[PlannedDispatch] = []
+        dispatch_context = self._build_dispatch_context(zone_state)
         actions = validated_output.get("recommended_actions")
         if not isinstance(actions, list):
             return plans
@@ -91,6 +108,7 @@ class ActionDispatchPlanner:
                 device_id=device_id,
                 action_type=action_type,
                 approval_required=bool(action.get("approval_required", False)),
+                dispatch_context=dispatch_context,
             )
             plans.append(
                 PlannedDispatch(
@@ -118,8 +136,9 @@ class ActionDispatchPlanner:
         device_id: str,
         action_type: str,
         approval_required: bool,
+        dispatch_context: dict[str, Any],
     ) -> dict[str, Any]:
-        return {
+        payload = {
             "request_id": request_id,
             "device_id": device_id,
             "action_type": action_type,
@@ -141,6 +160,8 @@ class ActionDispatchPlanner:
             },
             "sensor_quality": {"overall": "good"},
         }
+        payload.update(dispatch_context)
+        return payload
 
     @staticmethod
     def _build_override_request(
@@ -183,6 +204,75 @@ class ActionDispatchPlanner:
                 "policy_ids": ["api-approval-mode"],
             },
         }
+
+    @classmethod
+    def _build_dispatch_context(cls, zone_state: dict[str, Any] | None) -> dict[str, Any]:
+        if not isinstance(zone_state, dict):
+            return {}
+
+        current_state = zone_state.get("current_state")
+        current_state = current_state if isinstance(current_state, dict) else {}
+        sensor_quality = zone_state.get("sensor_quality")
+        sensor_quality = sensor_quality if isinstance(sensor_quality, dict) else {"overall": "good"}
+
+        active_constraints = cls._coerce_constraint_flags(zone_state.get("active_constraints"))
+        policy_flags = set(active_constraints)
+
+        if bool(current_state.get("worker_present")) or bool(current_state.get("operator_present")):
+            policy_flags.add("worker_present")
+        if bool(current_state.get("manual_override")):
+            policy_flags.add("manual_override_active")
+        if bool(current_state.get("safe_mode")):
+            policy_flags.add("safe_mode_active")
+        if bool(current_state.get("estop_active")):
+            policy_flags.add("estop_active")
+
+        for flag_name in POLICY_FLAG_FIELDS:
+            if bool(current_state.get(flag_name)) or flag_name in active_constraints:
+                policy_flags.add(flag_name)
+
+        if sensor_quality.get("overall") == "bad" or sensor_quality.get("automation_gate") == "blocked":
+            policy_flags.add("sensor_quality_blocked")
+
+        dispatch_context: dict[str, Any] = {
+            "operator_context": {
+                "operator_present": "worker_present" in policy_flags,
+                "manual_override": "manual_override_active" in policy_flags,
+                "estop_active": "estop_active" in policy_flags,
+            },
+            "sensor_quality": sensor_quality,
+            "active_constraints": sorted(policy_flags),
+            "policy_flags": sorted(policy_flags),
+            "worker_present": "worker_present" in policy_flags,
+            "manual_override_active": "manual_override_active" in policy_flags,
+            "safe_mode_active": "safe_mode_active" in policy_flags,
+            "estop_active": "estop_active" in policy_flags,
+        }
+        for flag_name in POLICY_FLAG_FIELDS:
+            if flag_name in {"worker_present", "manual_override_active", "safe_mode_active", "estop_active"}:
+                continue
+            if flag_name in policy_flags:
+                dispatch_context[flag_name] = True
+        return dispatch_context
+
+    @staticmethod
+    def _coerce_constraint_flags(raw_constraints: Any) -> set[str]:
+        flags: set[str] = set()
+        if isinstance(raw_constraints, dict):
+            for key, value in raw_constraints.items():
+                if not isinstance(key, str) or not key.strip():
+                    continue
+                if value is True:
+                    flags.add(key.strip())
+                elif isinstance(value, str) and value.lower() in {"true", "active", "required", "yes"}:
+                    flags.add(key.strip())
+        elif isinstance(raw_constraints, list):
+            for item in raw_constraints:
+                if isinstance(item, str) and item.strip():
+                    flags.add(item.strip())
+        elif isinstance(raw_constraints, str) and raw_constraints.strip():
+            flags.add(raw_constraints.strip())
+        return flags
 
 
 def _default_parameters(action_type: str) -> dict[str, Any]:

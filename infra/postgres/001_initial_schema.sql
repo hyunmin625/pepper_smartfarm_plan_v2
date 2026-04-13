@@ -142,6 +142,21 @@ CREATE TABLE IF NOT EXISTS policy_evaluations (
 CREATE INDEX IF NOT EXISTS idx_policy_evaluations_decision_id ON policy_evaluations(decision_id);
 CREATE INDEX IF NOT EXISTS idx_policy_evaluations_created_at ON policy_evaluations(created_at);
 
+CREATE TABLE IF NOT EXISTS policy_events (
+    id BIGSERIAL PRIMARY KEY,
+    decision_id BIGINT REFERENCES decisions(id) ON DELETE SET NULL,
+    request_id VARCHAR(128) NOT NULL,
+    event_type VARCHAR(32) NOT NULL,
+    policy_result VARCHAR(32) NOT NULL,
+    policy_ids_json JSONB NOT NULL,
+    reason_codes_json JSONB NOT NULL,
+    payload_json JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_policy_events_decision_id ON policy_events(decision_id);
+CREATE INDEX IF NOT EXISTS idx_policy_events_event_type_created_at ON policy_events(event_type, created_at);
+
 CREATE TABLE IF NOT EXISTS operator_reviews (
     id BIGSERIAL PRIMARY KEY,
     decision_id BIGINT NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,

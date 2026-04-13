@@ -669,8 +669,8 @@
 - [ ] state constraint evaluator 작성
 - [ ] robot constraint evaluator 작성
 - [ ] explanation builder 작성
-- [ ] blocked action event 발행
-- [ ] requires approval event 발행
+- [x] blocked action event 발행 (`execution-gateway/execution_gateway/dispatch.py`, `ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`, `scripts/validate_ops_api_flow.py`)
+- [x] requires approval event 발행 (`execution-gateway/execution_gateway/dispatch.py`, `ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`, `scripts/validate_ops_api_flow.py`)
 
 ## 8.4 기본 정책 등록
 - [ ] 야간 관수 제한 정책 등록
@@ -879,7 +879,7 @@
 - [ ] decision log 포맷 정의
 - [ ] command log 포맷 정의
 - [ ] robot log 포맷 정의
-- [ ] policy block log 포맷 정의
+- [x] policy block log 포맷 정의 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`, `execution-gateway/execution_gateway/dispatch.py`)
 - [ ] sensor anomaly log 포맷 정의
 
 ## 13.2 메트릭 설계
@@ -887,7 +887,7 @@
 - [ ] stale sensor count
 - [ ] decision latency
 - [ ] malformed response count
-- [ ] blocked action count
+- [x] blocked action count (`ops-api/ops_api/app.py`, `scripts/validate_ops_api_flow.py`)
 - [ ] approval pending count
 - [ ] command success rate
 - [ ] robot task success rate

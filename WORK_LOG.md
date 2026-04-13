@@ -4,6 +4,14 @@
 
 ## 2026-04-13
 
+### policy event persistence + dashboard wiring 완료
+- `ops-api/ops_api/models.py`와 `infra/postgres/001_initial_schema.sql`에 `policy_events` 저장 모델/테이블을 추가해 `blocked / approval_required` dispatch event를 decision과 분리해 저장할 수 있게 했다.
+- `execution-gateway/execution_gateway/dispatch.py`는 이제 preflight 결과에서 `policy_event`를 만들고 audit row에 함께 남긴다. `blocked`와 `approval_required`를 request id, policy ids, reason code와 함께 보존한다.
+- `ops-api/ops_api/planner.py`는 `zone_state.current_state`, `active_constraints`, `sensor_quality`를 dispatch request raw payload로 다시 전파한다. 따라서 approval dispatch 경로에서도 `HSV-04`, `HSV-09` 같은 precheck가 실제로 다시 발동한다.
+- `ops-api/ops_api/app.py`는 dispatch 결과의 `policy_event`를 `PolicyEventRecord`로 저장하고, `GET /policies/events`와 dashboard summary에서 `policy_event_count`, `policy_blocked_count`, `policy_approval_count`를 노출한다.
+- `scripts/validate_ops_api_flow.py`를 실제 `_execute_decision_dispatch()` 경로 기준으로 바꿔 `policy_event_count 2`, `policy_blocked_count 2`, `errors 0`을 확인했다.
+- `scripts/validate_ops_api_server_smoke.py`도 `GET /policies/events` route까지 포함해 `errors 0`으로 다시 통과했다.
+
 ### policy-engine loader + execution precheck 연결
 - `policy-engine/policy_engine/loader.py`를 추가해 enabled policy catalog를 stage 기준으로 읽는 loader를 만들었다.
 - `policy-engine/policy_engine/precheck.py`를 추가해 dispatch 직전 `DeviceCommandRequest.raw`와 `policy_snapshot`을 다시 읽고 `blocked / approval_required / pass`를 재계산하는 precheck evaluator를 구현했다.

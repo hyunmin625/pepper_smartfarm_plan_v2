@@ -77,6 +77,7 @@ class DispatchResult:
     reasons: list[str]
     normalized: dict[str, Any]
     preflight: dict[str, Any]
+    policy_event: dict[str, Any] | None = None
     adapter_result: dict[str, Any] | None = None
     state_transition: dict[str, Any] | None = None
 
@@ -89,6 +90,7 @@ class DispatchResult:
             "reasons": self.reasons,
             "normalized": self.normalized,
             "preflight": self.preflight,
+            "policy_event": self.policy_event,
             "adapter_result": self.adapter_result,
             "state_transition": self.state_transition,
         }
@@ -176,6 +178,7 @@ class ExecutionDispatcher:
             reasons=preflight.reasons,
             normalized=normalized.__dict__,
             preflight=preflight.__dict__,
+            policy_event=self._build_policy_event(preflight, request.request_id),
             adapter_result=adapter_result,
             state_transition=state_transition,
         )
@@ -204,6 +207,7 @@ class ExecutionDispatcher:
             reasons=preflight.reasons,
             normalized=normalized.__dict__,
             preflight=preflight.__dict__,
+            policy_event=self._build_policy_event(preflight, request.request_id),
             state_transition=state_transition,
         )
         self._audit(result)
@@ -255,6 +259,19 @@ class ExecutionDispatcher:
         if not transitions:
             return None
         return {"runtime_safe_mode_transitions": transitions}
+
+    @staticmethod
+    def _build_policy_event(preflight: PreflightDecision, request_id: str) -> dict[str, Any] | None:
+        if preflight.policy_result == "pass" and not any(reason.startswith("policy_precheck:") for reason in preflight.reasons):
+            return None
+        event_type = "blocked" if preflight.policy_result == "blocked" else "approval_required"
+        return {
+            "request_id": request_id,
+            "event_type": event_type,
+            "policy_result": preflight.policy_result,
+            "policy_ids": list(preflight.policy_ids),
+            "reason_codes": [reason for reason in preflight.reasons if reason.startswith("policy_")],
+        }
 
     @staticmethod
     def _extend_preflight(preflight: PreflightDecision, extra_reasons: list[str]) -> PreflightDecision:

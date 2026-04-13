@@ -52,7 +52,7 @@
 - `execution-gateway/execution_gateway/guards.py`에 hard-coded safety interlock을 추가했다. `worker_present`, `manual_override`, `safe_mode`, `estop`, `sensor_quality blocked`는 LLM 출력과 무관하게 execution-gateway에서 다시 reject한다.
 - `state-estimator/state_estimator/estimator.py` MVP를 추가했다. `sensor_quality`가 `bad/stale/missing/flatline/communication_loss`면 기본적으로 `risk_level=unknown`, `pause_automation + request_human_check`로 올린다.
 - `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 1분/5분 평균, 10분/30분 변화율, 관수 후 회복률, 배액률, climate/rootzone stress score를 `feature_schema.json` 형태로 계산하고, raw sensor/device row를 zone snapshot으로 올리는 loader와 feature validator도 함께 제공한다.
-- `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands`, `policy_evaluations`, `operator_reviews` 저장 경로와 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET/POST /runtime/mode`까지 연결했다.
+- `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands`, `policy_evaluations`, `policy_events`, `operator_reviews` 저장 경로와 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET /policies/events`, `GET/POST /runtime/mode`까지 연결했다.
 - `ops-api/ops_api/auth.py`와 `ops-api/ops_api/api_models.py`를 추가/확장해 `disabled/header_token` 인증, `viewer/operator/service/admin` 역할 권한, 공통 `ApiResponse/ErrorResponse` envelope를 고정했다.
 - `scripts/validate_ops_api_auth.py`를 추가해 auth/role 검증도 로컬에서 닫았다.
 - `scripts/validate_ops_api_schema_models.py`, `scripts/validate_ops_api_error_responses.py`를 추가해 request/response schema와 표준 error envelope도 로컬에서 닫았다.
@@ -327,7 +327,7 @@
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
-11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. `real localhost server smoke`, `sensor-ingestor -> state-estimator raw snapshot bridge`, `ops-api shadow case capture/window summary`, `OpenAI online smoke`, `dashboard auth/policy management`, `policy-engine loader/precheck`까지 통과했다. 현재 우선순위는 `real shadow log 누적`, `real PostgreSQL smoke`, `real sensor chart`, `policy source abstraction/event logging`다.
+11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. `real localhost server smoke`, `sensor-ingestor -> state-estimator raw snapshot bridge`, `ops-api shadow case capture/window summary`, `OpenAI online smoke`, `dashboard auth/policy management`, `policy-engine loader/precheck`, `policy event persistence`까지 통과했다. 현재 우선순위는 `real shadow log 누적`, `real PostgreSQL smoke`, `real sensor chart`, `policy source versioning/UI`다.
 
 ## 주의할 점
 
