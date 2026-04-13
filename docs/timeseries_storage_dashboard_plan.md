@@ -64,3 +64,9 @@ sensor-ingestor
 - `TimescaleDB vs InfluxDB` 선택 논쟁은 종료한다.
 - 새 시계열 스키마와 dashboard 설계는 `TimescaleDB + Grafana + 통합관제 웹 임베드` 전제에서만 진행한다.
 - 이후 문서에서 `InfluxDB`는 비교 배경이나 대안 설명 외 기본 계획으로 다시 열지 않는다.
+
+## 8. 연결 문서
+
+- `docs/timescaledb_schema_design.md`
+- `docs/grafana_integration_design.md`
+- `infra/grafana/README.md`

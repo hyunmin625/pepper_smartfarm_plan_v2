@@ -539,11 +539,11 @@
 
 ## 5.3 시계열 저장소
 - [x] TimescaleDB vs InfluxDB 결정 (`docs/timeseries_storage_dashboard_plan.md`)
-- [ ] sensor_readings hypertable 스키마 작성
-- [ ] zone_state_snapshots 스키마 작성
-- [ ] retention policy 작성
-- [ ] downsampling 정책 작성
-- [ ] 압축 정책 작성
+- [x] sensor_readings hypertable 스키마 작성 (`docs/timescaledb_schema_design.md`)
+- [x] zone_state_snapshots 스키마 작성 (`docs/timescaledb_schema_design.md`)
+- [x] retention policy 작성 (`docs/timescaledb_schema_design.md`)
+- [x] downsampling 정책 작성 (`docs/timescaledb_schema_design.md`)
+- [x] 압축 정책 작성 (`docs/timescaledb_schema_design.md`)
 
 ## 5.4 마이그레이션/시드
 - [ ] migration 초기화
@@ -957,10 +957,10 @@
 - [x] 문제 사례 태깅 UI (`ops-api/ops_api/app.py` `flagCase()` JS → `POST /shadow/reviews` with `flag:` prefix, `scripts/validate_ops_api_dashboard_section14.py` operator_review 회귀)
 
 ## 14.4 Grafana 통합
-- [ ] TimescaleDB datasource provisioning 설계 (`docs/timeseries_storage_dashboard_plan.md`)
-- [ ] Grafana dashboard/panel JSON 버전관리 구조 설계 (`docs/timeseries_storage_dashboard_plan.md`)
-- [ ] `/dashboard` 존 모니터링 뷰에 Grafana panel embed 설계 (`docs/timeseries_storage_dashboard_plan.md`)
-- [ ] 통합관제 role/auth와 Grafana read-only 접근 정책 정리 (`docs/timeseries_storage_dashboard_plan.md`)
+- [x] TimescaleDB datasource provisioning 설계 (`docs/grafana_integration_design.md`, `infra/grafana/README.md`)
+- [x] Grafana dashboard/panel JSON 버전관리 구조 설계 (`docs/grafana_integration_design.md`, `infra/grafana/README.md`)
+- [x] `/dashboard` 존 모니터링 뷰에 Grafana panel embed 설계 (`docs/grafana_integration_design.md`)
+- [x] 통합관제 role/auth와 Grafana read-only 접근 정책 정리 (`docs/grafana_integration_design.md`)
 
 ---
 

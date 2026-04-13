@@ -164,5 +164,5 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 
 1. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
 2. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
-3. `TimescaleDB + Grafana` 기반 real sensor 시계열 차트와 zone history를 스마트팜 통합관제 dashboard에 추가
+3. `TimescaleDB` actual writer와 `Grafana` panel embed를 구현해 real sensor 시계열 차트와 zone history를 스마트팜 통합관제 dashboard에 연결
 4. `policy-engine` source versioning과 정책 편집 폼 UI를 추가
