@@ -964,8 +964,12 @@
 
 ## 14.5 Native Realtime SSE + uPlot 구현
 - [x] 결정 문서: Grafana 임베드 supersede + 초단위 실시간 SSE/uPlot 아키텍처 고정 (`docs/native_realtime_dashboard_plan.md`)
-- [ ] `infra/postgres/002_timescaledb_sensor_readings.sql`: extension + `sensor_readings`/`zone_state_snapshots` hypertable + index + retention/compression policy + `zone_metric_5m`/`zone_metric_30m` continuous aggregate (`docs/timescaledb_schema_design.md` 기준)
-- [ ] sensor-ingestor TimescaleDB writer 경로: adapter normalized record를 `sensor_readings`로 insert + asyncio.Queue in-process pubsub broadcast (`sensor-ingestor/sensor_ingestor/runtime.py`, `adapters.py`)
+- [x] `infra/postgres/002_timescaledb_sensor_readings.sql`: extension + `sensor_readings`/`zone_state_snapshots` hypertable + index + retention/compression policy + `zone_metric_5m`/`zone_metric_30m` continuous aggregate (`docs/timescaledb_schema_design.md` 기준)
+- [x] `ops-api/ops_api/models.py`에 `SensorReadingRecord`/`ZoneStateSnapshotRecord` ORM 모델 추가 (sqlite portable PK, Float import, SQL drift validator 정렬)
+- [x] `ops-api/ops_api/realtime_broker.py`: `RealtimeBroker` (asyncio.Queue fan-out, zone_id 필터, oldest-drop overflow, sync `publish_nowait` shim)
+- [x] sensor-ingestor TimescaleDB writer 경로: `sensor-ingestor/sensor_ingestor/timeseries_writer.py` `TimeseriesWriter` + `SensorIngestorService.__init__(timeseries_writer=...)` + `run_once()`에서 publisher 직후 `_timeseries_write` 호출
+- [x] `scripts/validate_sensor_timeseries_writer.py`: writer 6 invariant + broker fan-out + zone 필터 + overflow 회귀
+- [x] `scripts/validate_postgres_schema_drift.py`를 두 SQL 파일(`001` + `002`) 동시 파싱으로 확장, Float 타입 매핑 추가
 - [ ] ops-api `GET /zones/{zone_id}/stream` (SSE, `read_runtime` 권한): 연결 시 최근 5분 bootstrap + sensor-ingestor pubsub에서 신규 reading streaming, 자동 disconnect 정리
 - [ ] ops-api `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m`: interval에 따라 `sensor_readings` raw / `zone_metric_5m` / `zone_metric_30m` 자동 라우팅
 - [ ] iFarm 대시보드 `존 모니터링` 뷰 uPlot 통합: 11개 지표 SVG 스파크라인을 uPlot 인스턴스로 교체, EventSource 기반 streaming, 60s/5m/30m/6h/24h 롤링 윈도우 selector, 자동 재연결 + 백오프

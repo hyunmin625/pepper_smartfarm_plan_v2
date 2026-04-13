@@ -108,7 +108,12 @@ class RuntimeMetrics:
 
 
 class SensorIngestorService:
-    def __init__(self, loaded: LoadedConfig) -> None:
+    def __init__(
+        self,
+        loaded: LoadedConfig,
+        *,
+        timeseries_writer: Any | None = None,
+    ) -> None:
         self.loaded = loaded
         self.metrics = RuntimeMetrics()
         self.publisher = PublishRouter(loaded.publish_targets)
@@ -116,6 +121,7 @@ class SensorIngestorService:
         self.sensor_history: dict[str, SensorHistoryEntry] = {}
         self._http_server: ThreadingHTTPServer | None = None
         self._http_thread: Thread | None = None
+        self.timeseries_writer = timeseries_writer
 
     @classmethod
     def from_files(cls, *, config_path: str, catalog_path: str | None = None) -> "SensorIngestorService":
@@ -130,6 +136,14 @@ class SensorIngestorService:
 
     def _device_groups(self) -> list[dict[str, Any]]:
         return [group for group in self.loaded.config.get("device_binding_groups", []) if group.get("enabled", False)]
+
+    def _timeseries_write(self, normalized: list[dict[str, Any]]) -> None:
+        if self.timeseries_writer is None or not normalized:
+            return
+        try:
+            self.timeseries_writer.write_records(normalized)
+        except Exception as exc:  # pragma: no cover - defensive branch
+            self.metrics.last_error = f"timeseries_writer: {exc}"
 
     @staticmethod
     def _simulate_timeout(override: dict[str, Any] | None, attempt_index: int) -> bool:
@@ -376,6 +390,7 @@ class SensorIngestorService:
                 )
                 self.publisher.publish(group["publish_targets"], normalized, self.metrics)
                 self.publisher.publish_alerts(alerts, self.metrics)
+                self._timeseries_write(normalized)
                 processed_sensor_groups.append(group["binding_group_id"])
                 alerts_emitted.extend(alerts)
                 self.metrics.sensor_groups_processed += 1
@@ -387,6 +402,7 @@ class SensorIngestorService:
                 )
                 self.publisher.publish(group["publish_targets"], normalized, self.metrics)
                 self.publisher.publish_alerts(alerts, self.metrics)
+                self._timeseries_write(normalized)
                 processed_device_groups.append(group["binding_group_id"])
                 alerts_emitted.extend(alerts)
                 self.metrics.device_groups_processed += 1

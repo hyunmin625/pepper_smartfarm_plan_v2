@@ -32,13 +32,16 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "ops-api"))
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text  # noqa: E402
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text  # noqa: E402
 
 from ops_api.database import Base  # noqa: E402
 from ops_api import models as _models  # noqa: F401,E402  - registers tables
 
 
-MIGRATION_PATH = REPO_ROOT / "infra" / "postgres" / "001_initial_schema.sql"
+MIGRATION_PATHS: tuple[Path, ...] = (
+    REPO_ROOT / "infra" / "postgres" / "001_initial_schema.sql",
+    REPO_ROOT / "infra" / "postgres" / "002_timescaledb_sensor_readings.sql",
+)
 
 
 _SQL_TYPE_NORMALIZATION = {
@@ -47,6 +50,8 @@ _SQL_TYPE_NORMALIZATION = {
     "BIGSERIAL": "integer",
     "BIGINT": "integer",
     "INTEGER": "integer",
+    "DOUBLE": "float",
+    "REAL": "float",
     "BOOLEAN": "boolean",
     "TIMESTAMP": "datetime",
 }
@@ -55,6 +60,7 @@ _ORM_TYPE_NORMALIZATION: dict[type, str] = {
     Text: "text",
     String: "text",
     Integer: "integer",
+    Float: "float",
     Boolean: "boolean",
     DateTime: "datetime",
 }
@@ -202,8 +208,17 @@ def _compare_schemas(
     return errors
 
 
+def parse_all_migrations(paths: tuple[Path, ...]) -> dict[str, dict[str, dict[str, Any]]]:
+    merged: dict[str, dict[str, dict[str, Any]]] = {}
+    for path in paths:
+        if not path.exists():
+            continue
+        merged.update(parse_sql_schema(path))
+    return merged
+
+
 def main() -> int:
-    sql_tables = parse_sql_schema(MIGRATION_PATH)
+    sql_tables = parse_all_migrations(MIGRATION_PATHS)
     orm_tables = collect_orm_schema()
     errors = _compare_schemas(sql_tables, orm_tables)
 

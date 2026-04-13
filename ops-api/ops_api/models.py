@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -247,3 +247,67 @@ class RobotTaskRecord(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
 
     decision: Mapped[DecisionRecord | None] = relationship(back_populates="robot_tasks")
+
+
+# ---------------------------------------------------------------------------
+# TimescaleDB sensor time-series records.
+#
+# These tables are created by infra/postgres/002_timescaledb_sensor_readings.sql
+# on real PostgreSQL (with TimescaleDB extension installed). On sqlite they are
+# created as plain tables via Base.metadata.create_all so unit/smoke tests can
+# still exercise the writer + reader paths without a Postgres instance.
+# ---------------------------------------------------------------------------
+
+
+class SensorReadingRecord(Base):
+    __tablename__ = "sensor_readings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    measured_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    ingested_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    site_id: Mapped[str] = mapped_column(String(64), index=True)
+    zone_id: Mapped[str] = mapped_column(String(128), index=True)
+    record_kind: Mapped[str] = mapped_column(String(16), index=True)
+    source_id: Mapped[str] = mapped_column(String(128), index=True)
+    source_type: Mapped[str] = mapped_column(String(64))
+    metric_name: Mapped[str] = mapped_column(String(64), index=True)
+    metric_value_double: Mapped[float | None] = mapped_column(Float, nullable=True)
+    metric_value_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    quality_flag: Mapped[str] = mapped_column(String(32), index=True)
+    transport_status: Mapped[str] = mapped_column(String(32))
+    binding_group_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    parser_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    calibration_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source: Mapped[str] = mapped_column(String(64))
+    metadata_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
+class ZoneStateSnapshotRecord(Base):
+    __tablename__ = "zone_state_snapshots"
+
+    measured_at: Mapped[datetime] = mapped_column(DateTime, primary_key=True)
+    zone_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    site_id: Mapped[str] = mapped_column(String(64), index=True)
+    snapshot_window_seconds: Mapped[int] = mapped_column(Integer, default=60)
+    air_temp_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rh_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    vpd_kpa: Mapped[float | None] = mapped_column(Float, nullable=True)
+    substrate_moisture_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    substrate_temp_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    co2_ppm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    par_umol_m2_s: Mapped[float | None] = mapped_column(Float, nullable=True)
+    feed_ec_ds_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    drain_ec_ds_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    feed_ph: Mapped[float | None] = mapped_column(Float, nullable=True)
+    drain_ph: Mapped[float | None] = mapped_column(Float, nullable=True)
+    irrigation_event_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    drain_volume_l: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sensor_quality_status: Mapped[str] = mapped_column(String(32), default="unknown")
+    risk_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    active_constraints_json: Mapped[str] = mapped_column(Text, default="[]")
+    device_status_json: Mapped[str] = mapped_column(Text, default="{}")
+    feature_payload_json: Mapped[str] = mapped_column(Text, default="{}")
+    source: Mapped[str] = mapped_column(String(64), default="state-estimator")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
