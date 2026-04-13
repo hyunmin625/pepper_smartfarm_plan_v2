@@ -96,6 +96,16 @@
 - [x] batch15 hard-case `10건` 추가와 next-only oversampling 규칙 고정 (`scripts/generate_batch15_hard_cases.py`, `docs/hard_case_oversampling_plan.md`)
 - [x] `scripts/build_openai_sft_datasets.py`에 train-only `--oversample-task-type` 지원 추가 및 dry-run format 검증 완료
 - [x] batch16 safety reinforcement `30건` 추가: `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10` (`scripts/generate_batch16_safety_reinforcement.py`)
+- [x] ops-api shadow window 런타임 경화: `_redirect_audit_paths` contextmanager로 env 변수 누수 차단, `append=false`는 `manage_runtime_mode` 권한 + `.bak-{ts}` 회전으로 분리, `safe_ratio` None 처리, `promotion_decision` None-aware, 혼합 모델/프롬프트 `mixed` 표기, `critical 우선 top_disagreements` 정렬 (`ops-api/ops_api/shadow_mode.py`, `scripts/validate_ops_api_shadow_mode.py`)
+- [x] ops-api auth dependency injection 회귀 해소: `create_app(settings=...)`이 `app.dependency_overrides[load_settings]`로 header_token 경로까지 주입되도록 수정, TestClient 기반 DI 회귀 추가 (`ops-api/ops_api/app.py`, `scripts/validate_ops_api_auth.py`)
+- [x] postgres 스키마 드리프트 해소: `infra/postgres/001_initial_schema.sql`의 JSONB 32개 → `TEXT`, TIMESTAMPTZ 21개 → `TIMESTAMP WITHOUT TIME ZONE ... DEFAULT (NOW() AT TIME ZONE 'UTC')`로 ORM과 정렬, `validate_ops_api_postgres_smoke`를 decision/alert/robot_task write round-trip + cleanup으로 격상
+- [x] ORM ↔ SQL 자동 드리프트 감지 smoke 추가: `infra/postgres/001_initial_schema.sql` 파서와 `Base.metadata` 비교, 13개 테이블 nullability/type family 정렬, negative test로 `policies.policy_stage` 강제 Integer 변경 드리프트 캐치 확인 (`scripts/validate_postgres_schema_drift.py`)
+- [x] policy source abstraction 도입: `PolicySource` Protocol + `FilePolicySource`/`StaticPolicySource`, `set_active_policy_source()` 전역 스위치, ops-api `DbPolicySource`가 `PolicyRecord` 테이블 기반 live lookup, `create_app`이 seed 직후 자동 등록, `PATCH /policies/{id}` 토글이 다음 precheck에 즉시 반영 (`policy-engine/policy_engine/loader.py`, `policy-engine/policy_engine/__init__.py`, `ops-api/ops_api/policy_source.py`, `ops-api/ops_api/app.py`, `scripts/validate_policy_source_db_wiring.py`)
+- [x] `/zones/{zone_id}/history` 응답에 `sensor_series` 추가, 9개 지표(air_temp_c, rh_pct, vpd_kpa, substrate_moisture_pct, substrate_temp_c, co2_ppm, par_umol_m2_s, feed_ec_ds_m, drain_ec_ds_m) 시계열, Approval Dashboard에 Zone History Chart 카드 + 인라인 SVG 스파크라인 추가 (`ops-api/ops_api/app.py`, `scripts/validate_ops_api_zone_history.py`)
+- [x] state-estimator → policy-engine precheck 통합 smoke: healthy / worker_present / sensor_quality bad 3개 시나리오, HSV-01 `worker_present` 경로와 estimator-only sensor 가드 invariant 회귀 (`scripts/validate_state_estimator_policy_flow.py`)
+- [x] llm-orchestrator → ActionDispatchPlanner → ExecutionDispatcher 통합 smoke: stub 기본 응답 log_only 경로, fixture 기반 adjust_fan → device_command acknowledged, pause_automation → control_override state_updated, audit row 2건 (`scripts/validate_llm_to_execution_flow.py`)
+- [x] 실시간 shadow runner + gate: `push_shadow_cases_to_ops_api.py`가 `/shadow/cases/capture` → `/shadow/window` 경로를 batch 단위로 호출하고 `--gate rollback|hold|promote`로 최소 promotion_decision을 강제, TestClient monkey-patch 기반 gate 회귀 3개 시나리오 (`scripts/push_shadow_cases_to_ops_api.py`, `scripts/validate_shadow_runner_gate.py`)
+- [x] `scripts/validate_execution_safe_mode.py`의 `policy_engine` sys.path pre-existing 버그 수정
 
 ---
 
@@ -1068,10 +1078,10 @@
 
 ## 18.2 통합 테스트
 - [x] sensor → state-estimator 통합 테스트 (`scripts/validate_sensor_to_state_estimator_integration.py`, `state-estimator/state_estimator/ingestor_bridge.py`)
-- [ ] state-estimator → policy-engine 통합 테스트
+- [x] state-estimator → policy-engine 통합 테스트 (`scripts/validate_state_estimator_policy_flow.py`)
 - [ ] RAG retrieval → llm-orchestrator 통합 테스트
 - [ ] policy-engine → llm-orchestrator 통합 테스트
-- [ ] llm-orchestrator → execution-gateway 통합 테스트
+- [x] llm-orchestrator → execution-gateway 통합 테스트 (`scripts/validate_llm_to_execution_flow.py`)
 - [ ] execution-gateway → plc-adapter 통합 테스트
 - [ ] vision → robot-task-manager 통합 테스트
 
