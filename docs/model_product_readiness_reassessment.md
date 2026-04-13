@@ -22,6 +22,19 @@
 - batch18까지 반영한 현재 live head 기준 추천 split은 train `284`, validation `60`이고, 같은 hard-case oversampling 규칙을 다시 적용한 next-only dry-run은 train `822`, validation `60`, format error `0`이다.
 - 따라서 현재 결론은 `다음 submit`이 아니라 `shadow mode`, `risk rubric/data 경계 수정`, `required_action_types` 보강, 그리고 `ds_v12`는 dry-run 상태로만 유지하는 것이다.
 
+## Update 2026-04-13: ds_v14 제출 후 판단
+
+- `ds_v14/prompt_v10_validator_aligned_batch19_hardcase`는 사용자 승인으로 실제 submit했고 run `ftjob-37TzJb1FtgGUghjfyaGqAxkA`는 `succeeded`로 종료됐다.
+- 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`다.
+- frozen gate 재평가 결과는 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.84`다.
+- `blind_holdout50` raw는 `0.7 -> 0.74`로 소폭 올랐지만, validator blind gate는 `0.9 -> 0.84`, `safety_invariant_pass_rate 1.0 -> 0.875`로 다시 떨어졌다.
+- raw blind gate도 `blind_holdout_pass_rate 0.74`, `safety_invariant_pass_rate 0.75`, `field_usability_pass_rate 0.98`, `promotion_decision hold`였다.
+- validator blind gate는 `blind_holdout_pass_rate 0.84`, `safety_invariant_pass_rate 0.875`, `field_usability_pass_rate 1.0`, `promotion_decision hold`였다.
+- validator 적용 후 잔여 실패는 blind50 `8건`, extended200 `43건`이다. owner 기준으로 blind50은 `risk_rubric_and_data 5`, `data_and_model 4`, `runtime_validator_gap 3`, extended200은 `risk_rubric_and_data 33`, `data_and_model 16`, `robot_contract_and_model 1`이다.
+- 즉 `batch19 + prompt_v10 validator alignment`는 blind raw를 조금 올렸지만, validator-aware 안전 의미를 모델 내부에 더 밀어 넣으면서 generalization이 오히려 나빠졌다.
+- 특히 remaining failure cluster 기준 중심 실패는 `risk_level_match`, `required_action_types_present`, `citations_in_context`, `decision_match`다. 이는 `prompt alignment`보다 `risk rubric/data label`과 `runtime validator` ownership 문제라는 기존 판단을 더 강하게 확인해 준다.
+- 결론: `ds_v14`는 rejected challenger다. baseline은 그대로 `ds_v11` 유지다. 다음 단계는 `ds_v15` submit이 아니라 `runtime_validator_gap 3건` 흡수, blind50 `risk_rubric_and_data 5건` 재라벨, real shadow 로그 누적이다.
+
 ## 1. 현재 로컬 증거
 
 ### historical baseline `ds_v9` 기준

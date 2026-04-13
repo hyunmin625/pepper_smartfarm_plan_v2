@@ -45,6 +45,7 @@
 - 새 challenger는 순수 모델 결과와 validator 적용 결과를 함께 남겨야 한다.
 - validator 적용 후에도 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`이므로, 다음 challenger는 raw와 validator-applied 모두에서 이 기준을 넘어야 한다.
 - `synthetic shadow day0`는 frozen comparison gate가 아니라 submit 전 preflight다. 현재 baseline은 `operator_agreement_rate 0.6667`, `promotion_decision hold`이며, 다음 challenger는 이 runtime-shaped shadow 기준도 함께 기록해야 한다.
+- 최신 challenger `ds_v14/prompt_v10_validator_aligned_batch19_hardcase`는 실제 submit까지 했지만 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 validator 0.84`로 baseline을 넘지 못했다. 따라서 baseline은 계속 `ds_v11` 유지다.
 
 ## Source Reports
 

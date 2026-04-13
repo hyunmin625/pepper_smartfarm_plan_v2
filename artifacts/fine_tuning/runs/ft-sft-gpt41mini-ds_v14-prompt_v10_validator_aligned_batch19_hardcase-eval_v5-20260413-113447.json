@@ -2,7 +2,7 @@
   "schema_version": "fine_tuning_run.v1",
   "experiment_name": "ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-113447",
   "mode": "submit",
-  "status": "validating_files",
+  "status": "succeeded",
   "created_at": "2026-04-13T02:34:47+00:00",
   "base_model": "gpt-4.1-mini-2025-04-14",
   "model_version": "pepper-ops-sft-v1.11.0",
@@ -17,16 +17,18 @@
   "job_id": "ftjob-37TzJb1FtgGUghjfyaGqAxkA",
   "training_file_id": "file-Q4pfdgf4iA3XZxCVGbsrAn",
   "validation_file_id": "file-5JnRkMz1ih7CwpLEh7vyaC",
-  "fine_tuned_model": null,
-  "result_files": [],
+  "fine_tuned_model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz",
+  "result_files": [
+    "file-JSMbxj7WhysD4W5MzCFWf6"
+  ],
   "error": {
     "code": null,
     "message": null,
     "param": null
   },
   "notes": "batch19 real shadow feedback plus validator-aligned prompt and hard-case oversampling; submit after runtime integration stack implementation",
-  "latest_synced_at": "2026-04-13T02:36:55+00:00",
+  "latest_synced_at": "2026-04-13T04:45:33+00:00",
   "estimated_finish": null,
-  "finished_at": null,
+  "finished_at": 1776051842,
   "events_path": "artifacts/fine_tuning/events/ftjob-37TzJb1FtgGUghjfyaGqAxkA.jsonl"
 }

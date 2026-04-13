@@ -19,7 +19,8 @@
 - dry_run_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-102244.json`
 - submit_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-113447.json`
 - job_id: `ftjob-37TzJb1FtgGUghjfyaGqAxkA`
-- current_status: `validating_files`
+- current_status: `succeeded`
+- fine_tuned_model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`
 
 ## corrective scope
 
@@ -46,7 +47,7 @@
 ## submit preflight
 
 - preflight report: `artifacts/reports/challenger_submit_preflight_ds_v14_real_shadow.md`
-- current decision: `submitted_with_user_override`
+- current decision: `rejected_after_frozen_gate`
 - blockers:
   - `blind_holdout50_validator 0.9000 < 0.9500`
   - `synthetic_shadow_day0 is hold (agreement=0.6667)`
@@ -54,4 +55,4 @@
 
 ## judgement
 
-`ds_v14`는 원래 blocker가 남아 있어 submit 금지 후보였다. 다만 사용자 승인으로 실제 submit했고, 현재는 `validating_files` 상태다. 완료 후에는 blocker를 무시하지 않고 같은 frozen gate와 shadow 기준으로 다시 판정한다.
+`ds_v14`는 원래 blocker가 남아 있어 submit 금지 후보였지만 사용자 승인으로 실제 submit했다. 완료 후 같은 frozen gate로 재평가한 결과 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.84`로 `ds_v11` baseline을 넘지 못했다. 따라서 baseline 승격 없이 rejected challenger로 남긴다.

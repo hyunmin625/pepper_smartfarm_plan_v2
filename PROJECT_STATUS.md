@@ -18,6 +18,10 @@
 - `ds_v11` raw gate는 `blind_holdout_pass_rate 0.7`, `safety_invariant_pass_rate 0.7083`, `field_usability_pass_rate 1.0`, validator gate는 `blind_holdout_pass_rate 0.9`, `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`, `shadow_mode_status=not_run`으로 모두 `hold`다.
 - `ds_v11`는 이전 baseline `ds_v9`보다 모든 frozen gate에서 개선됐지만, blind50 validator `0.9 < 0.95`와 shadow mode 미실행 때문에 아직 제품 수준은 아니다.
 - `scripts/report_eval_failure_clusters.py`와 `scripts/report_validator_residual_failures.py` 기준 `ds_v11`의 extended200 잔여 실패는 `42건`, blind50 validator 잔여 실패는 `5건`이다.
+- `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` run `ftjob-37TzJb1FtgGUghjfyaGqAxkA`도 `succeeded`로 종료됐고 결과 model은 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`다.
+- `ds_v14` frozen gate 재평가 결과는 `core24 0.8333`, `extended120 0.7167`, `extended160 0.6937`, `extended200 0.695`, `blind_holdout50 raw 0.74`, `blind_holdout50 validator 0.84`다. `core24`를 포함해 전반적으로 `ds_v11` baseline보다 나빠져 승격 실패로 확정한다.
+- `ds_v14` raw blind50 gate는 `blind_holdout_pass_rate 0.74`, `safety_invariant_pass_rate 0.75`, `field_usability_pass_rate 0.98`, validator blind50 gate는 `blind_holdout_pass_rate 0.84`, `safety_invariant_pass_rate 0.875`, `field_usability_pass_rate 1.0`, `shadow_mode_status=not_run`으로 모두 `hold`다.
+- `ds_v14` validator 적용 후 잔여 실패는 blind50 `8건`, extended200 `43건`이다. 중심 owner는 blind50에서 `risk_rubric_and_data 5`, `data_and_model 4`, `runtime_validator_gap 3`, extended200에서 `risk_rubric_and_data 33`, `data_and_model 16`, `robot_contract_and_model 1`이다.
 - 현재 남은 중심 owner는 extended200에서 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`, blind50에서 `data_and_model 3`, `risk_rubric_and_data 2`다.
 - `scripts/build_shadow_mode_replay_from_eval.py`로 blind50 기준 offline shadow replay를 만들었다. `forbidden_action` 계약 정렬, runtime `HSV-09` 반영, replay heuristic 보정 뒤 현재 기준선은 `decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`다.
 - 다만 이건 어디까지나 offline replay 기준선이다. 실제 corrective backlog는 `blind-action-004`, `blind-expert-003`, `blind-expert-010`, `blind-robot-005` 네 건이며 owner는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌다. 이 네 건은 `docs/offline_shadow_residual_batch17_plan.md`와 batch17 sample `8건`으로 직접 역투영했다.
@@ -32,7 +36,7 @@
 - 실제 운영 전환용 shadow 경로도 추가했다. `scripts/run_shadow_mode_capture_cases.py`는 일자별 shadow case JSONL을 append 방식으로 적재하고, `scripts/build_shadow_mode_window_report.py`는 여러 audit log를 rolling window 기준으로 집계한다. `docs/real_shadow_mode_runbook.md`에 post-construction 절차를 고정했다.
 - `scripts/build_challenger_submit_preflight.py`는 이제 `--real-shadow-report`를 지원한다. 실제 shadow window JSON을 넣으면 `promotion_decision promote -> pass`, `hold -> hold`, `rollback -> rollback`으로 자동 변환해 submit blocker에 반영한다.
 - `real shadow rollback` source `shadow-runtime-002`와 blind50 validator 잔여 `5건`을 직접 역투영한 `batch19` corrective sample `8건`을 추가했다. 동시에 validator hard rule을 자연어로 옮긴 `sft_v10` prompt를 도입해 `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` package를 만들었다.
-- `ds_v14`는 source training `352`, train `843`, validation `61`, format error `0`이다. preflight blocker는 그대로 남아 있었지만 사용자 승인으로 실제 submit했고, 현재 run은 `ftjob-37TzJb1FtgGUghjfyaGqAxkA`, status `validating_files`다.
+- `ds_v14`는 source training `352`, train `843`, validation `61`, format error `0`이었다. preflight blocker가 남은 상태에서 사용자 승인으로 submit했지만, 완료 후 frozen gate 재평가에서 실패해 baseline 교체 없이 rejected challenger로 남긴다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, malformed JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
@@ -311,7 +315,7 @@
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
-11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 현재 우선순위는 `ds_v14` 완료 대기 후 frozen gate 재평가이며, 그 다음은 `real shadow log`, `auth/role`, `sensor-ingestor raw snapshot 직결`이다.
+11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 현재 우선순위는 `ds_v14` 실패 원인 정리와 `real shadow log`, `auth/role`, `sensor-ingestor raw snapshot 직결`이다.
 
 ## 주의할 점
 
