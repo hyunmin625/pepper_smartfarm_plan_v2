@@ -4,6 +4,11 @@
 
 ## 2026-04-13
 
+### sensor-ingestor -> state-estimator raw snapshot bridge 추가
+- `state-estimator/state_estimator/ingestor_bridge.py`를 추가해 `sensor-ingestor` MQTT outbox JSONL을 그대로 읽고 zone 기준으로 묶은 뒤 snapshot/zone_state를 만들 수 있게 했다.
+- `scripts/validate_sensor_to_state_estimator_integration.py`를 추가해 `sensor-ingestor`를 실제로 한 번 돌린 뒤 outbox에서 `gh-01-zone-a` snapshot과 derived feature를 복원하는 통합 경로를 검증했다.
+- 최신 통합 검증 결과는 `mqtt_rows 49`, `zones_seen 5`, `zone_a_device_count 8`, `errors 0`이었다.
+
 ### ops-api localhost server smoke + postgres smoke 경로 추가
 - `scripts/validate_ops_api_server_smoke.py`를 추가해 실제 `uvicorn` 프로세스를 띄운 뒤 `GET /health`, `GET /auth/me`, `GET/POST /runtime/mode`, `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard/data`까지 localhost HTTP 경로를 점검하도록 만들었다.
 - 첫 smoke 실행에서 `llm-orchestrator/llm_orchestrator/prompt_catalog.py`가 `scripts/build_openai_sft_datasets.py`를 runtime import하면서 `training_data_config`를 찾지 못하는 버그가 드러났다. `PROMPT_SOURCE.parent`를 `sys.path`에 임시로 주입하는 방식으로 수정해 real server 경로를 복구했다.
@@ -96,7 +101,7 @@
 - `llm-orchestrator/llm_orchestrator/client.py`, `retriever.py`, `response_parser.py`, `prompt_catalog.py`, `service.py`를 추가해 `prompt version 선택 -> local RAG retrieval -> model 호출 -> malformed JSON recovery -> output validator 연결` 경로를 실제 서비스 계층으로 묶었다.
 - `ops-api/ops_api/`를 새로 추가해 FastAPI backend skeleton, SQLAlchemy 모델, runtime mode 저장, approval planner, inline dashboard를 구현했다. 핵심 엔드포인트는 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /actions/reject`, `GET /actions/history`, `GET /dashboard`, `GET/POST /runtime/mode`다.
 - `infra/postgres/001_initial_schema.sql`로 PostgreSQL 기준 `decisions`, `approvals`, `device_commands` DDL을 고정했다. 로컬 검증은 `SQLite + mock PLC adapter`로 수행했다.
-- 구현 범위와 한계는 `docs/runtime_integration_status.md`에 정리했다. 현재는 real OpenAI smoke test, auth/role, real PostgreSQL 연결, sensor-ingestor raw snapshot 직결은 아직 남겨 두었다.
+- 구현 범위와 한계는 `docs/runtime_integration_status.md`에 정리했다. 현재는 real OpenAI smoke test, real PostgreSQL 연결, policy management/auth UI, 실제 shadow log 누적이 남아 있다.
 
 ### runtime integration 로컬 검증
 - `python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py scripts/validate_state_estimator_features.py scripts/validate_llm_orchestrator_service.py scripts/validate_ops_api_flow.py`로 모듈 import/구문 검증을 다시 통과시켰다.

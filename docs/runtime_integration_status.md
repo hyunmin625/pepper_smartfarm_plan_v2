@@ -122,6 +122,7 @@
 python3 scripts/validate_state_estimator_mvp.py
 python3 scripts/validate_state_estimator_features.py
 python3 scripts/validate_state_estimator_raw_loader.py
+python3 scripts/validate_sensor_to_state_estimator_integration.py
 python3 scripts/validate_llm_orchestrator_service.py
 python3 scripts/validate_llm_response_parser.py
 python3 scripts/bootstrap_ops_api_reference_data.py
@@ -148,6 +149,5 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 
 1. `OPS_API_LLM_PROVIDER=openai`, `OPS_API_MODEL_ID=champion` 기준 online smoke 실행
 2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-3. sensor-ingestor runtime outbox를 state-estimator raw loader에 직접 연결
-4. approval mode dispatch 결과를 shadow window/report와 한 화면에서 묶기
-5. policy management 화면과 real sensor chart 추가
+3. approval mode dispatch 결과를 shadow window/report와 한 화면에서 묶기
+4. policy management 화면과 real sensor chart 추가

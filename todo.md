@@ -1066,7 +1066,7 @@
 - [ ] cooldown manager 테스트
 
 ## 18.2 통합 테스트
-- [ ] sensor → state-estimator 통합 테스트
+- [x] sensor → state-estimator 통합 테스트 (`scripts/validate_sensor_to_state_estimator_integration.py`, `state-estimator/state_estimator/ingestor_bridge.py`)
 - [ ] state-estimator → policy-engine 통합 테스트
 - [ ] RAG retrieval → llm-orchestrator 통합 테스트
 - [ ] policy-engine → llm-orchestrator 통합 테스트

@@ -18,6 +18,7 @@
 - `scripts/validate_state_estimator_mvp.py`
 - `scripts/validate_state_estimator_features.py`
 - `scripts/validate_state_estimator_raw_loader.py`
+- `scripts/validate_sensor_to_state_estimator_integration.py`
 - `data/examples/synthetic_sensor_scenarios.jsonl`
 - `data/examples/raw_sensor_window_seed.jsonl`
 
@@ -27,6 +28,7 @@
 python3 scripts/validate_state_estimator_mvp.py
 python3 scripts/validate_state_estimator_features.py
 python3 scripts/validate_state_estimator_raw_loader.py
+python3 scripts/validate_sensor_to_state_estimator_integration.py
 python3 scripts/validate_synthetic_scenarios.py
 ```
 
@@ -37,3 +39,4 @@ python3 scripts/validate_synthetic_scenarios.py
 - 재부팅 후 state sync 미완료, robot safety breach처럼 명확한 강위험은 `critical`
 - VPD, DLI, 1분/5분 평균, 10분/30분 변화율, 관수 후 회복률, 배액률, climate/rootzone stress score를 함께 계산해 LLM 입력용 snapshot을 만든다.
 - `sensor-ingestor`에서 나온 raw row를 바로 snapshot으로 올릴 수 있도록 window loader를 유지한다.
+- `state-estimator/state_estimator/ingestor_bridge.py`로 `sensor-ingestor` MQTT outbox JSONL을 바로 zone snapshot/zone_state로 변환할 수 있다.
