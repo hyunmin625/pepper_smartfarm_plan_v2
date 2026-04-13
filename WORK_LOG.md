@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### llm-orchestrator -> planner -> execution-gateway 통합 smoke
+- `scripts/validate_llm_to_execution_flow.py`를 추가해 `LLMOrchestratorService` → `ActionDispatchPlanner` → `ExecutionDispatcher` 경로를 한 프로세스에서 3개 시나리오로 회귀한다. 스모크는 네트워크/DB 없이 stub과 fixture만으로 동작한다.
+  - stub baseline: 레포 기본 `StubCompletionClient`가 `action_recommendation` 응답으로 `create_alert` + `request_human_check`를 돌려주는 상황을 재현한다. planner는 두 건 모두 `log_only` plan으로 변환하고 dispatcher에는 도달하지 않아야 한다.
+  - adjust_fan dispatch: `_FixedCompletionClient`로 `adjust_fan` 추천을 주입하면 planner는 `gh-01-zone-a--circulation-fan--01`을 target으로 한 `device_command` 하나를 만들고, mock adapter 기반 `ExecutionDispatcher`는 `status="acknowledged"`로 마무리해야 한다.
+  - pause_automation override: fixture로 `pause_automation`을 주입하면 planner는 `control_override` plan으로 변환하고, dispatcher는 `ControlStateStore` 갱신 후 `status="state_updated"`를 반환해야 한다. audit sink에는 정확히 2건의 dispatch row가 쌓이는지를 smoke가 직접 확인한다.
+- 15종 smoke (`flow`, `auth`, `error_responses`, `schema_models`, `shadow_mode`, `postgres_smoke`, `policy_source_db_wiring`, `policy_engine_precheck`, `policy_output_validator`, `state_estimator_policy_flow`, `llm_to_execution_flow`, `execution_dispatcher`, `execution_gateway_flow`, `execution_safe_mode`, `state_estimator_mvp`) 전부 `errors 0`.
+
 ### state-estimator -> policy-engine precheck 통합 smoke
 - `scripts/validate_state_estimator_policy_flow.py`를 추가해 같은 센서 스냅샷 shape으로 `estimate_zone_state` → `build_zone_state_payload` → raw device command → `evaluate_device_policy_precheck` 전 경로를 3개 시나리오로 회귀한다.
   - healthy fruiting: estimator `risk_level=low`, `observe_only`/`trend_review` 추천, adjust_fan precheck `pass`, policy_ids 빈 리스트.
