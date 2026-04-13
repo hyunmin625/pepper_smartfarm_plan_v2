@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### state-estimator -> policy-engine precheck 통합 smoke
+- `scripts/validate_state_estimator_policy_flow.py`를 추가해 같은 센서 스냅샷 shape으로 `estimate_zone_state` → `build_zone_state_payload` → raw device command → `evaluate_device_policy_precheck` 전 경로를 3개 시나리오로 회귀한다.
+  - healthy fruiting: estimator `risk_level=low`, `observe_only`/`trend_review` 추천, adjust_fan precheck `pass`, policy_ids 빈 리스트.
+  - worker_present: estimator `risk_level=critical`, `enter_safe_mode`/`request_human_check` 추천, notes `hard_safety_interlock`, 같은 raw command에 `worker_present=true`를 forward한 adjust_fan precheck `blocked`, `policy_ids=[HSV-01]`, `matched_flags=[worker_present]`.
+  - sensor_quality=bad: estimator `risk_level=unknown`, `observability_status=degraded`, `pause_automation`/`request_human_check` 추천, `unknown_reasons`에 `sensor_quality.overall=bad`/`substrate_moisture=flatline`/`sensor_reliability_score<=0.25` 수집. precheck는 `sensor_quality_blocked` flag를 수집하지만 이를 직접 트리거하는 hard 규칙이 없어 `pass`로 떨어지는 invariant를 `_debug_collect_flags`로 고정한다 — 센서 degradation 가드는 precheck가 아니라 estimator 층에 둔다는 설계 의도를 회귀로 잡는다.
+- ops-api, policy-engine, execution-gateway, state-estimator 14종 smoke (`flow`, `auth`, `error_responses`, `schema_models`, `shadow_mode`, `postgres_smoke`, `policy_source_db_wiring`, `policy_engine_precheck`, `policy_output_validator`, `state_estimator_policy_flow`, `execution_dispatcher`, `execution_gateway_flow`, `execution_safe_mode`, `state_estimator_mvp`) 모두 `errors 0`.
+
 ### policy source abstraction + 라이브 toggle 회귀
 - `policy-engine/policy_engine/loader.py`에 `PolicySource` Protocol과 `FilePolicySource` / `StaticPolicySource` 두 구현, 그리고 프로세스 전역 스위치 `set_active_policy_source()` / `get_active_policy_source()`를 도입했다. `load_enabled_policy_rules()`는 명시적 `path`가 주어지지 않았고 active source가 등록되어 있으면 그쪽으로 위임한다. 기존 파일 기반 동작은 active source가 None일 때 그대로 유지된다.
 - `ops-api/ops_api/policy_source.py`를 추가해 `DbPolicySource(session_factory)`가 `PolicyRecord` 테이블을 직접 읽고 `policy_row_to_rule()`로 JSON seed와 같은 rule dict 모양으로 변환한다. 각 호출은 short-lived session이라 `PATCH /policies/{id}` 편집이 다음 precheck 평가에 즉시 반영된다.
