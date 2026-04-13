@@ -85,6 +85,9 @@
 - [x] `scripts/build_challenger_submit_preflight.py`로 `ds_v12` / `ds_v13` submit blocker 리포트 생성 (`artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md`)
 - [x] 실제 운영 전환용 shadow capture runner와 rolling window report 추가 (`scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py`, `docs/real_shadow_mode_runbook.md`)
 - [x] submit preflight에 real shadow window 자동 연결 추가 (`scripts/build_challenger_submit_preflight.py --real-shadow-report`)
+- [x] real shadow rollback + blind50 residual `5건`을 batch19 corrective sample로 역투영 (`scripts/generate_batch19_real_shadow_feedback.py`, `docs/batch19_real_shadow_feedback_plan.md`)
+- [x] validator 규칙을 자연어로 정렬한 `sft_v10` prompt 추가 (`scripts/build_openai_sft_datasets.py`, `scripts/evaluate_fine_tuned_model.py`)
+- [x] `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` dry-run candidate와 preflight 리포트 생성 (`artifacts/fine_tuning/challenger_candidate_ds_v14_prompt_v10_validator_aligned_batch19_hardcase.md`, `artifacts/reports/challenger_submit_preflight_ds_v14_real_shadow.md`)
 - [ ] blind50 validator 잔여 `5건`에 대해 `risk_rubric_and_data / data_and_model` 기준 targeted fix 여부를 확정
 - [ ] extended200 validator 잔여 `42건` 중 `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`의 우선순위 batch를 설계
 - [ ] `synthetic shadow day0 hold`를 해소하고 `ds_v12` frozen dry-run package와 `ds_v13` batch18 next candidate 중 실제 submit 후보를 결정
