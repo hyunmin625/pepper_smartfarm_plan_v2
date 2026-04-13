@@ -28,3 +28,17 @@ python3 scripts/bootstrap_ops_api_reference_data.py
   - `operator`: shadow review, approve/execute, robot task write
   - `service`: evaluate-zone
   - `admin`: operator 권한 + runtime mode/policy 관리
+
+## response contract
+
+- 성공 응답은 `{"data": ..., "meta": {...}, "actor": {...}}` 형태를 사용한다.
+- 오류 응답은 `{"error": {"code": "...", "message": "..."}}` 형태를 사용한다.
+
+## validation
+
+```bash
+python3 scripts/validate_ops_api_auth.py
+python3 scripts/validate_ops_api_schema_models.py
+python3 scripts/validate_ops_api_error_responses.py
+python3 scripts/validate_ops_api_flow.py
+```

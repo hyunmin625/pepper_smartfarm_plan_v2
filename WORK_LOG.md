@@ -11,6 +11,11 @@
 - `ops-api/ops_api/errors.py`에 `HTTPException` handler를 추가해 오류 응답도 `{error:{code,message}}` 형태로 맞췄다.
 - `.env.example`에 `OPS_API_AUTH_MODE`, `OPS_API_AUTH_TOKENS_JSON` 예시를 추가했고, `scripts/validate_ops_api_auth.py`로 header token/role 검증을 따로 닫았다.
 
+### ops-api schema/error test 보강
+- `scripts/validate_ops_api_schema_models.py`를 추가해 `EvaluateZoneRequest`, `RuntimeModeRequest`, `ShadowReviewRequest`, `RobotTaskCreateRequest`, `ApiResponse`, `ErrorResponse`의 schema와 validation failure를 점검한다.
+- `scripts/validate_ops_api_error_responses.py`를 추가해 `HTTPException`과 generic exception handler가 모두 표준 `{error:{code,message}}` envelope를 반환하는지 확인한다.
+- 이로써 `todo 12.3`에서 남은 backend 검증은 `load test 최소 시나리오`만 남는다.
+
 ### backend/database 3단계 확장
 - `infra/postgres/001_initial_schema.sql`에 `zones`, `sensors`, `devices`, `policies`, `alerts`, `robot_candidates`, `robot_tasks`를 추가하고 `zone_id`, `created_at`, `device command`, `robot task` 인덱스를 보강했다.
 - `ops-api/ops_api/models.py`를 같은 스키마로 확장해 reference catalog와 운영 테이블을 ORM으로 다루게 했다.

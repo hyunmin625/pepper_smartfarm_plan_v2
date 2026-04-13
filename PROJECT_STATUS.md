@@ -55,6 +55,7 @@
 - `ops-api/ops_api/app.py`와 `infra/postgres/001_initial_schema.sql`을 추가해 `decisions`, `approvals`, `device_commands`, `policy_evaluations`, `operator_reviews` 저장 경로와 `POST /decisions/evaluate-zone`, `POST /actions/approve`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `GET/POST /runtime/mode`까지 연결했다.
 - `ops-api/ops_api/auth.py`와 `ops-api/ops_api/api_models.py`를 추가/확장해 `disabled/header_token` 인증, `viewer/operator/service/admin` 역할 권한, 공통 `ApiResponse/ErrorResponse` envelope를 고정했다.
 - `scripts/validate_ops_api_auth.py`를 추가해 auth/role 검증도 로컬에서 닫았다.
+- `scripts/validate_ops_api_schema_models.py`, `scripts/validate_ops_api_error_responses.py`를 추가해 request/response schema와 표준 error envelope도 로컬에서 닫았다.
 - backend/database 3단계 확장 완료: `zones`, `sensors`, `devices`, `policies`, `alerts`, `robot_candidates`, `robot_tasks` 스키마와 seed/bootstrap을 추가했고, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `POST /actions/execute`, `POST /robot/tasks`를 운영 API에 연결했다.
 - `/dashboard`는 `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow agree/disagree`, `approve/reject`를 한 화면으로 묶는다.
 - 로컬에서는 `SQLite + mock PLC adapter`로 end-to-end approval flow를 검증했고, 검증 스크립트는 `scripts/validate_state_estimator_features.py`, `scripts/validate_state_estimator_raw_loader.py`, `scripts/validate_llm_orchestrator_service.py`, `scripts/validate_llm_response_parser.py`, `scripts/validate_ops_api_flow.py`다.
@@ -324,7 +325,7 @@
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
-11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 현재 우선순위는 `real shadow log`, `sensor-ingestor raw snapshot 직결`, `real PostgreSQL smoke`, `policy management/auth UI`다.
+11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 현재 우선순위는 `real shadow log`, `sensor-ingestor raw snapshot 직결`, `real PostgreSQL smoke`, `load test`, `policy management/auth UI`다.
 
 ## 주의할 점
 
