@@ -928,7 +928,7 @@
 
 ## 14.1 기본 화면 정의
 - [x] zone overview 화면 설계 (`ops-api/ops_api/app.py`)
-- [ ] real-time sensor 화면 설계
+- [x] real-time sensor 화면 설계 (`ops-api/ops_api/app.py` Zone History Chart 카드, `/zones/{zone_id}/history` `sensor_series`, `scripts/validate_ops_api_zone_history.py`)
 - [x] decision 로그 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] action 승인 화면 설계 (`ops-api/ops_api/app.py`)
 - [x] alert 화면 설계 (`ops-api/ops_api/app.py`)
@@ -936,22 +936,22 @@
 - [x] policy 관리 화면 설계 (`ops-api/ops_api/app.py`, `ops-api/ops_api/api_models.py`)
 
 ## 14.2 시각화
-- [ ] 온도/습도 시계열 차트
-- [ ] CO2 시계열 차트
-- [ ] 함수율/EC/pH 시계열 차트
-- [ ] 장치 상태 카드
-- [ ] 현재 제약 조건 카드
+- [x] 온도/습도 시계열 차트 (`ops-api/ops_api/app.py` `TRACKED_SENSOR_METRICS` air_temp_c/rh_pct/vpd_kpa + `renderZoneHistory` SVG sparkline)
+- [x] CO2 시계열 차트 (`ops-api/ops_api/app.py` `TRACKED_SENSOR_METRICS` co2_ppm)
+- [x] 함수율/EC/pH 시계열 차트 (`ops-api/ops_api/app.py` `TRACKED_SENSOR_METRICS` substrate_moisture_pct/feed_ec_ds_m/drain_ec_ds_m/feed_ph/drain_ph, `scripts/validate_ops_api_dashboard_section14.py`)
+- [x] 장치 상태 카드 (`ops-api/ops_api/app.py` `_build_dashboard_payload` zone.device_status + `renderDeviceStatus`, `scripts/validate_ops_api_dashboard_section14.py`)
+- [x] 현재 제약 조건 카드 (`ops-api/ops_api/app.py` zone.active_constraints + `renderActiveConstraints`, `scripts/validate_ops_api_dashboard_section14.py`)
 - [x] 최근 결정 카드 (`ops-api/ops_api/app.py`)
 - [x] blocked/rejected 명령 리스트 (`ops-api/ops_api/app.py`)
 - [x] shadow window summary 카드 (`ops-api/ops_api/app.py`, `ops-api/ops_api/shadow_mode.py`)
-- [ ] robot candidate 리스트
+- [x] robot candidate 리스트 (`ops-api/ops_api/app.py` `GET /robot/candidates`, `_serialize_robot_candidate`, `renderRobotCandidates`, dashboard payload `robot_candidates`, `scripts/validate_ops_api_dashboard_section14.py`)
 
 ## 14.3 운영 기능
-- [ ] 수동 명령 입력 UI
+- [x] 수동 명령 입력 UI (`ops-api/ops_api/app.py` `executeAction()` JS → `POST /actions/execute`, `scripts/validate_ops_api_dashboard_section14.py`)
 - [x] 자동/수동 모드 전환 UI (`ops-api/ops_api/app.py`)
 - [x] 승인/거절 UI (`ops-api/ops_api/app.py`)
 - [x] 주석/운영 메모 UI (`ops-api/ops_api/app.py`)
-- [ ] 문제 사례 태깅 UI
+- [x] 문제 사례 태깅 UI (`ops-api/ops_api/app.py` `flagCase()` JS → `POST /shadow/reviews` with `flag:` prefix, `scripts/validate_ops_api_dashboard_section14.py` operator_review 회귀)
 
 ---
 

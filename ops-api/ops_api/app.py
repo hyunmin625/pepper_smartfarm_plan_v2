@@ -292,6 +292,20 @@ def _serialize_robot_task(row: RobotTaskRecord) -> dict[str, Any]:
     }
 
 
+def _serialize_robot_candidate(row: RobotCandidateRecord) -> dict[str, Any]:
+    return {
+        "candidate_id": row.candidate_id,
+        "decision_id": row.decision_id,
+        "zone_id": row.zone_id,
+        "candidate_type": row.candidate_type,
+        "priority": row.priority,
+        "status": row.status,
+        "payload": _loads_json(row.payload_json, {}),
+        "created_at": row.created_at.isoformat(),
+        "updated_at": row.updated_at.isoformat(),
+    }
+
+
 def _refresh_alerts_for_decision(
     *,
     session: Session,
@@ -469,6 +483,8 @@ TRACKED_SENSOR_METRICS: tuple[str, ...] = (
     "par_umol_m2_s",
     "feed_ec_ds_m",
     "drain_ec_ds_m",
+    "feed_ph",
+    "drain_ph",
 )
 
 
@@ -528,6 +544,9 @@ def _build_dashboard_payload(
     zone_rows = session.execute(select(ZoneRecord).order_by(ZoneRecord.zone_id)).scalars().all()
     alert_rows = session.execute(select(AlertRecord).order_by(desc(AlertRecord.id)).limit(30)).scalars().all()
     robot_rows = session.execute(select(RobotTaskRecord).order_by(desc(RobotTaskRecord.id)).limit(30)).scalars().all()
+    robot_candidate_rows = session.execute(
+        select(RobotCandidateRecord).order_by(desc(RobotCandidateRecord.id)).limit(30)
+    ).scalars().all()
     policy_rows = session.execute(select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)).scalars().all()
     policy_event_rows = session.execute(select(PolicyEventRecord).order_by(desc(PolicyEventRecord.id)).limit(30)).scalars().all()
     decision_items = [_build_decision_item(row) for row in rows]
@@ -565,6 +584,18 @@ def _build_dashboard_payload(
                 "sensor_quality": item["sensor_quality"],
                 "created_at": item["created_at"],
             }
+        zone_entry = latest_zone_items[item["zone_id"]]
+        if zone_entry.get("decision_id") is None or zone_entry["decision_id"] < item["decision_id"]:
+            zone_entry["decision_id"] = item["decision_id"]
+            zone_entry["task_type"] = item["task_type"]
+            zone_entry["status"] = item["status"]
+            zone_entry["risk_level"] = item["risk_level"]
+            zone_entry["current_state_summary"] = item["current_state_summary"]
+            zone_entry["sensor_quality"] = item["sensor_quality"]
+            zone_entry["created_at"] = item["created_at"]
+            zone_state = item.get("zone_state") or {}
+            zone_entry["device_status"] = zone_state.get("device_status") or {}
+            zone_entry["active_constraints"] = zone_state.get("active_constraints") or {}
 
         if item["runtime_mode"] == "approval" and item["status"] == "evaluated":
             approval_pending_count += 1
@@ -600,6 +631,7 @@ def _build_dashboard_payload(
             "command_count": len(command_rows),
             "alert_count": len(alert_rows),
             "robot_task_count": len(robot_rows),
+            "robot_candidate_count": len(robot_candidate_rows),
             "policy_count": len(policy_rows),
             "policy_disabled_count": sum(1 for row in policy_rows if not row.enabled),
             "policy_event_count": len(policy_event_rows),
@@ -612,6 +644,7 @@ def _build_dashboard_payload(
         "policy_events": [_serialize_policy_event(row) for row in policy_event_rows[:12]],
         "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
         "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
+        "robot_candidates": [_serialize_robot_candidate(row) for row in robot_candidate_rows[:12]],
         "decisions": decision_items,
         "commands": [
             {
@@ -1284,6 +1317,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         rows = session.execute(stmt.limit(50)).scalars().all()
         return _ok({"items": [_serialize_robot_task(row) for row in rows]}, actor=actor, meta={"zone_id": zone_id, "status": status})
 
+    @app.get(
+        "/robot/candidates",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_robot_candidates(
+        zone_id: str | None = None,
+        status: str | None = None,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        stmt = select(RobotCandidateRecord).order_by(desc(RobotCandidateRecord.id))
+        if zone_id:
+            stmt = stmt.where(RobotCandidateRecord.zone_id == zone_id)
+        if status:
+            stmt = stmt.where(RobotCandidateRecord.status == status)
+        rows = session.execute(stmt.limit(50)).scalars().all()
+        return _ok(
+            {"items": [_serialize_robot_candidate(row) for row in rows]},
+            actor=actor,
+            meta={"zone_id": zone_id, "status": status},
+        )
+
     @app.post(
         "/robot/tasks",
         tags=["operations"],
@@ -1588,6 +1645,27 @@ def _dashboard_html() -> str:
           </section>
           <section>
             <div class="section-title">
+              <h2>Robot Candidates</h2>
+              <span class="small">vision/operator 후보</span>
+            </div>
+            <div id="robotCandidateList"></div>
+          </section>
+          <section>
+            <div class="section-title">
+              <h2>Device Status</h2>
+              <span class="small">zone별 최신 device_status</span>
+            </div>
+            <div id="deviceStatusList"></div>
+          </section>
+          <section>
+            <div class="section-title">
+              <h2>Active Constraints</h2>
+              <span class="small">current zone constraints</span>
+            </div>
+            <div id="activeConstraintsList"></div>
+          </section>
+          <section>
+            <div class="section-title">
               <h2>Policy Events</h2>
               <span class="small">blocked / approval escalation</span>
             </div>
@@ -1656,6 +1734,35 @@ def _dashboard_html() -> str:
       });
       await refreshDashboard();
     }
+    async function executeAction(decisionId) {
+      const reason = window.prompt('수동 execute 사유를 입력하세요.', 'dashboard manual execute') || '';
+      try {
+        await apiFetch('/actions/execute', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason })
+        });
+      } catch (err) {
+        window.alert('execute 실패: ' + err.message);
+      }
+      await refreshDashboard();
+    }
+    async function flagCase(decisionId) {
+      const note = window.prompt('문제 사례 태깅 — 원인/카테고리를 입력하세요.', 'flag: ') || '';
+      if (!note.trim()) return;
+      const tagged = note.startsWith('flag:') ? note : ('flag: ' + note);
+      await apiFetch('/shadow/reviews', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          decision_id: decisionId,
+          actor_id:'dashboard-operator',
+          agreement_status: 'disagree',
+          note: tagged
+        })
+      });
+      await refreshDashboard();
+    }
     function renderMetrics(summary) {
       const metrics = [
         ['Decision', summary.decision_count],
@@ -1702,6 +1809,59 @@ def _dashboard_html() -> str:
           <div class="small">candidate=${item.candidate_id || 'none'} · status=${item.status}</div>
         </div>
       `).join('') || '<div>robot task가 없습니다.</div>';
+    }
+    function renderRobotCandidates(items) {
+      const host = document.getElementById('robotCandidateList');
+      if (!host) return;
+      host.innerHTML = (items || []).map(item => `
+        <div class="robot">
+          <div class="meta">${item.candidate_id} · ${item.zone_id}</div>
+          <div><span class="badge">${item.candidate_type}</span><span class="badge dark">${item.priority}</span><span class="badge ${item.status === 'rejected' ? 'warn' : ''}">${item.status}</span></div>
+          <div class="small">decision=${item.decision_id || 'none'} · created=${item.created_at || ''}</div>
+        </div>
+      `).join('') || '<div>robot candidate가 없습니다.</div>';
+    }
+    function renderDeviceStatus(zones) {
+      const host = document.getElementById('deviceStatusList');
+      if (!host) return;
+      const entries = (zones || []).filter(z => z.device_status && Object.keys(z.device_status).length > 0);
+      if (entries.length === 0) {
+        host.innerHTML = '<div>device_status 기록이 없습니다.</div>';
+        return;
+      }
+      host.innerHTML = entries.map(zone => {
+        const devices = Object.entries(zone.device_status).map(([deviceId, info]) => {
+          const status = (info && typeof info === 'object') ? (info.status || info.state || JSON.stringify(info)) : info;
+          return `<div class="small">${deviceId}: <span class="badge dark">${status}</span></div>`;
+        }).join('');
+        return `
+          <div class="zone">
+            <div class="meta">${zone.zone_id} · decision=${zone.decision_id || 'none'}</div>
+            ${devices}
+          </div>
+        `;
+      }).join('');
+    }
+    function renderActiveConstraints(zones) {
+      const host = document.getElementById('activeConstraintsList');
+      if (!host) return;
+      const entries = (zones || []).filter(z => z.active_constraints && Object.keys(z.active_constraints).length > 0);
+      if (entries.length === 0) {
+        host.innerHTML = '<div>현재 active constraint가 없습니다.</div>';
+        return;
+      }
+      host.innerHTML = entries.map(zone => {
+        const flags = Object.entries(zone.active_constraints).map(([key, value]) => {
+          const on = value === true || value === 'true' || value === 1;
+          return `<span class="badge ${on ? 'warn' : 'dark'}">${key}${on ? '' : `=${value}`}</span>`;
+        }).join('');
+        return `
+          <div class="zone">
+            <div class="meta">${zone.zone_id}</div>
+            <div>${flags}</div>
+          </div>
+        `;
+      }).join('');
     }
     function renderShadowWindow(summary) {
       if (!summary) {
@@ -1774,10 +1934,14 @@ def _dashboard_html() -> str:
               <button onclick="approve(${item.decision_id})">승인</button>
               <button class="secondary" onclick="reject(${item.decision_id})">거절</button>
             ` : ''}
+            ${mode === 'approval' && item.runtime_mode === 'approval' && item.status === 'evaluated' ? `
+              <button class="secondary" onclick="executeAction(${item.decision_id})">수동 Execute</button>
+            ` : ''}
             ${mode === 'shadow' && item.runtime_mode === 'shadow' && item.status === 'evaluated' ? `
               <button onclick="review(${item.decision_id}, 'agree')">일치</button>
               <button class="warn" onclick="review(${item.decision_id}, 'disagree')">불일치</button>
             ` : ''}
+            <button class="warn" onclick="flagCase(${item.decision_id})">문제 사례 태깅</button>
           </div>
           <div class="small">
             approval=${item.latest_approval ? item.latest_approval.approval_status : 'none'}
@@ -1799,6 +1963,9 @@ def _dashboard_html() -> str:
       renderPolicyEvents(data.policy_events || []);
       renderAlerts(data.alerts);
       renderRobotTasks(data.robot_tasks);
+      renderRobotCandidates(data.robot_candidates || []);
+      renderDeviceStatus(data.zones || []);
+      renderActiveConstraints(data.zones || []);
       renderCommands(data.commands);
       renderDecisions(data.runtime_mode.mode, data.decisions);
       syncZoneHistoryOptions(data.zones || []);

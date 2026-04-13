@@ -335,6 +335,7 @@
 16. `/zones/{zone_id}/history` 응답에 `sensor_series`가 추가됐고, Approval Dashboard에 Zone History Chart 카드 + 인라인 SVG 스파크라인이 붙었다. air/rh/vpd/substrate_moisture/substrate_temp/co2/par/feed_ec/drain_ec 9개 지표를 decision zone_state에서 재구성한다 (`validate_ops_api_zone_history`).
 17. 통합 smoke 2종이 추가됐다. `validate_state_estimator_policy_flow`는 healthy / worker_present / sensor_quality=bad 3 시나리오로 `estimate_zone_state → build_zone_state_payload → evaluate_device_policy_precheck` 계약을 회귀하고, `validate_llm_to_execution_flow`는 stub baseline / adjust_fan / pause_automation 3 시나리오로 `LLMOrchestratorService → ActionDispatchPlanner → ExecutionDispatcher`가 device_command acknowledged, control_override state_updated, audit row 2건까지 닫히는지 확인한다.
 18. 실시간 shadow runner가 추가됐다. `scripts/push_shadow_cases_to_ops_api.py`가 `/shadow/cases/capture` → `/shadow/window` 경로를 batch 단위로 호출하고 `--gate rollback|hold|promote`로 최소 promotion_decision을 강제한다. `validate_shadow_runner_gate`는 healthy → promote 통과, mismatch append → hold 강등 + promote 거부, gate=hold 완화 → 통과까지 TestClient 기반으로 회귀한다.
+19. Approval Dashboard 섹션 14가 닫혔다. Zone History Chart에 `feed_ph`/`drain_ph` 추가(총 11 지표), `_serialize_robot_candidate` + `GET /robot/candidates` + 대시보드 Robot Candidates 카드, 각 zone payload에 `device_status`/`active_constraints` 노출 + Device Status/Active Constraints 카드, 결정 카드에 `수동 Execute`(approval 모드)와 `문제 사례 태깅`(`flag:` prefix → `POST /shadow/reviews`) 버튼이 추가됐다. `validate_ops_api_dashboard_section14`가 `/robot/candidates` 필터, pH 시계열, HTML 10개 훅, `OperatorReviewRecord`의 `flag:` prefix 보존까지 7개 invariant를 회귀한다.
 
 ## 주의할 점
 
