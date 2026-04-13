@@ -663,7 +663,7 @@
 ## 8.3 정책 엔진 구현
 - [x] output validator runtime skeleton 작성 (`policy-engine/policy_engine/output_validator.py`, `scripts/validate_policy_output_validator.py`)
 - [x] llm output -> validator -> audit log runtime skeleton 작성 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/validate_llm_output_validator_runtime.py`)
-- [ ] policy loader 작성
+- [x] policy loader 작성 (`policy-engine/policy_engine/loader.py`, `scripts/validate_policy_engine_precheck.py`)
 - [ ] evaluator 작성
 - [ ] action constraint evaluator 작성
 - [ ] state constraint evaluator 작성
@@ -746,7 +746,7 @@
 - [ ] retrieval_coverage 필드 검증
 - [ ] robot task schema 검증
 - [ ] natural language leakage 검토
-- [ ] policy precheck 연결
+- [x] policy precheck 연결 (`policy-engine/policy_engine/precheck.py`, `execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
 
 ---
 
@@ -1061,7 +1061,7 @@
 - [ ] schema validator 테스트
 - [ ] VPD calculator 테스트
 - [ ] trend calculator 테스트
-- [ ] policy evaluator 테스트
+- [x] policy evaluator 테스트 (`scripts/validate_policy_engine_precheck.py`)
 - [ ] action validator 테스트
 - [ ] duplicate detector 테스트
 - [ ] cooldown manager 테스트

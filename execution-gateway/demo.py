@@ -12,6 +12,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "execution-gateway"))
 sys.path.insert(0, str(REPO_ROOT / "plc-adapter"))
+sys.path.insert(0, str(REPO_ROOT / "policy-engine"))
 
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest
 from execution_gateway.dispatch import ExecutionDispatcher

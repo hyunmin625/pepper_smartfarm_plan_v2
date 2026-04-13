@@ -11,6 +11,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "execution-gateway"))
 sys.path.insert(0, str(REPO_ROOT / "plc-adapter"))
+sys.path.insert(0, str(REPO_ROOT / "policy-engine"))
 
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest
 from execution_gateway.guards import (
@@ -103,6 +104,63 @@ def main() -> None:
     if blocked_sensor_decision.allow_dispatch or "hard_guard_sensor_quality_blocked" not in blocked_sensor_decision.reasons:
         errors.append("blocked_sensor_request should be blocked by hard_guard_sensor_quality_blocked")
 
+    irrigation_path_request = DeviceCommandRequest.from_dict(
+        {
+            **device_rows[0],
+            "request_id": "cmd-irrigation-path-degraded",
+            "action_type": "short_irrigation",
+            "device_id": "gh-01-zone-b--irrigation-valve--01",
+            "parameters": {"run_state": "open", "duration_seconds": 120},
+            "irrigation_path_degraded": True,
+        }
+    )
+    _, irrigation_path_decision = evaluate_device_command(
+        irrigation_path_request,
+        catalog=catalog,
+        registry=registry,
+        duplicates=DuplicateDetector(),
+        cooldowns=CooldownManager(),
+    )
+    if irrigation_path_decision.allow_dispatch or "policy_precheck:HSV-04" not in irrigation_path_decision.reasons:
+        errors.append("irrigation_path_request should be blocked by HSV-04 precheck")
+
+    fertigation_conflict_request = DeviceCommandRequest.from_dict(
+        {
+            **device_rows[0],
+            "request_id": "cmd-rootzone-conflict-fertigation",
+            "zone_id": "gh-01-nutrient-room",
+            "device_id": "gh-01-nutrient-room--nutrient-mixer--01",
+            "action_type": "adjust_fertigation",
+            "parameters": {"recipe_id": "default-recipe", "mix_volume_l": 50},
+            "approval_required": False,
+            "approval_context": {
+                "approval_status": "not_required",
+                "approver_id": None,
+                "approved_at": None,
+            },
+            "policy_snapshot": {
+                "policy_result": "pass",
+                "policy_ids": [],
+            },
+            "rootzone_sensor_conflict": True,
+            "rootzone_control_interpretable": False,
+        }
+    )
+    _, fertigation_conflict_decision = evaluate_device_command(
+        fertigation_conflict_request,
+        catalog=catalog,
+        registry=registry,
+        duplicates=DuplicateDetector(),
+        cooldowns=CooldownManager(),
+    )
+    if (
+        fertigation_conflict_decision.allow_dispatch
+        or fertigation_conflict_decision.policy_result != "approval_required"
+        or "policy_precheck:HSV-09" not in fertigation_conflict_decision.reasons
+        or "approval_pending" not in fertigation_conflict_decision.reasons
+    ):
+        errors.append("fertigation_conflict_request should escalate to approval_required via HSV-09")
+
     duplicate_detector = DuplicateDetector()
     _, first_duplicate_decision = evaluate_control_override(
         ControlOverrideRequest.from_dict(override_rows[0]),
@@ -130,7 +188,7 @@ def main() -> None:
     for error in errors:
         print(f"ERROR {error}", file=sys.stderr)
 
-    print("checked_cases: 6")
+    print("checked_cases: 8")
     print(f"errors: {len(errors)}")
     raise SystemExit(1 if errors else 0)
 

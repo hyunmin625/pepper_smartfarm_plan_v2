@@ -13,6 +13,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "execution-gateway"))
 sys.path.insert(0, str(REPO_ROOT / "plc-adapter"))
+sys.path.insert(0, str(REPO_ROOT / "policy-engine"))
 
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from execution_gateway.dispatch import ExecutionDispatcher  # noqa: E402
@@ -58,6 +59,16 @@ def main() -> int:
             },
         }
         worker_present_result = dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(worker_present_request))
+        irrigation_path_request = {
+            **device_rows[0],
+            "request_id": "cmd-irrigation-path-dispatch",
+            "zone_id": "gh-01-zone-b",
+            "device_id": "gh-01-zone-b--irrigation-valve--01",
+            "action_type": "short_irrigation",
+            "parameters": {"run_state": "open", "duration_seconds": 120},
+            "irrigation_path_degraded": True,
+        }
+        irrigation_path_result = dispatcher.dispatch_device_command(DeviceCommandRequest.from_dict(irrigation_path_request))
         auto_reentry_result = dispatcher.dispatch_control_override(ControlOverrideRequest.from_dict(override_rows[-1]))
 
         audit_rows = load_jsonl(audit_path)
@@ -72,13 +83,15 @@ def main() -> int:
             errors.append("source water dispatch did not reach adapter")
         if worker_present_result.status != "rejected" or "hard_guard_worker_present" not in worker_present_result.reasons:
             errors.append("worker_present_result was not blocked by hard safety guard")
+        if irrigation_path_result.status != "rejected" or "policy_precheck:HSV-04" not in irrigation_path_result.reasons:
+            errors.append("irrigation_path_result was not blocked by policy precheck")
         if auto_reentry_result.status != "state_updated":
             errors.append("auto mode reentry did not update state")
-        if len(audit_rows) != 6:
-            errors.append(f"expected 6 audit rows, found {len(audit_rows)}")
+        if len(audit_rows) != 7:
+            errors.append(f"expected 7 audit rows, found {len(audit_rows)}")
 
         summary = {
-            "checked_cases": 6,
+            "checked_cases": 7,
             "audit_rows": len(audit_rows),
             "zone_a_state": dispatcher.control_state.get("zone", "gh-01-zone-a").as_dict(),
             "site_state": dispatcher.control_state.get("site", "gh-01").as_dict(),

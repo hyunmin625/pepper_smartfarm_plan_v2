@@ -119,6 +119,7 @@
 - shadow review: 운영자가 AI 추천과 실제 판단의 일치/불일치를 기록
 - `POST /shadow/cases/capture`, `GET /shadow/window`로 real shadow case 적재와 rolling summary 조회를 API에서 직접 수행
 - approval mode: 승인된 action만 planner를 거쳐 `execution-gateway`로 전달
+- `execution-gateway`는 dispatch 직전 `policy-engine/precheck`로 seed policy를 다시 평가한다. 현재 `HSV-04` path degraded block, `HSV-09` fertigation approval escalation을 실제 request/raw context 기준으로 재적용한다.
 - 현재 dispatch backend는 `mock PLC adapter`
 
 ## 로컬 검증 명령
@@ -139,6 +140,9 @@ python3 scripts/validate_ops_api_load_scenario.py
 python3 scripts/validate_ops_api_shadow_mode.py
 python3 scripts/validate_ops_api_server_smoke.py
 python3 scripts/validate_ops_api_postgres_smoke.py
+python3 scripts/validate_policy_engine_precheck.py
+python3 scripts/validate_execution_gateway_flow.py
+python3 scripts/validate_execution_dispatcher.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
 python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
@@ -158,4 +162,4 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 1. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
 2. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
 3. real sensor 시계열 차트와 zone history 시각화를 dashboard에 추가
-4. `policy-engine`의 policy loader / precheck를 runtime path에 연결
+4. `policy-engine` policy source abstraction과 blocked/approval event 저장을 추가

@@ -104,6 +104,7 @@
 - PostgreSQL DDL도 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)로 고정했고, 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
 - `scripts/validate_ops_api_server_smoke.py`로 실제 `uvicorn` localhost HTTP smoke도 통과했고, smoke 범위에 `GET /auth/me`, `GET /policies`, `POST /policies/{policy_id}`까지 포함했다.
 - `bash -lc "set -a; source .env >/dev/null 2>&1; set +a; python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10"` 기준 OpenAI online smoke도 통과했다. `champion` alias는 현재 `ds_v11` FT model id로 해석되고, retrieval/strict JSON/validator 경로가 실제 응답으로 검증됐다.
+- `policy-engine/policy_engine/loader.py`, `precheck.py`를 추가해 dispatch 직전 seed policy를 다시 평가하도록 연결했다. 현재 `HSV-04` 관수 경로 degraded block, `HSV-09` fertigation approval escalation이 `execution-gateway` preflight에서 실제로 강제된다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10`이며, 모두 safety/failure 오판을 직접 겨냥한다.
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 1.0`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.
 - 다만 validator를 붙여도 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
@@ -308,7 +309,7 @@
 1. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
 2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
 3. real sensor 시계열 차트와 zone history 시각화를 dashboard에 추가
-4. `policy-engine`의 policy loader / precheck를 runtime path에 연결
+4. `policy-engine` policy source abstraction과 blocked/approval event 저장을 추가
 3. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
 4. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
 5. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`

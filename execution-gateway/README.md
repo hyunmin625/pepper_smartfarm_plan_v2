@@ -9,6 +9,7 @@
 - duplicate detector
 - cooldown manager
 - hard-coded safety guard (`worker_present`, `sensor_quality blocked`, active interlocks)
+- policy precheck (`policy-engine` seed rule catalog 재평가)
 - approval / policy / manual override / estop guard
 - control state store
 - execution dispatcher
@@ -19,8 +20,10 @@
 
 - `scripts/validate_execution_gateway_flow.py`
   - preflight reject/ready 경로
+  - `HSV-04` path degraded block, `HSV-09` fertigation approval escalation 확인
 - `scripts/validate_execution_dispatcher.py`
   - `override -> state update -> device block -> adapter dispatch -> audit log`
+  - dispatch 직전 policy precheck reject 경로 확인
 
 ## 실행 예시
 

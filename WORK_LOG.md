@@ -4,6 +4,13 @@
 
 ## 2026-04-13
 
+### policy-engine loader + execution precheck 연결
+- `policy-engine/policy_engine/loader.py`를 추가해 enabled policy catalog를 stage 기준으로 읽는 loader를 만들었다.
+- `policy-engine/policy_engine/precheck.py`를 추가해 dispatch 직전 `DeviceCommandRequest.raw`와 `policy_snapshot`을 다시 읽고 `blocked / approval_required / pass`를 재계산하는 precheck evaluator를 구현했다.
+- 현재 precheck는 `HSV-04` 관수 경로 degraded에서 `short_irrigation` 차단, `HSV-09` rootzone conflict에서 `adjust_fertigation`을 `approval_required`로 승격하는 보수 규칙을 실제 request path에 적용한다.
+- `execution-gateway/execution_gateway/guards.py`는 이제 precheck 결과를 병합해 `policy_result`, `policy_ids`, `policy_precheck:*` reason을 preflight와 audit에 남긴다.
+- `scripts/validate_policy_engine_precheck.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`를 갱신해 loader/precheck와 dispatch 직전 reject/escalation 경로를 회귀 검증했다.
+
 ### OpenAI online smoke + policy management/auth dashboard 보강
 - `bash -lc "set -a; source .env >/dev/null 2>&1; set +a; python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10"`로 실제 OpenAI online smoke를 실행했다.
 - 결과는 `champion -> ds_v11` FT model alias 해석, retrieval chunk 주입, strict JSON parse, validator rewrite reason(`HSV-08`)까지 모두 통과였다.

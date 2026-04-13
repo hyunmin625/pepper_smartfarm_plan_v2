@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from plc_adapter.device_catalog import DeviceCatalog
 from plc_adapter.device_profiles import DeviceProfileRegistry
+from policy_engine import evaluate_device_policy_precheck, evaluate_override_policy_precheck
 
 from .contracts import ControlOverrideRequest, DeviceCommandRequest
 from .normalizer import NormalizedRequest, normalize_control_override, normalize_device_command
@@ -29,6 +30,8 @@ class PreflightDecision:
     reasons: list[str]
     dedupe_key: str
     cooldown_key: str
+    policy_result: str = "pass"
+    policy_ids: list[str] = field(default_factory=list)
 
 
 class DuplicateDetector:
@@ -107,6 +110,7 @@ def evaluate_device_command(
 ) -> tuple[NormalizedRequest, PreflightDecision]:
     normalized = normalize_device_command(request)
     reasons: list[str] = []
+    policy_precheck = evaluate_device_policy_precheck(request.raw)
 
     device = catalog.get(request.device_id)
     profile = registry.get(device.profile_id)
@@ -125,14 +129,16 @@ def evaluate_device_command(
 
     if request.manual_override and request.action_type != "pause_automation":
         reasons.append("manual_override_active")
-    if request.policy_result == "blocked":
+    reasons.extend(policy_precheck.reasons)
+    resolved_policy_result = policy_precheck.policy_result
+    if resolved_policy_result == "blocked":
         reasons.append("policy_blocked")
     if duplicates.is_duplicate(normalized.dedupe_key):
         reasons.append("duplicate_request")
     if cooldowns.is_active(normalized.cooldown_key):
         reasons.append("cooldown_active")
 
-    if request.approval_required or request.policy_result == "approval_required":
+    if request.approval_required or resolved_policy_result == "approval_required":
         if request.approval_status != "approved":
             reasons.append("approval_pending")
 
@@ -146,6 +152,8 @@ def evaluate_device_command(
         reasons=reasons,
         dedupe_key=normalized.dedupe_key,
         cooldown_key=normalized.cooldown_key,
+        policy_result=resolved_policy_result,
+        policy_ids=policy_precheck.policy_ids,
     )
 
 
@@ -157,8 +165,11 @@ def evaluate_control_override(
 ) -> tuple[NormalizedRequest, PreflightDecision]:
     normalized = normalize_control_override(request)
     reasons: list[str] = []
+    policy_precheck = evaluate_override_policy_precheck(request.raw)
 
-    if request.policy_result == "blocked":
+    reasons.extend(policy_precheck.reasons)
+    resolved_policy_result = policy_precheck.policy_result
+    if resolved_policy_result == "blocked":
         reasons.append("policy_blocked")
     if duplicates.is_duplicate(normalized.dedupe_key):
         reasons.append("duplicate_request")
@@ -185,4 +196,6 @@ def evaluate_control_override(
         reasons=reasons,
         dedupe_key=normalized.dedupe_key,
         cooldown_key=normalized.cooldown_key,
+        policy_result=resolved_policy_result,
+        policy_ids=policy_precheck.policy_ids,
     )
