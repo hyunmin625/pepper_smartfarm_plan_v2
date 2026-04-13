@@ -103,6 +103,7 @@
 - **AI 어시스턴트 채팅 경로**: `POST /ai/chat` (`read_runtime` 권한). 운영자 질문을 파인튜닝된 orchestrator client에 `complete()`로 전달하고, 응답 JSON을 `_extract_chat_reply`로 자연어 평문으로 변환한다. 대화 히스토리는 클라이언트 메모리에 유지되며 매 호출마다 최근 8턴을 `운영자/AI/시스템` 포맷으로 함께 전송해 context를 보존한다. 안전 가드(system prompt)로 "장치 직접 on/off 금지, 대시보드 승인 경로로만 권고"를 강제한다.
 - UI는 backend 없이 SPA 하나로 동작하되 5초 주기로 `/dashboard/data`를 폴링해 모든 카드를 재렌더한다. 각 뷰 전환은 클라이언트 사이드 토글로 처리하며, 새 데이터는 `fetch('/dashboard/data')` 한 번으로 공유한다.
 - 장기 센서 시계열과 zone history drill-down은 `/dashboard`의 `대시보드`/`존 모니터링` 뷰 안에 native 시계열 화면으로 제공한다. 최신 상태, 승인, 정책, shadow summary, 수동 실행 같은 write-heavy 운영 기능과 같은 auth/context를 공유한다.
+- **초단위 실시간 시계열은 Server-Sent Events 기반 native streaming**으로 구현한다. ops-api에 `GET /zones/{zone_id}/stream` (SSE, `read_runtime` 권한)과 `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m` (임의 구간) 두 엔드포인트를 추가하고, sensor-ingestor가 TimescaleDB raw insert와 in-process pubsub broadcast를 동시 수행한다. 브라우저는 `EventSource`로 stream을 열고 **uPlot**(MIT, canvas 기반, 의존성 0)으로 60fps 롤링 윈도우를 그린다. iframe·외부 시각화 도구·Grafana embed 없음. 자세한 아키텍처는 `docs/native_realtime_dashboard_plan.md` 참조.
 - 운영 조작 경로는 API가 이미 제공하는 엔드포인트로만 구성한다: `/decisions/evaluate-zone`, `/actions/approve`, `/actions/reject`, `/actions/execute`, `/shadow/reviews`, `/runtime/mode`, `/policies/{id}` (enable/disable 토글), `/shadow/cases/capture`, `/ai/chat`.
 - 권한은 백엔드 `auth.py`의 `viewer/operator/service/admin` 역할을 그대로 사용하며, `auth_mode=disabled` 로컬 개발에서는 헤더 기반 role override로 뷰를 시연한다. `/ai/chat`은 `viewer` 이상 모두 접근 가능.
 

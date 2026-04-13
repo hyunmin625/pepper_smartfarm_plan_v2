@@ -4,6 +4,16 @@
 
 ## 2026-04-14
 
+### Native Realtime SSE + uPlot 결정 (Grafana 임베드 supersede)
+- 운영 요구사항이 "초단위(≤1초) 실시간"으로 명확해진 시점에서, 기존 `TimescaleDB + Grafana 임베드` 방향이 구조적으로 맞지 않는다는 점을 재검토했다. Grafana 기본 dashboard refresh 최소 단위가 5초이고, Grafana Live(WebSocket streaming)는 PostgreSQL/TimescaleDB datasource plugin에서 지원되지 않는다는 한계 때문이다.
+- 새 결정: `docs/native_realtime_dashboard_plan.md`를 추가해 `TimescaleDB + 통합관제 웹 native SSE + uPlot` 경로를 캐노니컬 아키텍처로 고정했다. ops-api에 `GET /zones/{zone_id}/stream` (SSE, `read_runtime` 권한)과 `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m` 두 엔드포인트를 추가하고, sensor-ingestor가 TimescaleDB raw insert와 in-process pubsub broadcast를 동시 수행하며, 브라우저는 `EventSource`로 stream을 열어 `uPlot`(MIT, canvas, 의존성 0)에 60fps 롤링 윈도우를 그린다. 자세한 데이터 볼륨 계산, 리스크/대응, 5단계 구현 순서, supersede되는 문서 매핑까지 포함.
+- 업스트림 정리 커밋 `914c8ee`(Remove Grafana from timeseries dashboard plan)가 이미 `docs/grafana_integration_design.md`와 `infra/grafana/README.md`를 삭제하고 PLAN/PROJECT_STATUS/README/todo/schedule에서 Grafana 언급을 제거해뒀다. 이번 작업은 그 위에 SSE+uPlot 구체 아키텍처를 못박는 형태다. 빈 `infra/grafana/` 디렉터리를 로컬에서 정리했다.
+- `PLAN.md` 2.1 E에 "초단위 실시간 시계열은 Server-Sent Events 기반 native streaming" 문단을 추가해 SSE 엔드포인트 두 개 + uPlot 컴포넌트를 명시했다. `docs/native_realtime_dashboard_plan.md`를 참조 링크로 박았다.
+- `README.md` 문서 인덱스 18번에 `docs/native_realtime_dashboard_plan.md`를 등록하고, "다음 우선순위" 3번을 `TimescaleDB actual writer + 통합관제 웹 native realtime 시계열 (SSE + uPlot)`으로 갱신했다.
+- `PROJECT_STATUS.md`에 항목 24를 추가해 supersede 경위, 새 아키텍처, 닫히는 결정과 살아남는 결정(TimescaleDB 저장 설계는 유효)을 정리했다.
+- `todo.md`에 새 섹션 14.5 `Native Realtime SSE + uPlot 구현`을 추가했다: 결정 문서 1건 완료 + 7건 미구현(TimescaleDB migration, sensor-ingestor writer + pubsub, `/zones/{id}/stream` SSE 엔드포인트, `/zones/{id}/timeseries` 임의 구간 엔드포인트, iFarm uPlot 통합, SSE smoke 회귀, timeseries smoke 회귀).
+- 14.4 `시계열 대시보드 통합` 항목 4건은 그대로 `[x]` 유지 (저장소 결정과 데이터 계층 설계는 supersede되지 않음).
+
 ### Stitch 레퍼런스 기반 UI 전면 재디자인 + AI 어시스턴트 채팅 + 반응형
 - `WebUI/stitch_ui_v1.zip`의 9개 Stitch 스크린(`_1~_6, ai, cctv_3x3, shadow_mode, verdant_control/DESIGN.md`)을 분석해 "농경 사령부 / The Agrarian Command" 디자인 시스템을 `ops-api/ops_api/app.py`의 `_dashboard_html()`에 전면 반영했다. Tailwind CSS CDN + Pretendard/Noto Sans KR/Material Symbols, 어두운 포레스트 사이드바(`#1d2a1f`), 카드 `#fffdf7 + radius 18px + soft shadow`, chip 기반 상태 표현으로 교체.
 - **반응형**: `lg:ml-64` 사이드바가 1024px 이상에서 고정되고, 그 이하에서는 오프스크린 drawer로 변환된다. 헤더의 햄버거 버튼(`toggleSidebar()`)과 backdrop overlay가 drawer를 열고 닫으며, 메뉴 선택 시 자동 닫힘. 메트릭 그리드는 `grid-cols-2 sm:3 md:4 lg:5`로, 존 히스토리 스파크라인은 `grid-cols-1 sm:2 lg:3`으로 breakpoint별로 재배치된다. 대시보드의 2단·3단 카드 레이아웃도 `lg:` 이상에서만 활성화.

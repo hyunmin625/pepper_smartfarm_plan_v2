@@ -25,11 +25,12 @@
 15. `docs/runtime_integration_status.md`: orchestrator/state-estimator/API/dashboard 연결 상태
 16. `docs/timeseries_storage_dashboard_plan.md`: TimescaleDB 시계열 저장/대시보드 방향
 17. `docs/timescaledb_schema_design.md`: raw/snapshot/downsampling/compression 스키마 기준
-18. `ops-api/README.md`: 운영 API, 역할 권한, seed/bootstrap 절차
-19. `schedule.md`: 개정 실행 순서와 8주 일정
-20. `todo.md`: 세부 작업 체크리스트
-21. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-22. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+18. `docs/native_realtime_dashboard_plan.md`: 초단위 실시간 SSE + uPlot 시각화 결정 (Grafana 임베드 supersede)
+19. `ops-api/README.md`: 운영 API, 역할 권한, seed/bootstrap 절차
+20. `schedule.md`: 개정 실행 순서와 8주 일정
+21. `todo.md`: 세부 작업 체크리스트
+22. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+23. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -311,7 +312,7 @@
 
 1. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
 2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-3. TimescaleDB actual writer와 통합관제 웹 real sensor 시계열 차트/zone history를 연결하기
+3. TimescaleDB actual writer와 통합관제 웹 native realtime 시계열을 연결하기 (`SSE + uPlot`, `docs/native_realtime_dashboard_plan.md`)
 4. `policy-engine` policy source versioning과 blocked/approval event UI를 추가
 5. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
 6. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`

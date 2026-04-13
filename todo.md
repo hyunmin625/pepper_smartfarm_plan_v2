@@ -962,6 +962,16 @@
 - [x] `/dashboard` 존 모니터링 뷰 시계열 drill-down 설계 (`docs/timeseries_storage_dashboard_plan.md`)
 - [x] 통합관제 role/auth 문맥에서 read-only 시계열 조회 정책 정리 (`docs/timeseries_storage_dashboard_plan.md`)
 
+## 14.5 Native Realtime SSE + uPlot 구현
+- [x] 결정 문서: Grafana 임베드 supersede + 초단위 실시간 SSE/uPlot 아키텍처 고정 (`docs/native_realtime_dashboard_plan.md`)
+- [ ] `infra/postgres/002_timescaledb_sensor_readings.sql`: extension + `sensor_readings`/`zone_state_snapshots` hypertable + index + retention/compression policy + `zone_metric_5m`/`zone_metric_30m` continuous aggregate (`docs/timescaledb_schema_design.md` 기준)
+- [ ] sensor-ingestor TimescaleDB writer 경로: adapter normalized record를 `sensor_readings`로 insert + asyncio.Queue in-process pubsub broadcast (`sensor-ingestor/sensor_ingestor/runtime.py`, `adapters.py`)
+- [ ] ops-api `GET /zones/{zone_id}/stream` (SSE, `read_runtime` 권한): 연결 시 최근 5분 bootstrap + sensor-ingestor pubsub에서 신규 reading streaming, 자동 disconnect 정리
+- [ ] ops-api `GET /zones/{zone_id}/timeseries?from&to&interval=raw|1m|5m|30m`: interval에 따라 `sensor_readings` raw / `zone_metric_5m` / `zone_metric_30m` 자동 라우팅
+- [ ] iFarm 대시보드 `존 모니터링` 뷰 uPlot 통합: 11개 지표 SVG 스파크라인을 uPlot 인스턴스로 교체, EventSource 기반 streaming, 60s/5m/30m/6h/24h 롤링 윈도우 selector, 자동 재연결 + 백오프
+- [ ] `scripts/validate_ops_api_sse_stream.py` 회귀: TestClient async generator로 연결 → 이벤트 시퀀스 검증 → reconnect 시 bootstrap 재발송 검증
+- [ ] `scripts/validate_ops_api_timeseries.py` 회귀: interval별 hypertable 라우팅, raw/5m/30m 결과 일관성, 권한 401/200 경로
+
 ---
 
 # 15. 시뮬레이터/디지털 트윈
