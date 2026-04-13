@@ -2,6 +2,18 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
+## 2026-04-14
+
+### Stitch 레퍼런스 기반 UI 전면 재디자인 + AI 어시스턴트 채팅 + 반응형
+- `WebUI/stitch_ui_v1.zip`의 9개 Stitch 스크린(`_1~_6, ai, cctv_3x3, shadow_mode, verdant_control/DESIGN.md`)을 분석해 "농경 사령부 / The Agrarian Command" 디자인 시스템을 `ops-api/ops_api/app.py`의 `_dashboard_html()`에 전면 반영했다. Tailwind CSS CDN + Pretendard/Noto Sans KR/Material Symbols, 어두운 포레스트 사이드바(`#1d2a1f`), 카드 `#fffdf7 + radius 18px + soft shadow`, chip 기반 상태 표현으로 교체.
+- **반응형**: `lg:ml-64` 사이드바가 1024px 이상에서 고정되고, 그 이하에서는 오프스크린 drawer로 변환된다. 헤더의 햄버거 버튼(`toggleSidebar()`)과 backdrop overlay가 drawer를 열고 닫으며, 메뉴 선택 시 자동 닫힘. 메트릭 그리드는 `grid-cols-2 sm:3 md:4 lg:5`로, 존 히스토리 스파크라인은 `grid-cols-1 sm:2 lg:3`으로 breakpoint별로 재배치된다. 대시보드의 2단·3단 카드 레이아웃도 `lg:` 이상에서만 활성화.
+- **AI 어시스턴트 채팅 뷰** 신설: 사이드바에 10번째 메뉴 `AI 어시스턴트` 추가, `xl:col-span-3 + xl:col-span-2` split pane 구조. 좌측은 chat message list(user bubble accent / assistant bubble cream + AI AGRO-SYSTEM 배지) + textarea 입력 + Quick prompt 칩 4개(`zone-a 상태 요약`, `blind50 residual`, `전체 위험도`, `shadow day0 hold`) + `대화 초기화`. 우측은 실시간 관제 current action 카드 + 최근 dispatch 로그 + 3×3 zone health grid. chatState는 클라이언트 메모리, 전송 시 pending bubble → 실제 응답 교체. Enter(Shift 제외) 단축키 지원.
+- **백엔드 `/ai/chat` 신설** (`read_runtime` 권한). `ops-api/ops_api/api_models.py`에 `ChatMessageRequest`/`ChatRequest` 추가, app.py에 `ai_chat` 라우트 + `_build_chat_system_prompt()` 헬퍼 + `_render_chat_history()` + `_extract_chat_reply()` 유틸. 대화 히스토리 최근 8턴을 `운영자/AI/시스템` 형식으로 직렬화해 orchestrator client의 `complete()`에 전달. 응답은 JSON이든 자연어든 안전하게 추출한다 (`reply/message/content/answer/response/situation_summary/risk_level` 키 우선).
+- 루트 `/`는 `/dashboard`로 307 리다이렉트 (`dashboard_root_redirect`). 기존 플레인 JSON "Not Found" 경험 해소.
+- `scripts/validate_ops_api_ai_chat.py` 신설: 6개 invariant 회귀 — (1) empty messages 400, (2) missing user 400, (3) 단일 턴 200 + `reply.content` 비어있지 않음, (4) 멀티 턴 히스토리 200, (5) header_token 모드 `read_runtime` 권한 경로(`no_key → 401`, viewer → 200), (6) `/dashboard` HTML에 `chatMessages/chatInput/sendChatMessage/ai/chat/AI 어시스턴트/AI AGRO-SYSTEM` 6개 훅 존재.
+- `scripts/validate_ops_api_flow.py`의 expected routes에 `/ai/chat` 추가.
+- 20종 smoke 전부 통과: `flow, auth, error_responses, schema_models, shadow_mode, postgres_smoke, zone_history, dashboard_section14, ai_chat, postgres_schema_drift, policy_source_db_wiring, policy_engine_precheck, policy_output_validator, state_estimator_policy_flow, llm_to_execution_flow, shadow_runner_gate, execution_dispatcher, execution_gateway_flow, execution_safe_mode, state_estimator_mvp`.
+
 ## 2026-04-13
 
 ### 운영자 통합 제어 웹 UI 재구성 + 루트 리다이렉트 + PLAN 반영

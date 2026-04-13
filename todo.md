@@ -107,6 +107,8 @@
 - [x] llm-orchestrator → ActionDispatchPlanner → ExecutionDispatcher 통합 smoke: stub 기본 응답 log_only 경로, fixture 기반 adjust_fan → device_command acknowledged, pause_automation → control_override state_updated, audit row 2건 (`scripts/validate_llm_to_execution_flow.py`)
 - [x] 실시간 shadow runner + gate: `push_shadow_cases_to_ops_api.py`가 `/shadow/cases/capture` → `/shadow/window` 경로를 batch 단위로 호출하고 `--gate rollback|hold|promote`로 최소 promotion_decision을 강제, TestClient monkey-patch 기반 gate 회귀 3개 시나리오 (`scripts/push_shadow_cases_to_ops_api.py`, `scripts/validate_shadow_runner_gate.py`)
 - [x] `scripts/validate_execution_safe_mode.py`의 `policy_engine` sys.path pre-existing 버그 수정
+- [x] Stitch `WebUI/stitch_ui_v1.zip` 레퍼런스 기반 대시보드 전면 재디자인 + 반응형: Tailwind CDN + Pretendard/Noto Sans KR + Material Symbols, 농경 사령부 컬러, `lg:` breakpoint 이상 고정 사이드바 / 이하 오프스크린 drawer + 햄버거 토글, 메트릭/스파크라인 그리드 반응형, 루트 `/` → `/dashboard` 307 리다이렉트 (`ops-api/ops_api/app.py` `_dashboard_html`)
+- [x] AI 어시스턴트 채팅 뷰 + 백엔드: 사이드바 10번째 메뉴, split-pane (좌 chat + quick prompt + Enter 단축키, 우 실시간 관제 카드 + 최근 dispatch + 3×3 zone health), `POST /ai/chat` (`read_runtime` 권한, `ChatMessageRequest`/`ChatRequest`, `_build_chat_system_prompt`/`_render_chat_history`/`_extract_chat_reply` 헬퍼), 클라이언트 메모리 히스토리 + 매 호출마다 최근 8턴 context 전송, `scripts/validate_ops_api_ai_chat.py` 6 invariant 회귀
 
 ---
 

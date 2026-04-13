@@ -87,20 +87,23 @@
 - 파인튜닝/평가용 데이터셋 자동 축적
 
 ### E. 운영자 통합 제어 웹 UI
-- 운영자가 온실 운영을 한 화면에서 모니터링하고 승인/수동 조작할 수 있는 **한국어 기본 웹 UI**를 제공한다. 기본 언어는 한글로 표현하고, 기술 필드명(예: `validator_reason_codes`)은 원문 유지한다.
-- ops-api의 `GET /dashboard`가 단일 페이지로 사이드바 네비게이션과 다음 메뉴를 노출한다. 루트 `/`는 `/dashboard`로 307 리다이렉트한다.
-  - `대시보드`: 운영 지표 카드, 존 상태 요약, shadow window, 최근 알림/실행 요약
-  - `존 모니터링`: Zone History Chart (air/rh/vpd/substrate_moisture/substrate_temp/co2/par/feed_ec/drain_ec/feed_ph/drain_ph 11개 지표 SVG 스파크라인), zone 전체 목록
-  - `결정 / 승인`: 신규 Decision 요청 폼, Real-time Decisions 리스트 (승인/거절/수동 Execute/문제 사례 태깅 버튼)
-  - `알림`: Alerts 리스트 (severity 필터 + validator reason)
+- 운영자가 온실 운영을 한 화면에서 모니터링하고 승인/수동 조작하며 AI와 대화할 수 있는 **한국어 기본·반응형 웹 UI**를 제공한다. 기본 언어는 한글로 표현하고, 기술 필드명(예: `validator_reason_codes`)은 원문 유지한다. 디자인 시스템은 Stitch 레퍼런스 `WebUI/stitch_ui_v1.zip`의 "농경 사령부 / The Agrarian Command"를 채택한다 (Tailwind CSS CDN + Pretendard/Noto Sans KR/Material Symbols, 어두운 포레스트 사이드바 `#1d2a1f`, 크림 카드 `#fffdf7 radius 18px`, chip 기반 상태 표기).
+- ops-api의 `GET /dashboard`가 단일 페이지 SPA로 사이드바 네비게이션 + 10개 뷰를 노출한다. 루트 `/`는 `/dashboard`로 307 리다이렉트한다.
+  - `대시보드`: 14개 메트릭 카드, 존 상태 요약, shadow window 요약, 최근 알림/실행 프리뷰
+  - `존 모니터링`: Zone History Chart (air_temp_c/rh_pct/vpd_kpa/substrate_moisture_pct/substrate_temp_c/co2_ppm/par_umol_m2_s/feed_ec_ds_m/drain_ec_ds_m/feed_ph/drain_ph 11개 지표 SVG 스파크라인), zone 전체 목록
+  - `결정 / 승인`: 신규 Decision 요청 폼 + Real-time Decisions 리스트 (승인/거절/수동 Execute/문제 사례 태깅 버튼)
+  - `AI 어시스턴트`: 파인튜닝된 운영 AI와의 split-pane 채팅 화면 (좌측 메시지 + quick prompt, 우측 실시간 관제 요약)
+  - `알림`: Alerts 리스트 (severity + validator reason)
   - `로봇`: Robot Tasks, Robot Candidates
   - `장치 / 제약`: Zone별 최신 device_status, Active Constraints
   - `정책 / 이벤트`: Policy Management (live toggle), Policy Events
   - `Shadow Mode`: Shadow Window Summary 상세, 리뷰 가이드
   - `시스템`: Execution History, Runtime Info (actor/role/auth_mode)
+- **반응형**: `lg` (1024px) 이상에서는 고정 사이드바 + workspace 2단, 그 이하에서는 사이드바가 오프스크린 drawer로 변환되고 헤더의 햄버거 버튼 + backdrop overlay로 제어한다. 메트릭 그리드는 `grid-cols-2 sm:3 md:4 lg:5`, 스파크라인 그리드는 `grid-cols-1 sm:2 lg:3`, 각 2단·3단 카드는 `lg:` 이상에서만 분할된다. 모바일 390px 폭까지 카드가 자연스럽게 1열로 쌓인다.
+- **AI 어시스턴트 채팅 경로**: `POST /ai/chat` (`read_runtime` 권한). 운영자 질문을 파인튜닝된 orchestrator client에 `complete()`로 전달하고, 응답 JSON을 `_extract_chat_reply`로 자연어 평문으로 변환한다. 대화 히스토리는 클라이언트 메모리에 유지되며 매 호출마다 최근 8턴을 `운영자/AI/시스템` 포맷으로 함께 전송해 context를 보존한다. 안전 가드(system prompt)로 "장치 직접 on/off 금지, 대시보드 승인 경로로만 권고"를 강제한다.
 - UI는 backend 없이 SPA 하나로 동작하되 5초 주기로 `/dashboard/data`를 폴링해 모든 카드를 재렌더한다. 각 뷰 전환은 클라이언트 사이드 토글로 처리하며, 새 데이터는 `fetch('/dashboard/data')` 한 번으로 공유한다.
-- 운영 조작 경로는 API가 이미 제공하는 엔드포인트로만 구성한다: `/decisions/evaluate-zone`, `/actions/approve`, `/actions/reject`, `/actions/execute`, `/shadow/reviews`, `/runtime/mode`, `/policies/{id}` (enable/disable 토글), `/shadow/cases/capture`.
-- 권한은 백엔드 `auth.py`의 `viewer/operator/service/admin` 역할을 그대로 사용하며, `auth_mode=disabled` 로컬 개발에서는 헤더 기반 role override로 뷰를 시연한다.
+- 운영 조작 경로는 API가 이미 제공하는 엔드포인트로만 구성한다: `/decisions/evaluate-zone`, `/actions/approve`, `/actions/reject`, `/actions/execute`, `/shadow/reviews`, `/runtime/mode`, `/policies/{id}` (enable/disable 토글), `/shadow/cases/capture`, `/ai/chat`.
+- 권한은 백엔드 `auth.py`의 `viewer/operator/service/admin` 역할을 그대로 사용하며, `auth_mode=disabled` 로컬 개발에서는 헤더 기반 role override로 뷰를 시연한다. `/ai/chat`은 `viewer` 이상 모두 접근 가능.
 
 ---
 

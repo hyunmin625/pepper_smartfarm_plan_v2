@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from .api_models import (
     ApprovalRequest,
     ApiResponse,
+    ChatRequest,
     EvaluateZoneRequest,
     ErrorResponse,
     ExecuteActionRequest,
@@ -1494,6 +1495,58 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         session.commit()
         return _ok({"decision_id": decision.id, "approval_status": "rejected"}, actor=actor)
 
+    @app.post(
+        "/ai/chat",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def ai_chat(
+        payload: ChatRequest,
+        services=Depends(get_services),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        if not payload.messages:
+            raise HTTPException(status_code=400, detail="messages must not be empty")
+        last_user = next(
+            (msg for msg in reversed(payload.messages) if msg.role == "user"),
+            None,
+        )
+        if last_user is None:
+            raise HTTPException(status_code=400, detail="at least one user message is required")
+
+        system_prompt = payload.system_prompt or _build_chat_system_prompt()
+        history_text = _render_chat_history(payload.messages[:-1])
+        user_payload = json.dumps(
+            {
+                "chat_history": history_text,
+                "latest_user_message": last_user.content,
+                "context": payload.context or {},
+                "instruction": (
+                    "위 대화 흐름을 고려해 적고추 온실 운영 관점의 한국어 답변을 작성해라. "
+                    "가능하면 구체적 수치와 제안 액션을 포함하고, JSON 형식이 아닌 자연어로 답한다."
+                ),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+        )
+        invocation = services.orchestrator.client.complete(
+            system_prompt=system_prompt,
+            user_message=user_payload,
+        )
+        reply_text = _extract_chat_reply(invocation.raw_text)
+        return _ok(
+            {
+                "reply": {"role": "assistant", "content": reply_text},
+                "model_id": invocation.model_id,
+                "provider": invocation.provider,
+                "attempts": invocation.attempts,
+            },
+            actor=actor,
+            meta={"system_prompt_id": "chat_v1"},
+        )
+
     @app.get("/dashboard", tags=["dashboard"], response_class=HTMLResponse)
     def dashboard() -> str:
         return _dashboard_html()
@@ -1505,271 +1558,519 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     return app
 
 
+def _build_chat_system_prompt() -> str:
+    return (
+        "너는 '적고추 온실 스마트팜 통합 제어' 시스템의 운영 보조 AI 어시스턴트다. "
+        "역할은 파인튜닝된 재배 의사결정 모델을 기반으로, 운영자의 질문에 대해 "
+        "현재 센서 상태와 기존 정책/규칙을 참고해 한국어로 답변하는 것이다. "
+        "절대 안전 규칙을 위반하는 제안을 하지 않는다. "
+        "장치 직접 on/off 명령을 내릴 수 없다는 점을 분명히 하고, 대신 운영자가 "
+        "대시보드에서 승인/거절할 수 있는 형태로 권고한다. "
+        "답변은 짧고 명확하게, 가능하면 숫자와 근거를 제시한다."
+    )
+
+
+def _render_chat_history(messages) -> str:
+    lines: list[str] = []
+    for msg in messages[-8:]:
+        role = "운영자" if msg.role == "user" else ("AI" if msg.role == "assistant" else "시스템")
+        lines.append(f"{role}: {msg.content}")
+    return "\n".join(lines) if lines else "(이전 대화 없음)"
+
+
+def _extract_chat_reply(raw_text: str) -> str:
+    text = (raw_text or "").strip()
+    if not text:
+        return "죄송합니다. 현재 AI 응답을 받아오지 못했습니다. 잠시 후 다시 시도해주세요."
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+    if isinstance(parsed, dict):
+        for key in ("reply", "message", "content", "answer", "response"):
+            value = parsed.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        summary = parsed.get("situation_summary") or parsed.get("risk_level")
+        if isinstance(summary, str) and summary.strip():
+            return summary.strip()
+    return text
+
+
 def _dashboard_html() -> str:
     return """<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>적고추 온실 스마트팜 통합 제어</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'ink': '#1d2a1f',
+            'muted': '#657d6a',
+            'surface': '#fff9ed',
+            'surface-low': '#f9f3e8',
+            'surface-lowest': '#ffffff',
+            'surface-container': '#f3ede2',
+            'surface-container-high': '#ede7dd',
+            'surface-dim': '#dfd9cf',
+            'outline': '#c1c8c0',
+            'primary': '#2d5338',
+            'primary-dim': '#456b4f',
+            'primary-container': '#bfeac7',
+            'on-primary-container': '#294e35',
+            'secondary': '#546255',
+            'secondary-container': '#d7e7d6',
+            'tertiary': '#763a20',
+            'tertiary-container': '#935135',
+            'warn': '#8a4a2f',
+            'critical': '#7a2f21',
+            'sidebar': '#1d2a1f',
+            'sidebar-hover': '#2d5338',
+          },
+          fontFamily: {
+            sans: ['Pretendard', 'Noto Sans KR', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 8px 28px rgba(44,60,47,0.06)',
+            'softer': '0 4px 12px rgba(0,0,0,0.02)',
+          },
+        },
+      },
+    }
+  </script>
   <style>
-    :root { --bg:#f4f1e8; --ink:#1d2a1f; --card:#fffdf7; --line:#d8d1c3; --accent:#456b4f; --accent-dark:#2f4a36; --warn:#8a4a2f; --muted:#657d6a; --critical:#7a2f21; --sidebar:#1d2a1f; --sidebar-ink:#f4f1e8; --sidebar-hover:#2f4a36; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family: 'Noto Sans KR', 'Segoe UI', sans-serif; background:linear-gradient(180deg,#f0eadf 0%,#f7f4ec 100%); color:var(--ink); min-height:100vh; }
-    h1,h2,h3,h4 { margin:0 0 12px; }
-    label { display:block; font-size:13px; margin:8px 0 4px; color:#4a5b4d; }
-    input, select, textarea, button { width:100%; box-sizing:border-box; border-radius:10px; border:1px solid var(--line); padding:10px 12px; font:inherit; }
-    textarea { min-height:110px; resize:vertical; }
-    button { background:var(--accent); color:white; cursor:pointer; border:none; margin-top:8px; }
-    button.secondary { background:#657d6a; }
-    button.warn { background:var(--warn); }
-    button.ghost { background:transparent; color:var(--accent); border:1px solid var(--accent); }
-    .app { display:grid; grid-template-columns: 240px 1fr; min-height:100vh; }
-    .sidebar { background:var(--sidebar); color:var(--sidebar-ink); padding:24px 0; display:flex; flex-direction:column; gap:14px; position:sticky; top:0; height:100vh; }
-    .brand { padding:0 24px 14px; border-bottom:1px solid #2d3a2e; }
-    .brand h1 { font-size:17px; margin:0; color:#f4f1e8; line-height:1.3; }
-    .brand .brand-sub { font-size:11px; color:#9fb1a3; margin-top:4px; letter-spacing:0.5px; }
-    .sidebar nav { display:flex; flex-direction:column; gap:2px; padding:8px 12px; flex:1; overflow-y:auto; }
-    .sidebar nav a { color:#d3ddd4; text-decoration:none; padding:10px 14px; border-radius:10px; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:8px; transition:background 0.15s; }
-    .sidebar nav a:hover { background:var(--sidebar-hover); color:white; }
-    .sidebar nav a.active { background:var(--accent); color:white; font-weight:700; }
-    .sidebar nav .nav-sub { font-size:10px; color:#9fb1a3; margin-left:auto; font-weight:400; }
-    .sidebar-foot { padding:14px 24px; border-top:1px solid #2d3a2e; font-size:12px; color:#c3cdc4; }
-    .sidebar-foot .mode-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-    .sidebar-foot button { margin-top:6px; font-size:12px; padding:6px 10px; }
-    .mode { display:inline-block; padding:4px 10px; border-radius:999px; background:#e3ecd9; color:#28523a; font-weight:700; font-size:11px; }
-    .workspace { padding:24px 28px; min-width:0; }
-    .workspace-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:20px; }
-    .workspace-header h2 { font-size:22px; margin:0; }
-    .workspace-header .sub { font-size:12px; color:var(--muted); margin-top:4px; }
-    .view { display:none; }
-    .view.active { display:block; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 8px 28px rgba(44,60,47,0.06); margin-bottom:16px; }
-    .card h3 { font-size:15px; color:var(--accent-dark); }
-    .section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; }
-    .two-col { display:grid; grid-template-columns: 1.1fr 0.9fr; gap:16px; }
-    .three-col { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:14px; }
-    .grid { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:12px; margin-bottom:16px; }
-    .metric { padding:14px; border-radius:14px; border:1px solid var(--line); background:#faf7ef; }
-    .metric strong { display:block; font-size:22px; margin-top:4px; color:var(--accent-dark); }
-    .row { display:flex; gap:8px; }
-    .row > * { flex:1; }
-    .decision { padding:14px; border:1px solid var(--line); border-radius:14px; margin-bottom:12px; background:#fffdf7; }
-    .decision pre { white-space:pre-wrap; word-break:break-word; background:#f6f3ea; padding:10px; border-radius:10px; font-size:11px; max-height:220px; overflow-y:auto; }
-    .decision-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    .decision-actions button { width:auto; margin-top:0; padding:8px 14px; font-size:12px; }
-    .meta { font-size:12px; color:#5b685e; margin-bottom:6px; }
-    .zone, .alert, .robot, .command { padding:12px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:#fbf8f1; }
-    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; background:#eef4e7; color:#28523a; margin-right:6px; }
-    .badge.warn { background:#f7e5db; color:#7a2f21; }
-    .badge.dark { background:#ece8dd; color:#4b544d; }
-    .badge.critical { background:#7a2f21; color:white; }
-    .small { font-size:12px; color:#5b685e; }
-    .placeholder { padding:20px; text-align:center; color:#9ba89f; font-size:13px; }
-    @media (max-width: 1100px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar { position:static; height:auto; }
-      .two-col, .three-col, .grid { grid-template-columns: 1fr; }
+    html, body { background-color: #f7f4ec; }
+    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #f7f4ec; background-image: linear-gradient(180deg, #f0eadf 0%, #f7f4ec 100%); color: #1d2a1f; min-height: 100vh; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .msf { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #c1c8c0; border-radius: 999px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .chip { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
+    .chip-enabled { background: #eef4e7; color: #28523a; }
+    .chip-warn { background: #f7e5db; color: #7a2f21; }
+    .chip-critical { background: #ffdad6; color: #93000a; }
+    .chip-dark { background: #ece8dd; color: #4b544d; }
+    .chip-accent { background: #2d5338; color: white; }
+    .kpi strong { color: #1d2a1f; }
+    .glass { background-color: rgba(255, 249, 237, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    /* Mobile drawer overlay — hidden on desktop so the workspace is not dimmed */
+    #sidebarBackdrop { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.4); z-index: 40; }
+    @media (max-width: 1023px) {
+      #sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      #sidebar.open { transform: translateX(0); }
+      #sidebarBackdrop.open { display: block; }
     }
   </style>
 </head>
-<body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <h1>적고추 온실 스마트팜</h1>
-        <div class="brand-sub">Pepper Smartfarm · 통합 제어</div>
+<body class="min-h-screen">
+  <aside id="sidebar" class="fixed left-0 top-0 h-screen w-64 flex flex-col bg-sidebar text-white z-50 shadow-soft">
+    <div class="px-6 py-6 border-b border-white/10">
+      <h1 class="text-lg font-bold tracking-tight">농경 사령부</h1>
+      <p class="text-[10px] tracking-[0.15em] uppercase text-white/60 mt-1">적고추 온실 · Agrarian Command</p>
+    </div>
+    <nav id="sidebarNav" class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scroll">
+      <a data-view="overview" class="nav-link active">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        <span>대시보드</span>
+      </a>
+      <a data-view="zones" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">thermostat</span>
+        <span>존 모니터링</span>
+      </a>
+      <a data-view="decisions" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">psychology</span>
+        <span>결정 / 승인</span>
+      </a>
+      <a data-view="ai_chat" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">forum</span>
+        <span>AI 어시스턴트</span>
+      </a>
+      <a data-view="alerts" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">notifications_active</span>
+        <span>알림</span>
+      </a>
+      <a data-view="robot" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+        <span>로봇</span>
+      </a>
+      <a data-view="devices" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+        <span>장치 / 제약</span>
+      </a>
+      <a data-view="policies" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">policy</span>
+        <span>정책 / 이벤트</span>
+      </a>
+      <a data-view="shadow" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">visibility</span>
+        <span>Shadow Mode</span>
+      </a>
+      <a data-view="system" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+        <span>시스템</span>
+      </a>
+    </nav>
+    <div class="px-4 py-4 border-t border-white/10 space-y-3">
+      <div class="flex items-center gap-2 text-[11px] text-white/75">
+        <span>운영 모드</span>
+        <span id="modeBadge" class="chip chip-enabled">loading</span>
       </div>
-      <nav id="sidebarNav">
-        <a data-view="overview" class="active">대시보드</a>
-        <a data-view="zones">존 모니터링</a>
-        <a data-view="decisions">결정 / 승인</a>
-        <a data-view="alerts">알림</a>
-        <a data-view="robot">로봇</a>
-        <a data-view="devices">장치 / 제약</a>
-        <a data-view="policies">정책 / 이벤트</a>
-        <a data-view="shadow">Shadow Mode</a>
-        <a data-view="system">시스템</a>
-      </nav>
-      <div class="sidebar-foot">
-        <div class="mode-row">운영 모드: <span id="modeBadge" class="mode">loading</span></div>
-        <div id="authContextMini" class="small" style="color:#c3cdc4;"></div>
-        <button class="secondary" onclick="toggleMode()">모드 전환</button>
+      <div id="authContextMini" class="text-[11px] text-white/60"></div>
+      <button onclick="toggleMode()" class="w-full bg-primary hover:bg-primary-dim text-white text-xs font-semibold rounded-lg py-2 transition">모드 전환</button>
+    </div>
+  </aside>
+  <div id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+  <header class="lg:ml-64 sticky top-0 h-16 z-30 glass border-b border-outline/30 flex items-center justify-between px-4 md:px-8">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="lg:hidden text-ink p-2 hover:bg-surface-container rounded-lg">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div>
+        <h2 id="viewTitle" class="text-lg md:text-xl font-bold text-ink">대시보드</h2>
+        <p id="viewSub" class="text-[11px] text-muted hidden md:block">전체 운영 현황 요약</p>
       </div>
-    </aside>
-    <main class="workspace">
-      <div class="workspace-header">
-        <div>
-          <h2 id="viewTitle">대시보드</h2>
-          <div class="sub" id="viewSub">전체 운영 현황 요약</div>
-        </div>
-        <div id="authContext"></div>
+    </div>
+    <div class="flex items-center gap-3 md:gap-5">
+      <div class="hidden md:flex items-center gap-2 text-xs text-muted">
+        <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+        <span>System Status: Optimal</span>
       </div>
+      <span class="material-symbols-outlined text-ink cursor-pointer">notifications</span>
+      <div id="authContext" class="hidden md:block"></div>
+    </div>
+  </header>
 
-      <section class="view active" data-view="overview">
-        <div class="grid" id="metricGrid"></div>
-        <div class="two-col">
-          <div class="card">
-            <div class="section-title"><h3>존 상태 요약</h3><span class="small">최신 risk_level</span></div>
-            <div id="zoneList"></div>
-          </div>
-          <div class="card">
-            <div class="section-title"><h3>Shadow Window</h3><span class="small">real shadow audit summary</span></div>
-            <div id="shadowWindow"></div>
-          </div>
-        </div>
-        <div class="two-col">
-          <div class="card">
-            <div class="section-title"><h3>최근 알림</h3><span class="small">high / critical / unknown / validator</span></div>
-            <div id="alertListOverview"></div>
-          </div>
-          <div class="card">
-            <div class="section-title"><h3>최근 실행</h3><span class="small">최근 dispatch</span></div>
-            <div id="commandListOverview"></div>
-          </div>
-        </div>
-      </section>
+  <main class="lg:ml-64 px-4 md:px-8 py-6 md:py-8 max-w-[1600px]">
 
-      <section class="view" data-view="zones">
+    <!-- 대시보드 -->
+    <section class="view active" data-view="overview">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6" id="metricGrid"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-5">
+        <div class="card lg:col-span-3">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">존 상태 요약</h3>
+            <span class="text-[11px] text-muted uppercase tracking-wider">Real-Time Environmental Monitoring</span>
+          </div>
+          <div id="zoneList" class="space-y-3"></div>
+        </div>
+        <div class="card lg:col-span-2 bg-primary text-white !bg-primary">
+          <p class="text-[11px] tracking-wider uppercase text-white/60 mb-1">Shadow Window Summary</p>
+          <h3 class="text-xl font-bold mb-4 text-white">Automation Strategy Review</h3>
+          <div id="shadowWindow"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="card">
-          <div class="section-title">
-            <h3>Zone History Chart</h3>
-            <span class="small">decision zone_state 기반 시계열 · 11개 지표</span>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">최근 알림</h3>
+            <span class="text-[11px] text-muted">View All Alerts</span>
           </div>
-          <div class="row" style="align-items:center; gap:8px; margin-bottom:10px;">
-            <label style="flex:1; margin:0;">Zone
-              <select id="historyZoneId">
-                <option value="gh-01-zone-a">gh-01-zone-a</option>
-              </select>
-            </label>
-            <button class="secondary" style="width:auto; margin-top:0;" onclick="refreshZoneHistory()">Refresh</button>
-          </div>
-          <div id="zoneHistoryCharts"></div>
+          <div id="alertListOverview" class="space-y-3"></div>
         </div>
         <div class="card">
-          <div class="section-title"><h3>Zone Overview</h3><span class="small">전체 존 목록</span></div>
-          <div id="zoneListDetailed"></div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">최근 실행</h3>
+            <span class="text-[11px] text-muted">Full Audit Log</span>
+          </div>
+          <div id="commandListOverview" class="space-y-3"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="view" data-view="decisions">
-        <div class="card">
-          <h3>신규 Decision 요청</h3>
-          <div class="two-col">
-            <div>
-              <label>Zone</label>
-              <input id="zoneId" value="gh-01-zone-a" />
-              <label>Task</label>
-              <select id="taskType">
-                <option value="state_judgement">state_judgement</option>
-                <option value="action_recommendation">action_recommendation</option>
-                <option value="failure_response">failure_response</option>
-                <option value="robot_task_prioritization">robot_task_prioritization</option>
-                <option value="forbidden_action">forbidden_action</option>
-              </select>
-              <label>Growth Stage</label>
-              <input id="growthStage" value="fruiting" />
+    <!-- 존 모니터링 -->
+    <section class="view" data-view="zones">
+      <div class="card mb-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div>
+            <p class="text-[11px] tracking-wider uppercase text-primary font-bold mb-1">Zone 시계열</p>
+            <h3 class="text-lg font-bold text-ink">Zone History Chart</h3>
+            <p class="text-[11px] text-muted mt-1">decision zone_state 기반 11개 지표 스파크라인</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="historyZoneId" class="bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs">
+              <option value="gh-01-zone-a">gh-01-zone-a</option>
+            </select>
+            <button onclick="refreshZoneHistory()" class="bg-primary text-white text-xs font-semibold rounded-lg px-4 py-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+        <div id="zoneHistoryCharts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-ink">Zone Overview</h3>
+          <span class="text-[11px] text-muted">View All</span>
+        </div>
+        <div id="zoneListDetailed" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- 결정 / 승인 -->
+    <section class="view" data-view="decisions">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div class="card lg:col-span-2">
+          <p class="text-[11px] tracking-wider uppercase text-primary font-bold mb-1">Intelligent Decision Engine</p>
+          <h3 class="text-lg font-bold text-ink mb-4">신규 Decision 요청</h3>
+          <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-2">Zone Select</label>
+          <input id="zoneId" value="gh-01-zone-a" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-sm" />
+          <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Target Task</label>
+          <select id="taskType" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-sm">
+            <option value="state_judgement">state_judgement</option>
+            <option value="action_recommendation">action_recommendation</option>
+            <option value="failure_response">failure_response</option>
+            <option value="robot_task_prioritization">robot_task_prioritization</option>
+            <option value="forbidden_action">forbidden_action</option>
+          </select>
+          <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Growth Stage</label>
+          <input id="growthStage" value="fruiting" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-sm" />
+          <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Current State JSON</label>
+          <textarea id="currentState" rows="6" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs font-mono">{ "air_temp_c": 27.5, "rh_pct": 71.0, "substrate_moisture_pct": 54.0, "co2_ppm": 430, "feed_ph": 5.9 }</textarea>
+          <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Sensor Quality JSON</label>
+          <textarea id="sensorQuality" rows="2" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs font-mono">{ "overall": "good" }</textarea>
+          <div class="flex gap-2 mt-4">
+            <button onclick="submitDecision()" class="flex-1 bg-primary text-white font-semibold rounded-lg py-2 text-sm flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">send</span>
+              Request LLM Decision
+            </button>
+          </div>
+        </div>
+        <div class="card lg:col-span-3">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[18px]">history</span>
+              Real-time Decisions
+            </h3>
+            <span class="text-[11px] text-muted">최근 40건</span>
+          </div>
+          <div id="decisionList" class="space-y-4 max-h-[720px] overflow-y-auto custom-scroll pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI 어시스턴트 (채팅) -->
+    <section class="view" data-view="ai_chat">
+      <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 h-[calc(100vh-9rem)]">
+        <div class="card xl:col-span-3 flex flex-col min-h-[500px]">
+          <div class="flex items-center justify-between pb-4 border-b border-outline/30">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-sidebar flex items-center justify-center">
+                <span class="material-symbols-outlined msf text-white text-[22px]">psychology</span>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-ink">AI AGRO-SYSTEM</h3>
+                <p class="text-[10px] text-muted uppercase tracking-wider">Fine-tuned on pepper domain · sft_v10</p>
+              </div>
             </div>
-            <div>
-              <label>Current State JSON</label>
-              <textarea id="currentState">{ "air_temp_c": 27.5, "rh_pct": 71.0, "substrate_moisture_pct": 54.0, "co2_ppm": 430, "feed_ph": 5.9 }</textarea>
-              <label>Sensor Quality JSON</label>
-              <textarea id="sensorQuality">{ "overall": "good" }</textarea>
+            <div class="chip chip-enabled">
+              <span class="w-2 h-2 bg-primary rounded-full animate-pulse mr-1"></span>
+              활성
             </div>
           </div>
-          <div class="row">
-            <button onclick="submitDecision()">Evaluate</button>
-            <button class="secondary" onclick="toggleMode()">모드 전환</button>
+          <div id="chatMessages" class="flex-1 overflow-y-auto custom-scroll py-4 space-y-4"></div>
+          <div class="border-t border-outline/30 pt-4">
+            <div class="bg-surface-low rounded-2xl p-2 flex items-end gap-2 shadow-softer">
+              <textarea id="chatInput" rows="2" placeholder="온실 운영 관련 질문이나 명령을 입력하세요 (예: 'zone-a의 현재 EC 농도 확인해줘')" class="flex-1 bg-transparent border-none text-sm resize-none focus:ring-0 px-2 py-2 custom-scroll"></textarea>
+              <button id="chatSendBtn" onclick="sendChatMessage()" class="bg-primary text-white p-3 rounded-xl hover:opacity-90 transition disabled:opacity-40">
+                <span class="material-symbols-outlined">send</span>
+              </button>
+            </div>
+            <div class="flex gap-2 mt-3 overflow-x-auto pb-1 custom-scroll">
+              <button onclick="useQuickPrompt('zone-a 현재 상태 요약해줘')" class="whitespace-nowrap chip chip-dark hover:bg-primary/10 transition">zone-a 상태 요약</button>
+              <button onclick="useQuickPrompt('blind50 residual 5건 어떻게 줄일까?')" class="whitespace-nowrap chip chip-dark hover:bg-primary/10 transition">blind50 residual</button>
+              <button onclick="useQuickPrompt('현재 모든 zone의 위험도를 알려줘')" class="whitespace-nowrap chip chip-dark hover:bg-primary/10 transition">전체 위험도</button>
+              <button onclick="useQuickPrompt('synthetic shadow day0 hold 해소 방법?')" class="whitespace-nowrap chip chip-dark hover:bg-primary/10 transition">shadow day0 hold</button>
+              <button onclick="clearChat()" class="whitespace-nowrap chip chip-warn">대화 초기화</button>
+            </div>
           </div>
-          <p class="small">shadow 모드에서는 운영자가 일치/불일치를 기록하고, approval 모드에서는 승인 후에만 dispatch가 실행됩니다.</p>
+        </div>
+        <div class="card xl:col-span-2 flex flex-col">
+          <p class="text-[11px] tracking-wider uppercase text-primary font-bold">Live Operations</p>
+          <h3 class="text-xl font-bold text-ink mb-4">실시간 관제 현황</h3>
+          <div class="bg-primary rounded-2xl p-5 text-white mb-4">
+            <p class="text-[10px] uppercase tracking-wider text-white/60">Current Action</p>
+            <h4 class="text-xl font-bold mt-2 mb-2" id="chatLiveAction">대기 중</h4>
+            <p class="text-xs text-white/80" id="chatLiveDesc">AI 명령을 기다리는 중입니다.</p>
+          </div>
+          <div class="space-y-3 flex-1 overflow-y-auto custom-scroll" id="chatLiveLogs"></div>
+          <div class="mt-4 bg-surface-low rounded-xl p-4">
+            <p class="text-[10px] uppercase tracking-wider text-muted mb-2">Zone Health</p>
+            <div class="grid grid-cols-3 gap-1" id="chatZoneHealth"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 알림 -->
+    <section class="view" data-view="alerts">
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-ink">Alerts</h3>
+          <span class="text-[11px] text-muted">high / critical / unknown / validator</span>
+        </div>
+        <div id="alertList" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- 로봇 -->
+    <section class="view" data-view="robot">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Robot Tasks</h3>
+            <span class="text-[11px] text-muted">LLM 추천 작업</span>
+          </div>
+          <div id="robotList" class="space-y-3"></div>
         </div>
         <div class="card">
-          <div class="section-title"><h3>Real-time Decisions</h3><span class="small">최근 40건</span></div>
-          <div id="decisionList"></div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Robot Candidates</h3>
+            <span class="text-[11px] text-muted">vision/operator 후보</span>
+          </div>
+          <div id="robotCandidateList" class="space-y-3"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="view" data-view="alerts">
+    <!-- 장치 / 제약 -->
+    <section class="view" data-view="devices">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="card">
-          <div class="section-title"><h3>Alerts</h3><span class="small">high / critical / unknown / validator</span></div>
-          <div id="alertList"></div>
-        </div>
-      </section>
-
-      <section class="view" data-view="robot">
-        <div class="two-col">
-          <div class="card">
-            <div class="section-title"><h3>Robot Tasks</h3><span class="small">LLM이 추천한 작업</span></div>
-            <div id="robotList"></div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Device Status</h3>
+            <span class="text-[11px] text-muted">zone별 최신 device_status</span>
           </div>
-          <div class="card">
-            <div class="section-title"><h3>Robot Candidates</h3><span class="small">vision/operator 후보</span></div>
-            <div id="robotCandidateList"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="view" data-view="devices">
-        <div class="two-col">
-          <div class="card">
-            <div class="section-title"><h3>Device Status</h3><span class="small">zone별 최신 device_status</span></div>
-            <div id="deviceStatusList"></div>
-          </div>
-          <div class="card">
-            <div class="section-title"><h3>Active Constraints</h3><span class="small">현재 활성 제약</span></div>
-            <div id="activeConstraintsList"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="view" data-view="policies">
-        <div class="two-col">
-          <div class="card">
-            <div class="section-title"><h3>Policy Management</h3><span class="small">admin only · DB live</span></div>
-            <div id="policyList"></div>
-          </div>
-          <div class="card">
-            <div class="section-title"><h3>Policy Events</h3><span class="small">blocked / approval escalation</span></div>
-            <div id="policyEventList"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="view" data-view="shadow">
-        <div class="card">
-          <div class="section-title"><h3>Shadow Window Summary</h3><span class="small">real shadow audit rolling window</span></div>
-          <div id="shadowWindowDetail"></div>
+          <div id="deviceStatusList" class="space-y-3"></div>
         </div>
         <div class="card">
-          <div class="section-title"><h3>Shadow Review 가이드</h3><span class="small">shadow 모드 decision 카드에서 직접 일치/불일치 기록</span></div>
-          <div class="small">
-            shadow 모드에서는 결정/승인 메뉴의 decision 카드에 <b>일치</b>, <b>불일치</b> 버튼이 노출됩니다.
-            capture 파이프라인은 <code>scripts/push_shadow_cases_to_ops_api.py</code>를 통해 외부에서 주입합니다.
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Active Constraints</h3>
+            <span class="text-[11px] text-muted">현재 활성 제약</span>
           </div>
+          <div id="activeConstraintsList" class="space-y-3"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="view" data-view="system">
-        <div class="two-col">
-          <div class="card">
-            <div class="section-title"><h3>Execution History</h3><span class="small">최근 dispatch</span></div>
-            <div id="commandList"></div>
+    <!-- 정책 / 이벤트 -->
+    <section class="view" data-view="policies">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div class="card lg:col-span-3">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Policy Management</h3>
+            <span class="text-[11px] text-muted">20 Active Rules · DB live</span>
           </div>
-          <div class="card">
-            <div class="section-title"><h3>Runtime Info</h3><span class="small">auth / config</span></div>
-            <div id="runtimeInfo"></div>
-          </div>
+          <div id="policyList" class="space-y-3 max-h-[720px] overflow-y-auto custom-scroll pr-1"></div>
         </div>
-      </section>
-    </main>
-  </div>
+        <div class="card lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Recent Policy Events</h3>
+            <span class="text-[11px] text-muted">blocked / approval escalation</span>
+          </div>
+          <div id="policyEventList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shadow Mode -->
+    <section class="view" data-view="shadow">
+      <div class="card mb-5">
+        <p class="text-[11px] tracking-wider uppercase text-primary font-bold">Monitoring Module</p>
+        <h3 class="text-lg font-bold text-ink mb-4">A. Shadow Window Summary</h3>
+        <div id="shadowWindowDetail"></div>
+      </div>
+      <div class="card">
+        <h3 class="text-lg font-bold text-ink mb-2">B. Shadow Review Guide</h3>
+        <p class="text-xs text-muted leading-relaxed">shadow 모드에서는 실운영 환경에 영향을 주지 않으면서 신규 모델의 안정성과 정책을 검증하는 단계입니다. 결정/승인 메뉴의 decision 카드에 <b>일치</b>, <b>불일치</b> 버튼이 노출됩니다. capture 파이프라인은 <code class="bg-surface-low px-1 rounded">scripts/push_shadow_cases_to_ops_api.py</code>를 통해 외부에서 주입합니다.</p>
+      </div>
+    </section>
+
+    <!-- 시스템 -->
+    <section class="view" data-view="system">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Execution History</h3>
+            <span class="text-[11px] text-muted">최근 dispatch</span>
+          </div>
+          <div id="commandList" class="space-y-3"></div>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-ink">Runtime Info</h3>
+            <span class="text-[11px] text-muted">auth / config</span>
+          </div>
+          <div id="runtimeInfo"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <style>
+    .card { background: #fffdf7; border-radius: 18px; padding: 20px; box-shadow: 0 8px 28px rgba(44,60,47,0.04); }
+    @media (min-width: 768px) { .card { padding: 24px; } }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); cursor: pointer; transition: all 0.15s; }
+    .nav-link:hover { background: rgba(45, 83, 56, 0.5); color: white; }
+    .nav-link.active { background: #456b4f; color: white; font-weight: 700; }
+    .decision-card { background: #fffdf7; border: 1px solid rgba(193, 200, 192, 0.3); border-radius: 14px; padding: 16px; }
+    .metric-card { background: #faf7ef; border-radius: 12px; padding: 12px; }
+    .metric-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #657d6a; font-weight: 600; }
+    .metric-card .value { font-size: 20px; font-weight: 700; color: #1d2a1f; margin-top: 4px; display: block; }
+    .zone-row { background: #fbf8f1; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .alert-row { background: #fbf8f1; border-radius: 12px; padding: 14px; }
+    .placeholder { text-align: center; color: #9ba89f; padding: 24px; font-size: 13px; }
+    .chat-bubble-user { max-width: 80%; background: #2d5338; color: white; padding: 12px 16px; border-radius: 18px 18px 4px 18px; font-size: 13px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .chat-bubble-ai { max-width: 88%; background: #fffdf7; color: #1d2a1f; padding: 14px 18px; border-radius: 18px 18px 18px 4px; font-size: 13px; line-height: 1.55; border: 1px solid rgba(193, 200, 192, 0.3); }
+    .chat-bubble-error { background: #ffdad6; color: #93000a; }
+  </style>
+
   <script>
+    const VIEW_TITLES = {
+      overview: ['대시보드', '전체 운영 현황 요약'],
+      zones: ['존 모니터링', 'Zone 시계열 · 최신 스냅샷'],
+      decisions: ['결정 / 승인', 'LLM 결정 요청과 승인 흐름'],
+      ai_chat: ['AI 어시스턴트', '파인튜닝된 AI와 대화하며 관리'],
+      alerts: ['알림', 'validator · risk · policy 알림'],
+      robot: ['로봇', 'Robot Tasks 및 Candidate'],
+      devices: ['장치 / 제약', '장치 상태와 활성 제약'],
+      policies: ['정책 / 이벤트', 'Policy live toggle과 이벤트 로그'],
+      shadow: ['Shadow Mode', 'real shadow window 요약'],
+      system: ['시스템', 'execution history · runtime'],
+    };
+    function showView(name) {
+      document.getElementById('viewTitle').textContent = (VIEW_TITLES[name] || VIEW_TITLES.overview)[0];
+      document.getElementById('viewSub').textContent = (VIEW_TITLES[name] || VIEW_TITLES.overview)[1];
+      document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.dataset.view === name));
+      document.querySelectorAll('#sidebarNav a').forEach(a => a.classList.toggle('active', a.dataset.view === name));
+      if (name === 'zones') refreshZoneHistory();
+      if (name === 'ai_chat') scrollChatToBottom();
+    }
+    function toggleSidebar(force) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const next = force !== undefined ? force : !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', next);
+      backdrop.classList.toggle('open', next);
+    }
     async function apiFetch(url, options) {
       const res = await fetch(url, options);
       const body = await res.json();
-      if (!res.ok) {
-        const message = body?.error?.message || body?.detail || 'request failed';
-        throw new Error(message);
-      }
+      if (!res.ok) throw new Error(body?.error?.message || body?.detail || 'request failed');
       return body;
     }
     async function toggleMode() {
@@ -1779,124 +2080,96 @@ def _dashboard_html() -> str:
       await refreshDashboard();
     }
     async function submitDecision() {
-      const body = {
-        request_id: 'dashboard-' + Date.now(),
-        zone_id: document.getElementById('zoneId').value,
-        task_type: document.getElementById('taskType').value,
-        growth_stage: document.getElementById('growthStage').value,
-        current_state: JSON.parse(document.getElementById('currentState').value),
-        sensor_quality: JSON.parse(document.getElementById('sensorQuality').value),
-      };
-      await apiFetch('/decisions/evaluate-zone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      await refreshDashboard();
-    }
-    async function approve(decisionId) {
-      const reason = window.prompt('승인 사유를 입력하세요.', 'dashboard approve') || '';
-      await apiFetch('/actions/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
-      await refreshDashboard();
-    }
-    async function reject(decisionId) {
-      const reason = window.prompt('거절 사유를 입력하세요.', 'dashboard reject') || '';
-      await apiFetch('/actions/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason }) });
-      await refreshDashboard();
-    }
-    async function review(decisionId, agreementStatus) {
-      const note = window.prompt(agreementStatus === 'agree' ? '일치 메모를 입력하세요.' : '불일치 원인을 입력하세요.', '') || '';
-      await apiFetch('/shadow/reviews', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          decision_id: decisionId,
-          actor_id:'dashboard-operator',
-          agreement_status: agreementStatus,
-          note
-        })
-      });
-      await refreshDashboard();
-    }
-    async function executeAction(decisionId) {
-      const reason = window.prompt('수동 execute 사유를 입력하세요.', 'dashboard manual execute') || '';
       try {
-        await apiFetch('/actions/execute', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ decision_id: decisionId, actor_id:'dashboard-operator', reason })
-        });
+        const body = {
+          request_id: 'dashboard-' + Date.now(),
+          zone_id: document.getElementById('zoneId').value,
+          task_type: document.getElementById('taskType').value,
+          growth_stage: document.getElementById('growthStage').value,
+          current_state: JSON.parse(document.getElementById('currentState').value),
+          sensor_quality: JSON.parse(document.getElementById('sensorQuality').value),
+        };
+        await apiFetch('/decisions/evaluate-zone', { method:'POST', headers:{'Content-Type':'application/json', 'X-Actor-Role':'service'}, body: JSON.stringify(body) });
+        await refreshDashboard();
       } catch (err) {
-        window.alert('execute 실패: ' + err.message);
+        alert('Decision 요청 실패: ' + err.message);
       }
+    }
+    async function approve(id) {
+      const reason = prompt('승인 사유', 'dashboard approve') || '';
+      try { await apiFetch('/actions/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: id, actor_id:'dashboard-operator', reason }) }); } catch (err) { alert(err.message); }
       await refreshDashboard();
     }
-    async function flagCase(decisionId) {
-      const note = window.prompt('문제 사례 태깅 — 원인/카테고리를 입력하세요.', 'flag: ') || '';
+    async function reject(id) {
+      const reason = prompt('거절 사유', 'dashboard reject') || '';
+      try { await apiFetch('/actions/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: id, actor_id:'dashboard-operator', reason }) }); } catch (err) { alert(err.message); }
+      await refreshDashboard();
+    }
+    async function review(id, status) {
+      const note = prompt(status === 'agree' ? '일치 메모' : '불일치 원인', '') || '';
+      try { await apiFetch('/shadow/reviews', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: id, actor_id:'dashboard-operator', agreement_status: status, note }) }); } catch (err) { alert(err.message); }
+      await refreshDashboard();
+    }
+    async function executeAction(id) {
+      const reason = prompt('수동 execute 사유', 'dashboard manual execute') || '';
+      try { await apiFetch('/actions/execute', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: id, actor_id:'dashboard-operator', reason }) }); } catch (err) { alert('execute 실패: ' + err.message); }
+      await refreshDashboard();
+    }
+    async function flagCase(id) {
+      const note = prompt('문제 사례 태깅 — 원인/카테고리', 'flag: ') || '';
       if (!note.trim()) return;
       const tagged = note.startsWith('flag:') ? note : ('flag: ' + note);
-      await apiFetch('/shadow/reviews', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          decision_id: decisionId,
-          actor_id:'dashboard-operator',
-          agreement_status: 'disagree',
-          note: tagged
-        })
-      });
+      try { await apiFetch('/shadow/reviews', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ decision_id: id, actor_id:'dashboard-operator', agreement_status:'disagree', note: tagged }) }); } catch (err) { alert(err.message); }
       await refreshDashboard();
     }
-    const VIEW_TITLES = {
-      overview: ['대시보드', '전체 운영 현황 요약'],
-      zones: ['존 모니터링', 'Zone 시계열 · 최신 스냅샷'],
-      decisions: ['결정 / 승인', 'LLM 결정 요청과 승인 흐름'],
-      alerts: ['알림', 'validator · risk · policy 알림'],
-      robot: ['로봇', 'Robot Tasks 및 Candidate'],
-      devices: ['장치 / 제약', '장치 상태와 활성 제약'],
-      policies: ['정책 / 이벤트', 'Policy live toggle과 이벤트 로그'],
-      shadow: ['Shadow Mode', 'real shadow window 요약'],
-      system: ['시스템', 'execution history · runtime'],
-    };
-    function showView(name) {
-      const titleEl = document.getElementById('viewTitle');
-      const subEl = document.getElementById('viewSub');
-      const [title, sub] = VIEW_TITLES[name] || VIEW_TITLES.overview;
-      titleEl.textContent = title;
-      subEl.textContent = sub;
-      document.querySelectorAll('.view').forEach(view => {
-        view.classList.toggle('active', view.dataset.view === name);
-      });
-      document.querySelectorAll('#sidebarNav a').forEach(link => {
-        link.classList.toggle('active', link.dataset.view === name);
-      });
+    async function togglePolicy(policyId, enabled) {
+      try { await apiFetch('/policies/' + policyId, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ enabled }) }); } catch (err) { alert(err.message); }
+      await refreshDashboard();
+    }
+
+    function riskChipClass(risk) {
+      if (risk === 'critical') return 'chip-critical';
+      if (risk === 'high' || risk === 'unknown') return 'chip-warn';
+      return 'chip-dark';
     }
     function renderMetrics(summary) {
       const metrics = [
-        ['결정 수', summary.decision_count],
-        ['승인 대기', summary.approval_pending_count],
-        ['Shadow 리뷰 대기', summary.shadow_review_pending_count],
-        ['차단된 결정', summary.blocked_action_count],
-        ['Safe Mode 추천', summary.safe_mode_count],
-        ['Operator 불일치', summary.operator_disagreement_count],
+        ['결정 수', summary.decision_count ?? 0],
+        ['승인 대기', summary.approval_pending_count ?? 0],
+        ['Shadow 리뷰 대기', summary.shadow_review_pending_count ?? 0],
+        ['차단된 결정', summary.blocked_action_count ?? 0],
+        ['Safe Mode 추천', summary.safe_mode_count ?? 0],
+        ['Operator 불일치', summary.operator_disagreement_count ?? 0],
         ['일치율', summary.operator_agreement_rate ?? 'n/a'],
-        ['실행 명령', summary.command_count],
-        ['Policy Event', summary.policy_event_count],
-        ['Policy Block', summary.policy_blocked_count],
-        ['Alerts', summary.alert_count],
-        ['Robot Task', summary.robot_task_count],
+        ['실행 명령', summary.command_count ?? 0],
+        ['Policy Event', summary.policy_event_count ?? 0],
+        ['Policy Block', summary.policy_blocked_count ?? 0],
+        ['Alerts', summary.alert_count ?? 0],
+        ['Robot Task', summary.robot_task_count ?? 0],
         ['Robot Candidate', summary.robot_candidate_count ?? 0],
-        ['Policy (enabled/total)', `${(summary.policy_count ?? 0) - (summary.policy_disabled_count ?? 0)}/${summary.policy_count ?? 0}`],
+        ['Policy (enabled/total)', ((summary.policy_count ?? 0) - (summary.policy_disabled_count ?? 0)) + '/' + (summary.policy_count ?? 0)],
       ];
       document.getElementById('metricGrid').innerHTML = metrics.map(([label, value]) => `
-        <div class="metric">
-          <div class="small">${label}</div>
-          <strong>${value}</strong>
+        <div class="metric-card">
+          <div class="label">${label}</div>
+          <strong class="value">${value}</strong>
         </div>
       `).join('');
     }
     function renderZones(zones) {
       const html = (zones || []).map(zone => `
-        <div class="zone">
-          <div class="meta">${zone.zone_id} · ${zone.task_type || '-'} · ${zone.status}</div>
-          <div><span class="badge ${zone.risk_level === 'critical' ? 'critical' : (zone.risk_level === 'high' ? 'warn' : 'dark')}">${zone.risk_level || '-'}</span>${zone.current_state_summary || 'summary 없음'}</div>
-          <div class="small">sensor_quality: ${JSON.stringify(zone.sensor_quality || {})}</div>
+        <div class="zone-row">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-sm font-bold text-ink truncate">${zone.zone_id}</span>
+              <span class="chip ${riskChipClass(zone.risk_level)}">${zone.risk_level || 'n/a'}</span>
+            </div>
+            <div class="text-[11px] text-muted truncate">${zone.current_state_summary || 'summary 없음'}</div>
+          </div>
+          <div class="text-right text-[11px] text-muted ml-3 hidden sm:block">
+            <div>${zone.task_type || '-'}</div>
+            <div>${zone.status || '-'}</div>
+          </div>
         </div>
       `).join('') || '<div class="placeholder">zone snapshot이 없습니다.</div>';
       const zoneList = document.getElementById('zoneList');
@@ -1905,117 +2178,144 @@ def _dashboard_html() -> str:
       if (zoneDetailed) zoneDetailed.innerHTML = html;
     }
     function renderAlerts(items) {
-      const html = (items || []).map(item => `
-        <div class="alert">
-          <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.alert_type}</div>
-          <div><span class="badge ${item.severity === 'critical' ? 'critical' : 'warn'}">${item.severity}</span>${item.summary || 'summary 없음'}</div>
-          <div class="small">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
+      const full = (items || []).map(item => `
+        <div class="alert-row">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] text-muted">#${item.decision_id} · ${item.zone_id} · ${item.alert_type}</span>
+            <span class="chip ${item.severity === 'critical' ? 'chip-critical' : 'chip-warn'}">${item.severity}</span>
+          </div>
+          <div class="text-xs text-ink">${item.summary || 'summary 없음'}</div>
+          <div class="text-[10px] text-muted mt-1">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
         </div>
       `).join('') || '<div class="placeholder">alert가 없습니다.</div>';
-      const fullList = document.getElementById('alertList');
-      if (fullList) fullList.innerHTML = html;
-      const overviewList = document.getElementById('alertListOverview');
-      if (overviewList) {
-        const topHtml = (items || []).slice(0, 5).map(item => `
-          <div class="alert">
-            <div class="meta">#${item.decision_id} · ${item.zone_id}</div>
-            <div><span class="badge ${item.severity === 'critical' ? 'critical' : 'warn'}">${item.severity}</span>${(item.summary || '').slice(0, 80)}</div>
+      const main = document.getElementById('alertList');
+      if (main) main.innerHTML = full;
+      const overview = document.getElementById('alertListOverview');
+      if (overview) {
+        overview.innerHTML = (items || []).slice(0, 5).map(item => `
+          <div class="flex items-center gap-3 py-2 border-b border-outline/10 last:border-0">
+            <div class="w-9 h-9 rounded-full bg-surface-low flex items-center justify-center ${item.severity === 'critical' ? 'text-critical' : 'text-warn'}">
+              <span class="material-symbols-outlined text-[18px]">warning</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-ink truncate">${item.alert_type} · ${item.zone_id}</div>
+              <div class="text-[10px] text-muted truncate">${item.summary || ''}</div>
+            </div>
+            <span class="chip ${item.severity === 'critical' ? 'chip-critical' : 'chip-warn'}">${item.severity}</span>
           </div>
         `).join('') || '<div class="placeholder">alert가 없습니다.</div>';
-        overviewList.innerHTML = topHtml;
       }
     }
     function renderRobotTasks(items) {
-      document.getElementById('robotList').innerHTML = items.map(item => `
-        <div class="robot">
-          <div class="meta">#${item.decision_id} · ${item.zone_id}</div>
-          <div><span class="badge">${item.task_type}</span><span class="badge dark">${item.priority}</span></div>
-          <div class="small">candidate=${item.candidate_id || 'none'} · status=${item.status}</div>
+      document.getElementById('robotList').innerHTML = (items || []).map(item => `
+        <div class="zone-row">
+          <div>
+            <div class="text-sm font-bold text-ink">${item.task_type}</div>
+            <div class="text-[11px] text-muted">#${item.decision_id} · ${item.zone_id} · candidate=${item.candidate_id || 'none'}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="chip chip-dark">${item.priority}</span>
+            <span class="chip ${item.status === 'pending' ? 'chip-warn' : 'chip-enabled'}">${item.status}</span>
+          </div>
         </div>
-      `).join('') || '<div>robot task가 없습니다.</div>';
+      `).join('') || '<div class="placeholder">robot task가 없습니다.</div>';
     }
     function renderRobotCandidates(items) {
       const host = document.getElementById('robotCandidateList');
       if (!host) return;
       host.innerHTML = (items || []).map(item => `
-        <div class="robot">
-          <div class="meta">${item.candidate_id} · ${item.zone_id}</div>
-          <div><span class="badge">${item.candidate_type}</span><span class="badge dark">${item.priority}</span><span class="badge ${item.status === 'rejected' ? 'warn' : ''}">${item.status}</span></div>
-          <div class="small">decision=${item.decision_id || 'none'} · created=${item.created_at || ''}</div>
+        <div class="zone-row">
+          <div>
+            <div class="text-sm font-bold text-ink">${item.candidate_id}</div>
+            <div class="text-[11px] text-muted">${item.zone_id} · ${item.candidate_type}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="chip chip-dark">${item.priority}</span>
+            <span class="chip ${item.status === 'rejected' ? 'chip-warn' : (item.status === 'approved' ? 'chip-enabled' : 'chip-dark')}">${item.status}</span>
+          </div>
         </div>
-      `).join('') || '<div>robot candidate가 없습니다.</div>';
+      `).join('') || '<div class="placeholder">robot candidate가 없습니다.</div>';
     }
     function renderDeviceStatus(zones) {
       const host = document.getElementById('deviceStatusList');
       if (!host) return;
       const entries = (zones || []).filter(z => z.device_status && Object.keys(z.device_status).length > 0);
-      if (entries.length === 0) {
-        host.innerHTML = '<div>device_status 기록이 없습니다.</div>';
-        return;
-      }
+      if (entries.length === 0) { host.innerHTML = '<div class="placeholder">device_status 기록이 없습니다.</div>'; return; }
       host.innerHTML = entries.map(zone => {
         const devices = Object.entries(zone.device_status).map(([deviceId, info]) => {
           const status = (info && typeof info === 'object') ? (info.status || info.state || JSON.stringify(info)) : info;
-          return `<div class="small">${deviceId}: <span class="badge dark">${status}</span></div>`;
+          const cls = status === 'fault' ? 'chip-critical' : (status === 'on' ? 'chip-enabled' : 'chip-dark');
+          return `<div class="flex items-center justify-between text-[11px] py-1">
+            <span class="text-muted truncate flex-1 mr-2">${deviceId}</span>
+            <span class="chip ${cls}">${status}</span>
+          </div>`;
         }).join('');
-        return `
-          <div class="zone">
-            <div class="meta">${zone.zone_id} · decision=${zone.decision_id || 'none'}</div>
-            ${devices}
-          </div>
-        `;
+        return `<div class="alert-row"><div class="text-xs font-bold text-ink mb-2">${zone.zone_id} · decision=${zone.decision_id || 'none'}</div>${devices}</div>`;
       }).join('');
     }
     function renderActiveConstraints(zones) {
       const host = document.getElementById('activeConstraintsList');
       if (!host) return;
       const entries = (zones || []).filter(z => z.active_constraints && Object.keys(z.active_constraints).length > 0);
-      if (entries.length === 0) {
-        host.innerHTML = '<div>현재 active constraint가 없습니다.</div>';
-        return;
-      }
+      if (entries.length === 0) { host.innerHTML = '<div class="placeholder">현재 active constraint가 없습니다.</div>'; return; }
       host.innerHTML = entries.map(zone => {
         const flags = Object.entries(zone.active_constraints).map(([key, value]) => {
           const on = value === true || value === 'true' || value === 1;
-          return `<span class="badge ${on ? 'warn' : 'dark'}">${key}${on ? '' : `=${value}`}</span>`;
+          return `<span class="chip ${on ? 'chip-warn' : 'chip-dark'} mr-1 mb-1 inline-block">${key}${on ? '' : '=' + value}</span>`;
         }).join('');
-        return `
-          <div class="zone">
-            <div class="meta">${zone.zone_id}</div>
-            <div>${flags}</div>
-          </div>
-        `;
+        return `<div class="alert-row"><div class="text-xs font-bold text-ink mb-2">${zone.zone_id}</div><div>${flags}</div></div>`;
       }).join('');
     }
     function renderShadowWindow(summary) {
-      const html = summary ? `
-        <div class="zone">
-          <div><span class="badge ${summary.promotion_decision === 'rollback' ? 'critical' : (summary.promotion_decision === 'hold' ? 'warn' : 'dark')}">${summary.promotion_decision}</span></div>
-          <div class="small">decision=${summary.decision_count} · agreement=${summary.operator_agreement_rate} · critical_disagreement=${summary.critical_disagreement_count}</div>
-          <div class="small">citation=${summary.citation_coverage} · retrieval=${summary.retrieval_hit_rate} · policy_mismatch=${summary.policy_mismatch_count}</div>
-          <div class="small">window=${summary.window_start || 'n/a'} ~ ${summary.window_end || 'n/a'}</div>
-        </div>` : '<div class="placeholder">shadow window가 아직 없습니다. capture 실행 필요.</div>';
       const mini = document.getElementById('shadowWindow');
-      if (mini) mini.innerHTML = html;
+      if (mini) {
+        mini.innerHTML = summary ? `
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-white/10 rounded-xl p-3">
+              <div class="text-[10px] uppercase text-white/60">Promote</div>
+              <div class="text-2xl font-bold text-white mt-1">${summary.decision_count || 0}</div>
+            </div>
+            <div class="bg-white/10 rounded-xl p-3">
+              <div class="text-[10px] uppercase text-white/60">Hold</div>
+              <div class="text-2xl font-bold text-white mt-1">${summary.critical_disagreement_count || 0}</div>
+            </div>
+            <div class="bg-white/10 rounded-xl p-3">
+              <div class="text-[10px] uppercase text-white/60">Result</div>
+              <div class="text-lg font-bold text-white mt-1">${summary.promotion_decision || 'n/a'}</div>
+            </div>
+          </div>
+          <div class="text-[11px] text-white/75">Agreement ${(summary.operator_agreement_rate ?? 'n/a')} · Citation ${(summary.citation_coverage ?? 'n/a')}</div>
+        ` : '<div class="text-white/70 text-sm">shadow window가 아직 없습니다.</div>';
+      }
       const detail = document.getElementById('shadowWindowDetail');
       if (detail) {
         detail.innerHTML = summary ? `
-          <div class="zone">
-            <div class="row" style="margin-bottom:10px;">
-              <div><span class="small">promotion_decision</span><br><span class="badge ${summary.promotion_decision === 'rollback' ? 'critical' : (summary.promotion_decision === 'hold' ? 'warn' : 'dark')}">${summary.promotion_decision}</span></div>
-              <div><span class="small">model_id</span><br>${summary.model_id || 'n/a'}</div>
-              <div><span class="small">prompt_id</span><br>${summary.prompt_id || 'n/a'}</div>
-              <div><span class="small">dataset_id</span><br>${summary.dataset_id || 'n/a'}</div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-surface-low rounded-xl p-3">
+              <div class="text-[10px] uppercase text-muted">Promotion Decision</div>
+              <div class="chip ${summary.promotion_decision === 'rollback' ? 'chip-critical' : (summary.promotion_decision === 'hold' ? 'chip-warn' : 'chip-enabled')} mt-2">${summary.promotion_decision}</div>
             </div>
-            <div class="row" style="margin-bottom:10px;">
-              <div><span class="small">decision_count</span><br><b>${summary.decision_count}</b></div>
-              <div><span class="small">operator_agreement_rate</span><br><b>${summary.operator_agreement_rate}</b></div>
-              <div><span class="small">critical_disagreement</span><br><b>${summary.critical_disagreement_count}</b></div>
-              <div><span class="small">citation_coverage</span><br><b>${summary.citation_coverage}</b></div>
+            <div class="bg-surface-low rounded-xl p-3">
+              <div class="text-[10px] uppercase text-muted">Model ID</div>
+              <div class="text-xs font-mono text-ink mt-2 truncate">${summary.model_id || 'n/a'}</div>
             </div>
-            <div class="small">window=${summary.window_start || 'n/a'} ~ ${summary.window_end || 'n/a'}</div>
-            <div class="small">policy_mismatch=${summary.policy_mismatch_count} · retrieval_hit_rate=${summary.retrieval_hit_rate}</div>
+            <div class="bg-surface-low rounded-xl p-3">
+              <div class="text-[10px] uppercase text-muted">Prompt ID</div>
+              <div class="text-xs font-mono text-ink mt-2">${summary.prompt_id || 'n/a'}</div>
+            </div>
+            <div class="bg-surface-low rounded-xl p-3">
+              <div class="text-[10px] uppercase text-muted">Dataset ID</div>
+              <div class="text-xs font-mono text-ink mt-2">${summary.dataset_id || 'n/a'}</div>
+            </div>
           </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div><div class="text-[10px] uppercase text-muted">Decision Count</div><div class="text-2xl font-bold text-ink mt-1">${summary.decision_count}</div></div>
+            <div><div class="text-[10px] uppercase text-muted">Agreement Rate</div><div class="text-2xl font-bold text-ink mt-1">${summary.operator_agreement_rate}</div></div>
+            <div><div class="text-[10px] uppercase text-muted">Critical Disagreement</div><div class="text-2xl font-bold text-ink mt-1">${summary.critical_disagreement_count}</div></div>
+            <div><div class="text-[10px] uppercase text-muted">Citation Coverage</div><div class="text-2xl font-bold text-ink mt-1">${summary.citation_coverage}</div></div>
+          </div>
+          <div class="text-[11px] text-muted">Window: ${summary.window_start || 'n/a'} ~ ${summary.window_end || 'n/a'}</div>
+          <div class="text-[11px] text-muted">policy_mismatch=${summary.policy_mismatch_count} · retrieval_hit_rate=${summary.retrieval_hit_rate}</div>
         ` : '<div class="placeholder">shadow window가 아직 없습니다.</div>';
       }
     }
@@ -2023,130 +2323,116 @@ def _dashboard_html() -> str:
       const main = document.getElementById('authContext');
       const mini = document.getElementById('authContextMini');
       if (!actor) {
-        if (main) main.innerHTML = '<div class="small">actor 정보가 없습니다.</div>';
+        if (main) main.innerHTML = '';
         if (mini) mini.innerHTML = '';
         return;
       }
       if (main) {
         main.innerHTML = `
-          <div style="text-align:right;">
-            <span class="badge dark">${actor.role}</span><span class="badge">${actor.auth_mode}</span>
-            <div class="small" style="margin-top:4px;">actor_id=${actor.actor_id}</div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-primary text-[11px] font-bold">${(actor.actor_id || '').slice(0, 2).toUpperCase()}</div>
+            <div class="text-right">
+              <div class="text-xs font-bold text-ink">${actor.actor_id}</div>
+              <div class="text-[10px] text-muted">${actor.role} · ${actor.auth_mode}</div>
+            </div>
           </div>
         `;
       }
-      if (mini) {
-        mini.innerHTML = `<div>${actor.actor_id} · ${actor.role}</div>`;
-      }
-      const runtimeInfo = document.getElementById('runtimeInfo');
-      if (runtimeInfo) {
-        runtimeInfo.innerHTML = `
-          <div class="zone">
-            <div class="small">actor_id: <b>${actor.actor_id}</b></div>
-            <div class="small">role: <b>${actor.role}</b></div>
-            <div class="small">auth_mode: <b>${actor.auth_mode}</b></div>
+      if (mini) mini.innerHTML = `<div class="truncate">${actor.actor_id} · ${actor.role}</div>`;
+      const runtime = document.getElementById('runtimeInfo');
+      if (runtime) {
+        runtime.innerHTML = `
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-muted">actor_id</span><span class="font-bold">${actor.actor_id}</span></div>
+            <div class="flex justify-between"><span class="text-muted">role</span><span class="font-bold">${actor.role}</span></div>
+            <div class="flex justify-between"><span class="text-muted">auth_mode</span><span class="font-bold">${actor.auth_mode}</span></div>
           </div>
         `;
       }
     }
     function renderPolicies(items) {
-      document.getElementById('policyList').innerHTML = items.map(item => `
-        <div class="zone">
-          <div class="meta">${item.policy_id} · ${item.policy_stage}</div>
-          <div><span class="badge ${item.enabled ? '' : 'warn'}">${item.enabled ? 'enabled' : 'disabled'}</span><span class="badge dark">${item.severity}</span></div>
-          <div class="small">${item.description || 'description 없음'}</div>
-          <div class="small">trigger_flags: ${(item.trigger_flags || []).join(', ') || 'none'}</div>
-          <div class="row">
-            <button class="secondary" onclick="togglePolicy('${item.policy_id}', ${item.enabled ? 'false' : 'true'})">${item.enabled ? '비활성화' : '활성화'}</button>
+      document.getElementById('policyList').innerHTML = (items || []).map(item => `
+        <div class="alert-row">
+          <div class="flex items-start justify-between mb-1">
+            <div>
+              <div class="text-sm font-bold text-ink">${item.policy_id}</div>
+              <div class="text-[10px] text-muted uppercase tracking-wider">${item.policy_stage}</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="chip ${item.enabled ? 'chip-enabled' : 'chip-warn'}">${item.enabled ? 'ENABLED' : 'DISABLED'}</span>
+              <span class="chip chip-dark">${item.severity}</span>
+            </div>
           </div>
+          <div class="text-xs text-ink mb-2 leading-relaxed">${item.description || 'description 없음'}</div>
+          <div class="text-[10px] text-muted mb-2">trigger_flags: ${(item.trigger_flags || []).join(', ') || 'none'}</div>
+          <button onclick="togglePolicy('${item.policy_id}', ${item.enabled ? 'false' : 'true'})" class="text-[11px] font-semibold ${item.enabled ? 'text-warn' : 'text-primary'} hover:underline">${item.enabled ? '비활성화' : '활성화'}</button>
         </div>
-      `).join('') || '<div>policy가 없습니다.</div>';
+      `).join('') || '<div class="placeholder">policy가 없습니다.</div>';
     }
     function renderPolicyEvents(items) {
-      document.getElementById('policyEventList').innerHTML = items.map(item => `
-        <div class="zone">
-          <div class="meta">${item.request_id} · decision=${item.decision_id || 'none'}</div>
-          <div><span class="badge ${item.event_type === 'blocked' ? 'warn' : 'dark'}">${item.event_type}</span><span class="badge dark">${item.policy_result}</span></div>
-          <div class="small">policy_ids: ${(item.policy_ids || []).join(', ') || 'none'}</div>
-          <div class="small">reasons: ${(item.reason_codes || []).join(', ') || 'none'}</div>
+      document.getElementById('policyEventList').innerHTML = (items || []).map(item => `
+        <div class="alert-row">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] text-muted">decision=#${item.decision_id || 'none'}</span>
+            <span class="chip ${item.event_type === 'blocked' ? 'chip-critical' : 'chip-warn'}">${item.event_type}</span>
+          </div>
+          <div class="text-xs text-ink">${item.request_id}</div>
+          <div class="text-[10px] text-muted">policy_ids: ${(item.policy_ids || []).join(', ') || 'none'}</div>
+          <div class="text-[10px] text-muted">reasons: ${(item.reason_codes || []).join(', ') || 'none'}</div>
         </div>
-      `).join('') || '<div>policy event가 없습니다.</div>';
+      `).join('') || '<div class="placeholder">policy event가 없습니다.</div>';
     }
     function renderCommands(items) {
-      const html = (items || []).map(item => `
-        <div class="command">
-          <div class="meta">#${item.decision_id} · ${item.target_id}</div>
-          <div><span class="badge">${item.action_type}</span><span class="badge dark">${item.status}</span></div>
-        </div>
-      `).join('') || '<div class="placeholder">dispatch 기록이 없습니다.</div>';
+      const row = (item) => `
+        <div class="zone-row">
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-bold text-ink truncate">${item.action_type}</div>
+            <div class="text-[11px] text-muted truncate">#${item.decision_id} · ${item.target_id}</div>
+          </div>
+          <span class="chip ${item.status === 'acknowledged' || item.status === 'state_updated' ? 'chip-enabled' : 'chip-warn'} ml-2">${item.status}</span>
+        </div>`;
+      const html = (items || []).map(row).join('') || '<div class="placeholder">dispatch 기록이 없습니다.</div>';
       const main = document.getElementById('commandList');
       if (main) main.innerHTML = html;
       const overview = document.getElementById('commandListOverview');
-      if (overview) {
-        overview.innerHTML = (items || []).slice(0, 5).map(item => `
-          <div class="command">
-            <div class="meta">#${item.decision_id} · ${item.target_id}</div>
-            <div><span class="badge">${item.action_type}</span><span class="badge dark">${item.status}</span></div>
-          </div>
-        `).join('') || '<div class="placeholder">dispatch 기록이 없습니다.</div>';
-      }
+      if (overview) overview.innerHTML = (items || []).slice(0, 5).map(row).join('') || '<div class="placeholder">dispatch 기록이 없습니다.</div>';
     }
     function renderDecisions(mode, items) {
-      const html = items.map(item => `
-        <div class="decision">
-          <div class="meta">#${item.decision_id} · ${item.zone_id} · ${item.task_type} · ${item.status}</div>
-          <div class="meta">risk=${item.risk_level || 'unknown'} · model=${item.model_id} · prompt=${item.prompt_version}</div>
-          <div class="meta">summary: ${item.current_state_summary || 'none'}</div>
-          <pre>${JSON.stringify(item.validated_output, null, 2)}</pre>
-          <div class="meta">citations: ${(item.citations || []).map(c => c.chunk_id).join(', ') || 'none'}</div>
-          <div class="meta">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
-          <div class="decision-actions">
+      document.getElementById('decisionList').innerHTML = (items || []).map(item => `
+        <div class="decision-card">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2">
+            <div>
+              <div class="text-xs text-muted font-mono">ID #${item.decision_id} · ${item.zone_id}</div>
+              <div class="text-sm font-bold text-ink mt-1">${item.task_type} · ${item.status}</div>
+              <div class="text-[11px] text-muted mt-1">risk=${item.risk_level || 'unknown'} · ${item.prompt_version}</div>
+            </div>
+            <span class="chip ${riskChipClass(item.risk_level)}">${item.risk_level || 'n/a'}</span>
+          </div>
+          <div class="text-[11px] text-muted mb-2 italic">${item.current_state_summary || 'no summary'}</div>
+          <pre class="bg-surface-low rounded-lg p-3 text-[10px] font-mono overflow-auto max-h-40 custom-scroll">${JSON.stringify(item.validated_output, null, 2)}</pre>
+          <div class="text-[10px] text-muted mt-2">citations: ${(item.citations || []).map(c => c.chunk_id).join(', ') || 'none'} · validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
+          <div class="flex flex-wrap gap-2 mt-3">
             ${mode === 'approval' && item.runtime_mode === 'approval' && item.status === 'evaluated' ? `
-              <button onclick="approve(${item.decision_id})">승인</button>
-              <button class="secondary" onclick="reject(${item.decision_id})">거절</button>
-            ` : ''}
-            ${mode === 'approval' && item.runtime_mode === 'approval' && item.status === 'evaluated' ? `
-              <button class="secondary" onclick="executeAction(${item.decision_id})">수동 Execute</button>
+              <button onclick="approve(${item.decision_id})" class="bg-primary text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check</span>승인</button>
+              <button onclick="reject(${item.decision_id})" class="bg-surface-container text-ink text-[11px] font-semibold px-3 py-1.5 rounded-lg">거절</button>
+              <button onclick="executeAction(${item.decision_id})" class="bg-secondary text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">수동 Execute</button>
             ` : ''}
             ${mode === 'shadow' && item.runtime_mode === 'shadow' && item.status === 'evaluated' ? `
-              <button onclick="review(${item.decision_id}, 'agree')">일치</button>
-              <button class="warn" onclick="review(${item.decision_id}, 'disagree')">불일치</button>
+              <button onclick="review(${item.decision_id}, 'agree')" class="bg-primary text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">일치</button>
+              <button onclick="review(${item.decision_id}, 'disagree')" class="bg-warn text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">불일치</button>
             ` : ''}
-            <button class="warn" onclick="flagCase(${item.decision_id})">문제 사례 태깅</button>
+            <button onclick="flagCase(${item.decision_id})" class="bg-tertiary text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">flag</span>문제 사례</button>
           </div>
-          <div class="small">
-            approval=${item.latest_approval ? item.latest_approval.approval_status : 'none'}
-            · shadow_review=${item.latest_shadow_review ? item.latest_shadow_review.agreement_status : 'none'}
-          </div>
+          <div class="text-[10px] text-muted mt-2">approval=${item.latest_approval ? item.latest_approval.approval_status : 'none'} · shadow_review=${item.latest_shadow_review ? item.latest_shadow_review.agreement_status : 'none'}</div>
         </div>
-      `).join('');
-      document.getElementById('decisionList').innerHTML = html || '<div>아직 decision이 없습니다.</div>';
+      `).join('') || '<div class="placeholder">아직 decision이 없습니다.</div>';
     }
-    async function refreshDashboard() {
-      const response = await apiFetch('/dashboard/data');
-      const data = response.data;
-      document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
-      renderAuthContext(response.actor);
-      renderMetrics(data.summary);
-      renderZones(data.zones);
-      renderShadowWindow(data.shadow_window);
-      renderPolicies(data.policies || []);
-      renderPolicyEvents(data.policy_events || []);
-      renderAlerts(data.alerts);
-      renderRobotTasks(data.robot_tasks);
-      renderRobotCandidates(data.robot_candidates || []);
-      renderDeviceStatus(data.zones || []);
-      renderActiveConstraints(data.zones || []);
-      renderCommands(data.commands);
-      renderDecisions(data.runtime_mode.mode, data.decisions);
-      syncZoneHistoryOptions(data.zones || []);
-      await refreshZoneHistory();
-    }
+
     function syncZoneHistoryOptions(zones) {
       const select = document.getElementById('historyZoneId');
       if (!select) return;
       const current = select.value;
-      const ids = zones.map(z => z.zone_id).filter(Boolean);
+      const ids = (zones || []).map(z => z.zone_id).filter(Boolean);
       if (!ids.includes('gh-01-zone-a')) ids.unshift('gh-01-zone-a');
       const uniqueIds = Array.from(new Set(ids));
       select.innerHTML = uniqueIds.map(id => `<option value="${id}">${id}</option>`).join('');
@@ -2160,24 +2446,29 @@ def _dashboard_html() -> str:
         const body = await apiFetch('/zones/' + encodeURIComponent(zoneId) + '/history?limit=30');
         renderZoneHistory(body.data || {});
       } catch (err) {
-        document.getElementById('zoneHistoryCharts').innerHTML = `<div class="small">zone history 조회 실패: ${err.message}</div>`;
+        document.getElementById('zoneHistoryCharts').innerHTML = `<div class="placeholder">zone history 조회 실패: ${err.message}</div>`;
       }
     }
     function renderZoneHistory(data) {
       const series = data.sensor_series || {};
       const container = document.getElementById('zoneHistoryCharts');
       const metrics = Object.keys(series);
-      if (metrics.length === 0) {
-        container.innerHTML = '<div class="small">zone decision이 쌓이면 센서 차트가 나타납니다.</div>';
-        return;
-      }
+      if (metrics.length === 0) { container.innerHTML = '<div class="placeholder col-span-full">zone decision이 쌓이면 센서 차트가 나타납니다.</div>'; return; }
       container.innerHTML = metrics.map(metric => {
         const points = series[metric] || [];
         if (points.length === 0) return '';
+        const values = points.map(p => p.value);
+        const last = values[values.length - 1];
+        const min = Math.min(...values);
+        const max = Math.max(...values);
         return `
-          <div style="margin-bottom:10px;">
-            <div class="small">${metric} · points=${points.length}</div>
+          <div class="bg-surface-low rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] uppercase tracking-wider text-muted font-bold">${metric}</span>
+              <span class="text-lg font-bold text-primary">${typeof last === 'number' ? last.toFixed(2) : last}</span>
+            </div>
             ${renderSparkline(points)}
+            <div class="text-[10px] text-muted mt-2">MIN ${min.toFixed(2)} · MAX ${max.toFixed(2)} · points=${points.length}</div>
           </div>
         `;
       }).join('');
@@ -2196,34 +2487,188 @@ def _dashboard_html() -> str:
         const y = height - ((p.value - minV) / range) * (height - 8) - 4;
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       }).join(' ');
-      const lastValue = values[values.length - 1];
-      return `
-        <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none">
-          <polyline fill="none" stroke="#456b4f" stroke-width="2" points="${coords}" />
-          <text x="${width - 4}" y="12" text-anchor="end" font-size="11" fill="#5b685e">last=${lastValue.toFixed(2)}</text>
-          <text x="4" y="${height - 4}" font-size="11" fill="#5b685e">min=${minV.toFixed(2)} · max=${maxV.toFixed(2)}</text>
-        </svg>
-      `;
+      return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none">
+        <polyline fill="none" stroke="#2d5338" stroke-width="2" points="${coords}" />
+      </svg>`;
     }
-    async function togglePolicy(policyId, enabled) {
-      await apiFetch('/policies/' + policyId, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ enabled })
-      });
-      await refreshDashboard();
+
+    // ===== AI Chat =====
+    const chatState = { messages: [], sending: false };
+    function chatBubbleUser(content, ts) {
+      return `<div class="flex justify-end">
+        <div>
+          <div class="chat-bubble-user">${escapeHtml(content)}</div>
+          <div class="text-[10px] text-muted mt-1 text-right">${ts}</div>
+        </div>
+      </div>`;
+    }
+    function chatBubbleAssistant(content, ts) {
+      return `<div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center">
+            <span class="material-symbols-outlined msf text-white text-[14px]">psychology</span>
+          </div>
+          <span class="text-[11px] font-bold text-primary uppercase tracking-wider">AI AGRO-SYSTEM</span>
+        </div>
+        <div class="chat-bubble-ai">${escapeHtml(content).replace(/\\n/g, '<br>')}</div>
+        <div class="text-[10px] text-muted">${ts}</div>
+      </div>`;
+    }
+    function chatBubbleError(content) {
+      return `<div class="chat-bubble-ai chat-bubble-error">${escapeHtml(content)}</div>`;
+    }
+    function chatBubblePending() {
+      return `<div class="chat-bubble-ai animate-pulse">AI 응답을 생성 중입니다...</div>`;
+    }
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function renderChat() {
+      const host = document.getElementById('chatMessages');
+      if (!host) return;
+      if (chatState.messages.length === 0) {
+        host.innerHTML = `<div class="text-center text-muted text-xs py-6"><span class="chip chip-dark">오늘의 운용 로그 시작</span></div><div class="chat-bubble-ai mx-auto max-w-md">안녕하세요. 적고추 온실 스마트팜 통합 제어 AI 어시스턴트입니다. 현재 존 상태, 정책, 결정을 질문하시면 파인튜닝된 모델이 답변합니다. 하단 빠른 질문 버튼도 활용해보세요.</div>`;
+        return;
+      }
+      host.innerHTML = chatState.messages.map(msg => {
+        if (msg.role === 'user') return chatBubbleUser(msg.content, msg.ts || '');
+        if (msg.role === 'error') return chatBubbleError(msg.content);
+        if (msg.role === 'pending') return chatBubblePending();
+        return chatBubbleAssistant(msg.content, msg.ts || '');
+      }).join('');
+      scrollChatToBottom();
+    }
+    function scrollChatToBottom() {
+      const host = document.getElementById('chatMessages');
+      if (host) host.scrollTop = host.scrollHeight;
+    }
+    function nowLabel() {
+      const d = new Date();
+      return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    }
+    function useQuickPrompt(text) {
+      const input = document.getElementById('chatInput');
+      if (input) input.value = text;
+    }
+    function clearChat() {
+      chatState.messages = [];
+      renderChat();
+    }
+    async function sendChatMessage() {
+      if (chatState.sending) return;
+      const input = document.getElementById('chatInput');
+      const text = (input?.value || '').trim();
+      if (!text) return;
+      chatState.sending = true;
+      chatState.messages.push({ role: 'user', content: text, ts: nowLabel() });
+      chatState.messages.push({ role: 'pending', content: '' });
+      renderChat();
+      input.value = '';
+      try {
+        const body = {
+          messages: chatState.messages.filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role, content: m.content })),
+          context: { zone_hint: 'gh-01-zone-a' },
+        };
+        const res = await apiFetch('/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const reply = res?.data?.reply?.content || '응답을 읽어오지 못했습니다.';
+        chatState.messages = chatState.messages.filter(m => m.role !== 'pending');
+        chatState.messages.push({ role: 'assistant', content: reply, ts: nowLabel() });
+      } catch (err) {
+        chatState.messages = chatState.messages.filter(m => m.role !== 'pending');
+        chatState.messages.push({ role: 'error', content: 'AI 호출 실패: ' + err.message });
+      } finally {
+        chatState.sending = false;
+        renderChat();
+      }
+    }
+    function renderChatLiveOps(data) {
+      const logs = document.getElementById('chatLiveLogs');
+      if (logs) {
+        const commands = (data.commands || []).slice(0, 5);
+        logs.innerHTML = commands.map(c => `
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-surface-low flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined text-[18px]">bolt</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-ink truncate">${c.action_type}</div>
+              <div class="text-[10px] text-muted truncate">#${c.decision_id} · ${c.target_id}</div>
+            </div>
+            <span class="chip chip-dark">${c.status}</span>
+          </div>
+        `).join('') || '<div class="placeholder">최근 dispatch 없음</div>';
+      }
+      const zoneHealth = document.getElementById('chatZoneHealth');
+      if (zoneHealth) {
+        const zones = (data.zones || []).slice(0, 9);
+        const fillers = Math.max(0, 9 - zones.length);
+        zoneHealth.innerHTML = zones.map(z => {
+          const risk = z.risk_level || 'low';
+          const color = risk === 'critical' ? 'bg-critical/40' : (risk === 'high' || risk === 'unknown' ? 'bg-warn/40' : 'bg-primary/40');
+          return `<div class="aspect-square rounded-lg ${color} flex items-center justify-center text-[9px] text-white/90 font-bold">${(z.zone_id || '').split('-').pop()}</div>`;
+        }).join('') + Array.from({ length: fillers }).map(() => '<div class="aspect-square rounded-lg bg-surface-low"></div>').join('');
+      }
+      const action = document.getElementById('chatLiveAction');
+      const desc = document.getElementById('chatLiveDesc');
+      if (action && desc) {
+        const anyAlert = (data.alerts || [])[0];
+        if (anyAlert) {
+          action.textContent = anyAlert.alert_type + ' · ' + anyAlert.severity;
+          desc.textContent = anyAlert.summary || '최근 알림을 확인해주세요.';
+        } else {
+          action.textContent = '정상 운영 중';
+          desc.textContent = '현재 critical 알림이 없습니다.';
+        }
+      }
+    }
+
+    async function refreshDashboard() {
+      try {
+        const response = await apiFetch('/dashboard/data');
+        const data = response.data;
+        document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
+        renderAuthContext(response.actor);
+        renderMetrics(data.summary);
+        renderZones(data.zones);
+        renderShadowWindow(data.shadow_window);
+        renderPolicies(data.policies || []);
+        renderPolicyEvents(data.policy_events || []);
+        renderAlerts(data.alerts);
+        renderRobotTasks(data.robot_tasks);
+        renderRobotCandidates(data.robot_candidates || []);
+        renderDeviceStatus(data.zones || []);
+        renderActiveConstraints(data.zones || []);
+        renderCommands(data.commands);
+        renderDecisions(data.runtime_mode.mode, data.decisions);
+        renderChatLiveOps(data);
+        syncZoneHistoryOptions(data.zones || []);
+        const activeView = document.querySelector('.view.active')?.dataset.view;
+        if (activeView === 'zones') await refreshZoneHistory();
+      } catch (err) {
+        console.error('refreshDashboard failed', err);
+      }
     }
     function setupNav() {
       document.querySelectorAll('#sidebarNav a').forEach(link => {
         link.addEventListener('click', (event) => {
           event.preventDefault();
           showView(link.dataset.view);
-          if (link.dataset.view === 'zones') refreshZoneHistory();
+          if (window.innerWidth < 1024) toggleSidebar(false);
         });
       });
+      const input = document.getElementById('chatInput');
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendChatMessage();
+          }
+        });
+      }
     }
     setupNav();
     showView('overview');
+    renderChat();
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>

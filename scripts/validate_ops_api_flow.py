@@ -74,6 +74,7 @@ def main() -> int:
             "/shadow/reviews",
             "/shadow/cases/capture",
             "/shadow/window",
+            "/ai/chat",
         }
         for expected_route in expected_routes:
             if expected_route not in routes:

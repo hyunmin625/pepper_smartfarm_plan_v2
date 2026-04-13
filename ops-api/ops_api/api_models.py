@@ -105,3 +105,14 @@ class PolicyUpdateRequest(BaseModel):
     description: str | None = None
     trigger_flags: list[str] | None = None
     enforcement: dict[str, Any] | None = None
+
+
+class ChatMessageRequest(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessageRequest] = Field(default_factory=list)
+    system_prompt: str | None = None
+    context: dict[str, Any] = Field(default_factory=dict)
