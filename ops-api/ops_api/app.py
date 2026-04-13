@@ -1560,7 +1560,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 def _build_chat_system_prompt() -> str:
     return (
-        "너는 '적고추 온실 스마트팜 통합 제어' 시스템의 운영 보조 AI 어시스턴트다. "
+        "너는 'iFarm 통합제어 (적고추 온실 스마트팜)' 시스템의 운영 보조 AI 어시스턴트다. "
         "역할은 파인튜닝된 재배 의사결정 모델을 기반으로, 운영자의 질문에 대해 "
         "현재 센서 상태와 기존 정책/규칙을 참고해 한국어로 답변하는 것이다. "
         "절대 안전 규칙을 위반하는 제안을 하지 않는다. "
@@ -1603,7 +1603,7 @@ def _dashboard_html() -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>적고추 온실 스마트팜 통합 제어</title>
+  <title>iFarm 통합제어 · 적고추 온실 스마트팜</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet" />
@@ -1677,8 +1677,8 @@ def _dashboard_html() -> str:
 <body class="min-h-screen">
   <aside id="sidebar" class="fixed left-0 top-0 h-screen w-64 flex flex-col bg-sidebar text-white z-50 shadow-soft">
     <div class="px-6 py-6 border-b border-white/10">
-      <h1 class="text-lg font-bold tracking-tight">농경 사령부</h1>
-      <p class="text-[10px] tracking-[0.15em] uppercase text-white/60 mt-1">적고추 온실 · Agrarian Command</p>
+      <h1 class="text-lg font-bold tracking-tight">iFarm 통합제어</h1>
+      <p class="text-[10px] tracking-[0.15em] uppercase text-white/60 mt-1">적고추 온실 · iFarm Integrated Control</p>
     </div>
     <nav id="sidebarNav" class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scroll">
       <a data-view="overview" class="nav-link active">
@@ -2527,7 +2527,7 @@ def _dashboard_html() -> str:
       const host = document.getElementById('chatMessages');
       if (!host) return;
       if (chatState.messages.length === 0) {
-        host.innerHTML = `<div class="text-center text-muted text-xs py-6"><span class="chip chip-dark">오늘의 운용 로그 시작</span></div><div class="chat-bubble-ai mx-auto max-w-md">안녕하세요. 적고추 온실 스마트팜 통합 제어 AI 어시스턴트입니다. 현재 존 상태, 정책, 결정을 질문하시면 파인튜닝된 모델이 답변합니다. 하단 빠른 질문 버튼도 활용해보세요.</div>`;
+        host.innerHTML = `<div class="text-center text-muted text-xs py-6"><span class="chip chip-dark">오늘의 운용 로그 시작</span></div><div class="chat-bubble-ai mx-auto max-w-md">안녕하세요. iFarm 통합제어 AI 어시스턴트입니다. 현재 존 상태, 정책, 결정을 질문하시면 파인튜닝된 모델이 답변합니다. 하단 빠른 질문 버튼도 활용해보세요.</div>`;
         return;
       }
       host.innerHTML = chatState.messages.map(msg => {
