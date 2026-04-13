@@ -4,6 +4,12 @@
 
 ## 2026-04-13
 
+### ds_v14 실제 submit
+- `./.venv/bin/python scripts/run_openai_fine_tuning_job.py --model gpt-4.1-mini-2025-04-14 --model-version pepper-ops-sft-v1.11.0 --dataset-version ds_v14 --prompt-version prompt_v10_validator_aligned_batch19_hardcase --eval-version eval_v5 --training-file artifacts/fine_tuning/openai_sft_train_prompt_v10_validator_aligned_batch19_hardcase.jsonl --validation-file artifacts/fine_tuning/openai_sft_validation_prompt_v10_validator_aligned_batch19_hardcase.jsonl --notes "batch19 real shadow feedback plus validator-aligned prompt and hard-case oversampling; submit after runtime integration stack implementation" --submit`로 `ds_v14`를 실제 제출했다.
+- 새 submit manifest는 `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-113447.json`이고, job id는 `ftjob-37TzJb1FtgGUghjfyaGqAxkA`다.
+- `./.venv/bin/python scripts/sync_openai_fine_tuning_job.py --manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-113447.json` 기준 현재 status는 `validating_files`, events 경로는 `artifacts/fine_tuning/events/ftjob-37TzJb1FtgGUghjfyaGqAxkA.jsonl`이다.
+- 원래 `challenger_submit_preflight_ds_v14_real_shadow.md` 기준 blocker는 남아 있었지만, 이번 submit은 사용자 승인으로 진행했다. 따라서 완료 후에는 blocker를 무시하지 않고 기존 frozen gate와 shadow 기준으로 다시 재평가해야 한다.
+
 ### runtime integration stack 구현
 - `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 5분 평균, 30분 변화율, 관수 후 회복률, 배액률, rootzone/climate/crop stress score를 계산하는 feature builder를 구현했다.
 - `state-estimator/state_estimator/estimator.py`는 기존 MVP unknown/critical 승격 규칙을 유지하면서 `build_state_snapshot`, `build_zone_state_payload`로 LLM 입력용 zone state를 직접 조합하도록 확장했다.

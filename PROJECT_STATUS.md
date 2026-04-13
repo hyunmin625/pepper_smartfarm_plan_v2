@@ -31,8 +31,8 @@
 - `scripts/build_challenger_submit_preflight.py`로 `ds_v12`와 `ds_v13` submit preflight를 같은 기준으로 묶었다. 현재 리포트 `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md` 기준 두 candidate 모두 `blocked`이며 공통 blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real shadow mode not_run`이다.
 - 실제 운영 전환용 shadow 경로도 추가했다. `scripts/run_shadow_mode_capture_cases.py`는 일자별 shadow case JSONL을 append 방식으로 적재하고, `scripts/build_shadow_mode_window_report.py`는 여러 audit log를 rolling window 기준으로 집계한다. `docs/real_shadow_mode_runbook.md`에 post-construction 절차를 고정했다.
 - `scripts/build_challenger_submit_preflight.py`는 이제 `--real-shadow-report`를 지원한다. 실제 shadow window JSON을 넣으면 `promotion_decision promote -> pass`, `hold -> hold`, `rollback -> rollback`으로 자동 변환해 submit blocker에 반영한다.
-- `real shadow rollback` source `shadow-runtime-002`와 blind50 validator 잔여 `5건`을 직접 역투영한 `batch19` corrective sample `8건`을 추가했다. 동시에 validator hard rule을 자연어로 옮긴 `sft_v10` prompt를 도입해 `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` dry-run candidate를 만들었다.
-- `ds_v14` draft는 source training `352`, train `843`, validation `61`, format error `0`이다. 하지만 `artifacts/reports/challenger_submit_preflight_ds_v14_real_shadow.md` 기준 아직 `blocked`이며 blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real shadow mode rollback`이다.
+- `real shadow rollback` source `shadow-runtime-002`와 blind50 validator 잔여 `5건`을 직접 역투영한 `batch19` corrective sample `8건`을 추가했다. 동시에 validator hard rule을 자연어로 옮긴 `sft_v10` prompt를 도입해 `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` package를 만들었다.
+- `ds_v14`는 source training `352`, train `843`, validation `61`, format error `0`이다. preflight blocker는 그대로 남아 있었지만 사용자 승인으로 실제 submit했고, 현재 run은 `ftjob-37TzJb1FtgGUghjfyaGqAxkA`, status `validating_files`다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, malformed JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
@@ -311,7 +311,7 @@
 8. offline shadow replay는 이제 `critical_disagreement_count 0`, `operator_agreement_rate 0.92`, `promotion_decision promote`까지 올라왔다. 다음은 실제 shadow mode 로그를 운영 시나리오 형식으로 쌓아 같은 기준이 유지되는지 보는 일이다.
 9. synthetic shadow `day0`는 아직 `operator_agreement_rate 0.6667`, `promotion_decision hold`다. residual owner report 기준 backlog는 `data_and_model 3`, `robot_contract_and_model 1`로 좁혀졌고, batch18은 이 4건만 직접 겨냥한다.
 10. 실제 shadow mode와 잔여 실패 축소 없이 다음 submit을 열지 않는다. `ds_v12`는 frozen dry-run snapshot이고, `ds_v13`은 batch18 포함 next-only challenger다. 현재 preflight 기준 두 후보 모두 `blocked`이며, 다음 우선순위는 real shadow case 적재와 window report 생성이다.
-11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 다음 구현 우선순위는 새 submit보다 `real shadow log`, `auth/role`, `실 OpenAI smoke test`, `sensor-ingestor raw snapshot 직결`이다.
+11. 모델 런타임 연결은 이제 `state-estimator -> llm-orchestrator -> validator -> ops-api -> execution-gateway` 경로로 로컬에서 동작한다. 현재 우선순위는 `ds_v14` 완료 대기 후 frozen gate 재평가이며, 그 다음은 `real shadow log`, `auth/role`, `sensor-ingestor raw snapshot 직결`이다.
 
 ## 주의할 점
 

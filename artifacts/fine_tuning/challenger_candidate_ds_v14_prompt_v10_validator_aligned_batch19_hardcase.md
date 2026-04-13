@@ -17,6 +17,9 @@
 - train_file: `artifacts/fine_tuning/openai_sft_train_prompt_v10_validator_aligned_batch19_hardcase.jsonl`
 - validation_file: `artifacts/fine_tuning/openai_sft_validation_prompt_v10_validator_aligned_batch19_hardcase.jsonl`
 - dry_run_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-102244.json`
+- submit_manifest: `artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v14-prompt_v10_validator_aligned_batch19_hardcase-eval_v5-20260413-113447.json`
+- job_id: `ftjob-37TzJb1FtgGUghjfyaGqAxkA`
+- current_status: `validating_files`
 
 ## corrective scope
 
@@ -43,7 +46,7 @@
 ## submit preflight
 
 - preflight report: `artifacts/reports/challenger_submit_preflight_ds_v14_real_shadow.md`
-- current decision: `blocked`
+- current decision: `submitted_with_user_override`
 - blockers:
   - `blind_holdout50_validator 0.9000 < 0.9500`
   - `synthetic_shadow_day0 is hold (agreement=0.6667)`
@@ -51,4 +54,4 @@
 
 ## judgement
 
-`ds_v14`는 현재 가장 현실적인 next-only challenger지만, 아직 submit candidate는 아니다. `real shadow feedback + prompt/validator alignment`까지는 들어갔고, 다음 단계는 real shadow window와 synthetic shadow day0를 먼저 끌어올리는 것이다.
+`ds_v14`는 원래 blocker가 남아 있어 submit 금지 후보였다. 다만 사용자 승인으로 실제 submit했고, 현재는 `validating_files` 상태다. 완료 후에는 blocker를 무시하지 않고 같은 frozen gate와 shadow 기준으로 다시 판정한다.
