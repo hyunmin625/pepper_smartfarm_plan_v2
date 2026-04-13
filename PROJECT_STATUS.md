@@ -38,6 +38,8 @@
 - `real shadow rollback` source `shadow-runtime-002`와 blind50 validator 잔여 `5건`을 직접 역투영한 `batch19` corrective sample `8건`을 추가했다. 동시에 validator hard rule을 자연어로 옮긴 `sft_v10` prompt를 도입해 `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` package를 만들었다.
 - `policy-engine/policy_engine/output_validator.py`와 `scripts/simulate_policy_output_validator.py`를 보정해 citation을 `retrieved_context` 안으로 정렬하고, `forbidden_action + path/readback loss`를 `decision=block`으로 강제했다. 이로써 `ds_v14` blind50 `runtime_validator_gap`은 `3 -> 0`이 됐다.
 - 남은 blind50 post-validator residual `5건`은 [docs/batch20_post_validator_residual_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/batch20_post_validator_residual_plan.md:1)과 batch20 sample `8건`으로 training seed에 추가했다.
+- batch20 live head를 반영한 `ds_v15/prompt_v10_validator_aligned_batch20_hardcase` dry-run package도 생성했다. 현재 draft는 train `855`, validation `61`, format error `0`, manifest `ft-sft-gpt41mini-ds_v15-prompt_v10_validator_aligned_batch20_hardcase-eval_v6-20260413-152557`이다.
+- `artifacts/reports/challenger_submit_preflight_ds_v15_real_shadow.md` 기준 `ds_v15`는 여전히 `blocked`다. blocker는 `blind_holdout50 validator 0.9 < 0.95`, `synthetic shadow day0 hold`, `real shadow rollback`이다.
 - `ds_v14`는 source training `352`, train `843`, validation `61`, format error `0`이었다. preflight blocker가 남은 상태에서 사용자 승인으로 submit했지만, 완료 후 frozen gate 재평가에서 실패해 baseline 교체 없이 rejected challenger로 남긴다.
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
