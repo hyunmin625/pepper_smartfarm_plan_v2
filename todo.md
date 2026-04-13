@@ -867,6 +867,8 @@
 - [x] auth test 작성 (`scripts/validate_ops_api_auth.py`)
 - [x] error response test 작성 (`scripts/validate_ops_api_error_responses.py`)
 - [x] load test 최소 시나리오 작성 (`scripts/validate_ops_api_load_scenario.py`)
+- [x] localhost server smoke 작성 (`scripts/validate_ops_api_server_smoke.py`)
+- [ ] real PostgreSQL smoke 실행 (`scripts/validate_ops_api_postgres_smoke.py`)
 
 ---
 

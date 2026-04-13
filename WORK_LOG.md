@@ -4,6 +4,12 @@
 
 ## 2026-04-13
 
+### ops-api localhost server smoke + postgres smoke 경로 추가
+- `scripts/validate_ops_api_server_smoke.py`를 추가해 실제 `uvicorn` 프로세스를 띄운 뒤 `GET /health`, `GET /auth/me`, `GET/POST /runtime/mode`, `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard/data`까지 localhost HTTP 경로를 점검하도록 만들었다.
+- 첫 smoke 실행에서 `llm-orchestrator/llm_orchestrator/prompt_catalog.py`가 `scripts/build_openai_sft_datasets.py`를 runtime import하면서 `training_data_config`를 찾지 못하는 버그가 드러났다. `PROMPT_SOURCE.parent`를 `sys.path`에 임시로 주입하는 방식으로 수정해 real server 경로를 복구했다.
+- `scripts/validate_ops_api_postgres_smoke.py`를 추가해 `OPS_API_POSTGRES_SMOKE_URL` 또는 `OPS_API_DATABASE_URL`가 PostgreSQL URL일 때 schema bootstrap과 seed counts를 확인하도록 했다.
+- 현재 환경에서는 PostgreSQL URL과 driver(`psycopg`/`psycopg2`)가 없어 postgres smoke는 `blocked`로 끝나고, localhost server smoke는 `errors 0`으로 통과했다.
+
 ### ops-api auth/role + response envelope 마감
 - `ops-api/ops_api/auth.py`를 추가해 `disabled/header_token` 인증 모드와 `viewer/operator/service/admin` 역할 권한을 고정했다.
 - `ops-api/ops_api/api_models.py`에 `ApiResponse`, `ErrorResponse`, `ActorModel`을 추가했고, `ops-api/ops_api/app.py`의 catalog/runtime/operations route 대부분을 공통 response envelope와 permission dependency로 감쌌다.
@@ -19,7 +25,7 @@
 - `scripts/validate_ops_api_load_scenario.py`를 추가해 `SQLite + stub LLM + mock dispatch` 기준 반복 `evaluate -> persist -> approve -> dispatch` 루프를 최소 부하 시나리오로 검증한다.
 - 현재 시나리오는 `4개 zone/task 조합 x 12 rounds = 48 decisions`를 돌리고, decision/approval/command/robot task row count와 `decision/full-cycle latency p50/p95`를 출력한다.
 - 최신 실행 결과는 `decision_count 48`, `approval_count 48`, `command_count 72`, `robot_task_count 12`, `throughput 28.23 decisions/sec`, `decision p95 26.51ms`, `full-cycle p95 51.28ms`였다.
-- 이로써 `todo 12.3`의 backend 검증 항목은 모두 닫았다. 남은 것은 local validation이 아니라 real PostgreSQL smoke와 real server smoke다.
+- 이로써 `todo 12.3`의 backend 검증 항목은 모두 닫았다. 남은 것은 local validation이 아니라 real PostgreSQL smoke와 OpenAI/운영 환경 smoke다.
 
 ### backend/database 3단계 확장
 - `infra/postgres/001_initial_schema.sql`에 `zones`, `sensors`, `devices`, `policies`, `alerts`, `robot_candidates`, `robot_tasks`를 추가하고 `zone_id`, `created_at`, `device command`, `robot task` 인덱스를 보강했다.

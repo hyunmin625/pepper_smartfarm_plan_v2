@@ -42,4 +42,9 @@ python3 scripts/validate_ops_api_schema_models.py
 python3 scripts/validate_ops_api_error_responses.py
 python3 scripts/validate_ops_api_flow.py
 python3 scripts/validate_ops_api_load_scenario.py
+python3 scripts/validate_ops_api_server_smoke.py
+python3 scripts/validate_ops_api_postgres_smoke.py
 ```
+
+- `validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄운 뒤 localhost HTTP 경로를 점검한다.
+- `validate_ops_api_postgres_smoke.py`는 `OPS_API_POSTGRES_SMOKE_URL` 또는 `OPS_API_DATABASE_URL`가 PostgreSQL URL이고 driver(`psycopg`/`psycopg2`)가 설치돼 있을 때만 실제 smoke를 수행한다. 환경이 없으면 `blocked` 상태로 종료한다.

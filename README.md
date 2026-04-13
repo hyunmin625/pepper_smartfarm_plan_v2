@@ -99,6 +99,7 @@
 - 운영 대시보드는 `zone overview`, `alerts`, `robot tasks`, `execution history`, `decision log`, `shadow review`, `approve/reject`를 한 화면으로 묶는다.
 - `ops-api`는 `policy_evaluations`, `operator_reviews`를 별도 저장해 shadow→approval 전환에 필요한 운영자 검토와 validator 결과를 같이 남긴다.
 - PostgreSQL DDL도 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)로 고정했고, 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
+- `scripts/validate_ops_api_server_smoke.py`로 실제 `uvicorn` localhost HTTP smoke도 통과했다. 현재 backend 쪽 미해결은 `real PostgreSQL smoke`와 `OpenAI online smoke`다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10`이며, 모두 safety/failure 오판을 직접 겨냥한다.
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 1.0`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.
 - 다만 validator를 붙여도 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 제품화 게이트는 계속 `hold`다.
