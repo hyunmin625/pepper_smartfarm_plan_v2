@@ -27,6 +27,13 @@
       "prompt_version": "sft_v10",
       "status": "rejected_challenger",
       "notes": "Historical rejected challenger kept for replay and regression comparison."
+    },
+    "gemini_flash_frontier": {
+      "provider_hint": "gemini",
+      "resolved_model_id": "gemini-2.5-flash",
+      "prompt_version": "sft_v11_rag_frontier",
+      "status": "frontier_rag_candidate",
+      "notes": "Selected RAG-first frontier challenger. Production promotion still requires frozen eval + shadow gates."
     }
   }
 }

@@ -20,12 +20,6 @@ class Settings:
     llm_prompt_version: str
     llm_timeout_seconds: float
     llm_max_retries: int
-    # AI 어시스턴트 채팅 경로는 결정 경로와 독립 구성한다.
-    # decision 경로는 여전히 frozen ds_v11 baseline (llm_model_id)를 쓰고,
-    # 채팅은 대화 스타일로 추가 학습된 fine-tune(ds_v14 chat-friendly 변종)을
-    # OPS_API_CHAT_PROVIDER / OPS_API_CHAT_MODEL_ID 로 주입한다.
-    chat_provider: str
-    chat_model_id: str
 
 
 def load_settings() -> Settings:
@@ -59,12 +53,4 @@ def load_settings() -> Settings:
         llm_prompt_version=os.getenv("OPS_API_PROMPT_VERSION", "sft_v10"),
         llm_timeout_seconds=float(os.getenv("OPS_API_LLM_TIMEOUT_SECONDS", "30")),
         llm_max_retries=int(os.getenv("OPS_API_LLM_MAX_RETRIES", "3")),
-        chat_provider=os.getenv(
-            "OPS_API_CHAT_PROVIDER",
-            os.getenv("OPS_API_LLM_PROVIDER", "stub"),
-        ),
-        chat_model_id=os.getenv(
-            "OPS_API_CHAT_MODEL_ID",
-            os.getenv("OPS_API_MODEL_ID", "pepper-ops-local-stub"),
-        ),
     )

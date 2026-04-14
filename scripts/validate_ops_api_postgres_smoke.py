@@ -214,8 +214,6 @@ def main() -> int:
             llm_prompt_version="sft_v10",
             llm_timeout_seconds=5.0,
             llm_max_retries=1,
-            chat_provider="stub",
-            chat_model_id="pepper-ops-local-stub-chat",
         )
         app = create_app(settings=settings)
         services = app.state.services

@@ -60,6 +60,7 @@
 - 학습/eval 합본 생성과 통계 리포트 완료: training `360건`, extended eval `200건`, blind holdout `50건`, 기본 validation 기준 eval 총 `250건`, longest sample 수동 검토 완료
 - `core24`는 append-only 회귀셋으로 유지하고, `extended120` minimum benchmark는 달성했다. 현재 승격 baseline은 `extended160`이고, 최종 제품 주장 baseline은 `extended200 + blind_holdout50`이다.
 - 파인튜닝 runbook 1차 완료: base model `gpt-4.1-mini-2025-04-14`, challenger `gpt-4.1-2025-04-14`, 실험명 규칙 고정
+- RAG-first frontier challenger 결정: `gemini-2.5-flash`를 `gemini_flash_frontier` alias와 `sft_v11_rag_frontier` prompt로 고정했다. 단, production champion은 여전히 `ds_v11` frozen baseline 유지다.
 - OpenAI SFT 실제 submit 완료: 1차 job `ftjob-2UERXn8JN2B0SDUXL1tukptl`은 학습 파일 top-level `metadata` 때문에 `invalid_file_format`로 실패했고, `messages` only 포맷으로 수정한 2차 job `ftjob-45KiYE5G2J125jSNg2QqakYm`는 `succeeded`, `batch3 + prompt_v2`를 반영한 3차 job `ftjob-ULBuPHoPBbAMah5rPdd2i334`, `batch4 + prompt_v3`를 반영한 4차 job `ftjob-MiiLGncQBHRXL2NZoBYWxMcc`도 `succeeded`
 - 최신 완료 challenger `ds_v11/prompt_v5_methodfix_batch14` 재평가 완료: `core24 0.9167`, `extended120 0.7667`, `extended160 0.75`, `extended200 0.7`, `blind_holdout50 raw 0.7`, `blind_holdout50 validator 0.9`, `strict_json_rate 1.0`이다.
 - 최신 완료 challenger model: `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3`
@@ -108,6 +109,7 @@
 - PostgreSQL DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1), [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)로 고정했고, [scripts/apply_ops_api_migrations.py](/home/user/pepper-smartfarm-plan-v2/scripts/apply_ops_api_migrations.py:1)로 canonical 적용 순서를 초기화한다. 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
 - `scripts/validate_ops_api_server_smoke.py`로 실제 `uvicorn` localhost HTTP smoke도 통과했고, smoke 범위에 `GET /auth/me`, `GET /policies`, `POST /policies/{policy_id}`까지 포함했다.
 - `bash -lc "set -a; source .env >/dev/null 2>&1; set +a; python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10"` 기준 OpenAI online smoke도 통과했다. `champion` alias는 현재 `ds_v11` FT model id로 해석되고, retrieval/strict JSON/validator 경로가 실제 응답으로 검증됐다.
+- Gemini runtime path도 `python3 scripts/run_llm_orchestrator_smoke.py --provider gemini --model-id gemini_flash_frontier --prompt-version sft_v11_rag_frontier`로 연결할 수 있게 열어 두었다. 다만 이 경로는 아직 challenger/shadow lane이다.
 - `policy-engine/policy_engine/loader.py`, `precheck.py`를 추가해 dispatch 직전 seed policy를 다시 평가하도록 연결했다. 현재 `HSV-04` 관수 경로 degraded block, `HSV-09` fertigation approval escalation이 `execution-gateway` preflight에서 실제로 강제된다.
 - batch16 safety reinforcement `30건`을 추가했다. 구성은 `worker_present 10`, `manual_override/safe_mode 10`, `critical readback/comm loss 10`이며, 모두 safety/failure 오판을 직접 겨냥한다.
 - validator 시뮬레이션 결과 `ds_v9/prompt_v5_methodfix`는 `extended200 0.51 -> 0.755`, `blind_holdout50 0.32 -> 0.76`까지 개선됐다. blind50 기준 `safety_invariant_pass_rate 0.25 -> 1.0`, `field_usability_pass_rate 0.92 -> 1.0`까지 회복된다.

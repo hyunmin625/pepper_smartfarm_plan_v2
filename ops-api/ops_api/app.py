@@ -60,7 +60,6 @@ configure_repo_paths()
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from execution_gateway.dispatch import ExecutionDispatcher  # noqa: E402
 from llm_orchestrator import LLMOrchestratorService, ModelConfig, OrchestratorRequest  # noqa: E402
-from llm_orchestrator.client import CompletionClient, create_completion_client  # noqa: E402
 from policy_engine import set_active_policy_source  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
 
@@ -76,7 +75,6 @@ class AppServices:
     dispatcher: ExecutionDispatcher
     planner: ActionDispatchPlanner
     realtime_broker: "RealtimeBroker"
-    chat_client: CompletionClient
 
 
 def _loads_json(raw: str | None, default: Any) -> Any:
@@ -796,14 +794,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         actor_id=current_mode.actor_id,
         reason=current_mode.reason,
     )
-    chat_client = create_completion_client(
-        ModelConfig(
-            provider=resolved_settings.chat_provider,
-            model_id=resolved_settings.chat_model_id,
-            timeout_seconds=resolved_settings.llm_timeout_seconds,
-            max_retries=resolved_settings.llm_max_retries,
-        )
-    )
     services = AppServices(
         settings=resolved_settings,
         session_factory=session_factory,
@@ -818,7 +808,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         dispatcher=ExecutionDispatcher.default(adapter_kind="mock"),
         planner=ActionDispatchPlanner(),
         realtime_broker=RealtimeBroker(),
-        chat_client=chat_client,
     )
 
     app = FastAPI(
@@ -1782,7 +1771,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             sort_keys=True,
             indent=2,
         )
-        invocation = services.chat_client.complete(
+        invocation = services.orchestrator.client.complete(
             system_prompt=system_prompt,
             user_message=user_payload,
         )
@@ -1867,7 +1856,7 @@ def _build_chat_grounding_context(
     extra_context: dict[str, Any],
 ) -> dict[str, Any]:
     """Pull the latest decision, sensor snapshot, and policy highlights for
-    the referenced zone so the fine-tuned chat model can ground its reply."""
+    the referenced zone so the shared orchestrator model can ground its reply."""
 
     context: dict[str, Any] = {
         "zone_id": zone_id,

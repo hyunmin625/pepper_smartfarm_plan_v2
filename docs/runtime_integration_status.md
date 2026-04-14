@@ -9,7 +9,7 @@
 ### 1. LLM orchestrator 본연결
 
 - `llm-orchestrator/llm_orchestrator/client.py`
-  - `stub` / `openai` provider 지원
+  - `stub` / `openai` / `gemini` provider 지원
   - retry / timeout / repair prompt 경로 포함
   - model alias -> resolved FT model id 해석
 - `llm-orchestrator/llm_orchestrator/retriever.py`
@@ -32,7 +32,7 @@
   - output validator 자동 연결
 - `scripts/run_llm_orchestrator_smoke.py`
   - sample scenario 기준 end-to-end smoke 경로
-  - stub / openai provider 공통 진입점
+  - stub / openai / gemini provider 공통 진입점
 
 ### 2. state-estimator feature engineering
 
@@ -148,12 +148,14 @@ python3 scripts/validate_execution_gateway_flow.py
 python3 scripts/validate_execution_dispatcher.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
 python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10
+python3 scripts/run_llm_orchestrator_smoke.py --provider gemini --model-id gemini_flash_frontier --prompt-version sft_v11_rag_frontier
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
 ```
 
 ## 현재 한계
 
 - OpenAI online smoke는 `.env`와 네트워크가 열린 환경에서 `champion -> ds_v11` FT model alias, retrieval, strict JSON, validator 경로까지 통과했다. 다만 CI나 운영 비밀관리 경로에 얹은 상태는 아직 아니다.
+- Gemini frontier path는 `gemini_flash_frontier -> gemini-2.5-flash` alias와 `sft_v11_rag_frontier` prompt로 연결할 수 있게 됐다. 다만 production champion 전환은 아니며, `extended200 + blind50 + real shadow` 게이트를 다시 통과해야 한다.
 - `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL과 reference seed/bootstrap까지 준비했다. `policy_events` table/index와 blocked/approval event persistence도 같은 스키마에 포함됐다. `scripts/validate_ops_api_postgres_smoke.py`도 추가했지만, 이 환경에는 PostgreSQL URL과 driver가 없어 현재는 `blocked` 상태로만 확인했다.
 - `ops-api`의 auth/role, schema validation, error envelope, minimal load scenario, localhost server smoke 테스트는 로컬 스크립트로 닫았다. `scripts/validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄워 HTTP 경로를 통과시켰고, 이 과정에서 `prompt_catalog` 런타임 import 경로 버그도 함께 수정했다.
 - dashboard의 auth context / policy management 패널과 policy enable/disable API는 구현됐지만, native `sensor_series` 스파크라인을 넘어서는 `TimescaleDB` 기반 real sensor 시계열 차트와 정책 편집의 세부 폼 편집 UI는 아직 없다.

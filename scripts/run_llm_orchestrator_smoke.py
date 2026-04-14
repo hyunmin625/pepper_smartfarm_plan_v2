@@ -57,7 +57,11 @@ def build_request_payload(scenario_id: str, task_type: str, prompt_version: str)
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--provider", default=os.getenv("LLM_ORCHESTRATOR_PROVIDER", "stub"), choices=["stub", "openai"])
+    parser.add_argument(
+        "--provider",
+        default=os.getenv("LLM_ORCHESTRATOR_PROVIDER", "stub"),
+        choices=["stub", "openai", "gemini"],
+    )
     parser.add_argument("--model-id", default=os.getenv("LLM_ORCHESTRATOR_MODEL_ID", "champion"))
     parser.add_argument("--prompt-version", default=os.getenv("LLM_ORCHESTRATOR_PROMPT_VERSION", "sft_v10"))
     parser.add_argument("--task-type", default="action_recommendation")

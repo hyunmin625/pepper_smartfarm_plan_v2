@@ -14,6 +14,13 @@ except Exception:  # pragma: no cover
     APITimeoutError = Exception
     RateLimitError = Exception
 
+try:
+    from google import genai as google_genai
+    from google.genai import types as google_genai_types
+except Exception:  # pragma: no cover
+    google_genai = None
+    google_genai_types = None
+
 from .model_registry import ResolvedModelReference, resolve_model_reference
 
 
@@ -76,8 +83,9 @@ class StubCompletionClient:
             # reply in natural Korean grounded in the supplied context.
             # The stub here approximates that behavior so dev/test
             # environments do not need a live OpenAI key to exercise the
-            # AI 어시스턴트 view. Production points this path at the
-            # fine-tuned orchestrator client via OPS_API_LLM_PROVIDER=openai.
+            # AI 어시스턴트 view. Production uses the same orchestrator
+            # model path as decision requests and switches behavior via
+            # task_type plus grounding context.
             latest_user = str(payload.get("input", {}).get("latest_user_message") or "")
             context = payload.get("input", {}).get("context") or {}
             zone_snapshot = context.get("zone_snapshot") or {}
@@ -228,16 +236,109 @@ class OpenAICompletionClient:
         return str(response.choices[0].message.content or "")
 
 
+class GeminiCompletionClient:
+    def __init__(self, config: ModelConfig) -> None:
+        if google_genai is None:
+            raise RuntimeError("google-genai package is not available")
+        api_key = os.getenv(config.api_key_env)
+        if not api_key and config.api_key_env == "OPENAI_API_KEY":
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                f"{config.api_key_env} is not set and neither GEMINI_API_KEY nor GOOGLE_API_KEY is available"
+            )
+        self.config = config
+        self.model_ref = resolve_model_reference(config.model_id)
+        self.client = google_genai.Client(api_key=api_key)
+
+    def complete(self, *, system_prompt: str, user_message: str) -> ModelInvocation:
+        return self._invoke(system_prompt=system_prompt, user_message=user_message, used_repair_prompt=False)
+
+    def repair_json(self, *, original_output: str, task_type: str) -> ModelInvocation:
+        repair_system = (
+            "You repair malformed assistant outputs. "
+            "Return valid JSON only. Preserve original fields when possible. "
+            "Do not add markdown fences or explanations."
+        )
+        repair_user = json.dumps(
+            {
+                "task_type": task_type,
+                "malformed_output": original_output,
+            },
+            ensure_ascii=False,
+        )
+        return self._invoke(system_prompt=repair_system, user_message=repair_user, used_repair_prompt=True)
+
+    def _invoke(self, *, system_prompt: str, user_message: str, used_repair_prompt: bool) -> ModelInvocation:
+        attempt = 0
+        last_error: Exception | None = None
+        while attempt < self.config.max_retries:
+            attempt += 1
+            try:
+                raw_text = self._call_gemini(system_prompt=system_prompt, user_message=user_message)
+                return ModelInvocation(
+                    raw_text=raw_text,
+                    model_id=self.model_ref.resolved_model_id,
+                    provider=self.config.provider,
+                    attempts=attempt,
+                    used_repair_prompt=used_repair_prompt,
+                    model_alias=self.model_ref.model_alias,
+                )
+            except Exception as exc:  # pragma: no cover
+                last_error = exc
+                if not _should_retry_gemini_error(exc) or attempt >= self.config.max_retries:
+                    break
+                time.sleep(min(2 * attempt, 6))
+        raise RuntimeError(f"Gemini invocation failed after {attempt} attempts: {last_error}") from last_error
+
+    def _call_gemini(self, *, system_prompt: str, user_message: str) -> str:
+        if google_genai_types is None:
+            raise RuntimeError("google-genai package is not available")
+        config_kwargs: dict[str, Any] = {
+            "system_instruction": system_prompt,
+            "temperature": self.config.temperature,
+            "max_output_tokens": 1600,
+            "response_mime_type": "application/json",
+        }
+        try:
+            config_kwargs["thinking_config"] = google_genai_types.ThinkingConfig(thinking_budget=0)
+        except Exception:
+            pass
+        response = self.client.models.generate_content(
+            model=self.model_ref.resolved_model_id,
+            contents=[user_message],
+            config=google_genai_types.GenerateContentConfig(**config_kwargs),
+        )
+        raw_text = getattr(response, "text", None) or ""
+        if raw_text:
+            return raw_text
+        parts: list[str] = []
+        for candidate in getattr(response, "candidates", None) or []:
+            content = getattr(candidate, "content", None)
+            for part in getattr(content, "parts", None) or []:
+                text = getattr(part, "text", None)
+                if text:
+                    parts.append(text)
+        return "".join(parts)
+
+
 def create_completion_client(config: ModelConfig) -> CompletionClient:
     if config.provider == "stub":
         return StubCompletionClient(config)
     if config.provider == "openai":
         return OpenAICompletionClient(config)
+    if config.provider == "gemini":
+        return GeminiCompletionClient(config)
     raise ValueError(f"unsupported provider: {config.provider}")
 
 
 def _should_retry_openai_error(exc: Exception) -> bool:
     return isinstance(exc, (RateLimitError, APITimeoutError, APIError))
+
+
+def _should_retry_gemini_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return any(token in message for token in ("rate", "timeout", "unavailable", "503", "500", "deadline", "quota"))
 
 
 def get_resolved_model_reference(model_id: str) -> ResolvedModelReference:

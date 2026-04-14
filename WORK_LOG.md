@@ -4,6 +4,18 @@
 
 ## 2026-04-14
 
+### Gemini frontier challenger 고정 + runtime provider 추가
+- 사용자 결정에 따라 RAG-first frontier challenger를 `gemini-2.5-flash`로 고정했다. 다만 production champion은 그대로 `ds_v11` frozen baseline으로 유지하고, Gemini 경로는 challenger/shadow lane으로만 다룬다.
+- `llm-orchestrator/llm_orchestrator/client.py`에 `gemini` provider를 추가했다. `google-genai` SDK가 있으면 `response_mime_type=application/json`과 `thinking_budget=0` 설정으로 structured output 경로를 호출하고, malformed JSON repair도 같은 provider로 재호출한다.
+- `llm-orchestrator/llm_orchestrator/model_registry.py`와 `artifacts/runtime/llm_orchestrator/model_registry.json`에 `gemini_flash_frontier -> gemini-2.5-flash` alias를 추가하고 prompt version을 `sft_v11_rag_frontier`로 고정했다.
+- `scripts/run_llm_orchestrator_smoke.py`, `.env.example`, `llm-orchestrator/README.md`, `docs/runtime_integration_status.md`, `README.md`, `PROJECT_STATUS.md`, `todo.md`를 함께 갱신해 runtime/provider 범위와 현재 승격 조건을 맞췄다.
+
+### AI 어시스턴트 모델 경로 재통합
+- 사용자 결정에 따라 AI 어시스턴트와 decision 경로를 다시 하나의 모델 경로로 통합했다. `/ai/chat`의 DB grounding과 `task_type="chat"` 입력 구조는 유지하되, 더 이상 `chat_provider` / `chat_model_id`나 별도 `AppServices.chat_client`를 두지 않는다.
+- `ops-api/ops_api/config.py`의 `Settings`에서 `chat_provider`, `chat_model_id`를 제거하고 `.env.example`도 `OPS_API_LLM_PROVIDER` / `OPS_API_MODEL_ID` 한 쌍만 남겼다. decision/chat 모두 같은 모델 설정을 공유한다.
+- `ops-api/ops_api/app.py`의 `/ai/chat`는 이제 `services.orchestrator.client.complete()`를 직접 호출한다. 즉 모델 분리는 없고, `task_type="chat"` + grounding context + chat 시스템 프롬프트 조합으로 대화 모드를 유도한다.
+- `scripts/validate_ops_api_ai_chat.py`를 포함한 `Settings(...)` 직접 생성 smoke들은 단일 LLM 설정만 사용하도록 정리했다. 기능적으로는 기존 zone_hint 감지, grounding_keys 검증, JSON unwrap 회귀를 그대로 유지한다.
+
 ### AI 어시스턴트 채팅 경로 분리 + DB grounding + chat task_type
 - 사용자 피드백: "AI 어시스턴트는 파인튜닝한 스마트팜 농업전문가를 붙여야지" + 지정 모델 `ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz`. 결정 경로(`evaluate_zone`)는 `ds_v11` frozen baseline 유지, AI 어시스턴트만 이 ds_v14 chat-friendly 파인튜닝으로 분리.
 - `ops-api/ops_api/config.py`의 `Settings`에 `chat_provider`, `chat_model_id` 두 필드를 추가. 환경변수 `OPS_API_CHAT_PROVIDER` / `OPS_API_CHAT_MODEL_ID`로 제어하고, 미지정 시 `OPS_API_LLM_PROVIDER` / `OPS_API_MODEL_ID`로 fallback해 기존 테스트 환경 호환성 유지.

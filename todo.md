@@ -50,6 +50,8 @@
 # 제품 수준 재평가 우선 작업
 
 - [ ] `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit freeze 상태 유지
+- [x] RAG-first frontier challenger를 `gemini-2.5-flash`로 고정하고 runtime alias `gemini_flash_frontier` + `gemini` provider smoke 경로를 연다 (`llm-orchestrator/llm_orchestrator/client.py`, `llm-orchestrator/llm_orchestrator/model_registry.py`, `artifacts/runtime/llm_orchestrator/model_registry.json`, `scripts/run_llm_orchestrator_smoke.py`, `.env.example`)
+- [ ] `gemini_flash_frontier + sft_v11_rag_frontier`를 `extended200 + blind_holdout50 + real shadow` 기준으로 다시 평가하고 production 승격 여부를 판정
 - [x] `scripts/build_openai_sft_datasets.py`로 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread` split 시뮬레이션과 결과 기록
 - [x] `docs/risk_level_rubric.md` 기준으로 기존 training/eval의 `risk_level` 전수 점검
 - [x] `python3 scripts/report_risk_slice_coverage.py` 기준 mismatch `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1` 정리
@@ -109,7 +111,7 @@
 - [x] `scripts/validate_execution_safe_mode.py`의 `policy_engine` sys.path pre-existing 버그 수정
 - [x] Stitch `WebUI/stitch_ui_v1.zip` 레퍼런스 기반 대시보드 전면 재디자인 + 반응형: Tailwind CDN + Pretendard/Noto Sans KR + Material Symbols, 농경 사령부 컬러, `lg:` breakpoint 이상 고정 사이드바 / 이하 오프스크린 drawer + 햄버거 토글, 메트릭/스파크라인 그리드 반응형, 루트 `/` → `/dashboard` 307 리다이렉트 (`ops-api/ops_api/app.py` `_dashboard_html`)
 - [x] AI 어시스턴트 채팅 뷰 + 백엔드: 사이드바 10번째 메뉴, split-pane (좌 chat + quick prompt + Enter 단축키, 우 실시간 관제 카드 + 최근 dispatch + 3×3 zone health), `POST /ai/chat` (`read_runtime` 권한, `ChatMessageRequest`/`ChatRequest`, `_build_chat_system_prompt`/`_render_chat_history`/`_extract_chat_reply` 헬퍼), 클라이언트 메모리 히스토리 + 매 호출마다 최근 8턴 context 전송, `scripts/validate_ops_api_ai_chat.py` 6 invariant 회귀
-- [x] AI 어시스턴트 채팅 경로를 결정 경로와 분리 + DB grounding: `Settings.chat_provider/chat_model_id` 필드 + `AppServices.chat_client` 별도 `CompletionClient`, `/ai/chat`이 `_detect_zone_hint` + `_build_chat_grounding_context`로 최신 decision/alert/sensor_readings/active policies를 DB에서 조회해 `task_type="chat"` payload로 파인튜닝 모델에 전달, `{"reply": "..."}` 단일 JSON 출력 강제. `OPS_API_CHAT_MODEL_ID=ft:gpt-4.1-mini-...ds-v14-prompt-v10-validator-aligned-batch19-har:DU2VQVYz` (ds_v14 chat-friendly) 지정 준비. `StubCompletionClient`에 chat task_type 분기, `validate_ops_api_ai_chat`에 4 invariant 추가 (총 10 invariant), 기존 8개 smoke의 `Settings(...)` 호출에 chat_provider/chat_model_id 필드 추가 (`ops-api/ops_api/config.py`, `ops-api/ops_api/app.py`, `llm-orchestrator/llm_orchestrator/client.py`, `.env.example`, `scripts/validate_ops_api_ai_chat.py`)
+- [x] AI 어시스턴트 채팅 경로 DB grounding + 단일 모델 경로 정리: `/ai/chat`이 `_detect_zone_hint` + `_build_chat_grounding_context`로 최신 decision/alert/sensor_readings/active policies를 DB에서 조회해 `task_type="chat"` payload를 만들고, 별도 chat client 없이 `services.orchestrator.client`를 그대로 사용한다. decision/chat은 같은 `OPS_API_LLM_PROVIDER` / `OPS_API_MODEL_ID`를 공유하고, `{"reply": "..."}` 단일 JSON 출력 강제를 유지한다. `StubCompletionClient`에 chat task_type 분기, `validate_ops_api_ai_chat`에 4 invariant 추가 (총 10 invariant), 기존 smoke의 `Settings(...)` 호출은 단일 LLM 설정만 사용하도록 정리 (`ops-api/ops_api/config.py`, `ops-api/ops_api/app.py`, `llm-orchestrator/llm_orchestrator/client.py`, `.env.example`, `scripts/validate_ops_api_ai_chat.py`)
 
 ---
 

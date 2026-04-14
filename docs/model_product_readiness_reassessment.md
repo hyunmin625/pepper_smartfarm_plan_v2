@@ -2,6 +2,12 @@
 
 이 문서는 `0.95`를 단순 benchmark score가 아니라, 실제 `건고추 온실 스마트팜에 사용 가능한 AI 모델 제품 수준`으로 다시 해석하기 위한 재평가 메모다.
 
+## Update 2026-04-14: frontier RAG challenger 선택
+
+- 사용자 결정에 따라 RAG-first frontier challenger는 `gemini-2.5-flash`로 고정한다.
+- 이 결정은 `production champion 교체`가 아니라 `frontier challenger lane` 선택이다. production baseline은 여전히 `ds_v11` frozen FT model로 유지한다.
+- 따라서 승격 조건은 바뀌지 않는다. `gemini-2.5-flash`도 `extended200 + blind_holdout50 + real shadow` 게이트를 통과하기 전까지는 production으로 올리지 않는다.
+
 ## Update 2026-04-13: ds_v11 완료 후 판단
 
 - 최신 완료 모델은 `ds_v11/prompt_v5_methodfix_batch14`다.

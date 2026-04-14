@@ -68,8 +68,6 @@ def _make_settings(tmp_path: Path) -> Settings:
         llm_prompt_version="sft_v10",
         llm_timeout_seconds=5.0,
         llm_max_retries=1,
-        chat_provider="stub",
-        chat_model_id="pepper-ops-local-stub-chat",
     )
 
 
