@@ -1816,6 +1816,43 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             meta={"system_prompt_id": "chat_v2"},
         )
 
+    @app.get(
+        "/ai/config",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def ai_config(
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        """Return the active LLM + retriever + prompt configuration used by
+        both the decision path (evaluate_zone) and the assistant chat path
+        (/ai/chat). Dashboard UI uses this to render a transparent model
+        badge so operators can verify which fine-tune checkpoint is answering.
+        """
+        model_id = resolved_settings.llm_model_id or ""
+        # Only expose the opaque checkpoint suffix when it is a fine-tuned id,
+        # otherwise the raw id is short enough to show as-is.
+        if model_id.startswith("ft:"):
+            model_tail = model_id.rsplit(":", 1)[-1]
+            model_label = f"ft:{model_tail}"
+            model_family = "gpt-4.1-mini (ds_v11 frozen)" if "ds-v11" in model_id else "fine-tuned"
+        else:
+            model_label = model_id
+            model_family = model_id
+        return _ok(
+            {
+                "llm_provider": resolved_settings.llm_provider,
+                "llm_model_id": model_id,
+                "llm_model_label": model_label,
+                "llm_model_family": model_family,
+                "llm_prompt_version": resolved_settings.llm_prompt_version,
+                "retriever_type": resolved_settings.retriever_type,
+                "chat_system_prompt_id": "chat_v2",
+            },
+            actor=actor,
+        )
+
     @app.get("/dashboard", tags=["dashboard"], response_class=HTMLResponse)
     def dashboard() -> str:
         return _dashboard_html()
@@ -2275,12 +2312,15 @@ def _dashboard_html() -> str:
               </div>
               <div>
                 <h3 class="text-sm font-bold text-ink">AI AGRO-SYSTEM</h3>
-                <p class="text-[10px] text-muted uppercase tracking-wider">Fine-tuned on pepper domain · sft_v10</p>
+                <p id="aiAssistantMeta" class="text-[10px] text-muted uppercase tracking-wider">적고추 온실 파인튜닝 모델 연결 중...</p>
               </div>
             </div>
-            <div class="chip chip-enabled">
-              <span class="w-2 h-2 bg-primary rounded-full animate-pulse mr-1"></span>
-              활성
+            <div class="flex items-center gap-2">
+              <span id="aiAssistantModelChip" class="chip chip-dark hidden">champion: —</span>
+              <div class="chip chip-enabled">
+                <span class="w-2 h-2 bg-primary rounded-full animate-pulse mr-1"></span>
+                활성
+              </div>
             </div>
           </div>
           <div id="chatMessages" class="flex-1 overflow-y-auto custom-scroll py-4 space-y-4"></div>
@@ -3088,6 +3128,30 @@ def _dashboard_html() -> str:
       chatState.messages = [];
       renderChat();
     }
+    async function loadAiConfig() {
+      // Fetches the live LLM/retriever config so the AI assistant badge shows
+      // which fine-tune checkpoint is actually answering. Non-blocking — if
+      // the call fails the badge stays on the "loading" placeholder.
+      const meta = document.getElementById('aiAssistantMeta');
+      const chip = document.getElementById('aiAssistantModelChip');
+      if (!meta) return;
+      try {
+        const res = await apiFetch('/ai/config', { method: 'GET' });
+        const d = res?.data || {};
+        const provider = d.llm_provider || 'unknown';
+        const family = d.llm_model_family || d.llm_model_id || 'unknown';
+        const label = d.llm_model_label || d.llm_model_id || 'unknown';
+        const prompt = d.llm_prompt_version || 'sft_v10';
+        const retriever = d.retriever_type || 'keyword';
+        meta.textContent = `${family} · ${prompt} · retriever=${retriever}`;
+        if (chip) {
+          chip.textContent = `champion: ${label}`;
+          chip.classList.remove('hidden');
+        }
+      } catch (err) {
+        meta.textContent = '파인튜닝 모델 구성 조회 실패 — /ai/chat은 그래도 동작합니다.';
+      }
+    }
     async function sendChatMessage() {
       if (chatState.sending) return;
       const input = document.getElementById('chatInput');
@@ -3211,6 +3275,7 @@ def _dashboard_html() -> str:
     setupNav();
     showView('overview');
     renderChat();
+    loadAiConfig();
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
