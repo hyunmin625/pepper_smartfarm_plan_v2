@@ -16,6 +16,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from .api_models import (
     ApprovalRequest,
     ApiResponse,
+    AutomationEvaluateRequest,
+    AutomationRuleRequest,
+    AutomationRuleToggleRequest,
+    AutomationRuleUpdateRequest,
     ChatRequest,
     EvaluateZoneRequest,
     ErrorResponse,
@@ -26,6 +30,7 @@ from .api_models import (
     RuntimeModeRequest,
     ShadowReviewRequest,
 )
+from .automation import evaluate_rules, serialize_rule, serialize_trigger
 from .auth import ROLE_PERMISSIONS, ActorIdentity, get_authenticated_actor, require_permission
 from .bootstrap import configure_repo_paths
 from .config import Settings, load_settings
@@ -35,6 +40,8 @@ from .logging import configure_logging
 from .models import (
     ApprovalRecord,
     AlertRecord,
+    AutomationRuleRecord,
+    AutomationRuleTriggerRecord,
     DecisionRecord,
     DeviceRecord,
     DeviceCommandRecord,
@@ -47,6 +54,7 @@ from .models import (
     SensorReadingRecord,
     SensorRecord,
     ZoneRecord,
+    utc_now,
 )
 from .planner import ActionDispatchPlanner
 from .runtime_mode import load_runtime_mode, save_runtime_mode
@@ -1853,6 +1861,214 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             actor=actor,
         )
 
+    # ---- Automation rules (operator threshold-driven device control) ----
+
+    def _persist_new_rule(session: Session, payload: AutomationRuleRequest, actor: ActorIdentity) -> AutomationRuleRecord:
+        rule = AutomationRuleRecord(
+            rule_id=payload.rule_id,
+            name=payload.name,
+            description=payload.description,
+            zone_id=payload.zone_id,
+            sensor_key=payload.sensor_key,
+            operator=payload.operator,
+            threshold_value=payload.threshold_value,
+            threshold_min=payload.threshold_min,
+            threshold_max=payload.threshold_max,
+            hysteresis_value=payload.hysteresis_value,
+            cooldown_minutes=payload.cooldown_minutes,
+            target_device_type=payload.target_device_type,
+            target_device_id=payload.target_device_id,
+            target_action=payload.target_action,
+            action_payload_json=json.dumps(payload.action_payload, ensure_ascii=False),
+            priority=payload.priority,
+            enabled=1 if payload.enabled else 0,
+            runtime_mode_gate=payload.runtime_mode_gate,
+            owner_role=payload.owner_role,
+            created_by=actor.actor_id,
+        )
+        session.add(rule)
+        session.commit()
+        session.refresh(rule)
+        return rule
+
+    @app.get(
+        "/automation/rules",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_automation_rules(
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        rows = session.scalars(
+            select(AutomationRuleRecord).order_by(
+                AutomationRuleRecord.priority.asc(), AutomationRuleRecord.id.asc()
+            )
+        ).all()
+        return _ok({"rules": [serialize_rule(r) for r in rows]}, actor=actor)
+
+    @app.post(
+        "/automation/rules",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    )
+    def create_automation_rule(
+        payload: AutomationRuleRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("manage_automation")),
+    ) -> dict[str, Any]:
+        existing = session.scalar(
+            select(AutomationRuleRecord).where(AutomationRuleRecord.rule_id == payload.rule_id)
+        )
+        if existing is not None:
+            raise HTTPException(status_code=409, detail=f"rule_id '{payload.rule_id}' already exists")
+        rule = _persist_new_rule(session, payload, actor)
+        return _ok(serialize_rule(rule), actor=actor, meta={"created": True})
+
+    @app.get(
+        "/automation/rules/{rule_id}",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def get_automation_rule(
+        rule_id: str,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        rule = session.scalar(
+            select(AutomationRuleRecord).where(AutomationRuleRecord.rule_id == rule_id)
+        )
+        if rule is None:
+            raise HTTPException(status_code=404, detail=f"automation rule '{rule_id}' not found")
+        return _ok(serialize_rule(rule), actor=actor)
+
+    @app.patch(
+        "/automation/rules/{rule_id}",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def update_automation_rule(
+        rule_id: str,
+        payload: AutomationRuleUpdateRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("manage_automation")),
+    ) -> dict[str, Any]:
+        rule = session.scalar(
+            select(AutomationRuleRecord).where(AutomationRuleRecord.rule_id == rule_id)
+        )
+        if rule is None:
+            raise HTTPException(status_code=404, detail=f"automation rule '{rule_id}' not found")
+        for field_name in (
+            "name", "description", "zone_id", "operator",
+            "threshold_value", "threshold_min", "threshold_max",
+            "hysteresis_value", "cooldown_minutes",
+            "target_device_id", "target_action", "priority",
+            "runtime_mode_gate",
+        ):
+            value = getattr(payload, field_name, None)
+            if value is not None:
+                setattr(rule, field_name, value)
+        if payload.enabled is not None:
+            rule.enabled = 1 if payload.enabled else 0
+        if payload.action_payload is not None:
+            rule.action_payload_json = json.dumps(payload.action_payload, ensure_ascii=False)
+        rule.updated_at = utc_now()
+        session.commit()
+        session.refresh(rule)
+        return _ok(serialize_rule(rule), actor=actor, meta={"updated": True})
+
+    @app.delete(
+        "/automation/rules/{rule_id}",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def delete_automation_rule(
+        rule_id: str,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("manage_automation")),
+    ) -> dict[str, Any]:
+        rule = session.scalar(
+            select(AutomationRuleRecord).where(AutomationRuleRecord.rule_id == rule_id)
+        )
+        if rule is None:
+            raise HTTPException(status_code=404, detail=f"automation rule '{rule_id}' not found")
+        session.delete(rule)
+        session.commit()
+        return _ok({"rule_id": rule_id, "deleted": True}, actor=actor)
+
+    @app.patch(
+        "/automation/rules/{rule_id}/toggle",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    )
+    def toggle_automation_rule(
+        rule_id: str,
+        payload: AutomationRuleToggleRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("manage_automation")),
+    ) -> dict[str, Any]:
+        rule = session.scalar(
+            select(AutomationRuleRecord).where(AutomationRuleRecord.rule_id == rule_id)
+        )
+        if rule is None:
+            raise HTTPException(status_code=404, detail=f"automation rule '{rule_id}' not found")
+        rule.enabled = 1 if payload.enabled else 0
+        rule.updated_at = utc_now()
+        session.commit()
+        session.refresh(rule)
+        return _ok(serialize_rule(rule), actor=actor, meta={"toggled": True})
+
+    @app.get(
+        "/automation/triggers",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_automation_triggers(
+        limit: int = 50,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        limit = max(1, min(int(limit), 200))
+        rows = session.scalars(
+            select(AutomationRuleTriggerRecord)
+            .order_by(AutomationRuleTriggerRecord.triggered_at.desc())
+            .limit(limit)
+        ).all()
+        return _ok({"triggers": [serialize_trigger(r) for r in rows]}, actor=actor)
+
+    @app.post(
+        "/automation/evaluate",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def evaluate_automation_rules(
+        payload: AutomationEvaluateRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        # Dry-run evaluate with the supplied sensor snapshot. Does not persist
+        # triggers so operators can safely preview rules without polluting
+        # the audit log. runtime_mode override falls back to the farm-wide mode.
+        from .runtime_mode import load_runtime_mode
+        mode_state = load_runtime_mode(services.settings.runtime_mode_path)
+        runtime_mode = payload.runtime_mode_override or mode_state.mode
+        report = evaluate_rules(
+            session,
+            runtime_mode=runtime_mode,
+            sensor_snapshot=payload.sensor_snapshot,
+            zone_id=payload.zone_id,
+            persist=False,
+        )
+        return _ok(report.as_dict(), actor=actor, meta={"dry_run": True})
+
     @app.get("/dashboard", tags=["dashboard"], response_class=HTMLResponse)
     def dashboard() -> str:
         return _dashboard_html()
@@ -2143,6 +2359,10 @@ def _dashboard_html() -> str:
       <a data-view="policies" class="nav-link">
         <span class="material-symbols-outlined text-[20px]">policy</span>
         <span>정책 / 이벤트</span>
+      </a>
+      <a data-view="automation" class="nav-link">
+        <span class="material-symbols-outlined text-[20px]">rule</span>
+        <span>자동화</span>
       </a>
       <a data-view="shadow" class="nav-link">
         <span class="material-symbols-outlined text-[20px]">visibility</span>
@@ -2437,6 +2657,187 @@ def _dashboard_html() -> str:
       </div>
     </section>
 
+    <!-- 자동화 규칙 -->
+    <section class="view" data-view="automation">
+      <div class="card mb-5">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-ink">자동화 규칙</h3>
+            <p class="text-[10px] text-muted uppercase tracking-wider">sensor threshold → device control (shadow → approval → execute)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="automationRuntimeChip" class="chip chip-dark">runtime: —</span>
+            <button onclick="openAutomationRuleModal()" class="chip chip-enabled hover:opacity-90">
+              <span class="material-symbols-outlined text-[14px] mr-1">add</span>새 규칙
+            </button>
+          </div>
+        </div>
+        <div class="bg-surface-low rounded-xl p-3 mb-4 text-[11px] text-muted leading-relaxed">
+          규칙은 <b>runtime_mode_gate</b> 와 전역 <b>runtime_mode</b> 중 <b>더 엄격한 쪽</b>을 따릅니다. 신규 규칙은 <code class="bg-white px-1 rounded">approval</code> 게이트로 시작해 실측 검증 후 <code class="bg-white px-1 rounded">execute</code>로 승격하세요. 모든 trigger는 <code class="bg-white px-1 rounded">policy_engine.output_validator</code> + <code class="bg-white px-1 rounded">execution_gateway.guards</code>를 거쳐 안전합니다.
+        </div>
+        <div id="automationRuleList" class="space-y-3"></div>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-ink">최근 trigger</h3>
+          <span class="text-[11px] text-muted">policy_engine + guards 경유 상태</span>
+        </div>
+        <div id="automationTriggerList" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- 자동화 규칙 생성/편집 모달 -->
+    <div id="automationRuleModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-surface w-full max-w-2xl rounded-2xl p-6 my-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-ink" id="automationModalTitle">새 자동화 규칙</h3>
+          <button onclick="closeAutomationRuleModal()" class="text-muted hover:text-ink">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form id="automationRuleForm" class="space-y-4 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">rule_id *</span>
+              <input type="text" id="ruleField_rule_id" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="rh-rain-close-vent">
+            </label>
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">name *</span>
+              <input type="text" id="ruleField_name" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="강우 시 천장 닫기">
+            </label>
+          </div>
+          <label class="block">
+            <span class="block text-[10px] text-muted uppercase mb-1">description</span>
+            <textarea id="ruleField_description" rows="2" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="강우량이 0.5mm/10min를 넘으면 천장 개폐기를 닫는다"></textarea>
+          </label>
+          <div class="grid grid-cols-3 gap-3">
+            <label class="block col-span-1">
+              <span class="block text-[10px] text-muted uppercase mb-1">zone_id</span>
+              <input type="text" id="ruleField_zone_id" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="(전 구역)">
+            </label>
+            <label class="block col-span-1">
+              <span class="block text-[10px] text-muted uppercase mb-1">priority</span>
+              <input type="number" id="ruleField_priority" value="100" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+            </label>
+            <label class="block col-span-1">
+              <span class="block text-[10px] text-muted uppercase mb-1">cooldown 분</span>
+              <input type="number" id="ruleField_cooldown_minutes" value="15" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+            </label>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <label class="block col-span-1">
+              <span class="block text-[10px] text-muted uppercase mb-1">sensor_key *</span>
+              <select id="ruleField_sensor_key" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+                <optgroup label="외부 기상">
+                  <option value="ext_air_temp_c">외부 온도 (℃)</option>
+                  <option value="ext_rh_pct">외부 습도 (%)</option>
+                  <option value="ext_wind_dir_deg">외부 풍향 (°)</option>
+                  <option value="ext_wind_speed_m_s">외부 풍속 (m/s)</option>
+                  <option value="ext_rainfall_mm">강우량 (mm)</option>
+                </optgroup>
+                <optgroup label="내부 기상">
+                  <option value="air_temp_c">내부 온도 (℃)</option>
+                  <option value="rh_pct">내부 습도 (%)</option>
+                  <option value="co2_ppm">CO2 (ppm)</option>
+                  <option value="vpd_kpa">VPD (kPa)</option>
+                  <option value="par_umol_m2_s">PAR (μmol/m²/s)</option>
+                </optgroup>
+                <optgroup label="배지 - Grodan Delta">
+                  <option value="substrate_delta_temp_c">Delta 슬래브 온도 (℃)</option>
+                  <option value="substrate_delta_moisture_pct">Delta 수분 (%)</option>
+                  <option value="substrate_delta_ph">Delta pH</option>
+                </optgroup>
+                <optgroup label="배지 - GT Master">
+                  <option value="substrate_gt_master_temp_c">GT Master 슬래브 온도 (℃)</option>
+                  <option value="substrate_gt_master_moisture_pct">GT Master 수분 (%)</option>
+                  <option value="substrate_gt_master_ph">GT Master pH</option>
+                </optgroup>
+                <optgroup label="공통 근권">
+                  <option value="feed_ec_ds_m">공급 EC (dS/m)</option>
+                  <option value="drain_ec_ds_m">배액 EC (dS/m)</option>
+                  <option value="feed_ph">공급 pH</option>
+                  <option value="drain_ph">배액 pH</option>
+                </optgroup>
+              </select>
+            </label>
+            <label class="block col-span-1">
+              <span class="block text-[10px] text-muted uppercase mb-1">operator *</span>
+              <select id="ruleField_operator" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+                <option value="gt">&gt; (초과)</option>
+                <option value="gte">&ge; (이상)</option>
+                <option value="lt">&lt; (미만)</option>
+                <option value="lte">&le; (이하)</option>
+                <option value="eq">= (같음)</option>
+                <option value="between">∈ [min, max] (범위)</option>
+              </select>
+            </label>
+            <label class="block col-span-1">
+              <span class="block text-[10px] text-muted uppercase mb-1">threshold_value</span>
+              <input type="number" step="any" id="ruleField_threshold_value" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3" id="ruleFieldBetweenRow" style="display:none;">
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">threshold_min</span>
+              <input type="number" step="any" id="ruleField_threshold_min" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+            </label>
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">threshold_max</span>
+              <input type="number" step="any" id="ruleField_threshold_max" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">target_device_type *</span>
+              <select id="ruleField_target_device_type" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+                <option value="roof_vent">천장 개폐기 (roof_vent)</option>
+                <option value="hvac_geothermal">지하수 냉난방기 (hvac_geothermal)</option>
+                <option value="humidifier">가습기 (humidifier)</option>
+                <option value="fertigation_mixer">양액 비율 (fertigation_mixer)</option>
+                <option value="irrigation_pump">관수 펌프 (irrigation_pump)</option>
+                <option value="shade_curtain">차광 커튼 (shade_curtain)</option>
+                <option value="fan_circulation">순환팬 (fan_circulation)</option>
+                <option value="co2_injector">CO2 공급기 (co2_injector)</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">target_action *</span>
+              <input type="text" id="ruleField_target_action" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="adjust_vent">
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">target_device_id</span>
+              <input type="text" id="ruleField_target_device_id" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="(선택)">
+            </label>
+            <label class="block">
+              <span class="block text-[10px] text-muted uppercase mb-1">runtime_mode_gate *</span>
+              <select id="ruleField_runtime_mode_gate" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+                <option value="shadow">shadow (로그만)</option>
+                <option value="approval" selected>approval (승인 요청)</option>
+                <option value="execute">execute (바로 실행)</option>
+              </select>
+            </label>
+          </div>
+          <label class="block">
+            <span class="block text-[10px] text-muted uppercase mb-1">action_payload (JSON)</span>
+            <textarea id="ruleField_action_payload" rows="2" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink font-mono text-[11px]" placeholder='{"target_position_pct": 0}'></textarea>
+          </label>
+          <div class="flex items-center justify-between pt-4 border-t border-outline/30">
+            <label class="flex items-center gap-2 text-xs">
+              <input type="checkbox" id="ruleField_enabled" checked class="rounded">
+              <span>활성화</span>
+            </label>
+            <div class="flex gap-2">
+              <button type="button" onclick="closeAutomationRuleModal()" class="chip chip-dark">취소</button>
+              <button type="submit" class="chip chip-enabled">저장</button>
+            </div>
+          </div>
+          <div id="automationRuleFormError" class="text-[11px] text-critical hidden"></div>
+        </form>
+      </div>
+    </div>
+
     <!-- Shadow Mode -->
     <section class="view" data-view="shadow">
       <div class="card mb-5">
@@ -2518,6 +2919,7 @@ def _dashboard_html() -> str:
       robot: ['로봇', 'Robot Tasks 및 Candidate'],
       devices: ['장치 / 제약', '장치 상태와 활성 제약'],
       policies: ['정책 / 이벤트', 'Policy live toggle과 이벤트 로그'],
+      automation: ['자동화', '운영자 임계값 규칙 → 장치 자동 제어'],
       shadow: ['Shadow Mode', 'real shadow window 요약'],
       system: ['시스템', 'execution history · runtime'],
     };
@@ -2528,6 +2930,7 @@ def _dashboard_html() -> str:
       document.querySelectorAll('#sidebarNav a').forEach(a => a.classList.toggle('active', a.dataset.view === name));
       if (name === 'zones') refreshZoneHistory();
       if (name === 'ai_chat') { scrollChatToBottom(); renderGroundingInspector(); }
+      if (name === 'automation') refreshAutomation();
     }
     function toggleSidebar(force) {
       const sidebar = document.getElementById('sidebar');
@@ -3255,6 +3658,246 @@ def _dashboard_html() -> str:
         : '—';
       atmpEl.textContent = (g.attempts != null) ? String(g.attempts) : '—';
     }
+    // ---- Automation rules UI ----
+    const automationState = { rules: [], triggers: [], editingRuleId: null };
+    async function refreshAutomation() {
+      try {
+        const [rulesRes, triggersRes] = await Promise.all([
+          apiFetch('/automation/rules'),
+          apiFetch('/automation/triggers?limit=25'),
+        ]);
+        automationState.rules = rulesRes?.data?.rules || [];
+        automationState.triggers = triggersRes?.data?.triggers || [];
+        renderAutomationRules();
+        renderAutomationTriggers();
+        const chip = document.getElementById('automationRuntimeChip');
+        if (chip) {
+          const mode = (dashboardState.runtimeMode && dashboardState.runtimeMode.mode) || 'unknown';
+          const cls = mode === 'execute' ? 'chip-critical' : (mode === 'approval' ? 'chip-warn' : 'chip-enabled');
+          chip.className = `chip ${cls}`;
+          chip.textContent = `runtime: ${mode}`;
+        }
+      } catch (err) {
+        console.error('refreshAutomation failed', err);
+        const host = document.getElementById('automationRuleList');
+        if (host) host.innerHTML = `<div class="placeholder">자동화 규칙 로드 실패: ${escapeHtml(err.message || '')}</div>`;
+      }
+    }
+    function thresholdLabel(rule) {
+      const op = rule.operator;
+      if (op === 'between') {
+        return `${rule.threshold_min ?? '?'} ~ ${rule.threshold_max ?? '?'}`;
+      }
+      const opMap = { gt: '>', gte: '≥', lt: '<', lte: '≤', eq: '=' };
+      return `${opMap[op] || op} ${rule.threshold_value ?? '?'}`;
+    }
+    function gateChipClass(gate) {
+      if (gate === 'execute') return 'chip-critical';
+      if (gate === 'approval') return 'chip-warn';
+      return 'chip-enabled';
+    }
+    function renderAutomationRules() {
+      const host = document.getElementById('automationRuleList');
+      if (!host) return;
+      if (!automationState.rules.length) {
+        host.innerHTML = '<div class="placeholder">등록된 자동화 규칙이 없습니다. <button onclick="openAutomationRuleModal()" class="text-primary underline ml-1">규칙 추가</button></div>';
+        return;
+      }
+      host.innerHTML = automationState.rules.map(rule => `
+        <div class="alert-row">
+          <div class="flex items-start justify-between mb-2 gap-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <span class="text-sm font-bold text-ink">${escapeHtml(rule.name)}</span>
+                <span class="chip ${rule.enabled ? 'chip-enabled' : 'chip-warn'}">${rule.enabled ? 'ENABLED' : 'DISABLED'}</span>
+                <span class="chip ${gateChipClass(rule.runtime_mode_gate)}">gate: ${rule.runtime_mode_gate}</span>
+                <span class="chip chip-dark">prio ${rule.priority}</span>
+              </div>
+              <div class="text-[10px] text-muted uppercase tracking-wider">${escapeHtml(rule.rule_id)}</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="toggleAutomationRule('${escapeHtml(rule.rule_id)}', ${rule.enabled ? 'false' : 'true'})" class="text-[11px] font-semibold ${rule.enabled ? 'text-warn' : 'text-primary'} hover:underline">${rule.enabled ? '비활성화' : '활성화'}</button>
+              <button onclick="openAutomationRuleModal('${escapeHtml(rule.rule_id)}')" class="text-[11px] text-primary hover:underline">편집</button>
+              <button onclick="deleteAutomationRule('${escapeHtml(rule.rule_id)}')" class="text-[11px] text-critical hover:underline">삭제</button>
+            </div>
+          </div>
+          <div class="text-xs text-ink mb-1">
+            IF <b>${escapeHtml(rule.sensor_key)}</b> ${thresholdLabel(rule)}
+            THEN <b>${escapeHtml(rule.target_action)}</b> @ <b>${escapeHtml(rule.target_device_type)}</b>${rule.target_device_id ? ' (' + escapeHtml(rule.target_device_id) + ')' : ''}
+          </div>
+          ${rule.description ? `<div class="text-[11px] text-muted leading-relaxed">${escapeHtml(rule.description)}</div>` : ''}
+          <div class="text-[10px] text-muted mt-1">
+            zone=${escapeHtml(rule.zone_id || '전 구역')} · cooldown=${rule.cooldown_minutes}분 · owner=${escapeHtml(rule.owner_role)}
+          </div>
+        </div>
+      `).join('');
+    }
+    function renderAutomationTriggers() {
+      const host = document.getElementById('automationTriggerList');
+      if (!host) return;
+      if (!automationState.triggers.length) {
+        host.innerHTML = '<div class="placeholder">trigger 로그가 없습니다.</div>';
+        return;
+      }
+      const statusChip = (st) => {
+        if (st === 'dispatched') return 'chip-enabled';
+        if (st === 'approval_pending') return 'chip-warn';
+        if (st === 'blocked_validator' || st === 'blocked_guard') return 'chip-critical';
+        return 'chip-dark';
+      };
+      host.innerHTML = automationState.triggers.map(t => `
+        <div class="alert-row">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
+            <span class="chip ${statusChip(t.status)}">${t.status}</span>
+          </div>
+          <div class="text-xs text-ink">rule_id=${t.rule_id} · sensor=${escapeHtml(t.sensor_key)} = ${t.matched_value}</div>
+          <div class="text-[10px] text-muted">runtime=${escapeHtml(t.runtime_mode || '')}${t.note ? ' · ' + escapeHtml(t.note) : ''}</div>
+        </div>
+      `).join('');
+    }
+    function openAutomationRuleModal(ruleId = null) {
+      automationState.editingRuleId = ruleId;
+      const modal = document.getElementById('automationRuleModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const title = document.getElementById('automationModalTitle');
+      if (title) title.textContent = ruleId ? `규칙 편집: ${ruleId}` : '새 자동화 규칙';
+      const form = document.getElementById('automationRuleForm');
+      if (form) form.reset();
+      const errEl = document.getElementById('automationRuleFormError');
+      if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+      document.getElementById('ruleField_priority').value = 100;
+      document.getElementById('ruleField_cooldown_minutes').value = 15;
+      document.getElementById('ruleField_enabled').checked = true;
+      document.getElementById('ruleField_runtime_mode_gate').value = 'approval';
+      toggleBetweenRow();
+      if (ruleId) {
+        const rule = automationState.rules.find(r => r.rule_id === ruleId);
+        if (rule) {
+          document.getElementById('ruleField_rule_id').value = rule.rule_id;
+          document.getElementById('ruleField_rule_id').readOnly = true;
+          document.getElementById('ruleField_name').value = rule.name;
+          document.getElementById('ruleField_description').value = rule.description || '';
+          document.getElementById('ruleField_zone_id').value = rule.zone_id || '';
+          document.getElementById('ruleField_priority').value = rule.priority;
+          document.getElementById('ruleField_cooldown_minutes').value = rule.cooldown_minutes;
+          document.getElementById('ruleField_sensor_key').value = rule.sensor_key;
+          document.getElementById('ruleField_operator').value = rule.operator;
+          document.getElementById('ruleField_threshold_value').value = rule.threshold_value ?? '';
+          document.getElementById('ruleField_threshold_min').value = rule.threshold_min ?? '';
+          document.getElementById('ruleField_threshold_max').value = rule.threshold_max ?? '';
+          document.getElementById('ruleField_target_device_type').value = rule.target_device_type;
+          document.getElementById('ruleField_target_device_id').value = rule.target_device_id || '';
+          document.getElementById('ruleField_target_action').value = rule.target_action;
+          document.getElementById('ruleField_action_payload').value = rule.action_payload
+            ? JSON.stringify(rule.action_payload) : '';
+          document.getElementById('ruleField_runtime_mode_gate').value = rule.runtime_mode_gate;
+          document.getElementById('ruleField_enabled').checked = !!rule.enabled;
+          toggleBetweenRow();
+        }
+      } else {
+        document.getElementById('ruleField_rule_id').readOnly = false;
+      }
+    }
+    function closeAutomationRuleModal() {
+      const modal = document.getElementById('automationRuleModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      automationState.editingRuleId = null;
+    }
+    function toggleBetweenRow() {
+      const op = document.getElementById('ruleField_operator').value;
+      const row = document.getElementById('ruleFieldBetweenRow');
+      if (!row) return;
+      row.style.display = (op === 'between') ? '' : 'none';
+    }
+    async function toggleAutomationRule(ruleId, enable) {
+      try {
+        await apiFetch(`/automation/rules/${encodeURIComponent(ruleId)}/toggle`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: enable }),
+        });
+        refreshAutomation();
+      } catch (err) {
+        alert('toggle 실패: ' + err.message);
+      }
+    }
+    async function deleteAutomationRule(ruleId) {
+      if (!confirm(`자동화 규칙 '${ruleId}'을 삭제하시겠습니까?`)) return;
+      try {
+        await apiFetch(`/automation/rules/${encodeURIComponent(ruleId)}`, { method: 'DELETE' });
+        refreshAutomation();
+      } catch (err) {
+        alert('삭제 실패: ' + err.message);
+      }
+    }
+    async function submitAutomationRuleForm(event) {
+      event.preventDefault();
+      const errEl = document.getElementById('automationRuleFormError');
+      errEl.classList.add('hidden');
+      errEl.textContent = '';
+      const getNum = (id) => {
+        const v = document.getElementById(id).value;
+        return v === '' ? null : Number(v);
+      };
+      let actionPayload = {};
+      const apRaw = document.getElementById('ruleField_action_payload').value.trim();
+      if (apRaw) {
+        try {
+          actionPayload = JSON.parse(apRaw);
+        } catch (err) {
+          errEl.textContent = 'action_payload JSON 파싱 실패: ' + err.message;
+          errEl.classList.remove('hidden');
+          return;
+        }
+      }
+      const body = {
+        rule_id: document.getElementById('ruleField_rule_id').value.trim(),
+        name: document.getElementById('ruleField_name').value.trim(),
+        description: document.getElementById('ruleField_description').value,
+        zone_id: document.getElementById('ruleField_zone_id').value.trim() || null,
+        priority: parseInt(document.getElementById('ruleField_priority').value || 100),
+        cooldown_minutes: parseInt(document.getElementById('ruleField_cooldown_minutes').value || 15),
+        sensor_key: document.getElementById('ruleField_sensor_key').value,
+        operator: document.getElementById('ruleField_operator').value,
+        threshold_value: getNum('ruleField_threshold_value'),
+        threshold_min: getNum('ruleField_threshold_min'),
+        threshold_max: getNum('ruleField_threshold_max'),
+        target_device_type: document.getElementById('ruleField_target_device_type').value,
+        target_device_id: document.getElementById('ruleField_target_device_id').value.trim() || null,
+        target_action: document.getElementById('ruleField_target_action').value.trim(),
+        action_payload: actionPayload,
+        runtime_mode_gate: document.getElementById('ruleField_runtime_mode_gate').value,
+        enabled: document.getElementById('ruleField_enabled').checked,
+        owner_role: 'operator',
+      };
+      try {
+        const editing = automationState.editingRuleId;
+        if (editing) {
+          const { rule_id, owner_role, sensor_key, ...updatable } = body;
+          await apiFetch(`/automation/rules/${encodeURIComponent(editing)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatable),
+          });
+        } else {
+          await apiFetch('/automation/rules', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+        }
+        closeAutomationRuleModal();
+        refreshAutomation();
+      } catch (err) {
+        errEl.textContent = '저장 실패: ' + err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
     async function sendChatMessage() {
       if (chatState.sending) return;
       const input = document.getElementById('chatInput');
@@ -3389,6 +4032,10 @@ def _dashboard_html() -> str:
     showView('overview');
     renderChat();
     loadAiConfig().then(() => { renderGroundingInspector(); });
+    const automationForm = document.getElementById('automationRuleForm');
+    if (automationForm) automationForm.addEventListener('submit', submitAutomationRuleForm);
+    const operatorSelect = document.getElementById('ruleField_operator');
+    if (operatorSelect) operatorSelect.addEventListener('change', toggleBetweenRow);
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>

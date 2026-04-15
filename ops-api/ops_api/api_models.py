@@ -116,3 +116,99 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessageRequest] = Field(default_factory=list)
     system_prompt: str | None = None
     context: dict[str, Any] = Field(default_factory=dict)
+
+
+AUTOMATION_SENSOR_KEYS = {
+    # 외부 기상
+    "ext_air_temp_c", "ext_rh_pct", "ext_wind_dir_deg", "ext_wind_speed_m_s", "ext_rainfall_mm",
+    # 내부 기상
+    "air_temp_c", "rh_pct", "co2_ppm", "vpd_kpa", "par_umol_m2_s",
+    # 배지 — Grodan Delta
+    "substrate_delta_temp_c", "substrate_delta_moisture_pct", "substrate_delta_ph",
+    # 배지 — GT Master
+    "substrate_gt_master_temp_c", "substrate_gt_master_moisture_pct", "substrate_gt_master_ph",
+    # 공통 근권 (양식 통합)
+    "substrate_temp_c", "substrate_moisture_pct", "feed_ec_ds_m", "drain_ec_ds_m",
+    "feed_ph", "drain_ph",
+}
+
+AUTOMATION_DEVICE_TYPES = {
+    "roof_vent",          # 천장개폐기
+    "hvac_geothermal",    # 지하수 활용 냉난방기
+    "humidifier",         # 가습기
+    "fertigation_mixer",  # 양액 비율 조정
+    "irrigation_pump",    # 관수 펌프
+    "shade_curtain",      # 차광 커튼
+    "fan_circulation",    # 순환팬
+    "co2_injector",       # CO2 공급기
+}
+
+AUTOMATION_OPERATORS = {"gt", "gte", "lt", "lte", "eq", "between"}
+AUTOMATION_RUNTIME_MODE_GATES = {"shadow", "approval", "execute"}
+
+
+class AutomationRuleRequest(BaseModel):
+    rule_id: str = Field(..., min_length=1, max_length=128)
+    name: str = Field(..., min_length=1, max_length=200)
+    description: str = ""
+    zone_id: str | None = None
+    sensor_key: Literal[
+        "ext_air_temp_c", "ext_rh_pct", "ext_wind_dir_deg", "ext_wind_speed_m_s", "ext_rainfall_mm",
+        "air_temp_c", "rh_pct", "co2_ppm", "vpd_kpa", "par_umol_m2_s",
+        "substrate_delta_temp_c", "substrate_delta_moisture_pct", "substrate_delta_ph",
+        "substrate_gt_master_temp_c", "substrate_gt_master_moisture_pct", "substrate_gt_master_ph",
+        "substrate_temp_c", "substrate_moisture_pct", "feed_ec_ds_m", "drain_ec_ds_m",
+        "feed_ph", "drain_ph",
+    ]
+    operator: Literal["gt", "gte", "lt", "lte", "eq", "between"]
+    threshold_value: float | None = None
+    threshold_min: float | None = None
+    threshold_max: float | None = None
+    hysteresis_value: float | None = None
+    cooldown_minutes: int = 15
+    target_device_type: Literal[
+        "roof_vent", "hvac_geothermal", "humidifier",
+        "fertigation_mixer", "irrigation_pump",
+        "shade_curtain", "fan_circulation", "co2_injector",
+    ]
+    target_device_id: str | None = None
+    target_action: str = Field(..., min_length=1, max_length=64)
+    action_payload: dict[str, Any] = Field(default_factory=dict)
+    priority: int = 100
+    enabled: bool = True
+    runtime_mode_gate: Literal["shadow", "approval", "execute"] = "approval"
+    owner_role: Literal["viewer", "operator", "service", "admin"] = "operator"
+
+
+class AutomationRuleUpdateRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    zone_id: str | None = None
+    operator: Literal["gt", "gte", "lt", "lte", "eq", "between"] | None = None
+    threshold_value: float | None = None
+    threshold_min: float | None = None
+    threshold_max: float | None = None
+    hysteresis_value: float | None = None
+    cooldown_minutes: int | None = None
+    target_device_id: str | None = None
+    target_action: str | None = Field(None, min_length=1, max_length=64)
+    action_payload: dict[str, Any] | None = None
+    priority: int | None = None
+    enabled: bool | None = None
+    runtime_mode_gate: Literal["shadow", "approval", "execute"] | None = None
+
+
+class AutomationRuleToggleRequest(BaseModel):
+    enabled: bool
+
+
+class AutomationEvaluateRequest(BaseModel):
+    """Offline sensor snapshot used to dry-run the rule engine.
+
+    Populate only the keys you want to test. Missing keys behave as if the
+    sensor has no reading, so the corresponding rules do not match.
+    """
+
+    zone_id: str | None = None
+    runtime_mode_override: Literal["shadow", "approval", "execute"] | None = None
+    sensor_snapshot: dict[str, float] = Field(default_factory=dict)

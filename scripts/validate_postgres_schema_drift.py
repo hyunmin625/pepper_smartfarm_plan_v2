@@ -41,6 +41,7 @@ from ops_api import models as _models  # noqa: F401,E402  - registers tables
 MIGRATION_PATHS: tuple[Path, ...] = (
     REPO_ROOT / "infra" / "postgres" / "001_initial_schema.sql",
     REPO_ROOT / "infra" / "postgres" / "002_timescaledb_sensor_readings.sql",
+    REPO_ROOT / "infra" / "postgres" / "003_automation_rules.sql",
 )
 
 
@@ -48,6 +49,7 @@ _SQL_TYPE_NORMALIZATION = {
     "TEXT": "text",
     "VARCHAR": "text",
     "BIGSERIAL": "integer",
+    "SERIAL": "integer",
     "BIGINT": "integer",
     "INTEGER": "integer",
     "DOUBLE": "float",

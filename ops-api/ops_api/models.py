@@ -311,3 +311,93 @@ class ZoneStateSnapshotRecord(Base):
     feature_payload_json: Mapped[str] = mapped_column(Text, default="{}")
     source: Mapped[str] = mapped_column(String(64), default="state-estimator")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
+class AutomationRuleRecord(Base):
+    """Operator-defined "if <sensor> <op> <threshold> then <device action>" rule.
+
+    The rule engine in ``ops_api/automation.py`` loads every enabled row and
+    matches them against a sensor snapshot (``zone_state_snapshots`` columns
+    plus external weather keys). Matched rules produce proposed actions that
+    are handed off to the same shadow / approval / execute pipeline as LLM
+    decisions, so hard-safety rules and runtime_mode still apply.
+
+    operator ∈ {gt, gte, lt, lte, eq, between}. For ``between`` both
+    ``threshold_min`` and ``threshold_max`` must be set and the match condition
+    is ``threshold_min <= sensor_value <= threshold_max``.
+
+    runtime_mode_gate is the minimum runtime mode at which the rule is
+    allowed to produce an action. ``shadow`` rules always run but only log
+    triggers; ``approval`` rules also write a pending_approval decision;
+    ``execute`` rules additionally request dispatch. Setting a stricter
+    gate prevents e.g. a newly authored heating rule from auto-executing
+    before operator approval.
+    """
+
+    __tablename__ = "automation_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    rule_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    zone_id: Mapped[str | None] = mapped_column(String(128), index=True, nullable=True)
+    sensor_key: Mapped[str] = mapped_column(String(64), index=True)
+    operator: Mapped[str] = mapped_column(String(16))
+    threshold_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    threshold_min: Mapped[float | None] = mapped_column(Float, nullable=True)
+    threshold_max: Mapped[float | None] = mapped_column(Float, nullable=True)
+    hysteresis_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cooldown_minutes: Mapped[int] = mapped_column(Integer, default=15)
+    target_device_type: Mapped[str] = mapped_column(String(64), index=True)
+    target_device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    target_action: Mapped[str] = mapped_column(String(64))
+    action_payload_json: Mapped[str] = mapped_column(Text, default="{}")
+    priority: Mapped[int] = mapped_column(Integer, default=100)
+    enabled: Mapped[bool] = mapped_column(Integer, default=1)
+    runtime_mode_gate: Mapped[str] = mapped_column(String(16), default="approval")
+    owner_role: Mapped[str] = mapped_column(String(32), default="operator")
+    created_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    triggers: Mapped[list["AutomationRuleTriggerRecord"]] = relationship(
+        back_populates="rule",
+        cascade="all, delete-orphan",
+    )
+
+
+class AutomationRuleTriggerRecord(Base):
+    """One match of an automation rule against a sensor snapshot.
+
+    Stored regardless of whether the proposed action is eventually executed,
+    so operators can audit how often each rule would fire under the current
+    sensor conditions. ``status`` follows the runtime_mode pipeline:
+
+    - ``shadow_logged``: runtime_mode was shadow, trigger recorded only.
+    - ``approval_pending``: wrote an ApprovalRecord-compatible proposed_action.
+    - ``dispatched``: execution_gateway accepted the command.
+    - ``blocked_validator``: output_validator rejected the proposed action.
+    - ``blocked_guard``: execution-gateway guard rejected (worker_present etc.).
+    - ``cooldown_skipped``: rule matched but was within cooldown window.
+    """
+
+    __tablename__ = "automation_rule_triggers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    rule_id: Mapped[int] = mapped_column(
+        ForeignKey("automation_rules.id", ondelete="CASCADE"), index=True
+    )
+    triggered_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    zone_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    sensor_key: Mapped[str] = mapped_column(String(64))
+    matched_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sensor_snapshot_json: Mapped[str] = mapped_column(Text, default="{}")
+    proposed_action_json: Mapped[str] = mapped_column(Text, default="{}")
+    status: Mapped[str] = mapped_column(String(32), default="shadow_logged", index=True)
+    runtime_mode: Mapped[str] = mapped_column(String(16), default="shadow")
+    decision_id: Mapped[int | None] = mapped_column(
+        ForeignKey("decisions.id"), nullable=True
+    )
+    note: Mapped[str] = mapped_column(Text, default="")
+
+    rule: Mapped[AutomationRuleRecord] = relationship(back_populates="triggers")

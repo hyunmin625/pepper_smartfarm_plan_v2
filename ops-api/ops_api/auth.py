@@ -21,6 +21,7 @@ ROLE_PERMISSIONS = {
         "approve_actions",
         "execute_actions",
         "write_robot_tasks",
+        "manage_automation",
     },
     "service": {
         "read_catalog",
@@ -36,6 +37,7 @@ ROLE_PERMISSIONS = {
         "write_robot_tasks",
         "manage_runtime_mode",
         "manage_policies",
+        "manage_automation",
     },
 }
 
