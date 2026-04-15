@@ -62,7 +62,7 @@ validator는 JSON parse 직후, `policy-engine` 전에 실행한다.
 | `HSV-05` | 원수 메인 밸브 write timeout 또는 stale readback | `risk_level=critical`, `enter_safe_mode + request_human_check` 강제 | source-water path 보호 |
 | `HSV-06` | 건조실 fan/dehumidifier 통신 손실 또는 readback mismatch | `risk_level=critical`, `enter_safe_mode + request_human_check` 강제 | 건조 품질 손상 선차단 |
 | `HSV-07` | 핵심 기후 센서 stale/missing/inconsistent로 VPD/제어 해석 불가 | 기본은 `risk_level=unknown`, `pause_automation + request_human_check` 강제. 단, degraded 자동 기후 제어가 이미 이어졌으면 `risk_level=high` 유지 | climate control degraded nuance |
-| `HSV-08` | 근권 WC/drain EC/loadcell 충돌 또는 stale로 자동 관수/양액 근거 붕괴 | `risk_level=unknown`, `pause_automation + request_human_check` 강제, `short_irrigation`/`adjust_fertigation` 제거 | GT Master/Delta 6.5 포함 |
+| `HSV-08` | 근권 WC/drain EC/loadcell 충돌 또는 stale, 또는 `Delta 6.5` 정식 전 block saturation evidence 부재로 자동 관수/양액 근거 붕괴 | `risk_level=unknown`, `pause_automation + request_human_check` 강제, `short_irrigation`/`adjust_fertigation` 제거 | GT Master/Delta 6.5 포함 |
 | `HSV-09` | EC/pH/drain sensor fault 상태에서 fertigation 변경 제안 또는 forbidden_action 심사 | 자동 승인 금지, `decision=approval_required` 또는 action `approval_required=true` 강제 | hard interlock이 있으면 `block` 허용 |
 | `HSV-10` | worker present, zone clearance uncertain, aisle slip hazard, safe_mode active 중 하나에서 robot task 생성 | `harvest_candidate_review`/`inspect_crop` 제거, 필요 시 `skip_area`만 허용 | robot safety interlock |
 
@@ -102,6 +102,18 @@ validator가 우선 맡아야 하는 것:
 - evidence gap 아래 `short_irrigation`, `adjust_fertigation`, `create_robot_task` 차단
 - robot task enum, `candidate_id/target`, citation/follow_up contract 강제
 
+validator가 **직접 판단하지 않는 것**:
+
+- `GT Master`의 `high` vs `medium` 경계 자체
+- `EC delta 0.3~0.8` 안정권, `<0.3` 과급수 watch, `>1.0` 과소급수/refresh 실패 watch 같은 rootzone 해석
+- `first drain`과 `EC drop`의 일치 여부를 crop stress와 연결하는 의미 판단
+
+즉 validator는 `evidence sufficiency`까지만 본다.
+
+- `WC`, `drain EC`, `drain timing/volume` 중 핵심 조합이 빠지면 `HSV-08`
+- `Delta 6.5` block wet weight나 saturation evidence가 없으면 `HSV-08`
+- 그 이후 `high`/`medium` 분기는 `docs/risk_level_rubric.md`와 모델/라벨이 맡는다.
+
 ## 6. 다음 구현 범위
 
 1. `scripts/report_eval_failure_clusters.py` 결과를 기준으로 `HSV-01`~`HSV-10`, `OV-01`~`OV-10`을 runtime JSON/policy seed로 옮긴다.
@@ -121,7 +133,7 @@ validator가 우선 맡아야 하는 것:
 
 - 두 케이스는 hard safety invariant나 output schema 문제보다 `도메인 의미 일반화` 문제에 가깝다.
 - 여기까지 validator로 덮기 시작하면 score chasing 규칙이 되고, 제품 일반화에 불리하다.
-- 따라서 위 두 케이스는 `docs/risk_level_rubric.md`와 training sample batch13으로 해결한다.
+- 따라서 위 두 케이스는 `docs/risk_level_rubric.md`와 training sample batch13, Grodan rootzone 해석 규칙으로 해결한다.
 
 ## 7. 관련 문서
 

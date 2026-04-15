@@ -2361,8 +2361,8 @@ def _dashboard_html() -> str:
         <span>정책 / 이벤트</span>
       </a>
       <a data-view="automation" class="nav-link">
-        <span class="material-symbols-outlined text-[20px]">rule</span>
-        <span>자동화</span>
+        <span class="material-symbols-outlined text-[20px]">tune</span>
+        <span>환경설정</span>
       </a>
       <a data-view="shadow" class="nav-link">
         <span class="material-symbols-outlined text-[20px]">visibility</span>
@@ -2657,12 +2657,12 @@ def _dashboard_html() -> str:
       </div>
     </section>
 
-    <!-- 자동화 규칙 -->
+    <!-- 환경설정 · 자동화 규칙 -->
     <section class="view" data-view="automation">
       <div class="card mb-5">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
-            <h3 class="text-sm font-bold text-ink">자동화 규칙</h3>
+            <h3 class="text-sm font-bold text-ink">환경설정 — 사용자 자동화 규칙</h3>
             <p class="text-[10px] text-muted uppercase tracking-wider">sensor threshold → device control (shadow → approval → execute)</p>
           </div>
           <div class="flex items-center gap-2">
@@ -2919,7 +2919,7 @@ def _dashboard_html() -> str:
       robot: ['로봇', 'Robot Tasks 및 Candidate'],
       devices: ['장치 / 제약', '장치 상태와 활성 제약'],
       policies: ['정책 / 이벤트', 'Policy live toggle과 이벤트 로그'],
-      automation: ['자동화', '운영자 임계값 규칙 → 장치 자동 제어'],
+      automation: ['환경설정', '사용자 임계값 기반 자동 제어 규칙 (센서 → 장치)'],
       shadow: ['Shadow Mode', 'real shadow window 요약'],
       system: ['시스템', 'execution history · runtime'],
     };

@@ -1,76 +1,76 @@
 {
-  "input_files": 64,
-  "sample_rows": 360,
+  "input_files": 72,
+  "sample_rows": 535,
   "task_counts": {
-    "action_recommendation": 37,
+    "action_recommendation": 100,
     "alert_report": 20,
     "climate_risk": 11,
-    "failure_response": 51,
-    "forbidden_action": 26,
-    "harvest_drying": 4,
-    "nutrient_risk": 16,
+    "failure_response": 67,
+    "forbidden_action": 100,
+    "harvest_drying": 8,
+    "nutrient_risk": 17,
     "pest_disease_risk": 6,
     "qa_reference": 20,
-    "robot_task_prioritization": 57,
-    "rootzone_diagnosis": 19,
+    "robot_task_prioritization": 59,
+    "rootzone_diagnosis": 31,
     "safety_policy": 58,
-    "sensor_fault": 28,
-    "state_judgement": 7
+    "sensor_fault": 29,
+    "state_judgement": 9
   },
-  "class_imbalance_ratio": 14.5,
+  "class_imbalance_ratio": 16.666666666666668,
   "action_type_counts": {
     "adjust_co2": 1,
-    "adjust_fan": 1,
-    "adjust_fertigation": 2,
-    "adjust_heating": 4,
-    "adjust_shade": 3,
+    "adjust_fan": 7,
+    "adjust_fertigation": 8,
+    "adjust_heating": 10,
+    "adjust_shade": 9,
     "adjust_vent": 3,
-    "block_action": 57,
-    "create_alert": 139,
+    "block_action": 73,
+    "create_alert": 212,
     "create_robot_task": 1,
     "enter_safe_mode": 31,
-    "observe_only": 2,
-    "pause_automation": 51,
-    "request_human_check": 176,
+    "observe_only": 3,
+    "pause_automation": 52,
+    "request_human_check": 258,
     "short_irrigation": 1
   },
   "input_length_chars": {
     "min": 137,
-    "median": 291,
-    "p90": 394,
+    "median": 289,
+    "p90": 384,
     "max": 551
   },
   "output_length_chars": {
     "min": 276,
-    "median": 1121,
-    "p90": 1440,
-    "max": 1623
+    "median": 1155,
+    "p90": 1468,
+    "max": 1843
   },
   "longest_samples": [
+    {
+      "sample_id": "state-judgement-batch22-b1d",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch22_gt_master_dryback.jsonl",
+      "combined_chars": 2272
+    },
+    {
+      "sample_id": "action-recommendation-batch22-b5d",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch22_gt_master_dryback.jsonl",
+      "combined_chars": 2129
+    },
+    {
+      "sample_id": "state-judgement-batch22-b2d",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch22_gt_master_dryback.jsonl",
+      "combined_chars": 2109
+    },
+    {
+      "sample_id": "state-judgement-batch22-b1a",
+      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch22_gt_master_dryback.jsonl",
+      "combined_chars": 1973
+    },
     {
       "sample_id": "action-rec-026",
       "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch9.jsonl",
       "combined_chars": 1967
-    },
-    {
-      "sample_id": "action-rec-031",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch11_shadow_residual.jsonl",
-      "combined_chars": 1934
-    },
-    {
-      "sample_id": "state-judgement-045",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch9.jsonl",
-      "combined_chars": 1924
-    },
-    {
-      "sample_id": "state-judgement-035",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/state_judgement_samples_batch5.jsonl",
-      "combined_chars": 1898
-    },
-    {
-      "sample_id": "action-rec-033",
-      "source_file": "/home/user/pepper-smartfarm-plan-v2/data/examples/action_recommendation_samples_batch12_shadow_day0.jsonl",
-      "combined_chars": 1892
     }
   ]
 }

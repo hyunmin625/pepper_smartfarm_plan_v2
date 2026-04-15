@@ -12,14 +12,19 @@
 - `action_recommendation_samples.jsonl`: 추천 행동과 승인 필요 여부를 구조화해 출력하는 예시
 - `action_recommendation_samples_batch2.jsonl`: 행동추천 seed를 총 20건으로 확장하는 추가 묶음
 - `action_recommendation_samples_batch4.jsonl`: ds_v2 eval 실패(action 2건)의 위험도 보정용 추가 묶음
+- `action_recommendation_samples_batch23_seed_completion.jsonl`: 행동추천 seed를 총 100건으로 맞추는 completion 묶음
 - `forbidden_action_samples.jsonl`: 위험하거나 승인 없이는 실행하면 안 되는 행동을 차단하는 예시
 - `forbidden_action_samples_batch2.jsonl`: 금지행동 seed를 총 20건으로 확장하는 추가 묶음
 - `forbidden_action_samples_batch4.jsonl`: ds_v2 eval 실패(decision 1건)의 승인 요구 보정용 추가 묶음
+- `forbidden_action_samples_batch23_seed_completion.jsonl`: 금지행동 seed를 총 100건으로 맞추는 completion 묶음
 - `failure_response_samples.jsonl`: 센서/장치/통신 장애 시 fallback과 안전 대응을 생성하는 예시
 - `failure_response_samples_batch2.jsonl`: 장애대응 seed를 총 20건으로 확장하는 추가 묶음
+- `failure_response_samples_batch24_reentry_block_priority.jsonl`: `reentry_pending + dry_room comm loss`에서 `block_action + create_alert`를 우선 고정하는 corrective 묶음
 - `robot_task_samples.jsonl`: 수확/점검 후보의 로봇 작업 우선순위를 정하는 예시
 - `robot_task_samples_batch2.jsonl`: 로봇작업 seed를 총 20건으로 확장하는 추가 묶음
+- `robot_task_samples_batch24_inspect_crop_contract.jsonl`: low-confidence hotspot을 `inspect_crop` exact enum과 `candidate_id/target` 계약으로 다시 고정하는 corrective 묶음
 - `state_judgement_samples_batch15_hard_cases.jsonl`: `worker_present`, `manual_override`, noisy sensor, rootzone evidence loss 같은 hard-case 전용 추가 묶음
+- `state_judgement_samples_batch24_lowcount_rebalance.jsonl`: `state_judgement`/`harvest_drying` 저빈도 family와 drying sensor/nutrient risk slice를 함께 보강하는 rebalance 묶음
 - `failure_response_samples_batch15_hard_cases.jsonl`: 통신 단절, 장치 stuck, reboot recovery 같은 safe-mode hard-case 전용 추가 묶음
 - `robot_task_samples_batch6_hard_cases.jsonl`: `worker_present`, `estop_active` 아래 robot task 차단 hard-case 추가 묶음
 - `state_judgement_samples_batch16_safety_reinforcement.jsonl`: `worker_present`, `manual_override`, `safe_mode`에서 `critical + block_action + create_alert`를 강제하는 safety reinforcement 묶음
@@ -51,7 +56,6 @@
 
 ## 다음 확장
 
-1. 행동추천/금지행동 샘플을 100건 수준으로 확장
-2. 품종별/계절별 행동추천 샘플 추가
-3. 운영자 승인/거절 로그가 생기면 preference pair로 확장
-4. 합성 센서 시나리오를 계절/재배형태별로 30건 이상으로 확장
+1. 품종별/계절별 행동추천 샘플 추가
+2. 운영자 승인/거절 로그가 생기면 preference pair로 확장
+3. 합성 센서 시나리오를 계절/재배형태별로 30건 이상으로 확장

@@ -210,7 +210,7 @@ def main() -> int:
             "function refreshAutomation",
             "function renderAutomationRules",
             "function submitAutomationRuleForm",
-            ">자동화</span>",
+            ">환경설정</span>",
         ):
             _assert(hook in html, f"dashboard contains `{hook}`")
 
