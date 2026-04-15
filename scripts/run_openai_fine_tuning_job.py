@@ -36,6 +36,17 @@ def utc_now_iso() -> str:
 
 
 def short_model_name(model: str) -> str:
+    """Produce a filename-safe short alias for the base model.
+
+    Accepts either a plain OpenAI base id (`gpt-4.1-mini-2025-04-14`) or a
+    fine-tuned checkpoint id (`ft:gpt-4.1-mini-...:DTryNJg3`). For fine-tuned
+    models we return `ftbase-<tail>` where tail is the opaque checkpoint
+    suffix OpenAI hands out, so continuous/incremental fine-tuning runs stay
+    inside filename + suffix length limits while still being traceable.
+    """
+    if model.startswith("ft:"):
+        tail = model.rsplit(":", 1)[-1] or "unknown"
+        return f"ftbase-{tail}"
     return (
         model.replace("gpt-4.1-mini-2025-04-14", "gpt41mini")
         .replace("gpt-4.1-2025-04-14", "gpt41")
@@ -53,7 +64,24 @@ def upload_file(client: Any, path: Path) -> str:
     return result.id
 
 
+def build_hyperparameters(args: argparse.Namespace) -> dict[str, Any]:
+    """Return the explicit hyperparameters dict to send to OpenAI, or empty
+    when every flag is left at None (= OpenAI auto). An empty dict means
+    the request body will not carry a `hyperparameters` key at all, so the
+    old auto-selection behaviour is preserved byte-for-byte.
+    """
+    hp: dict[str, Any] = {}
+    if args.n_epochs is not None:
+        hp["n_epochs"] = int(args.n_epochs)
+    if args.learning_rate_multiplier is not None:
+        hp["learning_rate_multiplier"] = float(args.learning_rate_multiplier)
+    if args.batch_size is not None:
+        hp["batch_size"] = int(args.batch_size)
+    return hp
+
+
 def build_manifest(args: argparse.Namespace, experiment_name: str, train_rows: int, validation_rows: int) -> dict[str, Any]:
+    hp = build_hyperparameters(args)
     return {
         "schema_version": "fine_tuning_run.v1",
         "experiment_name": experiment_name,
@@ -70,6 +98,7 @@ def build_manifest(args: argparse.Namespace, experiment_name: str, train_rows: i
         "training_rows": train_rows,
         "validation_rows": validation_rows,
         "suffix": args.suffix or experiment_name[:64],
+        "hyperparameters": hp if hp else "auto",
         "job_id": None,
         "training_file_id": None,
         "validation_file_id": None,
@@ -93,6 +122,34 @@ def main() -> None:
     parser.add_argument("--suffix", default=None)
     parser.add_argument("--run-tag", default=None)
     parser.add_argument("--notes", default="")
+    parser.add_argument(
+        "--n-epochs",
+        type=int,
+        default=None,
+        help=(
+            "Explicit number of training epochs. Leave unset to let OpenAI "
+            "auto-select. Phase H postmortem: ds_v12 was trained with epochs=3 "
+            "+ lr×2, which caused catastrophic forgetting. Use 2 with lr=1.0 "
+            "for conservative retries."
+        ),
+    )
+    parser.add_argument(
+        "--learning-rate-multiplier",
+        type=float,
+        default=None,
+        help=(
+            "Explicit learning rate multiplier. Leave unset to let OpenAI "
+            "auto-select. Phase H postmortem: ds_v12 auto-picked 2.0 which "
+            "overrode the pepper-ops schema persona. Use 1.0 to keep the "
+            "existing persona stable while adding batch22 corrections."
+        ),
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=None,
+        help="Explicit batch size. Leave unset to let OpenAI auto-select (usually 1 for this dataset size).",
+    )
     parser.add_argument("--submit", action="store_true")
     args = parser.parse_args()
 
@@ -138,6 +195,9 @@ def main() -> None:
         }
         if validation_file_id:
             request_body["validation_file"] = validation_file_id
+        hp = build_hyperparameters(args)
+        if hp:
+            request_body["hyperparameters"] = hp
 
         job = client.fine_tuning.jobs.create(**request_body)
         manifest["job_id"] = job.id
@@ -155,6 +215,7 @@ def main() -> None:
     print(f"status: {manifest['status']}")
     print(f"training_rows: {train_rows}")
     print(f"validation_rows: {validation_rows}")
+    print(f"hyperparameters: {manifest['hyperparameters']}")
     print(f"manifest: {manifest_path.as_posix()}")
     if manifest["job_id"]:
         print(f"job_id: {manifest['job_id']}")

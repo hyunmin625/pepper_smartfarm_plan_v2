@@ -1,0 +1,262 @@
+{
+  "reference_records": 200,
+  "candidate_records": 200,
+  "reference_pass_rate": 0.7,
+  "candidate_pass_rate": 0.585,
+  "reference_strict_json_rate": 1.0,
+  "candidate_strict_json_rate": 1.0,
+  "reference_top_keys": [
+    [
+      "citations",
+      200
+    ],
+    [
+      "risk_level",
+      200
+    ],
+    [
+      "confidence",
+      180
+    ],
+    [
+      "follow_up",
+      180
+    ],
+    [
+      "requires_human_approval",
+      180
+    ],
+    [
+      "situation_summary",
+      180
+    ],
+    [
+      "retrieval_coverage",
+      179
+    ],
+    [
+      "approval_reason",
+      162
+    ],
+    [
+      "recommended_actions",
+      162
+    ],
+    [
+      "diagnosis",
+      158
+    ],
+    [
+      "skipped_actions",
+      60
+    ],
+    [
+      "fallback_mode",
+      28
+    ],
+    [
+      "blocked_action_type",
+      20
+    ],
+    [
+      "decision",
+      20
+    ],
+    [
+      "reason",
+      20
+    ],
+    [
+      "required_follow_up",
+      20
+    ],
+    [
+      "robot_tasks",
+      18
+    ],
+    [
+      "skipped_tasks",
+      12
+    ],
+    [
+      "skipped_robot_tasks",
+      5
+    ],
+    [
+      "target",
+      3
+    ]
+  ],
+  "candidate_top_keys": [
+    [
+      "citations",
+      200
+    ],
+    [
+      "risk_level",
+      200
+    ],
+    [
+      "confidence",
+      180
+    ],
+    [
+      "requires_human_approval",
+      180
+    ],
+    [
+      "retrieval_coverage",
+      180
+    ],
+    [
+      "situation_summary",
+      180
+    ],
+    [
+      "follow_up",
+      171
+    ],
+    [
+      "approval_reason",
+      162
+    ],
+    [
+      "recommended_actions",
+      162
+    ],
+    [
+      "diagnosis",
+      158
+    ],
+    [
+      "skipped_actions",
+      31
+    ],
+    [
+      "fallback_mode",
+      27
+    ],
+    [
+      "blocked_action_type",
+      20
+    ],
+    [
+      "decision",
+      20
+    ],
+    [
+      "reason",
+      20
+    ],
+    [
+      "required_follow_up",
+      20
+    ],
+    [
+      "robot_tasks",
+      18
+    ],
+    [
+      "skipped_tasks",
+      9
+    ],
+    [
+      "skipped_task_types",
+      6
+    ],
+    [
+      "state",
+      4
+    ],
+    [
+      "task_prioritization",
+      2
+    ],
+    [
+      "strategy",
+      1
+    ],
+    [
+      "urgency",
+      1
+    ],
+    [
+      "skipped_candidates",
+      1
+    ],
+    [
+      "skipped_task_reasons",
+      1
+    ]
+  ],
+  "new_keys": [
+    "skipped_candidates",
+    "skipped_task_reasons",
+    "state",
+    "strategy",
+    "task_prioritization"
+  ],
+  "missing_keys": [
+    "skipped_robot_tasks",
+    "state_type",
+    "state_version",
+    "target"
+  ],
+  "common_key_drops": [],
+  "rare_key_losses": [
+    {
+      "key": "skipped_robot_tasks",
+      "reference_count": 5
+    }
+  ],
+  "reference_citation_shapes": [
+    [
+      [
+        "chunk_id",
+        "document_id"
+      ],
+      298
+    ],
+    [
+      [
+        "<empty>"
+      ],
+      33
+    ]
+  ],
+  "candidate_citation_shapes": [
+    [
+      [
+        "chunk_id",
+        "document_id"
+      ],
+      285
+    ],
+    [
+      [
+        "<empty>"
+      ],
+      46
+    ]
+  ],
+  "reference_citation_majority": {
+    "shape": [
+      "chunk_id",
+      "document_id"
+    ],
+    "count": 298,
+    "ratio": 0.9003
+  },
+  "candidate_citation_majority": {
+    "shape": [
+      "chunk_id",
+      "document_id"
+    ],
+    "count": 285,
+    "ratio": 0.861
+  },
+  "alarms": [
+    "new_top_level_keys: 5 ≥ 3",
+    "rare_key_losses: 1"
+  ]
+}

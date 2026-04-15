@@ -1,0 +1,28 @@
+{
+  "schema_version": "fine_tuning_run.v1",
+  "experiment_name": "ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix-eval_v2_2026-20260415-111812",
+  "mode": "submit",
+  "status": "validating_files",
+  "created_at": "2026-04-15T02:18:12+00:00",
+  "base_model": "gpt-4.1-mini-2025-04-14",
+  "model_version": "pepper-ops-sft-v1.2.1",
+  "dataset_version": "ds_v12",
+  "prompt_version": "prompt_v5_methodfix",
+  "eval_version": "eval_v2_2026",
+  "training_file_path": "artifacts/fine_tuning/openai_sft_train.jsonl",
+  "validation_file_path": "artifacts/fine_tuning/openai_sft_validation.jsonl",
+  "training_rows": 341,
+  "validation_rows": 55,
+  "suffix": "ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix-eval_v2_2026-2026041",
+  "hyperparameters": {
+    "n_epochs": 2,
+    "learning_rate_multiplier": 1.0
+  },
+  "job_id": "ftjob-7FKMcyxqKdrzDBDmfHqqlMxI",
+  "training_file_id": "file-QYtvMWXPktuR4eq3b1orZt",
+  "validation_file_id": "file-Pv8fZHhxphywb87sygVRb2",
+  "fine_tuned_model": null,
+  "result_files": [],
+  "error": null,
+  "notes": "ds_v12.1 retry with conservative hyperparameters (lr=1.0, epochs=2). Fixes ds_v12 catastrophic forgetting (lr=2.0+epochs=3 caused schema drift). Training data: batch22 cluster A 12 + cluster B 24 (variation extended) + validation 55. See ds_v12_failure_postmortem.md."
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": "fine_tuning_run.v1",
+  "experiment_name": "ft-sft-ftbase-DTryNJg3-ds_v11_plus_batch22-prompt_v5_methodfix-eval_v2_2026-20260415-114636",
+  "mode": "dry_run",
+  "status": "prepared",
+  "created_at": "2026-04-15T02:46:36+00:00",
+  "base_model": "ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+  "model_version": "pepper-ops-sft-v1.2.1-incremental",
+  "dataset_version": "ds_v11_plus_batch22",
+  "prompt_version": "prompt_v5_methodfix",
+  "eval_version": "eval_v2_2026",
+  "training_file_path": "artifacts/fine_tuning/openai_sft_train_batch22_only.jsonl",
+  "validation_file_path": "artifacts/fine_tuning/openai_sft_validation_batch22_only.jsonl",
+  "training_rows": 30,
+  "validation_rows": 6,
+  "suffix": "ds-v11-b1-batch22-inc",
+  "hyperparameters": {
+    "n_epochs": 2,
+    "learning_rate_multiplier": 1.0
+  },
+  "job_id": null,
+  "training_file_id": null,
+  "validation_file_id": null,
+  "fine_tuned_model": null,
+  "result_files": [],
+  "error": null,
+  "notes": "ds_v11.B1 incremental fine-tune: starts from ds_v11 DTryNJg3, adds only batch22 (36 rows: cluster A 12 + cluster B 24). Conservative hyperparameters. Parallel to ds_v12.1 (full re-training) for A vs B method comparison. See ds_v12_failure_postmortem.md §4 hybrid strategy."
+}
