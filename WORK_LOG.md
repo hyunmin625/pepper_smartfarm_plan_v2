@@ -2,13 +2,36 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
-## 2026-04-14
+## 2026-04-15
 
-### Gemini frontier challenger 고정 + runtime provider 추가
-- 사용자 결정에 따라 RAG-first frontier challenger를 `gemini-2.5-flash`로 고정했다. 다만 production champion은 그대로 `ds_v11` frozen baseline으로 유지하고, Gemini 경로는 challenger/shadow lane으로만 다룬다.
-- `llm-orchestrator/llm_orchestrator/client.py`에 `gemini` provider를 추가했다. `google-genai` SDK가 있으면 `response_mime_type=application/json`과 `thinking_budget=0` 설정으로 structured output 경로를 호출하고, malformed JSON repair도 같은 provider로 재호출한다.
-- `llm-orchestrator/llm_orchestrator/model_registry.py`와 `artifacts/runtime/llm_orchestrator/model_registry.json`에 `gemini_flash_frontier -> gemini-2.5-flash` alias를 추가하고 prompt version을 `sft_v11_rag_frontier`로 고정했다.
-- `scripts/run_llm_orchestrator_smoke.py`, `.env.example`, `llm-orchestrator/README.md`, `docs/runtime_integration_status.md`, `README.md`, `PROJECT_STATUS.md`, `todo.md`를 함께 갱신해 runtime/provider 범위와 현재 승격 조건을 맞췄다.
+### v11 초과 재도전 준비용 batch24 corrective seed 추가
+- 사용자의 요청에 따라 `v11` 초과 가능성을 높이는 선행 작업만 먼저 진행하고, `100% 보장`이 없으면 전면 재학습은 열지 않는 기준을 다시 고정했다.
+- `scripts/generate_batch24_v11_breakthrough_prep.py`를 추가해 두 가지 축만 보강했다.
+  - `edge-eval-021` 전용 corrective: `reentry_pending + dry_room comm loss`에서 `enter_safe_mode`를 금지하고 `block_action + create_alert`를 우선 고정하는 `failure_response` `4건`
+  - low-count family rebalance: `state_judgement` `2건`, `harvest_drying` `4건`, drying `sensor_fault` `1건`, `nutrient_risk` `1건`, `inspect_crop` exact enum robot contract `2건`
+- 생성 산출물:
+  - `data/examples/failure_response_samples_batch24_reentry_block_priority.jsonl` `4건`
+  - `data/examples/state_judgement_samples_batch24_lowcount_rebalance.jsonl` `8건`
+  - `data/examples/robot_task_samples_batch24_inspect_crop_contract.jsonl` `2건`
+- 검증 결과:
+  - `python3 scripts/validate_training_examples.py --sample-files ...batch24...` 기준 `sample_rows 14`, duplicate `0`, sample/eval errors `0`
+  - `python3 scripts/audit_training_data_consistency.py ...batch24...` 기준 duplicate/contradiction/eval overlap `0`
+  - 전체 seed 기준 `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`도 모두 `errors 0`
+- dataset rebuild:
+  - `python3 scripts/build_training_jsonl.py --include-source-file`로 combined training을 `535건`으로 재생성
+  - `python3 scripts/build_openai_sft_datasets.py` 결과 현재 기본 split은 `train 521`, `validation 14`
+  - `python3 scripts/report_training_sample_stats.py` 기준 저빈도 family는 `state_judgement 9`, `harvest_drying 8`, `sensor_fault 30`, `nutrient_risk 18`, `robot_task_prioritization 62`, `failure_response 71`로 갱신
+- 판단:
+  - 이번 작업은 `재학습 실행`이 아니라 `재학습 전 준비 강화`다.
+  - `real shadow` 누적과 `100% 보장` 조건은 여전히 충족되지 않아 전면 재학습은 계속 보류한다.
+
+### 즉시 착수 우선순위 seed 100건 달성
+- `scripts/generate_batch23_seed_completion.py`를 추가해 `action_recommendation`과 `forbidden_action` seed 부족분을 batch23 completion 파일로 생성했다.
+- 생성 산출물은 `data/examples/action_recommendation_samples_batch23_seed_completion.jsonl` `51건`, `data/examples/forbidden_action_samples_batch23_seed_completion.jsonl` `74건`이며, 누적 기준 두 task family 모두 총 `100건`을 충족한다.
+- `python3 scripts/validate_training_examples.py --sample-files data/examples/action_recommendation_samples*.jsonl data/examples/forbidden_action_samples*.jsonl --eval-files evals/action_recommendation_eval_set.jsonl evals/forbidden_action_eval_set.jsonl` 기준 `sample_rows 200`, duplicate `0`, sample/eval errors `0`을 확인했다.
+- 이에 따라 `todo.md`의 `#23. 즉시 착수 우선순위`에서 `행동추천 JSON 샘플 100개 작성`, `금지행동 샘플 100개 작성` 두 항목을 완료 처리했고, `data/examples/README.md`, `docs/dataset_taxonomy.md`의 관련 설명도 갱신했다.
+
+## 2026-04-14
 
 ### AI 어시스턴트 모델 경로 재통합
 - 사용자 결정에 따라 AI 어시스턴트와 decision 경로를 다시 하나의 모델 경로로 통합했다. `/ai/chat`의 DB grounding과 `task_type="chat"` 입력 구조는 유지하되, 더 이상 `chat_provider` / `chat_model_id`나 별도 `AppServices.chat_client`를 두지 않는다.
@@ -1661,3 +1684,61 @@
 - `scripts/report_risk_slice_coverage.py`에 `gt_master_dryback_high`, `nursery_cold_humid_high` slice 감사를 추가했다.
 - `python3 scripts/build_training_jsonl.py`, `python3 scripts/validate_training_examples.py`, `python3 scripts/audit_training_data_consistency.py`, `python3 scripts/report_risk_slice_coverage.py`, `python3 scripts/report_training_sample_stats.py` 기준 training은 `276건`, duplicate `0`, contradiction `0`, eval overlap `0`, `gt_master_dryback_high 4`, `nursery_cold_humid_high 2`, class imbalance ratio `11.00`으로 재고정했다.
 - `python3 scripts/build_openai_sft_datasets.py --validation-min-per-family 2 --validation-ratio 0.15 --validation-selection spread --train-output artifacts/fine_tuning/tmp_train_batch13.jsonl --validation-output artifacts/fine_tuning/tmp_validation_batch13.jsonl` 기준 현재 추천 split은 train `227`, validation `49`다.
+
+---
+
+## 2026-04-14 ~ 2026-04-15 — Phase A~K 종합 (4-way 비교 → fine-tune iteration 종결 → retriever 전환)
+
+### Phase A~E: 4-way 모델 비교 + live-rag grading 버그 수정
+- `scripts/build_openai_sft_datasets.py`에 `SFT_V11_RAG_FRONTIER_SYSTEM_PROMPT` (6,695자) 추가. `llm_orchestrator.prompt_catalog`에서 자동 로드.
+- `scripts/evaluate_fine_tuned_model.py` 대폭 확장: `--provider {openai,gemini,minimax}`, `--live-rag`, `--rag-top-k`, `--rag-corpus-paths`, `--gemini-thinking-budget`, `--pacing-seconds`, `--minimax-base-url`, `--force-rag-inline`, `--rag-index-path`. `LiveRagRetriever`, `build_retrieval_query`, `load_rag_chunk_lookup`, `inline_retrieved_context`, `strip_thinking_tags`(MiniMax `<think>` 제거) 신규.
+- **Phase E 치명 버그 발견**: `grade_case`의 `citations_in_context` 체크가 live-rag 모드에서 `case["retrieved_context"]` (static 정답)만 참조했음. `effective_retrieved_ids` 파라미터 추가로 수정. 검증: unit test 4/4 + B gpt-4.1 static 재채점 0.705→0.705 (회귀 0), C gemini live-rag 재채점 0.070→0.400 (+33점), D m2.7 live-rag 재채점 0.015→0.285 (+27점). `scripts/regrade_eval_results.py`로 11개 run을 API 재호출 없이 재채점.
+- 4-way 최종 (raw, ext200/blind50): ds_v11 0.70/0.70, gpt-4.1 frontier+RAG 0.705/0.74, gemini-2.5-flash 0.37/0.50, MiniMax M2.7 0.335/0.22. **Reasoning 모델 이 프로젝트 부적합 실증**.
+- 카테고리 단독 1위 (ext200): A ds_v11 6개, B gpt-4.1 6개, 공동 3개. C/D 0개. A crit_floor 0, B는 forbidden_action 0.05 치명.
+- 리포트: `artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`.
+
+### Phase F: Validator 후처리 + retriever 업그레이드
+- `scripts/apply_validator_postprocess.py` 신규. `scenario+summary+grading_notes` 키워드 스캔으로 `ValidatorContext` 복원 + `policy_engine.output_validator` 적용. 결과 (raw→validator, ext200): A 0.70→0.78, B 0.705→0.715, C 0.37→0.57, D 0.335→0.47. B는 blind50에서 -2점(validator rule 충돌).
+- Retriever recall@5 벤치마크 (250): `KeywordRagRetriever` 0.164, `TfidfSvdRagRetriever` 0.172, **`OpenAIEmbeddingRetriever` (text-embedding-3-small 1536d) 0.352**. `safety_policy` 0.000 → 0.542 복구. `scripts/build_rag_index.py` 재실행으로 `artifacts/rag_index/pepper_openai_embed_index.json` 생성 (226 청크).
+- 리포트: `artifacts/reports/phase_f_validator_retriever_improvements.md`.
+
+### Phase G: Retriever를 llm-orchestrator 패키지로 이관
+- `llm-orchestrator/llm_orchestrator/retriever_vector.py` 신규: `TfidfSvdRagRetriever`, `OpenAIEmbeddingRetriever`, `create_retriever()` factory. `KeywordRagRetriever`와 동일 인터페이스.
+- `llm-orchestrator/llm_orchestrator/__init__.py` export 확장.
+- `ops-api/ops_api/config.py`에 `retriever_type`/`retriever_rag_index_path` 필드 추가. `ops-api/ops_api/app.py`가 `create_retriever(...)` 주입 + 실패 시 keyword fallback.
+- `scripts/validate_vector_retrievers.py` 신규: 8개 invariant.
+- `docs/ds_v12_batch22_hard_safety_reinforcement_plan.md` 신규: ds_v11 hard-safety 5건 2개 클러스터(A enter_safe_mode vs block_action, B GT Master dry-back) 설계.
+- `.env.example`에 `OPS_API_RETRIEVER_TYPE`/`OPS_API_RETRIEVER_RAG_INDEX_PATH` 추가.
+
+### Phase H: ds_v12 첫 fine-tune 시도 (catastrophic forgetting 실패)
+- `scripts/generate_batch22_hard_safety_reinforcement.py` 신규. batch22 총 36건 (Cluster A 12 + Cluster B 24): `failure_response_samples_batch22_block_vs_safe_mode.jsonl` 12, `state_judgement_samples_batch22_gt_master_dryback.jsonl` 12, `action_recommendation_samples_batch22_gt_master_dryback.jsonl` 12. `validate_training_examples` sample_errors=0.
+- `training_data_config.py` glob 패턴이 batch22를 자동 인식(별도 등록 불필요). `build_training_jsonl.py` → 396 rows. `build_openai_sft_datasets.py --system-prompt-version sft_v5` → train 370, validation 14, eval overlap 0.
+- 첫 ds_v12 fine-tune submit (`ftjob-2aNsXiqI3VGXBfuUpctaTYkK`, auto hp). 결과 모델 `ft:...:DUhIsVmY`, 실제 선택 hp `batch_size=1, lr_multiplier=2.0, n_epochs=3`.
+- **평가 참사**: ext200 0.110, blind50 0.100 (ds_v11 대비 -59/-60점). `citations_present` 실패 168/42건, `blocked_action_type` 20→0 완전 소실, 17개 신규 top-level 키(`action`, `state_id`, `recommended_action` 단수 등 base 스타일).
+- 5축 postmortem (`artifacts/reports/ds_v12_failure_postmortem.md`): A citations 12가지 포맷 혼재, B risk_level 소폭 drift, C top-level 키 카오스, D target 5건 중 cluster A 2건은 판단 자체는 학습됐지만 citations 드리프트로 가려짐, **E base gpt-4.1-mini 직접 probe에서 top_keys `[action, state, failure, robot_task, citations(string array)]` — ds_v11 persona가 100% fine-tune 학습 산물임을 확증**.
+- 근본 원인: `lr=2.0 + epochs=3`이 ds_v11 persona 얇은 층을 base 쪽으로 gradient overshoot. Training JSONL은 `chunk_id` 335건/`doc_id` 0건으로 정상 — hyperparameter 문제.
+
+### Phase I: Schema drift 감지 + validation 확장 + batch22 variation 확장
+- `scripts/compare_output_schemas.py` 신규. 6개 alarm: `new_top_level_keys >= 3`, `common_key_drops >= 50%`, `rare_key_losses (ref ≥5)`, `citations_majority_ratio < 0.80`, `pass_rate_drop >= 0.15`, `strict_json_drop >= 0.05`. `--exit-on-alarm` CI 게이트. ds_v12 first-try 5/6 alarm 발동 + ds_v11 self 0 alarm 검증.
+- Validation 14→55건 (`--validation-per-family 4`). `harvest_drying` train 1건 축소는 known issue.
+- Batch22 cluster B variation 12→24건: 한국어/영어/Grodan slab/rockwool/mixed substrate/dual-slab/post_harvest_recovery/cold-night 변형. 동일 판단 유지 (`create_alert + request_human_check`, `adjust_fertigation` forbidden). validate_training_examples sample_errors=0.
+
+### Phase J: ds_v12.1 전면 재학습 + ds_v11.B1 증분 재학습 (3-way 실측)
+- `scripts/run_openai_fine_tuning_job.py`에 `--n-epochs`, `--learning-rate-multiplier`, `--batch-size` 추가. `short_model_name`이 `ft:` 프리픽스를 `ftbase-<tail>`로 변환.
+- **ds_v12.1 전면 재학습** (`ftjob-7FKMcyxqKdrzDBDmfHqqlMxI`, base gpt-4.1-mini, `lr=1.0/epochs=2`, train 341 + validation 55, trained_tokens 860k). 모델 `ft:...:DUmuCKkc`. 평가: ext **0.585** / blind **0.700** (ds_v11 동률), hard_safety 2/1, crit_floor 1/2, Target 3/5 해결 (edge-027, blind-expert-010, blind-action-004). Schema drift 2 alarm.
+- **ds_v11.B1 증분 재학습** (`ftjob-GsuYlZAtSNEmKIBjh0FUL9oa`, base `ft:...ds_v11:DTryNJg3`, `lr=1.0/epochs=2`, train 30 batch22만, trained_tokens 82k=전면의 1/10). 모델 `ft:...:DUnXF8Df`. 평가: ext **0.485** / blind **0.540**, hard_safety 1/**0**, crit_floor 3/4 (sensor_fault 0.111, nutrient_risk 0.125, robot_task 0.188 regression), Target **4/5** 해결 (edge-018, edge-027, blind-expert-010, blind-action-004). Citations majority 0.902 (persona 가장 안정적) 하지만 다른 카테고리 negative transfer. Schema drift 3 alarm.
+- **3-way 공통 미해결**: `edge-eval-021` (reentry_pending + dry_room comm loss). batch22 cluster A에 이 변형이 부족했음.
+- **Hybrid 전략 반증**: Phase F의 "증분이 소규모 보강에 유리" 가설은 실측으로 뒤집혔다. 증분은 비용/시간에서 ×10 유리하지만 persona 유지/일반화/regression 억제에서 전면에 전부 밀림.
+- 리포트: `artifacts/reports/ds_v11_vs_ds_v12_1_vs_ds_v11_b1_3way.md`, `artifacts/reports/schema_drift_ds_v12_1_vs_ds_v11.{md,json}`, `artifacts/reports/schema_drift_ds_v11_b1_vs_ds_v11.{md,json}`.
+
+### Phase K: Fine-tune iteration 공식 종결 + retriever 방향 전환
+- `artifacts/reports/fine_tune_iteration_final_postmortem.md` 신규. **3번 fine-tune 시도(ds_v12, ds_v12.1, ds_v11.B1) 모두 ds_v11 baseline을 이기지 못함**을 공식 문서화. 근본 한계는 346 rows / 14 카테고리 데이터셋의 구조적 상한이며 AND-grading 해상도가 target 해결과 regression을 상쇄한다는 점. 3개 실패 모델은 debug 자료로만 보존, production 배선 금지. batch22 36건은 미래 데이터셋 증량 프로젝트에 재사용 가능하도록 유지.
+- **Production retriever 승격**: `.env`에 `OPS_API_RETRIEVER_TYPE=openai` 추가 (기존 default `keyword`에서 명시적 전환). `ops-api/ops_api/config.py`의 `load_settings()`가 이 값을 읽고 `ops-api/ops_api/app.py::create_app()`이 `create_retriever("openai", ...)`로 `OpenAIEmbeddingRetriever`를 주입한다. Boot smoke 통과: `OpenAIEmbeddingRetriever rows=226`, routes 36. **recall@5 0.164→0.352 (2.1배), `safety_policy` 카테고리 0.000→0.542**.
+- **다음 개선 축**: (1) retriever recall hybrid RRF 개선, (2) shadow mode 실트래픽 수집, (3) validator rule 재검토 (B gpt-4.1 충돌 사례 참조), (4) 장기 데이터셋 3~5배 증량 프로젝트. Fine-tune 반복 iteration은 현 데이터셋 규모에서 종료.
+- 교훈:
+  - Fine-tune persona는 얇은 층. 공격적 lr 한 번으로 base 쪽으로 overwrite 가능.
+  - Grading drift와 model drift를 구분하라 (Phase E `citations_in_context` 버그 사례).
+  - Base 모델 probe는 재학습 전후 필수 (persona 유지 여부 자동 감지).
+  - 작은 corrective batch (전체의 6~10%)는 negative transfer 위험 큼.
+  - 학술적 점수와 운영 적합성은 다르다: ds_v11 raw 0.70 = 3겹 안전망 위에서 validator-후 0.90.
+  - Retriever 업그레이드가 fine-tune 반복보다 레버리지 훨씬 큼.

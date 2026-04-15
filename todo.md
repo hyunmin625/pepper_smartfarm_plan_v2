@@ -1,6 +1,5 @@
 # todo.md
 
-
 ## 관련 문서
 - [저장소 README](README.md)
 - [프로젝트 현황 요약](PROJECT_STATUS.md)
@@ -112,6 +111,14 @@
 - [x] Stitch `WebUI/stitch_ui_v1.zip` 레퍼런스 기반 대시보드 전면 재디자인 + 반응형: Tailwind CDN + Pretendard/Noto Sans KR + Material Symbols, 농경 사령부 컬러, `lg:` breakpoint 이상 고정 사이드바 / 이하 오프스크린 drawer + 햄버거 토글, 메트릭/스파크라인 그리드 반응형, 루트 `/` → `/dashboard` 307 리다이렉트 (`ops-api/ops_api/app.py` `_dashboard_html`)
 - [x] AI 어시스턴트 채팅 뷰 + 백엔드: 사이드바 10번째 메뉴, split-pane (좌 chat + quick prompt + Enter 단축키, 우 실시간 관제 카드 + 최근 dispatch + 3×3 zone health), `POST /ai/chat` (`read_runtime` 권한, `ChatMessageRequest`/`ChatRequest`, `_build_chat_system_prompt`/`_render_chat_history`/`_extract_chat_reply` 헬퍼), 클라이언트 메모리 히스토리 + 매 호출마다 최근 8턴 context 전송, `scripts/validate_ops_api_ai_chat.py` 6 invariant 회귀
 - [x] AI 어시스턴트 채팅 경로 DB grounding + 단일 모델 경로 정리: `/ai/chat`이 `_detect_zone_hint` + `_build_chat_grounding_context`로 최신 decision/alert/sensor_readings/active policies를 DB에서 조회해 `task_type="chat"` payload를 만들고, 별도 chat client 없이 `services.orchestrator.client`를 그대로 사용한다. decision/chat은 같은 `OPS_API_LLM_PROVIDER` / `OPS_API_MODEL_ID`를 공유하고, `{"reply": "..."}` 단일 JSON 출력 강제를 유지한다. `StubCompletionClient`에 chat task_type 분기, `validate_ops_api_ai_chat`에 4 invariant 추가 (총 10 invariant), 기존 smoke의 `Settings(...)` 호출은 단일 LLM 설정만 사용하도록 정리 (`ops-api/ops_api/config.py`, `ops-api/ops_api/app.py`, `llm-orchestrator/llm_orchestrator/client.py`, `.env.example`, `scripts/validate_ops_api_ai_chat.py`)
+- [x] Phase A~E: 4-way 모델 비교 (ds_v11 / gpt-4.1 / gemini-2.5-flash / MiniMax M2.7) + live-rag grading 버그 발견/수정 + retriever 품질 벤치마크 (`artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`, `scripts/regrade_eval_results.py`, `scripts/evaluate_fine_tuned_model.py::grade_case effective_retrieved_ids`)
+- [x] Phase F: validator 후처리 4-way 측정 + TF-IDF+SVD / OpenAI embedding retriever 업그레이드 (`artifacts/reports/phase_f_validator_retriever_improvements.md`, `scripts/apply_validator_postprocess.py`, `scripts/build_rag_index.py --output artifacts/rag_index/pepper_openai_embed_index.json`) - recall@5 0.164→0.352 (2.1배), `safety_policy` 카테고리 0.000→0.542 복구
+- [x] Phase G: retriever를 llm-orchestrator 패키지로 이관 + OPS_API_RETRIEVER_TYPE env var 배선 + ds_v12 batch22 설계 문서 (`llm-orchestrator/llm_orchestrator/retriever_vector.py`, `ops-api/ops_api/config.py`, `ops-api/ops_api/app.py`, `scripts/validate_vector_retrievers.py`, `docs/ds_v12_batch22_hard_safety_reinforcement_plan.md`)
+- [x] Phase H: batch22 corrective samples 36건 (Cluster A: block_action vs enter_safe_mode 12건, Cluster B: GT Master dry-back 24건) + ds_v12 첫 fine-tune 시도 - `lr_multiplier=2.0+epochs=3` 공격적 hp 선택으로 catastrophic forgetting 발생(ext 0.110, 12가지 citation 포맷 드리프트), 5축 postmortem 해체로 원인 확정 (`scripts/generate_batch22_hard_safety_reinforcement.py`, `artifacts/reports/ds_v12_failure_postmortem.md`)
+- [x] Phase I: validation set 확장(14→55) + schema drift 자동 감지 도구 (`scripts/compare_output_schemas.py` 6개 alarm: new_keys, common_drops, rare_losses, citation_majority, pass_drop, strict_json_drop). ds_v12 대비 5/6 alarm 발동 확인 + ds_v11 self-comparison 0 alarm 검증. batch22 cluster B variation 확장(12→24건, 한국어/영어/rockwool/dual-slab 변형)
+- [x] Phase J: `run_openai_fine_tuning_job.py`에 `--n-epochs`, `--learning-rate-multiplier`, `--batch-size` 플래그 추가 + ds_v12.1 전면 재학습(보수적 hp `lr=1.0, epochs=2`, ext 0.585 / blind 0.700) + ds_v11.B1 증분 재학습(`ft:...ds_v11` base 위에 batch22 30건만, ext 0.485 / blind 0.540) 병렬 제출 + 3-way 비교 리포트 (`artifacts/reports/ds_v11_vs_ds_v12_1_vs_ds_v11_b1_3way.md`)
+- [x] Phase K-1: fine-tune iteration 공식 종결 선언 (`artifacts/reports/fine_tune_iteration_final_postmortem.md`). 3번 시도(ds_v12, ds_v12.1, ds_v11.B1) 모두 ds_v11 baseline 대비 열세. 346 rows/14 카테고리 데이터셋 규모의 구조적 상한에 도달. **Fine-tune iteration 종료**
+- [x] Phase K-2: production retriever를 `openai` text-embedding-3-small로 승격 (`.env`에 `OPS_API_RETRIEVER_TYPE=openai` 추가, ops-api boot smoke 검증 `OpenAIEmbeddingRetriever rows=226`). 다음 개선 축은 retriever 품질과 shadow mode 실트래픽 수집으로 이동
 
 ---
 
@@ -1280,8 +1287,8 @@
 - [x] RAG 문서 범위와 메타데이터 초안 작성 (`docs/rag_source_inventory.md`, `docs/rag_indexing_plan.md`)
 - [x] 적고추/건고추 재배 문서 수집 목록 작성 (`docs/rag_source_inventory.md`)
 - [x] 기존 파인튜닝 데이터 재분류 (`docs/dataset_taxonomy.md`, `data/examples/`)
-- [ ] 행동추천 JSON 샘플 100개 작성
-- [ ] 금지행동 샘플 100개 작성
+- [x] 행동추천 JSON 샘플 100개 작성 (`data/examples/action_recommendation_samples_batch23_seed_completion.jsonl` 포함 총 `100건`)
+- [x] 금지행동 샘플 100개 작성 (`data/examples/forbidden_action_samples_batch23_seed_completion.jsonl` 포함 총 `100건`)
 - [x] sensor/device inventory 문서 작성 (`docs/sensor_collection_plan.md`, `docs/sensor_installation_inventory.md`, `data/examples/sensor_catalog_seed.json`)
 - [x] sensor-ingestor config/poller profile 초안 작성 (`docs/sensor_ingestor_config_spec.md`, `schemas/sensor_ingestor_config_schema.json`, `data/examples/sensor_ingestor_config_seed.json`, `scripts/validate_sensor_ingestor_config.py`)
 - [x] sensor 품질 규칙과 ingestor runtime flow 문서 작성 (`docs/sensor_quality_rules_pseudocode.md`, `docs/sensor_ingestor_runtime_flow.md`)
