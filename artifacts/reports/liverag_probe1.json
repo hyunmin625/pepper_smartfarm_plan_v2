@@ -1,0 +1,112 @@
+{
+  "schema_version": "fine_tuned_model_eval.v1",
+  "status": "completed",
+  "evaluated_at": "2026-04-14T09:54:25+00:00",
+  "model": "gemini-2.5-flash",
+  "system_prompt": "You are pepper-ops, a senior red pepper (적고추) greenhouse agronomy expert and control-system safety officer. You are NOT a fine-tuned checkpoint — you are a general-purpose frontier model being grounded on this project's red pepper greenhouse domain via retrieved_context. Treat retrieved_context as your primary source of truth about this farm's historical decisions, policies, and incident reviews. If retrieved_context disagrees with your general knowledge, prefer retrieved_context and cite it.\n\nOUTPUT CONTRACT:\n- Return a single JSON object. No markdown fences, no prose, no explanations outside JSON.\n- Required top-level keys for state, action, failure, and robot-task outputs: risk_level, confidence, retrieval_coverage, citations, follow_up.\n- risk_level ∈ {unknown, low, medium, high, critical}. It is the confirmed/most defensible situation risk, not the urgency of an individual action.\n- confidence ∈ [0.0, 1.0] as a float. Use ≤0.55 when sensor quality or retrieval coverage is weak.\n- retrieval_coverage ∈ {sufficient, partial, insufficient, not_used}. Only use not_used when retrieved_context is empty.\n- citations is a list of {chunk_id, document_id} objects drawn ONLY from retrieved_context items. Never invent chunk_ids.\n- follow_up and required_follow_up are lists of short action objects describing what a human should re-check.\n\nALLOWED ACTION TYPES (recommended_actions[*].action_type): observe_only, create_alert, request_human_check, adjust_fan, adjust_shade, adjust_vent, short_irrigation, adjust_fertigation, adjust_heating, adjust_co2, pause_automation, enter_safe_mode, create_robot_task, block_action. No other values allowed.\nALLOWED ROBOT TASK TYPES (robot_tasks[*].task_type, only for robot_task_prioritization): harvest_candidate_review, inspect_crop, skip_area, manual_review. Never invent wrapper names like create_harvest_plan_review or create_robot_task inside robot_tasks.\n\nHARD SAFETY RULES (MANDATORY — these override any other reasoning):\n1. Worker present / manual_override / safe_mode active → risk_level=critical; block_action + create_alert mandatory;    no device-control actions, no robot tasks. request_human_check may be added but never replaces block_action.\n2. Core water-delivery path (irrigation / source water / dry room) has communication_loss or readback loss →    risk_level=critical; enter_safe_mode + request_human_check mandatory. pause_automation alone is insufficient.\n3. Core climate evidence uninterpretable AND climate control already ran on degraded evidence →    risk_level=high; pause_automation + request_human_check mandatory.\n4. Rootzone evidence conflicting or uninterpretable → risk_level=unknown; pause_automation + request_human_check    mandatory; do NOT emit short_irrigation or adjust_fertigation until manual confirmation restores missing evidence.\n5. Task=forbidden_action and blocked_action_type=adjust_fertigation while rootzone evidence is degraded →    decision=approval_required (not block).\n6. Zone clearance uncertain or aisle unsafe → use skip_area, not generic review or create_robot_task.\n7. Task=sensor_fault with stale/missing/calibration_error/flatline/cross-sensor inconsistency → risk_level=unknown    unless physical crop damage or hard safety hazard is already confirmed; use pause_automation + request_human_check;    avoid device-control actions.\n8. Task=rootzone_diagnosis or nutrient_risk with key drain/substrate/WC/EC/pH sensor stale/missing/flatline →    risk_level=unknown unless physical damage or hard hazard confirmed.\n9. rootzone_diagnosis with GT Master dry-back overrun + low dawn WC + repeated afternoon wilt and interpretable evidence →    risk_level=high; create_alert + request_human_check mandatory; adjust_fertigation forbidden.\n10. nutrient_risk with large EC gradient + low drain fraction and interpretable evidence → risk_level=high;     create_alert + request_human_check mandatory; adjust_fertigation only after human review.\n11. action_recommendation for GT Master dry-back overload or repeated afternoon wilt → create_alert + request_human_check     mandatory; adjust_fertigation must NOT be the primary answer.\n12. climate_risk for Grodan Delta 6.5 nursery block after sunset with cold-humid leaf-wet conditions → risk_level=high;     create_alert + request_human_check mandatory; do NOT reflexively adjust_vent.\n13. Harvest or drying planning → request_human_check mandatory; create_robot_task may supplement but never replaces human review.\n14. robot_task_prioritization: blocked/inaccessible candidates → skip_area first; low-confidence hotspots → inspect_crop.\n15. forbidden_action: decision ∈ {allow, block, approval_required}. When fertigation evidence is incomplete due to     EC/pH/drain sensor faults, prefer approval_required over block unless a hard safety interlock is active.\n16. CO2 below target with vent_open_lock or similar lock active → risk_level=high; request_human_check required;     forbid adjust_co2 until the lock state is reviewed; create_alert only supplemental.\n17. Winter nursery low-temperature + low-light → risk_level=high default; create_alert + request_human_check mandatory;     adjust_heating only as supplemental reviewed action.\n18. Spring transplanting/establishment cold-night + overwet (rockwool slab, Grodan substrate) → risk_level=medium default;     request_human_check required; adjust_heating only with human review; short_irrigation forbidden.\n19. Flowering heat + strong radiation → risk_level=high; create_alert + request_human_check mandatory;     adjust_fan / adjust_vent / limited adjust_shade may supplement.\n\nRETRIEVED_CONTEXT USAGE PROTOCOL:\n- input.retrieved_context is an ordered list of RAG chunks, each with chunk_id, document_id, and text body.\n- Before deciding, scan retrieved_context for: prior decisions on similar zone states, active farm policies,   HSV/OV hard rules, and any incident reviews with matching failure modes.\n- Your citations[] MUST reference 1-3 chunk_ids that materially shaped your decision. If retrieval_coverage is   sufficient or partial but citations is empty, that is a contract violation.\n- If retrieved_context is empty, set retrieval_coverage=not_used and citations=[]. You may still decide, but   drop confidence to ≤0.5 and prefer conservative actions (observe_only, create_alert, request_human_check).\n- Do NOT hallucinate chunk_ids, policy_ids, or decision_ids. Every id you emit must appear in the input.\n\nWHEN IN DOUBT: prefer unknown risk_level + pause_automation + request_human_check over any device action. This system is in shadow/approval mode — a conservative answer grounded in retrieved_context is better than a confident answer that bypasses a hard safety rule.",
+  "temperature": 0.0,
+  "eval_files": [
+    "evals/expert_judgement_eval_set.jsonl",
+    "evals/action_recommendation_eval_set.jsonl",
+    "evals/forbidden_action_eval_set.jsonl",
+    "evals/failure_response_eval_set.jsonl",
+    "evals/robot_task_eval_set.jsonl",
+    "evals/edge_case_eval_set.jsonl",
+    "evals/seasonal_eval_set.jsonl"
+  ],
+  "summary": {
+    "total_cases": 1,
+    "passed_cases": 0,
+    "pass_rate": 0.0,
+    "strict_json_rate": 1.0,
+    "recovered_json_rate": 1.0,
+    "average_confidence": 0.9,
+    "average_confidence_on_pass": null,
+    "average_confidence_on_fail": 0.9,
+    "by_category": {
+      "state_judgement": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      }
+    },
+    "request_errors": 0,
+    "top_failed_checks": [
+      [
+        "citations_in_context",
+        1
+      ],
+      [
+        "required_action_types_present",
+        1
+      ]
+    ],
+    "top_optional_failures": []
+  },
+  "cases": [
+    {
+      "eval_id": "pepper-eval-001",
+      "category": "state_judgement",
+      "task_type": "state_judgement",
+      "prompt_index": 1,
+      "strict_json_ok": true,
+      "recovered_json_ok": true,
+      "parse_error": null,
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "risk_level_match",
+        "follow_up_present",
+        "citations_present",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "citations_in_context",
+        "required_action_types_present"
+      ],
+      "optional_failures": [],
+      "action_types": [],
+      "robot_task_types": [],
+      "citation_ids": [
+        "pepper-hydroponic-001",
+        "pepper-hydroponic-mixer-check-001"
+      ],
+      "confidence": 0.9,
+      "request_error": false,
+      "request": {
+        "task_type": "state_judgement",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      {\n        \"chunk_id\": \"pepper-graymold-ventilation-density-001\",\n        \"citation_required\": true,\n        \"document_id\": \"RAG-SRC-001\",\n        \"score\": 5.0,\n        \"source_section\": \"제8장 병해충 예방과 방제 잿빛곰팡이병 환경 관리\",\n        \"source_type\": \"official_master_guideline\",\n        \"text\": \"시설 잿빛곰팡이병은 습도 관리 실패가 핵심 원인이다. 통풍이 막히는 밀식, 낮은 투광도, 질소 과다로 연약하게 자란 상태가 겹치면 약제보다 먼저 환경을 바로잡아야 한다.\\ngrowth_stage: vegetative_growth, flowering, fruiting\\nsensor_tags: humidity, plant_density, light\\nrisk_tags: gray_mold, poor_airflow, soft_growth\\noperation_tags: ventilation, density_control, light_improvement, nitrogen_control\\ncausality_tags: high_humidity -> strongest_gray_mold_driver, dense_canopy -> lower_airflow_and_more_wetness, high_nitrogen_plus_low_light -> tender_growth\\nvisual_tags: dense_wet_canopy\\nsource_section: 제8장 병해충 예방과 방제 잿빛곰팡이병 환경 관리\",\n        \"trust_level\": \"high\"\n      },\n      {\n        \"chunk_id\": \"pepper-rootknot-symptom-uptake-001\",\n        \"citation_required\": true,\n        \"document_id\": \"RAG-SRC-001\",\n        \"score\": 5.0,\n        \"source_section\": \"제8장 병해충 예방과 방제 뿌리혹선충 피해\",\n        \"source_type\": \"official_master_guideline\",\n        \"text\": \"뿌리혹선충은 뿌리에 혹을 만들고 수분·양분 흡수를 막아 생육을 떨어뜨린다. 잔뿌리가 비정상적으로 많고 혹이 보이면서 시들음과 생육 부진이 함께 나타나면 근권 환경 문제와 별도로 선충을 의심해야 한다.\\ngrowth_stage: vegetative_growth, fruiting\\nsensor_tags: root_gall_score, wilting, growth_rate\\nrisk_tags: root_knot_nematode, uptake_failure, early_decline\\noperation_tags: root_inspection, nematode_diagnosis, soil_treatment_planning\\ncausality_tags: root_galls -> water_and_nutrient_uptake_drop, many_rootlets_in_gall -> chronic_stress, wilt_and_stunting -> nematode_suspect\\nvisual_tags: root_galls, stunted_plant\\nsource_section: 제8장 병해충 예방과 방제 뿌리혹선충 피해\",\n        \"trust_level\": \"high\"\n      },\n      {\n        \"chunk_id\": \"pepper-southern-blight-diagnosis-001\",\n        \"citation_required\": true,\n        \"document_id\": \"RAG-SRC-001\",\n        \"score\": 5.0,\n        \"source_section\": \"제8장 병해충 예방과 방제 흰비단병 진단\",\n        \"source_type\": \"official_master_guideline\",\n        \"text\": \"흰비단병은 시들음 자체보다 지제부의 비단 같은 흰 균사와 배추씨 같은 둥근 균핵이 핵심 진단 포인트다. 역병처럼 물길을 따라 퍼지지 않고 군데군데 발생하면 흰비단병 쪽으로 판단해야 한다.\\ngrowth_stage: vegetative_growth, fruiting\\nsensor_tags: vision_symptom, stem_base_inspection, root_inspection\\nrisk_tags: southern_blight, misdiagnosis_with_phytophthora, misdiagnosis_with_bacterial_wilt\\noperation_tags: disease_diagnosis, plant_removal, soil_sanitation\\ncausality_tags: silky_white_mycelium_at_stem_base -> southern_blight, mustard_seed_like_sclerotia -> diagnostic_feature, patchy_occurrence_not_water_line -> unlike_phytophthora\\nvisual_tags: silky_white_mycelium, brown_wood_discoloration, small_round_sclerotia\\nsource_section: 제8장 병해충 예방과 방제 흰비단병 진단\",\n        \"trust_level\": \"high\"\n      },\n      {\n        \"chunk_id\": \"pepper-hydroponic-001\",\n        \"citation_required\": true,\n        \"document_id\": \"RAG-SRC-003\",\n        \"score\": 4.3,\n        \"source_section\": \"농사로 고추 양액재배 현장 기술지원, 배지·급액·배액 진단\",\n        \"source_type\": \"field_case\",\n        \"text\": \"양액재배에서는 배지 상태, 급액 EC/pH, 배액 EC/pH, 배액률을 함께 추적해 근권 스트레스와 양분 흡수 이상을 판단해야 한다.\\ngrowth_stage: transplanting, vegetative_growth, fruiting\\nsensor_tags: substrate_moisture, feed_ec, feed_ph, drain_ec, drain_ph, drain_rate\\nrisk_tags: rootzone_stress, nutrient_imbalance, summer_stress\\noperation_tags: fertigation, irrigation, substrate_management\\ncausality_tags: drain_ec_rise -> salt_accumulation, low_drain_rate -> rootzone_stress\\nvisual_tags: poor_vigor, leaf_discoloration\\nsource_section: 농사로 고추 양액재배 현장 기술지원, 배지·급액·배액 진단\",\n        \"trust_level\": \"medium\"\n      },\n      {\n        \"chunk_id\": \"pepper-hydroponic-mixer-check-001\",\n        \"citation_required\": true,\n        \"document_id\": \"RAG-SRC-003\",\n        \"score\": 4.3,\n        \"source_section\": \"풋고추 양액재배 급액기 점검\",\n        \"source_type\": \"field_case\",\n        \"text\": \"양액기는 하우스 단위로 교반 상태와 공급 EC·pH를 실제 배지 측정값과 맞춰 봐야 한다. 급액값만 보고 운전하면 블록별 배액 EC·pH 차이를 놓쳐 근권 불균형이 오래 지속될 수 있다.\\ngrowth_stage: transplanting, vegetative_growth, fruiting\\nsensor_tags: feed_ec, feed_ph, drain_ec, drain_ph, drain_rate\\nrisk_tags: nutrient_imbalance, sensor_mismatch, uneven_fertigation\\noperation_tags: fertigation, sensor_validation, mixer_calibration\\ncausality_tags: mixer_check_per_house -> lower_supply_error, compare_feed_and_drain_each_block -> early_detection_of_imbalance, blind_supply -> unnoticed_ec_drift\\nvisual_tags: uneven_growth, pale_leaves\\nsource_section: 풋고추 양액재배 급액기 점검\\nregion: jeonnam_haenam\\nseason: spring, summer\\ncultivar: oigochu\\ngreenhouse_type: large_plastic_house\",\n        \"trust_level\": \"medium\"\n      }\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"state_judgement\"\n}"
+      },
+      "response": {
+        "raw_content": "{\n  \"risk_level\": \"low\",\n  \"confidence\": 0.9,\n  \"retrieval_coverage\": \"partial\",\n  \"citations\": [\n    {\n      \"chunk_id\": \"pepper-hydroponic-001\",\n      \"document_id\": \"RAG-SRC-003\"\n    },\n    {\n      \"chunk_id\": \"pepper-hydroponic-mixer-check-001\",\n      \"document_id\": \"RAG-SRC-003\"\n    }\n  ],\n  \"follow_up\": [\n    {\n      \"action_type\": \"observe_only\",\n      \"description\": \"Continue monitoring environmental and rootzone conditions as they are currently stable and sensor quality is good.\"\n    }\n  ]\n}",
+        "parsed_output": {
+          "risk_level": "low",
+          "confidence": 0.9,
+          "retrieval_coverage": "partial",
+          "citations": [
+            {
+              "chunk_id": "pepper-hydroponic-001",
+              "document_id": "RAG-SRC-003"
+            },
+            {
+              "chunk_id": "pepper-hydroponic-mixer-check-001",
+              "document_id": "RAG-SRC-003"
+            }
+          ],
+          "follow_up": [
+            {
+              "action_type": "observe_only",
+              "description": "Continue monitoring environmental and rootzone conditions as they are currently stable and sensor quality is good."
+            }
+          ]
+        },
+        "response_id": null,
+        "usage": {
+          "prompt_token_count": 3496,
+          "candidates_token_count": 183,
+          "total_token_count": 4376
+        }
+      }
+    }
+  ]
+}

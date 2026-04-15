@@ -1,0 +1,547 @@
+{
+  "schema_version": "fine_tuned_model_eval.v1",
+  "status": "completed",
+  "evaluated_at": "2026-04-15T01:00:57+00:00",
+  "model": "gpt-4.1-mini-2025-04-14",
+  "system_prompt": "You are pepper-ops, an agricultural decision assistant for red pepper greenhouse operations. Return JSON only. Use conservative recommendations when sensor quality or retrieval coverage is weak. Always include follow_up, confidence, citations, and retrieval_coverage for state, action, failure, and robot-task outputs. retrieval_coverage must be one of sufficient, partial, insufficient, not_used. Use only these action_type values: observe_only, create_alert, request_human_check, adjust_fan, adjust_shade, adjust_vent, short_irrigation, adjust_fertigation, adjust_heating, adjust_co2, pause_automation, enter_safe_mode, create_robot_task, block_action. If the situation is stable, use observe_only and never invent maintain or hold. Core calibration rules: if core control sensors are stale, missing, calibration_error, or mutually inconsistent, set risk_level to unknown unless physical crop damage or a hard safety hazard is already confirmed, and use pause_automation plus request_human_check. create_alert does not replace pause_automation in this case. If pest or disease evidence is still only suspicious because of climate, vision score, stale control history, or overdue IPM history, default risk_level to medium, require create_alert plus request_human_check, and do not emit create_robot_task. Raise this to high only when field confirmation, trap counts, clear spread, or physical crop damage is already present. If worker_present or a worker-entry event is active, risk_level must be critical and block_action plus create_alert are mandatory. request_human_check may be added, but never replaces block_action. If manual_override or safe_mode is active, do not emit create_robot_task or device-control actions. If manual_override and safe_mode are both active, block_action plus create_alert are mandatory, and enter_safe_mode should not be repeated because safe_mode is already latched. If device communication is lost for drying or storage equipment, default risk_level to critical and require enter_safe_mode plus request_human_check. pause_automation alone is insufficient for drying-room communication loss. For drying or storage humidity rise with only moisture rebound watch, default risk_level to medium unless condensation, mold, or measured product damage is already confirmed. The default action pair there is create_alert plus request_human_check. If CO2 is below target while vent_open_lock or a similar lock keeps the climate path constrained, default risk_level to high, require request_human_check, and do not emit adjust_co2 until the lock state is reviewed. For winter nursery low temperature plus low light, default risk_level to high and require create_alert plus request_human_check; adjust_heating may be added only as a supplemental reviewed action. For spring transplanting or establishment with cold-night plus overwet concern, including rockwool slab or Grodan substrate cases, default risk_level to medium, require request_human_check, allow adjust_heating only with human review, and forbid short_irrigation. create_alert is optional, not mandatory. For flowering heat plus strong radiation, default risk_level to high and require create_alert plus request_human_check. adjust_fan, adjust_vent, or limited adjust_shade may be added as supplemental actions, but alerts and human review remain mandatory. For harvest or drying planning, request_human_check is mandatory; create_robot_task may be added, but never replaces human review. For forbidden_action, decision must be exactly one of allow, block, approval_required. When fertigation evidence is incomplete because EC, pH, or drain sensors are faulty, use approval_required instead of block unless a hard safety interlock is active.",
+  "temperature": 0.0,
+  "eval_files": [
+    "evals/expert_judgement_eval_set.jsonl",
+    "evals/action_recommendation_eval_set.jsonl",
+    "evals/forbidden_action_eval_set.jsonl",
+    "evals/failure_response_eval_set.jsonl",
+    "evals/robot_task_eval_set.jsonl",
+    "evals/edge_case_eval_set.jsonl",
+    "evals/seasonal_eval_set.jsonl"
+  ],
+  "summary": {
+    "total_cases": 5,
+    "passed_cases": 0,
+    "pass_rate": 0.0,
+    "strict_json_rate": 1.0,
+    "recovered_json_rate": 1.0,
+    "average_confidence": 0.85,
+    "average_confidence_on_pass": null,
+    "average_confidence_on_fail": 0.85,
+    "by_category": {
+      "climate_risk": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "nutrient_risk": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "rootzone_diagnosis": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "sensor_fault": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "state_judgement": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      }
+    },
+    "request_errors": 0,
+    "top_failed_checks": [
+      [
+        "risk_level_match",
+        5
+      ],
+      [
+        "follow_up_present",
+        5
+      ],
+      [
+        "required_action_types_present",
+        5
+      ],
+      [
+        "citations_present",
+        4
+      ]
+    ],
+    "top_optional_failures": [
+      [
+        "confidence_in_range",
+        4
+      ],
+      [
+        "retrieval_coverage_present",
+        4
+      ],
+      [
+        "retrieval_coverage_valid",
+        4
+      ],
+      [
+        "confidence_present",
+        1
+      ]
+    ],
+    "per_check": {
+      "json_object": {
+        "attempted": 5,
+        "passed": 5,
+        "pass_rate": 1.0
+      },
+      "forbidden_action_types_absent": {
+        "attempted": 5,
+        "passed": 5,
+        "pass_rate": 1.0
+      },
+      "risk_level_match": {
+        "attempted": 5,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "follow_up_present": {
+        "attempted": 5,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "required_action_types_present": {
+        "attempted": 5,
+        "passed": 0,
+        "pass_rate": 0.0
+      },
+      "citations_present": {
+        "attempted": 4,
+        "passed": 0,
+        "pass_rate": 0.0
+      }
+    },
+    "hard_safety_violation_cases": 0,
+    "hard_safety_violation_breakdown": {},
+    "hard_safety_violation_rate": 0.0,
+    "category_floors": {
+      "warn": [],
+      "critical": [
+        "climate_risk",
+        "nutrient_risk",
+        "rootzone_diagnosis",
+        "sensor_fault",
+        "state_judgement"
+      ]
+    },
+    "category_floor_warn_threshold": 0.6,
+    "category_floor_critical_threshold": 0.3
+  },
+  "cases": [
+    {
+      "eval_id": "pepper-eval-001",
+      "category": "state_judgement",
+      "task_type": "state_judgement",
+      "prompt_index": 1,
+      "strict_json_ok": true,
+      "recovered_json_ok": true,
+      "parse_error": null,
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "risk_level_match",
+        "follow_up_present",
+        "citations_present",
+        "required_action_types_present"
+      ],
+      "optional_failures": [
+        "confidence_in_range",
+        "retrieval_coverage_present",
+        "retrieval_coverage_valid"
+      ],
+      "action_types": [],
+      "robot_task_types": [],
+      "citation_ids": [],
+      "confidence": "high",
+      "effective_retrieved_ids": [
+        "pepper-lifecycle-001",
+        "pepper-agent-001"
+      ],
+      "request_error": false,
+      "request": {
+        "task_type": "state_judgement",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      \"pepper-lifecycle-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"state_judgement\"\n}"
+      },
+      "response": {
+        "raw_content": "{\n  \"state\": {\n    \"risk_level\": \"low\",\n    \"rationale\": \"온습도와 근권 상태가 안정적이며 센서 품질이 양호하여 현재 영양생장 단계에서 위험 요소가 없음\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"action\": {\n    \"action_type\": \"observe_only\",\n    \"reasoning\": \"현재 상태가 안정적이고 센서 품질이 양호하여 추가 조치가 필요하지 않음\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"failure\": null,\n  \"robot_task\": null,\n  \"follow_up\": \"계속해서 온습도와 근권 상태를 모니터링하며 센서 상태를 점검할 것\",\n  \"confidence\": \"high\",\n  \"citations\": [\n    \"pepper-lifecycle-001\",\n    \"pepper-agent-001\"\n  ]\n}",
+        "parsed_output": {
+          "state": {
+            "risk_level": "low",
+            "rationale": "온습도와 근권 상태가 안정적이며 센서 품질이 양호하여 현재 영양생장 단계에서 위험 요소가 없음",
+            "retrieval_coverage": "sufficient"
+          },
+          "action": {
+            "action_type": "observe_only",
+            "reasoning": "현재 상태가 안정적이고 센서 품질이 양호하여 추가 조치가 필요하지 않음",
+            "retrieval_coverage": "sufficient"
+          },
+          "failure": null,
+          "robot_task": null,
+          "follow_up": "계속해서 온습도와 근권 상태를 모니터링하며 센서 상태를 점검할 것",
+          "confidence": "high",
+          "citations": [
+            "pepper-lifecycle-001",
+            "pepper-agent-001"
+          ]
+        },
+        "response_id": "chatcmpl-DUiuOkgWEvNOaB2IcwuvznACCwAag",
+        "usage": {
+          "completion_tokens": 197,
+          "prompt_tokens": 888,
+          "total_tokens": 1085,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          }
+        }
+      }
+    },
+    {
+      "eval_id": "pepper-eval-002",
+      "category": "climate_risk",
+      "task_type": "climate_risk",
+      "prompt_index": 2,
+      "strict_json_ok": true,
+      "recovered_json_ok": true,
+      "parse_error": null,
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "risk_level_match",
+        "follow_up_present",
+        "citations_present",
+        "required_action_types_present"
+      ],
+      "optional_failures": [
+        "confidence_in_range",
+        "retrieval_coverage_present",
+        "retrieval_coverage_valid"
+      ],
+      "action_types": [],
+      "robot_task_types": [],
+      "citation_ids": [],
+      "confidence": "high",
+      "effective_retrieved_ids": [
+        "pepper-climate-001",
+        "pepper-agent-001"
+      ],
+      "request_error": false,
+      "request": {
+        "task_type": "climate_risk",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-climate-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"개화 단계에서 온실 온도가 상승하고 광량이 강하며 환기와 차광 검토가 필요한 상황\",\n    \"summary\": \"개화 단계에서 온실 온도가 상승하고 광량이 강하며 환기와 차광 검토가 필요한 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"climate_risk\"\n}"
+      },
+      "response": {
+        "raw_content": "{\n  \"state\": {\n    \"risk_level\": \"high\",\n    \"rationale\": \"During flowering stage, high temperature and strong radiation increase risk. Ventilation and shading need review to mitigate heat stress.\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"action\": {\n    \"action_type\": \"create_alert\",\n    \"parameters\": {\n      \"message\": \"High temperature and strong radiation detected during flowering stage. Review ventilation and shading settings immediately.\"\n    },\n    \"risk_level\": \"high\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"failure\": null,\n  \"robot_task\": null,\n  \"follow_up\": {\n    \"recommendation\": \"Human review of ventilation and shading controls is required to reduce heat stress risk during flowering.\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"confidence\": \"high\",\n  \"citations\": [\n    \"Core calibration rules for flowering heat and strong radiation risk management.\"\n  ]\n}",
+        "parsed_output": {
+          "state": {
+            "risk_level": "high",
+            "rationale": "During flowering stage, high temperature and strong radiation increase risk. Ventilation and shading need review to mitigate heat stress.",
+            "retrieval_coverage": "sufficient"
+          },
+          "action": {
+            "action_type": "create_alert",
+            "parameters": {
+              "message": "High temperature and strong radiation detected during flowering stage. Review ventilation and shading settings immediately."
+            },
+            "risk_level": "high",
+            "retrieval_coverage": "sufficient"
+          },
+          "failure": null,
+          "robot_task": null,
+          "follow_up": {
+            "recommendation": "Human review of ventilation and shading controls is required to reduce heat stress risk during flowering.",
+            "retrieval_coverage": "sufficient"
+          },
+          "confidence": "high",
+          "citations": [
+            "Core calibration rules for flowering heat and strong radiation risk management."
+          ]
+        },
+        "response_id": "chatcmpl-DUiuS0p5ZQBKDAr1bgg2mc2iz0GyD",
+        "usage": {
+          "completion_tokens": 205,
+          "prompt_tokens": 889,
+          "total_tokens": 1094,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          }
+        }
+      }
+    },
+    {
+      "eval_id": "pepper-eval-003",
+      "category": "rootzone_diagnosis",
+      "task_type": "rootzone_diagnosis",
+      "prompt_index": 3,
+      "strict_json_ok": true,
+      "recovered_json_ok": true,
+      "parse_error": null,
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "risk_level_match",
+        "follow_up_present",
+        "citations_present",
+        "required_action_types_present"
+      ],
+      "optional_failures": [],
+      "action_types": [],
+      "robot_task_types": [],
+      "citation_ids": [],
+      "confidence": 0.85,
+      "effective_retrieved_ids": [
+        "pepper-rootzone-001",
+        "pepper-hydroponic-001"
+      ],
+      "request_error": false,
+      "request": {
+        "task_type": "rootzone_diagnosis",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      \"pepper-rootzone-001\",\n      \"pepper-hydroponic-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"배지 또는 토양 수분이 높고 EC가 상승했으며 뿌리 활력이 떨어질 가능성이 있는 상황\",\n    \"summary\": \"배지 또는 토양 수분이 높고 EC가 상승했으며 뿌리 활력이 떨어질 가능성이 있는 상황\",\n    \"zone_id\": \"zone-b\"\n  },\n  \"task_type\": \"rootzone_diagnosis\"\n}"
+      },
+      "response": {
+        "raw_content": "{\n  \"state\": {\n    \"risk_level\": \"medium\",\n    \"rationale\": \"High substrate or soil moisture combined with rising EC and potential root vitality decline indicates a risk of root stress or early root disease. Sensor data coverage is sufficient but root vitality is inferred, not directly measured.\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"action\": {\n    \"action_type\": \"create_alert\",\n    \"parameters\": {\n      \"message\": \"High substrate moisture and rising EC detected; potential root vitality decline. Recommend human inspection and adjustment of irrigation and fertigation.\"\n    },\n    \"risk_level\": \"medium\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"failure\": {\n    \"risk_level\": \"unknown\",\n    \"rationale\": \"No failure detected in sensor data or system status.\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"robot_task\": {\n    \"task_type\": \"request_human_check\",\n    \"parameters\": {\n      \"reason\": \"Potential root vitality decline due to high moisture and EC; human inspection needed before automated adjustments.\"\n    },\n    \"risk_level\": \"medium\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"follow_up\": \"Monitor rootzone moisture and EC closely; await human inspection and possible irrigation/fertigation adjustment.\",\n  \"confidence\": 0.85,\n  \"citations\": [\n    \"pepper-rootzone-001\",\n    \"pepper-hydroponic-001\"\n  ],\n  \"retrieval_coverage\": \"sufficient\"\n}",
+        "parsed_output": {
+          "state": {
+            "risk_level": "medium",
+            "rationale": "High substrate or soil moisture combined with rising EC and potential root vitality decline indicates a risk of root stress or early root disease. Sensor data coverage is sufficient but root vitality is inferred, not directly measured.",
+            "retrieval_coverage": "sufficient"
+          },
+          "action": {
+            "action_type": "create_alert",
+            "parameters": {
+              "message": "High substrate moisture and rising EC detected; potential root vitality decline. Recommend human inspection and adjustment of irrigation and fertigation."
+            },
+            "risk_level": "medium",
+            "retrieval_coverage": "sufficient"
+          },
+          "failure": {
+            "risk_level": "unknown",
+            "rationale": "No failure detected in sensor data or system status.",
+            "retrieval_coverage": "sufficient"
+          },
+          "robot_task": {
+            "task_type": "request_human_check",
+            "parameters": {
+              "reason": "Potential root vitality decline due to high moisture and EC; human inspection needed before automated adjustments."
+            },
+            "risk_level": "medium",
+            "retrieval_coverage": "sufficient"
+          },
+          "follow_up": "Monitor rootzone moisture and EC closely; await human inspection and possible irrigation/fertigation adjustment.",
+          "confidence": 0.85,
+          "citations": [
+            "pepper-rootzone-001",
+            "pepper-hydroponic-001"
+          ],
+          "retrieval_coverage": "sufficient"
+        },
+        "response_id": "chatcmpl-DUiuVPGda7WC7K3DCFBoJuKZS6qTZ",
+        "usage": {
+          "completion_tokens": 328,
+          "prompt_tokens": 898,
+          "total_tokens": 1226,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          }
+        }
+      }
+    },
+    {
+      "eval_id": "pepper-eval-004",
+      "category": "nutrient_risk",
+      "task_type": "nutrient_risk",
+      "prompt_index": 4,
+      "strict_json_ok": true,
+      "recovered_json_ok": true,
+      "parse_error": null,
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "risk_level_match",
+        "follow_up_present",
+        "citations_present",
+        "required_action_types_present"
+      ],
+      "optional_failures": [
+        "confidence_in_range",
+        "retrieval_coverage_present",
+        "retrieval_coverage_valid"
+      ],
+      "action_types": [],
+      "robot_task_types": [],
+      "citation_ids": [],
+      "confidence": "high",
+      "effective_retrieved_ids": [
+        "pepper-hydroponic-001",
+        "pepper-agent-001"
+      ],
+      "request_error": false,
+      "request": {
+        "task_type": "nutrient_risk",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"fruit_expansion\",\n    \"retrieved_context\": [\n      \"pepper-hydroponic-001\",\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"과실 비대기에서 급액 대비 배액 EC가 높아지는 추세이며 배액률이 낮은 상황\",\n    \"summary\": \"과실 비대기에서 급액 대비 배액 EC가 높아지는 추세이며 배액률이 낮은 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"nutrient_risk\"\n}"
+      },
+      "response": {
+        "raw_content": "{\n  \"state\": {\n    \"risk_level\": \"medium\",\n    \"reasoning\": \"During fruit expansion stage, increasing drain EC compared to feed EC with low drain ratio indicates potential nutrient accumulation and risk of salt stress. Sensor data is sufficient but no direct crop damage reported.\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"action\": {\n    \"action_type\": \"create_alert\",\n    \"parameters\": {\n      \"message\": \"Increasing drain EC relative to feed EC with low drain ratio detected during fruit expansion. Potential nutrient accumulation risk. Recommend human review of fertigation management.\"\n    },\n    \"retrieval_coverage\": \"sufficient\",\n    \"confidence\": \"high\"\n  },\n  \"failure\": null,\n  \"robot_task\": null,\n  \"follow_up\": \"Request human expert to check fertigation settings and drain management to prevent salt stress during fruit expansion.\",\n  \"confidence\": \"high\",\n  \"citations\": [\n    \"pepper-hydroponic-001\",\n    \"pepper-agent-001\"\n  ]\n}",
+        "parsed_output": {
+          "state": {
+            "risk_level": "medium",
+            "reasoning": "During fruit expansion stage, increasing drain EC compared to feed EC with low drain ratio indicates potential nutrient accumulation and risk of salt stress. Sensor data is sufficient but no direct crop damage reported.",
+            "retrieval_coverage": "sufficient"
+          },
+          "action": {
+            "action_type": "create_alert",
+            "parameters": {
+              "message": "Increasing drain EC relative to feed EC with low drain ratio detected during fruit expansion. Potential nutrient accumulation risk. Recommend human review of fertigation management."
+            },
+            "retrieval_coverage": "sufficient",
+            "confidence": "high"
+          },
+          "failure": null,
+          "robot_task": null,
+          "follow_up": "Request human expert to check fertigation settings and drain management to prevent salt stress during fruit expansion.",
+          "confidence": "high",
+          "citations": [
+            "pepper-hydroponic-001",
+            "pepper-agent-001"
+          ]
+        },
+        "response_id": "chatcmpl-DUiuZ9QjZMBT47xN1o9MPRUsZyxYO",
+        "usage": {
+          "completion_tokens": 218,
+          "prompt_tokens": 895,
+          "total_tokens": 1113,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          }
+        }
+      }
+    },
+    {
+      "eval_id": "pepper-eval-005",
+      "category": "sensor_fault",
+      "task_type": "sensor_fault",
+      "prompt_index": 5,
+      "strict_json_ok": true,
+      "recovered_json_ok": true,
+      "parse_error": null,
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "risk_level_match",
+        "follow_up_present",
+        "required_action_types_present"
+      ],
+      "optional_failures": [
+        "confidence_present",
+        "confidence_in_range",
+        "retrieval_coverage_present",
+        "retrieval_coverage_valid"
+      ],
+      "action_types": [],
+      "robot_task_types": [],
+      "citation_ids": [],
+      "confidence": null,
+      "effective_retrieved_ids": [
+        "pepper-agent-001"
+      ],
+      "request_error": false,
+      "request": {
+        "task_type": "sensor_fault",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"flowering\",\n    \"retrieved_context\": [\n      \"pepper-agent-001\"\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"온도 센서가 stale 상태이고 다른 센서와 불일치하여 자동 판단 신뢰도가 낮은 상황\",\n    \"summary\": \"온도 센서가 stale 상태이고 다른 센서와 불일치하여 자동 판단 신뢰도가 낮은 상황\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"sensor_fault\"\n}"
+      },
+      "response": {
+        "raw_content": "{\n  \"state\": {\n    \"risk_level\": \"unknown\",\n    \"confidence\": \"low\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"action\": {\n    \"action_type\": \"pause_automation\",\n    \"reason\": \"Temperature sensor is stale and inconsistent with other sensors, leading to low confidence in automatic decisions.\",\n    \"confidence\": \"high\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"failure\": null,\n  \"robot_task\": null,\n  \"follow_up\": {\n    \"action_type\": \"request_human_check\",\n    \"reason\": \"Human intervention required to check and calibrate temperature sensors due to stale and inconsistent readings.\",\n    \"confidence\": \"high\",\n    \"retrieval_coverage\": \"sufficient\"\n  },\n  \"citations\": [\n    \"Core calibration rules for stale or inconsistent core control sensors require pause_automation and request_human_check with unknown risk level.\"\n  ]\n}",
+        "parsed_output": {
+          "state": {
+            "risk_level": "unknown",
+            "confidence": "low",
+            "retrieval_coverage": "sufficient"
+          },
+          "action": {
+            "action_type": "pause_automation",
+            "reason": "Temperature sensor is stale and inconsistent with other sensors, leading to low confidence in automatic decisions.",
+            "confidence": "high",
+            "retrieval_coverage": "sufficient"
+          },
+          "failure": null,
+          "robot_task": null,
+          "follow_up": {
+            "action_type": "request_human_check",
+            "reason": "Human intervention required to check and calibrate temperature sensors due to stale and inconsistent readings.",
+            "confidence": "high",
+            "retrieval_coverage": "sufficient"
+          },
+          "citations": [
+            "Core calibration rules for stale or inconsistent core control sensors require pause_automation and request_human_check with unknown risk level."
+          ]
+        },
+        "response_id": "chatcmpl-DUiudYkv5sojvCQOIR3d5Wbs4hwcS",
+        "usage": {
+          "completion_tokens": 199,
+          "prompt_tokens": 876,
+          "total_tokens": 1075,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "schema_version": "fine_tuned_model_eval.v1",
+  "status": "completed",
+  "evaluated_at": "2026-04-14T04:08:57+00:00",
+  "model": "MiniMax-M2.7",
+  "system_prompt": "You are pepper-ops, a senior red pepper (적고추) greenhouse agronomy expert and control-system safety officer. You are NOT a fine-tuned checkpoint — you are a general-purpose frontier model being grounded on this project's red pepper greenhouse domain via retrieved_context. Treat retrieved_context as your primary source of truth about this farm's historical decisions, policies, and incident reviews. If retrieved_context disagrees with your general knowledge, prefer retrieved_context and cite it.\n\nOUTPUT CONTRACT:\n- Return a single JSON object. No markdown fences, no prose, no explanations outside JSON.\n- Required top-level keys for state, action, failure, and robot-task outputs: risk_level, confidence, retrieval_coverage, citations, follow_up.\n- risk_level ∈ {unknown, low, medium, high, critical}. It is the confirmed/most defensible situation risk, not the urgency of an individual action.\n- confidence ∈ [0.0, 1.0] as a float. Use ≤0.55 when sensor quality or retrieval coverage is weak.\n- retrieval_coverage ∈ {sufficient, partial, insufficient, not_used}. Only use not_used when retrieved_context is empty.\n- citations is a list of {chunk_id, document_id} objects drawn ONLY from retrieved_context items. Never invent chunk_ids.\n- follow_up and required_follow_up are lists of short action objects describing what a human should re-check.\n\nALLOWED ACTION TYPES (recommended_actions[*].action_type): observe_only, create_alert, request_human_check, adjust_fan, adjust_shade, adjust_vent, short_irrigation, adjust_fertigation, adjust_heating, adjust_co2, pause_automation, enter_safe_mode, create_robot_task, block_action. No other values allowed.\nALLOWED ROBOT TASK TYPES (robot_tasks[*].task_type, only for robot_task_prioritization): harvest_candidate_review, inspect_crop, skip_area, manual_review. Never invent wrapper names like create_harvest_plan_review or create_robot_task inside robot_tasks.\n\nHARD SAFETY RULES (MANDATORY — these override any other reasoning):\n1. Worker present / manual_override / safe_mode active → risk_level=critical; block_action + create_alert mandatory;    no device-control actions, no robot tasks. request_human_check may be added but never replaces block_action.\n2. Core water-delivery path (irrigation / source water / dry room) has communication_loss or readback loss →    risk_level=critical; enter_safe_mode + request_human_check mandatory. pause_automation alone is insufficient.\n3. Core climate evidence uninterpretable AND climate control already ran on degraded evidence →    risk_level=high; pause_automation + request_human_check mandatory.\n4. Rootzone evidence conflicting or uninterpretable → risk_level=unknown; pause_automation + request_human_check    mandatory; do NOT emit short_irrigation or adjust_fertigation until manual confirmation restores missing evidence.\n5. Task=forbidden_action and blocked_action_type=adjust_fertigation while rootzone evidence is degraded →    decision=approval_required (not block).\n6. Zone clearance uncertain or aisle unsafe → use skip_area, not generic review or create_robot_task.\n7. Task=sensor_fault with stale/missing/calibration_error/flatline/cross-sensor inconsistency → risk_level=unknown    unless physical crop damage or hard safety hazard is already confirmed; use pause_automation + request_human_check;    avoid device-control actions.\n8. Task=rootzone_diagnosis or nutrient_risk with key drain/substrate/WC/EC/pH sensor stale/missing/flatline →    risk_level=unknown unless physical damage or hard hazard confirmed.\n9. rootzone_diagnosis with GT Master dry-back overrun + low dawn WC + repeated afternoon wilt and interpretable evidence →    risk_level=high; create_alert + request_human_check mandatory; adjust_fertigation forbidden.\n10. nutrient_risk with large EC gradient + low drain fraction and interpretable evidence → risk_level=high;     create_alert + request_human_check mandatory; adjust_fertigation only after human review.\n11. action_recommendation for GT Master dry-back overload or repeated afternoon wilt → create_alert + request_human_check     mandatory; adjust_fertigation must NOT be the primary answer.\n12. climate_risk for Grodan Delta 6.5 nursery block after sunset with cold-humid leaf-wet conditions → risk_level=high;     create_alert + request_human_check mandatory; do NOT reflexively adjust_vent.\n13. Harvest or drying planning → request_human_check mandatory; create_robot_task may supplement but never replaces human review.\n14. robot_task_prioritization: blocked/inaccessible candidates → skip_area first; low-confidence hotspots → inspect_crop.\n15. forbidden_action: decision ∈ {allow, block, approval_required}. When fertigation evidence is incomplete due to     EC/pH/drain sensor faults, prefer approval_required over block unless a hard safety interlock is active.\n16. CO2 below target with vent_open_lock or similar lock active → risk_level=high; request_human_check required;     forbid adjust_co2 until the lock state is reviewed; create_alert only supplemental.\n17. Winter nursery low-temperature + low-light → risk_level=high default; create_alert + request_human_check mandatory;     adjust_heating only as supplemental reviewed action.\n18. Spring transplanting/establishment cold-night + overwet (rockwool slab, Grodan substrate) → risk_level=medium default;     request_human_check required; adjust_heating only with human review; short_irrigation forbidden.\n19. Flowering heat + strong radiation → risk_level=high; create_alert + request_human_check mandatory;     adjust_fan / adjust_vent / limited adjust_shade may supplement.\n\nRETRIEVED_CONTEXT USAGE PROTOCOL:\n- input.retrieved_context is an ordered list of RAG chunks, each with chunk_id, document_id, and text body.\n- Before deciding, scan retrieved_context for: prior decisions on similar zone states, active farm policies,   HSV/OV hard rules, and any incident reviews with matching failure modes.\n- Your citations[] MUST reference 1-3 chunk_ids that materially shaped your decision. If retrieval_coverage is   sufficient or partial but citations is empty, that is a contract violation.\n- If retrieved_context is empty, set retrieval_coverage=not_used and citations=[]. You may still decide, but   drop confidence to ≤0.5 and prefer conservative actions (observe_only, create_alert, request_human_check).\n- Do NOT hallucinate chunk_ids, policy_ids, or decision_ids. Every id you emit must appear in the input.\n\nWHEN IN DOUBT: prefer unknown risk_level + pause_automation + request_human_check over any device action. This system is in shadow/approval mode — a conservative answer grounded in retrieved_context is better than a confident answer that bypasses a hard safety rule.",
+  "temperature": 0.0,
+  "eval_files": [
+    "evals/expert_judgement_eval_set.jsonl",
+    "evals/action_recommendation_eval_set.jsonl",
+    "evals/forbidden_action_eval_set.jsonl",
+    "evals/failure_response_eval_set.jsonl",
+    "evals/robot_task_eval_set.jsonl",
+    "evals/edge_case_eval_set.jsonl",
+    "evals/seasonal_eval_set.jsonl"
+  ],
+  "summary": {
+    "total_cases": 1,
+    "passed_cases": 0,
+    "pass_rate": 0.0,
+    "strict_json_rate": 0.0,
+    "recovered_json_rate": 1.0,
+    "average_confidence": 0.75,
+    "average_confidence_on_pass": null,
+    "average_confidence_on_fail": 0.75,
+    "by_category": {
+      "state_judgement": {
+        "cases": 1,
+        "passed": 0,
+        "pass_rate": 0.0
+      }
+    },
+    "request_errors": 0,
+    "top_failed_checks": [
+      [
+        "follow_up_present",
+        1
+      ]
+    ],
+    "top_optional_failures": []
+  },
+  "cases": [
+    {
+      "eval_id": "pepper-eval-001",
+      "category": "state_judgement",
+      "task_type": "state_judgement",
+      "prompt_index": 1,
+      "strict_json_ok": false,
+      "recovered_json_ok": true,
+      "parse_error": "Expecting value: line 1 column 1 (char 0)",
+      "passed": false,
+      "passed_checks": [
+        "json_object",
+        "risk_level_match",
+        "citations_present",
+        "citations_in_context",
+        "required_action_types_present",
+        "forbidden_action_types_absent"
+      ],
+      "failed_checks": [
+        "follow_up_present"
+      ],
+      "optional_failures": [],
+      "action_types": [
+        "observe_only"
+      ],
+      "robot_task_types": [],
+      "citation_ids": [
+        "pepper-lifecycle-001",
+        "pepper-agent-001"
+      ],
+      "confidence": 0.75,
+      "request_error": false,
+      "request": {
+        "task_type": "state_judgement",
+        "user_message": "{\n  \"input\": {\n    \"farm_id\": \"demo-farm\",\n    \"growth_stage\": \"vegetative_growth\",\n    \"retrieved_context\": [\n      {\n        \"chunk_id\": \"pepper-lifecycle-001\",\n        \"document_id\": \"RAG-SRC-001\",\n        \"source_section\": \"농업기술길잡이 115 고추, 생리·생태적 특성 및 육묘/정식 관리\",\n        \"text\": \"육묘와 정식 단계는 이후 전 생육의 기준점이므로 발아·묘 생육·온도 순화·초기 활착 조건을 별도 생육 단계로 관리해야 한다.\\ngrowth_stage: nursery, transplanting, vegetative_growth\\nsensor_tags: temperature, light, moisture\\nrisk_tags: poor_seedling, transplant_stress\\noperation_tags: nursery_management, transplanting\\ncausality_tags: nursery_quality -> early_yield, transplant_stress -> delayed_growth\\nvisual_tags: seedling_vigor, wilting_after_planting\\nsource_section: 농업기술길잡이 115 고추, 생리·생태적 특성 및 육묘/정식 관리\",\n        \"trust_level\": \"high\"\n      },\n      {\n        \"chunk_id\": \"pepper-agent-001\",\n        \"document_id\": \"EXPERT-AI-DESIGN\",\n        \"source_section\": null,\n        \"text\": \"전문가 AI Agent는 원시 센서가 아니라 품질 검증과 특징량 생성을 거친 상태 JSON을 입력받고, RAG 근거와 함께 판단한 뒤 policy-engine과 execution-gateway에서 재검증되어야 한다.\\ngrowth_stage: all\\nsensor_tags: temperature, humidity, co2, light, vpd, dli, substrate_moisture, ec, ph, drain_rate, vision\\nrisk_tags: all\\noperation_tags: decision_support, approval, audit\\ncausality_tags: validated_state -> safer_decision, policy_gate -> execution_safety\\nvisual_tags: \",\n        \"trust_level\": null\n      }\n    ],\n    \"schema_version\": \"state.v1\",\n    \"state_summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"summary\": \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\",\n    \"zone_id\": \"zone-a\"\n  },\n  \"task_type\": \"state_judgement\"\n}"
+      },
+      "response": {
+        "raw_content": "<think>\nLet me analyze this input carefully.\n\nThe user is asking for a state judgment for zone-a during vegetative_growth stage. Let me check what I have:\n\n1. **State summary**: \"온습도와 근권 상태가 안정적이고 센서 품질이 양호한 영양생장 단계\" - This translates to \"Temperature/humidity and rootzone status are stable with good sensor quality during vegetative growth stage\"\n\n2. **retrieved_context**: Contains 2 chunks:\n   - pepper-lifecycle-001: About nursery/transplanting/vegetative growth management\n   - pepper-agent-001: About expert AI agent design and validation\n\n3. **task_type**: state_judgement\n\nNow let me assess according to the OUTPUT CONTRACT:\n\n**Risk Assessment**:\n- State summary indicates stable conditions (온습도 안정, 근권 상태 안정)\n- Sensor quality is good (센서 품질이 양호)\n- Growth stage is vegetative_growth (normal operational stage)\n- No hard safety conditions triggered (no worker present, no manual override, no safe_mode mentioned)\n- No communication loss mentioned\n- No core climate or rootzone evidence conflicts\n- No sensor faults mentioned\n- No forbidden actions requested\n\nThis appears to be a routine, stable state with good sensor coverage. According to the safety rules:\n- Rule 1: No worker present/manaul override/safe_mode\n- Rule 2: No communication loss\n- Rule 3: Core climate evidence is interpretable (sensor quality is good)\n- Rule 4: Rootzone evidence is interpretable (stable)\n- Rule 5-19: No specific risk conditions triggered\n\n**Confidence and Coverage**:\n- retrieval_coverage: The context provides some general information about the pepper lifecycle and AI agent design, but not specific policies about state_judgement for zone-a. It's relevant but not comprehensive.\n- confidence: State summary is positive and sensor quality is confirmed good. I can give moderate-high confidence.\n\n**Citations**:\n- pepper-lifecycle-001: Relevant for understanding vegetative_growth stage\n\n\n- pepper-agent-001: Relevant for understanding how AI agents validate state\n\nBoth citations are drawn from the retrieved_context items, so they're valid to cite. For action_type, since this is state_judgement with stable conditions, observe_only fits best—no interventions needed for a healthy zone.\n\nI'm constructing the JSON response with risk_level set to low given the stable readings and functioning sensors, and confidence at 0.75 reflecting reasonable but not absolute certainty about the zone's condition.\n</think>\n\n{\"risk_level\":\"low\",\"confidence\":0.75,\"retrieval_coverage\":\"partial\",\"citations\":[{\"chunk_id\":\"pepper-lifecycle-001\",\"document_id\":\"RAG-SRC-001\"},{\"chunk_id\":\"pepper-agent-001\",\"document_id\":\"EXPERT-AI-DESIGN\"}],\"recommended_actions\":[{\"action_type\":\"observe_only\",\"priority\":\"normal\",\"reason\":\"state_judgement on stable vegetative_growth zone with confirmed good sensor quality; no intervention required\"}],\"follow_up\":[],\"state_overview\":\"zone-a shows stable conditions appropriate for vegetative growth stage. Temperature/humidity and rootzone status are within acceptable ranges with good sensor quality. No anomalies or risk conditions detected.\"}",
+        "parsed_output": {
+          "risk_level": "low",
+          "confidence": 0.75,
+          "retrieval_coverage": "partial",
+          "citations": [
+            {
+              "chunk_id": "pepper-lifecycle-001",
+              "document_id": "RAG-SRC-001"
+            },
+            {
+              "chunk_id": "pepper-agent-001",
+              "document_id": "EXPERT-AI-DESIGN"
+            }
+          ],
+          "recommended_actions": [
+            {
+              "action_type": "observe_only",
+              "priority": "normal",
+              "reason": "state_judgement on stable vegetative_growth zone with confirmed good sensor quality; no intervention required"
+            }
+          ],
+          "follow_up": [],
+          "state_overview": "zone-a shows stable conditions appropriate for vegetative growth stage. Temperature/humidity and rootzone status are within acceptable ranges with good sensor quality. No anomalies or risk conditions detected."
+        },
+        "response_id": "062cf0c808bf2274a136e55f1da14ef7",
+        "usage": {
+          "completion_tokens": 663,
+          "prompt_tokens": 1973,
+          "total_tokens": 2636,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 519,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null,
+          "total_characters": 0
+        }
+      }
+    }
+  ]
+}

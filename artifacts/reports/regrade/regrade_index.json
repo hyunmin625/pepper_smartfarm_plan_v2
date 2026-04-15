@@ -1,0 +1,2265 @@
+{
+  "schema_version": "regrade.v1",
+  "runs": {
+    "A_ds_v11_ext200": {
+      "label": "A_ds_v11_ext200",
+      "source": "artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_extended200.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 200,
+        "passed_cases": 140,
+        "pass_rate": 0.7,
+        "strict_json_rate": 1.0,
+        "recovered_json_rate": 1.0,
+        "average_confidence": 0.8119,
+        "average_confidence_on_pass": 0.8022,
+        "average_confidence_on_fail": 0.8346,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 28,
+            "passed": 19,
+            "pass_rate": 0.6786
+          },
+          "climate_risk": {
+            "cases": 7,
+            "passed": 5,
+            "pass_rate": 0.7143
+          },
+          "edge_case": {
+            "cases": 28,
+            "passed": 20,
+            "pass_rate": 0.7143
+          },
+          "failure_response": {
+            "cases": 26,
+            "passed": 13,
+            "pass_rate": 0.5
+          },
+          "forbidden_action": {
+            "cases": 20,
+            "passed": 14,
+            "pass_rate": 0.7
+          },
+          "harvest_drying": {
+            "cases": 6,
+            "passed": 6,
+            "pass_rate": 1.0
+          },
+          "nutrient_risk": {
+            "cases": 8,
+            "passed": 5,
+            "pass_rate": 0.625
+          },
+          "pest_disease_risk": {
+            "cases": 6,
+            "passed": 6,
+            "pass_rate": 1.0
+          },
+          "robot_task_prioritization": {
+            "cases": 16,
+            "passed": 9,
+            "pass_rate": 0.5625
+          },
+          "rootzone_diagnosis": {
+            "cases": 8,
+            "passed": 6,
+            "pass_rate": 0.75
+          },
+          "safety_policy": {
+            "cases": 9,
+            "passed": 8,
+            "pass_rate": 0.8889
+          },
+          "seasonal": {
+            "cases": 24,
+            "passed": 16,
+            "pass_rate": 0.6667
+          },
+          "sensor_fault": {
+            "cases": 9,
+            "passed": 9,
+            "pass_rate": 1.0
+          },
+          "state_judgement": {
+            "cases": 5,
+            "passed": 4,
+            "pass_rate": 0.8
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "risk_level_match",
+            31
+          ],
+          [
+            "required_action_types_present",
+            21
+          ],
+          [
+            "citations_present",
+            17
+          ],
+          [
+            "required_task_types_present",
+            3
+          ],
+          [
+            "forbidden_action_types_absent",
+            3
+          ],
+          [
+            "decision_match",
+            1
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "allowed_robot_task_enum_only",
+            4
+          ],
+          [
+            "retrieval_coverage_present",
+            1
+          ],
+          [
+            "retrieval_coverage_valid",
+            1
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 200,
+            "passed": 200,
+            "pass_rate": 1.0
+          },
+          "risk_level_match": {
+            "attempted": 200,
+            "passed": 169,
+            "pass_rate": 0.845
+          },
+          "citations_present": {
+            "attempted": 168,
+            "passed": 151,
+            "pass_rate": 0.8988
+          },
+          "citations_in_context": {
+            "attempted": 167,
+            "passed": 167,
+            "pass_rate": 1.0
+          },
+          "required_action_types_present": {
+            "attempted": 164,
+            "passed": 143,
+            "pass_rate": 0.872
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 136,
+            "passed": 133,
+            "pass_rate": 0.9779
+          },
+          "follow_up_present": {
+            "attempted": 112,
+            "passed": 112,
+            "pass_rate": 1.0
+          },
+          "decision_match": {
+            "attempted": 20,
+            "passed": 19,
+            "pass_rate": 0.95
+          },
+          "blocked_action_type_match": {
+            "attempted": 20,
+            "passed": 20,
+            "pass_rate": 1.0
+          },
+          "required_task_types_present": {
+            "attempted": 16,
+            "passed": 13,
+            "pass_rate": 0.8125
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 5,
+            "passed": 5,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 3,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 3
+        },
+        "hard_safety_violation_rate": 0.015,
+        "category_floors": {
+          "warn": [
+            "failure_response",
+            "robot_task_prioritization"
+          ],
+          "critical": []
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 200
+    },
+    "A_ds_v11_blind50": {
+      "label": "A_ds_v11_blind50",
+      "source": "artifacts/reports/fine_tuned_model_eval_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 50,
+        "passed_cases": 35,
+        "pass_rate": 0.7,
+        "strict_json_rate": 1.0,
+        "recovered_json_rate": 1.0,
+        "average_confidence": 0.8398,
+        "average_confidence_on_pass": 0.8303,
+        "average_confidence_on_fail": 0.8608,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 7,
+            "passed": 5,
+            "pass_rate": 0.7143
+          },
+          "climate_risk": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "edge_case": {
+            "cases": 6,
+            "passed": 5,
+            "pass_rate": 0.8333
+          },
+          "failure_response": {
+            "cases": 8,
+            "passed": 6,
+            "pass_rate": 0.75
+          },
+          "forbidden_action": {
+            "cases": 8,
+            "passed": 6,
+            "pass_rate": 0.75
+          },
+          "harvest_drying": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          },
+          "nutrient_risk": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "pest_disease_risk": {
+            "cases": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          },
+          "robot_task_prioritization": {
+            "cases": 7,
+            "passed": 4,
+            "pass_rate": 0.5714
+          },
+          "rootzone_diagnosis": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "safety_policy": {
+            "cases": 3,
+            "passed": 2,
+            "pass_rate": 0.6667
+          },
+          "sensor_fault": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "risk_level_match",
+            6
+          ],
+          [
+            "required_action_types_present",
+            5
+          ],
+          [
+            "citations_present",
+            3
+          ],
+          [
+            "forbidden_action_types_absent",
+            2
+          ],
+          [
+            "required_task_types_present",
+            2
+          ],
+          [
+            "decision_match",
+            1
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "allowed_robot_task_enum_only",
+            4
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 50,
+            "passed": 50,
+            "pass_rate": 1.0
+          },
+          "risk_level_match": {
+            "attempted": 50,
+            "passed": 44,
+            "pass_rate": 0.88
+          },
+          "citations_present": {
+            "attempted": 42,
+            "passed": 39,
+            "pass_rate": 0.9286
+          },
+          "citations_in_context": {
+            "attempted": 42,
+            "passed": 42,
+            "pass_rate": 1.0
+          },
+          "required_action_types_present": {
+            "attempted": 35,
+            "passed": 30,
+            "pass_rate": 0.8571
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 23,
+            "passed": 21,
+            "pass_rate": 0.913
+          },
+          "follow_up_present": {
+            "attempted": 20,
+            "passed": 20,
+            "pass_rate": 1.0
+          },
+          "decision_match": {
+            "attempted": 8,
+            "passed": 7,
+            "pass_rate": 0.875
+          },
+          "blocked_action_type_match": {
+            "attempted": 8,
+            "passed": 8,
+            "pass_rate": 1.0
+          },
+          "required_task_types_present": {
+            "attempted": 7,
+            "passed": 5,
+            "pass_rate": 0.7143
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 2,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 2
+        },
+        "hard_safety_violation_rate": 0.04,
+        "category_floors": {
+          "warn": [
+            "climate_risk",
+            "nutrient_risk",
+            "robot_task_prioritization",
+            "rootzone_diagnosis",
+            "sensor_fault"
+          ],
+          "critical": []
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 50
+    },
+    "B_gpt41_ext200": {
+      "label": "B_gpt41_ext200",
+      "source": "artifacts/reports/frontier_rag_extended200.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 200,
+        "passed_cases": 141,
+        "pass_rate": 0.705,
+        "strict_json_rate": 1.0,
+        "recovered_json_rate": 1.0,
+        "average_confidence": 0.8391,
+        "average_confidence_on_pass": 0.8471,
+        "average_confidence_on_fail": 0.82,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 28,
+            "passed": 24,
+            "pass_rate": 0.8571
+          },
+          "climate_risk": {
+            "cases": 7,
+            "passed": 7,
+            "pass_rate": 1.0
+          },
+          "edge_case": {
+            "cases": 28,
+            "passed": 27,
+            "pass_rate": 0.9643
+          },
+          "failure_response": {
+            "cases": 26,
+            "passed": 21,
+            "pass_rate": 0.8077
+          },
+          "forbidden_action": {
+            "cases": 20,
+            "passed": 1,
+            "pass_rate": 0.05
+          },
+          "harvest_drying": {
+            "cases": 6,
+            "passed": 5,
+            "pass_rate": 0.8333
+          },
+          "nutrient_risk": {
+            "cases": 8,
+            "passed": 4,
+            "pass_rate": 0.5
+          },
+          "pest_disease_risk": {
+            "cases": 6,
+            "passed": 4,
+            "pass_rate": 0.6667
+          },
+          "robot_task_prioritization": {
+            "cases": 16,
+            "passed": 5,
+            "pass_rate": 0.3125
+          },
+          "rootzone_diagnosis": {
+            "cases": 8,
+            "passed": 6,
+            "pass_rate": 0.75
+          },
+          "safety_policy": {
+            "cases": 9,
+            "passed": 8,
+            "pass_rate": 0.8889
+          },
+          "seasonal": {
+            "cases": 24,
+            "passed": 18,
+            "pass_rate": 0.75
+          },
+          "sensor_fault": {
+            "cases": 9,
+            "passed": 9,
+            "pass_rate": 1.0
+          },
+          "state_judgement": {
+            "cases": 5,
+            "passed": 2,
+            "pass_rate": 0.4
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "risk_level_match",
+            44
+          ],
+          [
+            "blocked_action_type_match",
+            18
+          ],
+          [
+            "decision_match",
+            17
+          ],
+          [
+            "required_action_types_present",
+            10
+          ],
+          [
+            "forbidden_action_types_absent",
+            4
+          ],
+          [
+            "follow_up_present",
+            2
+          ],
+          [
+            "required_task_types_present",
+            1
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "allowed_action_enum_only",
+            2
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 200,
+            "passed": 200,
+            "pass_rate": 1.0
+          },
+          "risk_level_match": {
+            "attempted": 200,
+            "passed": 156,
+            "pass_rate": 0.78
+          },
+          "citations_in_context": {
+            "attempted": 200,
+            "passed": 200,
+            "pass_rate": 1.0
+          },
+          "citations_present": {
+            "attempted": 168,
+            "passed": 168,
+            "pass_rate": 1.0
+          },
+          "required_action_types_present": {
+            "attempted": 164,
+            "passed": 154,
+            "pass_rate": 0.939
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 136,
+            "passed": 132,
+            "pass_rate": 0.9706
+          },
+          "follow_up_present": {
+            "attempted": 112,
+            "passed": 110,
+            "pass_rate": 0.9821
+          },
+          "decision_match": {
+            "attempted": 20,
+            "passed": 3,
+            "pass_rate": 0.15
+          },
+          "blocked_action_type_match": {
+            "attempted": 20,
+            "passed": 2,
+            "pass_rate": 0.1
+          },
+          "required_task_types_present": {
+            "attempted": 16,
+            "passed": 15,
+            "pass_rate": 0.9375
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 5,
+            "passed": 5,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 4,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 4
+        },
+        "hard_safety_violation_rate": 0.02,
+        "category_floors": {
+          "warn": [
+            "nutrient_risk",
+            "robot_task_prioritization",
+            "state_judgement"
+          ],
+          "critical": [
+            "forbidden_action"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 200
+    },
+    "B_gpt41_blind50": {
+      "label": "B_gpt41_blind50",
+      "source": "artifacts/reports/frontier_rag_blind50.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 50,
+        "passed_cases": 37,
+        "pass_rate": 0.74,
+        "strict_json_rate": 1.0,
+        "recovered_json_rate": 1.0,
+        "average_confidence": 0.8476,
+        "average_confidence_on_pass": 0.8386,
+        "average_confidence_on_fail": 0.8731,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 7,
+            "passed": 7,
+            "pass_rate": 1.0
+          },
+          "climate_risk": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          },
+          "edge_case": {
+            "cases": 6,
+            "passed": 6,
+            "pass_rate": 1.0
+          },
+          "failure_response": {
+            "cases": 8,
+            "passed": 8,
+            "pass_rate": 1.0
+          },
+          "forbidden_action": {
+            "cases": 8,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "harvest_drying": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          },
+          "nutrient_risk": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          },
+          "pest_disease_risk": {
+            "cases": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          },
+          "robot_task_prioritization": {
+            "cases": 7,
+            "passed": 2,
+            "pass_rate": 0.2857
+          },
+          "rootzone_diagnosis": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          },
+          "safety_policy": {
+            "cases": 3,
+            "passed": 3,
+            "pass_rate": 1.0
+          },
+          "sensor_fault": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "risk_level_match",
+            8
+          ],
+          [
+            "decision_match",
+            8
+          ],
+          [
+            "blocked_action_type_match",
+            8
+          ],
+          [
+            "required_task_types_present",
+            1
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "allowed_action_enum_only",
+            2
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 50,
+            "passed": 50,
+            "pass_rate": 1.0
+          },
+          "risk_level_match": {
+            "attempted": 50,
+            "passed": 42,
+            "pass_rate": 0.84
+          },
+          "citations_in_context": {
+            "attempted": 50,
+            "passed": 50,
+            "pass_rate": 1.0
+          },
+          "citations_present": {
+            "attempted": 42,
+            "passed": 42,
+            "pass_rate": 1.0
+          },
+          "required_action_types_present": {
+            "attempted": 35,
+            "passed": 35,
+            "pass_rate": 1.0
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 23,
+            "passed": 23,
+            "pass_rate": 1.0
+          },
+          "follow_up_present": {
+            "attempted": 20,
+            "passed": 20,
+            "pass_rate": 1.0
+          },
+          "decision_match": {
+            "attempted": 8,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "blocked_action_type_match": {
+            "attempted": 8,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "required_task_types_present": {
+            "attempted": 7,
+            "passed": 6,
+            "pass_rate": 0.8571
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 0,
+        "hard_safety_violation_breakdown": {},
+        "hard_safety_violation_rate": 0.0,
+        "category_floors": {
+          "warn": [],
+          "critical": [
+            "forbidden_action",
+            "robot_task_prioritization"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 50
+    },
+    "C_gemini_ext200": {
+      "label": "C_gemini_ext200",
+      "source": "artifacts/reports/frontier_gemini_extended200.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 200,
+        "passed_cases": 74,
+        "pass_rate": 0.37,
+        "strict_json_rate": 1.0,
+        "recovered_json_rate": 1.0,
+        "average_confidence": 0.8902,
+        "average_confidence_on_pass": 0.8878,
+        "average_confidence_on_fail": 0.8916,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 28,
+            "passed": 17,
+            "pass_rate": 0.6071
+          },
+          "climate_risk": {
+            "cases": 7,
+            "passed": 2,
+            "pass_rate": 0.2857
+          },
+          "edge_case": {
+            "cases": 28,
+            "passed": 11,
+            "pass_rate": 0.3929
+          },
+          "failure_response": {
+            "cases": 26,
+            "passed": 10,
+            "pass_rate": 0.3846
+          },
+          "forbidden_action": {
+            "cases": 20,
+            "passed": 4,
+            "pass_rate": 0.2
+          },
+          "harvest_drying": {
+            "cases": 6,
+            "passed": 1,
+            "pass_rate": 0.1667
+          },
+          "nutrient_risk": {
+            "cases": 8,
+            "passed": 2,
+            "pass_rate": 0.25
+          },
+          "pest_disease_risk": {
+            "cases": 6,
+            "passed": 1,
+            "pass_rate": 0.1667
+          },
+          "robot_task_prioritization": {
+            "cases": 16,
+            "passed": 7,
+            "pass_rate": 0.4375
+          },
+          "rootzone_diagnosis": {
+            "cases": 8,
+            "passed": 4,
+            "pass_rate": 0.5
+          },
+          "safety_policy": {
+            "cases": 9,
+            "passed": 4,
+            "pass_rate": 0.4444
+          },
+          "seasonal": {
+            "cases": 24,
+            "passed": 5,
+            "pass_rate": 0.2083
+          },
+          "sensor_fault": {
+            "cases": 9,
+            "passed": 6,
+            "pass_rate": 0.6667
+          },
+          "state_judgement": {
+            "cases": 5,
+            "passed": 0,
+            "pass_rate": 0.0
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "required_action_types_present",
+            44
+          ],
+          [
+            "risk_level_match",
+            44
+          ],
+          [
+            "citations_present",
+            36
+          ],
+          [
+            "follow_up_present",
+            22
+          ],
+          [
+            "blocked_action_type_match",
+            7
+          ],
+          [
+            "forbidden_action_types_absent",
+            6
+          ],
+          [
+            "decision_match",
+            2
+          ],
+          [
+            "required_task_types_present",
+            2
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "confidence_present",
+            1
+          ],
+          [
+            "confidence_in_range",
+            1
+          ],
+          [
+            "retrieval_coverage_present",
+            1
+          ],
+          [
+            "retrieval_coverage_valid",
+            1
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 200,
+            "passed": 200,
+            "pass_rate": 1.0
+          },
+          "risk_level_match": {
+            "attempted": 200,
+            "passed": 156,
+            "pass_rate": 0.78
+          },
+          "citations_present": {
+            "attempted": 168,
+            "passed": 132,
+            "pass_rate": 0.7857
+          },
+          "required_action_types_present": {
+            "attempted": 164,
+            "passed": 120,
+            "pass_rate": 0.7317
+          },
+          "citations_in_context": {
+            "attempted": 154,
+            "passed": 154,
+            "pass_rate": 1.0
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 136,
+            "passed": 130,
+            "pass_rate": 0.9559
+          },
+          "follow_up_present": {
+            "attempted": 112,
+            "passed": 90,
+            "pass_rate": 0.8036
+          },
+          "decision_match": {
+            "attempted": 20,
+            "passed": 18,
+            "pass_rate": 0.9
+          },
+          "blocked_action_type_match": {
+            "attempted": 20,
+            "passed": 13,
+            "pass_rate": 0.65
+          },
+          "required_task_types_present": {
+            "attempted": 16,
+            "passed": 14,
+            "pass_rate": 0.875
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 5,
+            "passed": 5,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 6,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 6
+        },
+        "hard_safety_violation_rate": 0.03,
+        "category_floors": {
+          "warn": [
+            "edge_case",
+            "failure_response",
+            "robot_task_prioritization",
+            "rootzone_diagnosis",
+            "safety_policy"
+          ],
+          "critical": [
+            "climate_risk",
+            "forbidden_action",
+            "harvest_drying",
+            "nutrient_risk",
+            "pest_disease_risk",
+            "seasonal",
+            "state_judgement"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 200
+    },
+    "C_gemini_blind50": {
+      "label": "C_gemini_blind50",
+      "source": "artifacts/reports/frontier_gemini_blind50.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 50,
+        "passed_cases": 25,
+        "pass_rate": 0.5,
+        "strict_json_rate": 0.98,
+        "recovered_json_rate": 0.98,
+        "average_confidence": 0.8663,
+        "average_confidence_on_pass": 0.878,
+        "average_confidence_on_fail": 0.8542,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 7,
+            "passed": 6,
+            "pass_rate": 0.8571
+          },
+          "climate_risk": {
+            "cases": 2,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "edge_case": {
+            "cases": 6,
+            "passed": 3,
+            "pass_rate": 0.5
+          },
+          "failure_response": {
+            "cases": 8,
+            "passed": 5,
+            "pass_rate": 0.625
+          },
+          "forbidden_action": {
+            "cases": 8,
+            "passed": 3,
+            "pass_rate": 0.375
+          },
+          "harvest_drying": {
+            "cases": 2,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "nutrient_risk": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "pest_disease_risk": {
+            "cases": 1,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "robot_task_prioritization": {
+            "cases": 7,
+            "passed": 4,
+            "pass_rate": 0.5714
+          },
+          "rootzone_diagnosis": {
+            "cases": 2,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "safety_policy": {
+            "cases": 3,
+            "passed": 2,
+            "pass_rate": 0.6667
+          },
+          "sensor_fault": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "risk_level_match",
+            11
+          ],
+          [
+            "citations_present",
+            9
+          ],
+          [
+            "follow_up_present",
+            5
+          ],
+          [
+            "required_action_types_present",
+            4
+          ],
+          [
+            "blocked_action_type_match",
+            2
+          ],
+          [
+            "json_object",
+            1
+          ],
+          [
+            "decision_match",
+            1
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "confidence_present",
+            1
+          ],
+          [
+            "confidence_in_range",
+            1
+          ],
+          [
+            "retrieval_coverage_present",
+            1
+          ],
+          [
+            "retrieval_coverage_valid",
+            1
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 50,
+            "passed": 49,
+            "pass_rate": 0.98
+          },
+          "risk_level_match": {
+            "attempted": 50,
+            "passed": 39,
+            "pass_rate": 0.78
+          },
+          "citations_present": {
+            "attempted": 42,
+            "passed": 33,
+            "pass_rate": 0.7857
+          },
+          "citations_in_context": {
+            "attempted": 38,
+            "passed": 38,
+            "pass_rate": 1.0
+          },
+          "required_action_types_present": {
+            "attempted": 35,
+            "passed": 31,
+            "pass_rate": 0.8857
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 23,
+            "passed": 23,
+            "pass_rate": 1.0
+          },
+          "follow_up_present": {
+            "attempted": 20,
+            "passed": 15,
+            "pass_rate": 0.75
+          },
+          "decision_match": {
+            "attempted": 8,
+            "passed": 7,
+            "pass_rate": 0.875
+          },
+          "blocked_action_type_match": {
+            "attempted": 8,
+            "passed": 6,
+            "pass_rate": 0.75
+          },
+          "required_task_types_present": {
+            "attempted": 7,
+            "passed": 7,
+            "pass_rate": 1.0
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 0,
+        "hard_safety_violation_breakdown": {},
+        "hard_safety_violation_rate": 0.0,
+        "category_floors": {
+          "warn": [
+            "edge_case",
+            "forbidden_action",
+            "nutrient_risk",
+            "robot_task_prioritization",
+            "sensor_fault"
+          ],
+          "critical": [
+            "climate_risk",
+            "harvest_drying",
+            "pest_disease_risk",
+            "rootzone_diagnosis"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 50
+    },
+    "D_m27_ext200": {
+      "label": "D_m27_ext200",
+      "source": "artifacts/reports/frontier_minimax_m27_extended200.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 200,
+        "passed_cases": 67,
+        "pass_rate": 0.335,
+        "strict_json_rate": 0.925,
+        "recovered_json_rate": 0.98,
+        "average_confidence": 0.6886,
+        "average_confidence_on_pass": 0.7157,
+        "average_confidence_on_fail": 0.6721,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 28,
+            "passed": 13,
+            "pass_rate": 0.4643
+          },
+          "climate_risk": {
+            "cases": 7,
+            "passed": 1,
+            "pass_rate": 0.1429
+          },
+          "edge_case": {
+            "cases": 28,
+            "passed": 11,
+            "pass_rate": 0.3929
+          },
+          "failure_response": {
+            "cases": 26,
+            "passed": 9,
+            "pass_rate": 0.3462
+          },
+          "forbidden_action": {
+            "cases": 20,
+            "passed": 2,
+            "pass_rate": 0.1
+          },
+          "harvest_drying": {
+            "cases": 6,
+            "passed": 2,
+            "pass_rate": 0.3333
+          },
+          "nutrient_risk": {
+            "cases": 8,
+            "passed": 1,
+            "pass_rate": 0.125
+          },
+          "pest_disease_risk": {
+            "cases": 6,
+            "passed": 2,
+            "pass_rate": 0.3333
+          },
+          "robot_task_prioritization": {
+            "cases": 16,
+            "passed": 8,
+            "pass_rate": 0.5
+          },
+          "rootzone_diagnosis": {
+            "cases": 8,
+            "passed": 1,
+            "pass_rate": 0.125
+          },
+          "safety_policy": {
+            "cases": 9,
+            "passed": 3,
+            "pass_rate": 0.3333
+          },
+          "seasonal": {
+            "cases": 24,
+            "passed": 10,
+            "pass_rate": 0.4167
+          },
+          "sensor_fault": {
+            "cases": 9,
+            "passed": 4,
+            "pass_rate": 0.4444
+          },
+          "state_judgement": {
+            "cases": 5,
+            "passed": 0,
+            "pass_rate": 0.0
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "required_action_types_present",
+            92
+          ],
+          [
+            "risk_level_match",
+            62
+          ],
+          [
+            "citations_present",
+            30
+          ],
+          [
+            "blocked_action_type_match",
+            18
+          ],
+          [
+            "follow_up_present",
+            12
+          ],
+          [
+            "decision_match",
+            8
+          ],
+          [
+            "forbidden_action_types_absent",
+            7
+          ],
+          [
+            "json_object",
+            4
+          ],
+          [
+            "required_task_types_present",
+            4
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "confidence_present",
+            22
+          ],
+          [
+            "confidence_in_range",
+            22
+          ],
+          [
+            "retrieval_coverage_present",
+            22
+          ],
+          [
+            "retrieval_coverage_valid",
+            22
+          ],
+          [
+            "allowed_action_enum_only",
+            2
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 200,
+            "passed": 196,
+            "pass_rate": 0.98
+          },
+          "risk_level_match": {
+            "attempted": 200,
+            "passed": 138,
+            "pass_rate": 0.69
+          },
+          "citations_present": {
+            "attempted": 168,
+            "passed": 138,
+            "pass_rate": 0.8214
+          },
+          "required_action_types_present": {
+            "attempted": 164,
+            "passed": 72,
+            "pass_rate": 0.439
+          },
+          "citations_in_context": {
+            "attempted": 158,
+            "passed": 158,
+            "pass_rate": 1.0
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 136,
+            "passed": 129,
+            "pass_rate": 0.9485
+          },
+          "follow_up_present": {
+            "attempted": 112,
+            "passed": 100,
+            "pass_rate": 0.8929
+          },
+          "decision_match": {
+            "attempted": 20,
+            "passed": 12,
+            "pass_rate": 0.6
+          },
+          "blocked_action_type_match": {
+            "attempted": 20,
+            "passed": 2,
+            "pass_rate": 0.1
+          },
+          "required_task_types_present": {
+            "attempted": 16,
+            "passed": 12,
+            "pass_rate": 0.75
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 5,
+            "passed": 5,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 7,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 7
+        },
+        "hard_safety_violation_rate": 0.035,
+        "category_floors": {
+          "warn": [
+            "action_recommendation",
+            "edge_case",
+            "failure_response",
+            "harvest_drying",
+            "pest_disease_risk",
+            "robot_task_prioritization",
+            "safety_policy",
+            "seasonal",
+            "sensor_fault"
+          ],
+          "critical": [
+            "climate_risk",
+            "forbidden_action",
+            "nutrient_risk",
+            "rootzone_diagnosis",
+            "state_judgement"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 200
+    },
+    "D_m27_blind50": {
+      "label": "D_m27_blind50",
+      "source": "artifacts/reports/frontier_minimax_m27_blind50.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 50,
+        "passed_cases": 11,
+        "pass_rate": 0.22,
+        "strict_json_rate": 0.94,
+        "recovered_json_rate": 0.96,
+        "average_confidence": 0.7067,
+        "average_confidence_on_pass": 0.6245,
+        "average_confidence_on_fail": 0.7358,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 7,
+            "passed": 3,
+            "pass_rate": 0.4286
+          },
+          "climate_risk": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "edge_case": {
+            "cases": 6,
+            "passed": 2,
+            "pass_rate": 0.3333
+          },
+          "failure_response": {
+            "cases": 8,
+            "passed": 1,
+            "pass_rate": 0.125
+          },
+          "forbidden_action": {
+            "cases": 8,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "harvest_drying": {
+            "cases": 2,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "nutrient_risk": {
+            "cases": 2,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "pest_disease_risk": {
+            "cases": 1,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "robot_task_prioritization": {
+            "cases": 7,
+            "passed": 2,
+            "pass_rate": 0.2857
+          },
+          "rootzone_diagnosis": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "safety_policy": {
+            "cases": 3,
+            "passed": 1,
+            "pass_rate": 0.3333
+          },
+          "sensor_fault": {
+            "cases": 2,
+            "passed": 0,
+            "pass_rate": 0.0
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "required_action_types_present",
+            23
+          ],
+          [
+            "risk_level_match",
+            15
+          ],
+          [
+            "citations_present",
+            9
+          ],
+          [
+            "blocked_action_type_match",
+            8
+          ],
+          [
+            "decision_match",
+            3
+          ],
+          [
+            "follow_up_present",
+            2
+          ],
+          [
+            "json_object",
+            2
+          ],
+          [
+            "required_task_types_present",
+            2
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "confidence_present",
+            6
+          ],
+          [
+            "confidence_in_range",
+            6
+          ],
+          [
+            "retrieval_coverage_present",
+            5
+          ],
+          [
+            "retrieval_coverage_valid",
+            5
+          ],
+          [
+            "allowed_action_enum_only",
+            1
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 50,
+            "passed": 48,
+            "pass_rate": 0.96
+          },
+          "risk_level_match": {
+            "attempted": 50,
+            "passed": 35,
+            "pass_rate": 0.7
+          },
+          "citations_present": {
+            "attempted": 42,
+            "passed": 33,
+            "pass_rate": 0.7857
+          },
+          "citations_in_context": {
+            "attempted": 40,
+            "passed": 40,
+            "pass_rate": 1.0
+          },
+          "required_action_types_present": {
+            "attempted": 35,
+            "passed": 12,
+            "pass_rate": 0.3429
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 23,
+            "passed": 23,
+            "pass_rate": 1.0
+          },
+          "follow_up_present": {
+            "attempted": 20,
+            "passed": 18,
+            "pass_rate": 0.9
+          },
+          "decision_match": {
+            "attempted": 8,
+            "passed": 5,
+            "pass_rate": 0.625
+          },
+          "blocked_action_type_match": {
+            "attempted": 8,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "required_task_types_present": {
+            "attempted": 7,
+            "passed": 5,
+            "pass_rate": 0.7143
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 0,
+        "hard_safety_violation_breakdown": {},
+        "hard_safety_violation_rate": 0.0,
+        "category_floors": {
+          "warn": [
+            "action_recommendation",
+            "climate_risk",
+            "edge_case",
+            "rootzone_diagnosis",
+            "safety_policy"
+          ],
+          "critical": [
+            "failure_response",
+            "forbidden_action",
+            "harvest_drying",
+            "nutrient_risk",
+            "pest_disease_risk",
+            "robot_task_prioritization",
+            "sensor_fault"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 50
+    },
+    "C_gemini_liverag_ext200": {
+      "label": "C_gemini_liverag_ext200",
+      "source": "artifacts/reports/frontier_gemini_liverag_extended200.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 200,
+        "passed_cases": 80,
+        "pass_rate": 0.4,
+        "strict_json_rate": 0.995,
+        "recovered_json_rate": 0.995,
+        "average_confidence": 0.905,
+        "average_confidence_on_pass": 0.9062,
+        "average_confidence_on_fail": 0.9042,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 28,
+            "passed": 14,
+            "pass_rate": 0.5
+          },
+          "climate_risk": {
+            "cases": 7,
+            "passed": 4,
+            "pass_rate": 0.5714
+          },
+          "edge_case": {
+            "cases": 28,
+            "passed": 9,
+            "pass_rate": 0.3214
+          },
+          "failure_response": {
+            "cases": 26,
+            "passed": 12,
+            "pass_rate": 0.4615
+          },
+          "forbidden_action": {
+            "cases": 20,
+            "passed": 3,
+            "pass_rate": 0.15
+          },
+          "harvest_drying": {
+            "cases": 6,
+            "passed": 4,
+            "pass_rate": 0.6667
+          },
+          "nutrient_risk": {
+            "cases": 8,
+            "passed": 2,
+            "pass_rate": 0.25
+          },
+          "pest_disease_risk": {
+            "cases": 6,
+            "passed": 2,
+            "pass_rate": 0.3333
+          },
+          "robot_task_prioritization": {
+            "cases": 16,
+            "passed": 4,
+            "pass_rate": 0.25
+          },
+          "rootzone_diagnosis": {
+            "cases": 8,
+            "passed": 3,
+            "pass_rate": 0.375
+          },
+          "safety_policy": {
+            "cases": 9,
+            "passed": 4,
+            "pass_rate": 0.4444
+          },
+          "seasonal": {
+            "cases": 24,
+            "passed": 14,
+            "pass_rate": 0.5833
+          },
+          "sensor_fault": {
+            "cases": 9,
+            "passed": 5,
+            "pass_rate": 0.5556
+          },
+          "state_judgement": {
+            "cases": 5,
+            "passed": 0,
+            "pass_rate": 0.0
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "risk_level_match",
+            49
+          ],
+          [
+            "citations_present",
+            49
+          ],
+          [
+            "required_action_types_present",
+            28
+          ],
+          [
+            "follow_up_present",
+            12
+          ],
+          [
+            "blocked_action_type_match",
+            9
+          ],
+          [
+            "forbidden_action_types_absent",
+            5
+          ],
+          [
+            "decision_match",
+            2
+          ],
+          [
+            "json_object",
+            1
+          ],
+          [
+            "required_task_types_present",
+            1
+          ]
+        ],
+        "top_optional_failures": [],
+        "per_check": {
+          "json_object": {
+            "attempted": 200,
+            "passed": 199,
+            "pass_rate": 0.995
+          },
+          "risk_level_match": {
+            "attempted": 200,
+            "passed": 151,
+            "pass_rate": 0.755
+          },
+          "citations_present": {
+            "attempted": 168,
+            "passed": 119,
+            "pass_rate": 0.7083
+          },
+          "required_action_types_present": {
+            "attempted": 164,
+            "passed": 136,
+            "pass_rate": 0.8293
+          },
+          "citations_in_context": {
+            "attempted": 136,
+            "passed": 136,
+            "pass_rate": 1.0
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 136,
+            "passed": 131,
+            "pass_rate": 0.9632
+          },
+          "follow_up_present": {
+            "attempted": 112,
+            "passed": 100,
+            "pass_rate": 0.8929
+          },
+          "decision_match": {
+            "attempted": 20,
+            "passed": 18,
+            "pass_rate": 0.9
+          },
+          "blocked_action_type_match": {
+            "attempted": 20,
+            "passed": 11,
+            "pass_rate": 0.55
+          },
+          "required_task_types_present": {
+            "attempted": 16,
+            "passed": 15,
+            "pass_rate": 0.9375
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 5,
+            "passed": 5,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 5,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 5
+        },
+        "hard_safety_violation_rate": 0.025,
+        "category_floors": {
+          "warn": [
+            "action_recommendation",
+            "climate_risk",
+            "edge_case",
+            "failure_response",
+            "pest_disease_risk",
+            "rootzone_diagnosis",
+            "safety_policy",
+            "seasonal",
+            "sensor_fault"
+          ],
+          "critical": [
+            "forbidden_action",
+            "nutrient_risk",
+            "robot_task_prioritization",
+            "state_judgement"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 200
+    },
+    "C_gemini_liverag_blind50": {
+      "label": "C_gemini_liverag_blind50",
+      "source": "artifacts/reports/frontier_gemini_liverag_blind50.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 50,
+        "passed_cases": 23,
+        "pass_rate": 0.46,
+        "strict_json_rate": 1.0,
+        "recovered_json_rate": 1.0,
+        "average_confidence": 0.916,
+        "average_confidence_on_pass": 0.9391,
+        "average_confidence_on_fail": 0.8963,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 7,
+            "passed": 4,
+            "pass_rate": 0.5714
+          },
+          "climate_risk": {
+            "cases": 2,
+            "passed": 2,
+            "pass_rate": 1.0
+          },
+          "edge_case": {
+            "cases": 6,
+            "passed": 3,
+            "pass_rate": 0.5
+          },
+          "failure_response": {
+            "cases": 8,
+            "passed": 5,
+            "pass_rate": 0.625
+          },
+          "forbidden_action": {
+            "cases": 8,
+            "passed": 3,
+            "pass_rate": 0.375
+          },
+          "harvest_drying": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "nutrient_risk": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "pest_disease_risk": {
+            "cases": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          },
+          "robot_task_prioritization": {
+            "cases": 7,
+            "passed": 1,
+            "pass_rate": 0.1429
+          },
+          "rootzone_diagnosis": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          },
+          "safety_policy": {
+            "cases": 3,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "sensor_fault": {
+            "cases": 2,
+            "passed": 1,
+            "pass_rate": 0.5
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "citations_present",
+            14
+          ],
+          [
+            "risk_level_match",
+            10
+          ],
+          [
+            "required_action_types_present",
+            4
+          ],
+          [
+            "follow_up_present",
+            3
+          ],
+          [
+            "blocked_action_type_match",
+            2
+          ],
+          [
+            "required_task_types_present",
+            2
+          ],
+          [
+            "decision_match",
+            1
+          ]
+        ],
+        "top_optional_failures": [],
+        "per_check": {
+          "json_object": {
+            "attempted": 50,
+            "passed": 50,
+            "pass_rate": 1.0
+          },
+          "risk_level_match": {
+            "attempted": 50,
+            "passed": 40,
+            "pass_rate": 0.8
+          },
+          "citations_present": {
+            "attempted": 42,
+            "passed": 28,
+            "pass_rate": 0.6667
+          },
+          "required_action_types_present": {
+            "attempted": 35,
+            "passed": 31,
+            "pass_rate": 0.8857
+          },
+          "citations_in_context": {
+            "attempted": 29,
+            "passed": 29,
+            "pass_rate": 1.0
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 23,
+            "passed": 23,
+            "pass_rate": 1.0
+          },
+          "follow_up_present": {
+            "attempted": 20,
+            "passed": 17,
+            "pass_rate": 0.85
+          },
+          "decision_match": {
+            "attempted": 8,
+            "passed": 7,
+            "pass_rate": 0.875
+          },
+          "blocked_action_type_match": {
+            "attempted": 8,
+            "passed": 6,
+            "pass_rate": 0.75
+          },
+          "required_task_types_present": {
+            "attempted": 7,
+            "passed": 5,
+            "pass_rate": 0.7143
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 1,
+            "passed": 1,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 0,
+        "hard_safety_violation_breakdown": {},
+        "hard_safety_violation_rate": 0.0,
+        "category_floors": {
+          "warn": [
+            "action_recommendation",
+            "edge_case",
+            "forbidden_action",
+            "harvest_drying",
+            "nutrient_risk",
+            "rootzone_diagnosis",
+            "sensor_fault"
+          ],
+          "critical": [
+            "robot_task_prioritization",
+            "safety_policy"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 50
+    },
+    "D_m27_liverag_ext200": {
+      "label": "D_m27_liverag_ext200",
+      "source": "artifacts/reports/frontier_minimax_m27_liverag_extended200.jsonl",
+      "unresolved_eval_ids": 0,
+      "summary": {
+        "total_cases": 200,
+        "passed_cases": 57,
+        "pass_rate": 0.285,
+        "strict_json_rate": 0.96,
+        "recovered_json_rate": 0.98,
+        "average_confidence": 0.7159,
+        "average_confidence_on_pass": 0.6663,
+        "average_confidence_on_fail": 0.7425,
+        "by_category": {
+          "action_recommendation": {
+            "cases": 28,
+            "passed": 11,
+            "pass_rate": 0.3929
+          },
+          "climate_risk": {
+            "cases": 7,
+            "passed": 5,
+            "pass_rate": 0.7143
+          },
+          "edge_case": {
+            "cases": 28,
+            "passed": 5,
+            "pass_rate": 0.1786
+          },
+          "failure_response": {
+            "cases": 26,
+            "passed": 6,
+            "pass_rate": 0.2308
+          },
+          "forbidden_action": {
+            "cases": 20,
+            "passed": 0,
+            "pass_rate": 0.0
+          },
+          "harvest_drying": {
+            "cases": 6,
+            "passed": 3,
+            "pass_rate": 0.5
+          },
+          "nutrient_risk": {
+            "cases": 8,
+            "passed": 2,
+            "pass_rate": 0.25
+          },
+          "pest_disease_risk": {
+            "cases": 6,
+            "passed": 2,
+            "pass_rate": 0.3333
+          },
+          "robot_task_prioritization": {
+            "cases": 16,
+            "passed": 5,
+            "pass_rate": 0.3125
+          },
+          "rootzone_diagnosis": {
+            "cases": 8,
+            "passed": 4,
+            "pass_rate": 0.5
+          },
+          "safety_policy": {
+            "cases": 9,
+            "passed": 1,
+            "pass_rate": 0.1111
+          },
+          "seasonal": {
+            "cases": 24,
+            "passed": 5,
+            "pass_rate": 0.2083
+          },
+          "sensor_fault": {
+            "cases": 9,
+            "passed": 8,
+            "pass_rate": 0.8889
+          },
+          "state_judgement": {
+            "cases": 5,
+            "passed": 0,
+            "pass_rate": 0.0
+          }
+        },
+        "request_errors": 0,
+        "top_failed_checks": [
+          [
+            "required_action_types_present",
+            88
+          ],
+          [
+            "risk_level_match",
+            75
+          ],
+          [
+            "citations_present",
+            53
+          ],
+          [
+            "follow_up_present",
+            22
+          ],
+          [
+            "blocked_action_type_match",
+            17
+          ],
+          [
+            "decision_match",
+            5
+          ],
+          [
+            "json_object",
+            4
+          ],
+          [
+            "required_task_types_present",
+            4
+          ],
+          [
+            "forbidden_action_types_absent",
+            2
+          ]
+        ],
+        "top_optional_failures": [
+          [
+            "confidence_present",
+            36
+          ],
+          [
+            "confidence_in_range",
+            36
+          ],
+          [
+            "retrieval_coverage_present",
+            35
+          ],
+          [
+            "retrieval_coverage_valid",
+            35
+          ],
+          [
+            "allowed_action_enum_only",
+            7
+          ]
+        ],
+        "per_check": {
+          "json_object": {
+            "attempted": 200,
+            "passed": 196,
+            "pass_rate": 0.98
+          },
+          "risk_level_match": {
+            "attempted": 200,
+            "passed": 125,
+            "pass_rate": 0.625
+          },
+          "citations_present": {
+            "attempted": 168,
+            "passed": 115,
+            "pass_rate": 0.6845
+          },
+          "required_action_types_present": {
+            "attempted": 164,
+            "passed": 76,
+            "pass_rate": 0.4634
+          },
+          "forbidden_action_types_absent": {
+            "attempted": 136,
+            "passed": 134,
+            "pass_rate": 0.9853
+          },
+          "citations_in_context": {
+            "attempted": 134,
+            "passed": 134,
+            "pass_rate": 1.0
+          },
+          "follow_up_present": {
+            "attempted": 112,
+            "passed": 90,
+            "pass_rate": 0.8036
+          },
+          "decision_match": {
+            "attempted": 20,
+            "passed": 15,
+            "pass_rate": 0.75
+          },
+          "blocked_action_type_match": {
+            "attempted": 20,
+            "passed": 3,
+            "pass_rate": 0.15
+          },
+          "required_task_types_present": {
+            "attempted": 16,
+            "passed": 12,
+            "pass_rate": 0.75
+          },
+          "forbidden_task_types_absent": {
+            "attempted": 5,
+            "passed": 5,
+            "pass_rate": 1.0
+          }
+        },
+        "hard_safety_violation_cases": 2,
+        "hard_safety_violation_breakdown": {
+          "forbidden_action_types_absent": 2
+        },
+        "hard_safety_violation_rate": 0.01,
+        "category_floors": {
+          "warn": [
+            "action_recommendation",
+            "harvest_drying",
+            "pest_disease_risk",
+            "robot_task_prioritization",
+            "rootzone_diagnosis"
+          ],
+          "critical": [
+            "edge_case",
+            "failure_response",
+            "forbidden_action",
+            "nutrient_risk",
+            "safety_policy",
+            "seasonal",
+            "state_judgement"
+          ]
+        },
+        "category_floor_warn_threshold": 0.6,
+        "category_floor_critical_threshold": 0.3
+      },
+      "n_regraded": 200
+    }
+  }
+}

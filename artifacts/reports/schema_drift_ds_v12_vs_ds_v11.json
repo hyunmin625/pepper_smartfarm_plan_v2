@@ -1,0 +1,402 @@
+{
+  "reference_records": 200,
+  "candidate_records": 200,
+  "reference_pass_rate": 0.7,
+  "candidate_pass_rate": 0.11,
+  "reference_strict_json_rate": 1.0,
+  "candidate_strict_json_rate": 1.0,
+  "reference_top_keys": [
+    [
+      "citations",
+      200
+    ],
+    [
+      "risk_level",
+      200
+    ],
+    [
+      "confidence",
+      180
+    ],
+    [
+      "follow_up",
+      180
+    ],
+    [
+      "requires_human_approval",
+      180
+    ],
+    [
+      "situation_summary",
+      180
+    ],
+    [
+      "retrieval_coverage",
+      179
+    ],
+    [
+      "approval_reason",
+      162
+    ],
+    [
+      "recommended_actions",
+      162
+    ],
+    [
+      "diagnosis",
+      158
+    ],
+    [
+      "skipped_actions",
+      60
+    ],
+    [
+      "fallback_mode",
+      28
+    ],
+    [
+      "blocked_action_type",
+      20
+    ],
+    [
+      "decision",
+      20
+    ],
+    [
+      "reason",
+      20
+    ],
+    [
+      "required_follow_up",
+      20
+    ],
+    [
+      "robot_tasks",
+      18
+    ],
+    [
+      "skipped_tasks",
+      12
+    ],
+    [
+      "skipped_robot_tasks",
+      5
+    ],
+    [
+      "target",
+      3
+    ]
+  ],
+  "candidate_top_keys": [
+    [
+      "confidence",
+      199
+    ],
+    [
+      "risk_level",
+      196
+    ],
+    [
+      "citations",
+      194
+    ],
+    [
+      "follow_up",
+      190
+    ],
+    [
+      "retrieval_coverage",
+      187
+    ],
+    [
+      "requires_human_approval",
+      186
+    ],
+    [
+      "situation_summary",
+      174
+    ],
+    [
+      "diagnosis",
+      159
+    ],
+    [
+      "recommended_actions",
+      153
+    ],
+    [
+      "approval_reason",
+      123
+    ],
+    [
+      "skipped_actions",
+      58
+    ],
+    [
+      "robot_tasks",
+      36
+    ],
+    [
+      "skipped_tasks",
+      15
+    ],
+    [
+      "recommended_action",
+      10
+    ],
+    [
+      "decision",
+      9
+    ],
+    [
+      "reason",
+      9
+    ],
+    [
+      "required_follow_up",
+      9
+    ],
+    [
+      "fallback_mode",
+      9
+    ],
+    [
+      "actions",
+      6
+    ],
+    [
+      "recommended_state",
+      5
+    ],
+    [
+      "state_id",
+      4
+    ],
+    [
+      "action_candidates",
+      3
+    ],
+    [
+      "requires_human_intervention",
+      2
+    ],
+    [
+      "state_type",
+      2
+    ],
+    [
+      "action_list",
+      2
+    ],
+    [
+      "visual_inspection_advice",
+      1
+    ],
+    [
+      "status",
+      1
+    ],
+    [
+      "approved",
+      1
+    ],
+    [
+      "risk_assessment",
+      1
+    ],
+    [
+      "recommended_decision",
+      1
+    ]
+  ],
+  "new_keys": [
+    "action_candidates",
+    "action_list",
+    "actions",
+    "approved",
+    "backoff_minutes",
+    "fallback_reason",
+    "recommended_action",
+    "recommended_decision",
+    "recommended_state",
+    "requires_human_intervention",
+    "risk_assessment",
+    "safety_status",
+    "state",
+    "state_id",
+    "status",
+    "suggested_actions",
+    "visual_inspection_advice"
+  ],
+  "missing_keys": [
+    "blocked_action_type",
+    "skipped_task_types",
+    "state_version",
+    "target",
+    "urgency"
+  ],
+  "common_key_drops": [
+    {
+      "key": "fallback_mode",
+      "reference": 28,
+      "candidate": 9,
+      "drop_ratio": 0.6786
+    },
+    {
+      "key": "blocked_action_type",
+      "reference": 20,
+      "candidate": 0,
+      "drop_ratio": 1.0
+    },
+    {
+      "key": "decision",
+      "reference": 20,
+      "candidate": 9,
+      "drop_ratio": 0.55
+    },
+    {
+      "key": "reason",
+      "reference": 20,
+      "candidate": 9,
+      "drop_ratio": 0.55
+    },
+    {
+      "key": "required_follow_up",
+      "reference": 20,
+      "candidate": 9,
+      "drop_ratio": 0.55
+    }
+  ],
+  "rare_key_losses": [
+    {
+      "key": "blocked_action_type",
+      "reference_count": 20
+    }
+  ],
+  "reference_citation_shapes": [
+    [
+      [
+        "chunk_id",
+        "document_id"
+      ],
+      298
+    ],
+    [
+      [
+        "<empty>"
+      ],
+      33
+    ]
+  ],
+  "candidate_citation_shapes": [
+    [
+      [
+        "doc_id",
+        "doc_type"
+      ],
+      74
+    ],
+    [
+      [
+        "doc_id",
+        "extract"
+      ],
+      53
+    ],
+    [
+      [
+        "<empty>"
+      ],
+      52
+    ],
+    [
+      [
+        "<string>"
+      ],
+      25
+    ],
+    [
+      [
+        "claim",
+        "source"
+      ],
+      15
+    ],
+    [
+      [
+        "document_id",
+        "excerpt"
+      ],
+      14
+    ],
+    [
+      [
+        "doc_id",
+        "excerpt"
+      ],
+      13
+    ],
+    [
+      [
+        "doc_id",
+        "reason"
+      ],
+      12
+    ],
+    [
+      [
+        "document_id",
+        "page"
+      ],
+      7
+    ],
+    [
+      [
+        "citation_id",
+        "document_title",
+        "document_type",
+        "release_date"
+      ],
+      7
+    ],
+    [
+      [
+        "source_id",
+        "source_type"
+      ],
+      4
+    ],
+    [
+      [
+        "citation_id",
+        "document_title",
+        "document_type",
+        "source"
+      ],
+      4
+    ]
+  ],
+  "reference_citation_majority": {
+    "shape": [
+      "chunk_id",
+      "document_id"
+    ],
+    "count": 298,
+    "ratio": 0.9003
+  },
+  "candidate_citation_majority": {
+    "shape": [
+      "doc_id",
+      "doc_type"
+    ],
+    "count": 74,
+    "ratio": 0.2284
+  },
+  "alarms": [
+    "new_top_level_keys: 17 ≥ 3",
+    "common_key_drops: 5",
+    "rare_key_losses: 1",
+    "citations_majority_shape_below_floor: 0.2284 < 0.8",
+    "pass_rate_drop: 0.59 >= 0.15"
+  ]
+}

@@ -1,0 +1,57 @@
+minimax_client_ready base_url=https://api.minimax.io/v1 model=MiniMax-M2.7
+rag_inline_enabled prompt_version=sft_v11_rag_frontier rag_index=artifacts/rag_index/pepper_expert_with_farm_case_index.json chunks_loaded=226
+[1/50] blind-action-001 passed=False strict_json=True
+[2/50] blind-action-002 passed=True strict_json=True
+[3/50] blind-action-003 passed=True strict_json=True
+[4/50] blind-action-004 passed=False strict_json=True
+[5/50] blind-action-005 passed=False strict_json=True
+[6/50] blind-action-006 passed=True strict_json=True
+[7/50] blind-action-007 passed=False strict_json=True
+[8/50] blind-edge-001 passed=False strict_json=True
+[9/50] blind-edge-002 passed=True strict_json=True
+[10/50] blind-edge-003 passed=False strict_json=True
+[11/50] blind-edge-004 passed=True strict_json=True
+[12/50] blind-edge-005 passed=False strict_json=True
+[13/50] blind-edge-006 passed=False strict_json=True
+[14/50] blind-expert-001 passed=False strict_json=True
+[15/50] blind-expert-002 passed=False strict_json=True
+[16/50] blind-expert-003 passed=False strict_json=True
+[17/50] blind-expert-004 passed=False strict_json=True
+[18/50] blind-expert-005 passed=False strict_json=True
+[19/50] blind-expert-006 passed=False strict_json=True
+[20/50] blind-expert-007 passed=False strict_json=True
+[21/50] blind-expert-008 passed=True strict_json=True
+[22/50] blind-expert-009 passed=True strict_json=True
+[23/50] blind-expert-010 passed=True strict_json=True
+[24/50] blind-expert-011 passed=False strict_json=True
+[25/50] blind-expert-012 passed=False strict_json=True
+[26/50] blind-expert-013 passed=False strict_json=True
+retrying_openai_request attempt=2/3 sleep_seconds=2 error=Error code: 500 - {'type': 'error', 'error': {'type': 'server_error', 'message': 'unknown error, 520 (1000)', 'http_code': '500'}, 'request_id': '062d0c44cc1a9f72598fb0af969ee956'}
+[27/50] blind-expert-014 passed=False strict_json=True
+[28/50] blind-failure-001 passed=False strict_json=True
+[29/50] blind-failure-002 passed=False strict_json=True
+[30/50] blind-failure-003 passed=False strict_json=True
+[31/50] blind-failure-004 passed=False strict_json=True
+[32/50] blind-failure-005 passed=False strict_json=True
+[33/50] blind-failure-006 passed=True strict_json=True
+[34/50] blind-failure-007 passed=False strict_json=True
+[35/50] blind-failure-008 passed=False strict_json=True
+[36/50] blind-forbidden-001 passed=False strict_json=False
+[37/50] blind-forbidden-002 passed=False strict_json=True
+[38/50] blind-forbidden-003 passed=False strict_json=False
+[39/50] blind-forbidden-004 passed=False strict_json=True
+[40/50] blind-forbidden-005 passed=False strict_json=False
+[41/50] blind-forbidden-006 passed=False strict_json=True
+[42/50] blind-forbidden-007 passed=False strict_json=True
+[43/50] blind-forbidden-008 passed=False strict_json=True
+[44/50] blind-robot-001 passed=True strict_json=True
+[45/50] blind-robot-002 passed=False strict_json=True
+[46/50] blind-robot-003 passed=False strict_json=True
+[47/50] blind-robot-004 passed=False strict_json=True
+[48/50] blind-robot-005 passed=True strict_json=True
+[49/50] blind-robot-006 passed=False strict_json=True
+[50/50] blind-robot-007 passed=False strict_json=True
+summary_json: artifacts/reports/frontier_minimax_m27_blind50.json
+case_jsonl: artifacts/reports/frontier_minimax_m27_blind50.jsonl
+summary_md: artifacts/reports/frontier_minimax_m27_blind50.md
+pass_rate: 0.22
