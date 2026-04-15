@@ -20,6 +20,13 @@ class Settings:
     llm_prompt_version: str
     llm_timeout_seconds: float
     llm_max_retries: int
+    # Retriever backend selection. Default stays 'keyword' so existing
+    # deployments keep the historical behaviour until the operator opts in
+    # to the denser OpenAI embedding retriever via OPS_API_RETRIEVER_TYPE.
+    # See artifacts/reports/phase_f_validator_retriever_improvements.md for
+    # the recall@5 benchmark that motivates the 'openai' option.
+    retriever_type: str = "keyword"
+    retriever_rag_index_path: str = ""
 
 
 def load_settings() -> Settings:
@@ -53,4 +60,6 @@ def load_settings() -> Settings:
         llm_prompt_version=os.getenv("OPS_API_PROMPT_VERSION", "sft_v10"),
         llm_timeout_seconds=float(os.getenv("OPS_API_LLM_TIMEOUT_SECONDS", "30")),
         llm_max_retries=int(os.getenv("OPS_API_LLM_MAX_RETRIES", "3")),
+        retriever_type=os.getenv("OPS_API_RETRIEVER_TYPE", "keyword"),
+        retriever_rag_index_path=os.getenv("OPS_API_RETRIEVER_RAG_INDEX_PATH", ""),
     )

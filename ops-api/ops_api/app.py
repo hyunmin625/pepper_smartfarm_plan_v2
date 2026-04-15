@@ -59,7 +59,12 @@ configure_repo_paths()
 
 from execution_gateway.contracts import ControlOverrideRequest, DeviceCommandRequest  # noqa: E402
 from execution_gateway.dispatch import ExecutionDispatcher  # noqa: E402
-from llm_orchestrator import LLMOrchestratorService, ModelConfig, OrchestratorRequest  # noqa: E402
+from llm_orchestrator import (  # noqa: E402
+    LLMOrchestratorService,
+    ModelConfig,
+    OrchestratorRequest,
+    create_retriever,
+)
 from policy_engine import set_active_policy_source  # noqa: E402
 from state_estimator import build_zone_state_payload, estimate_zone_state  # noqa: E402
 
@@ -794,6 +799,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         actor_id=current_mode.actor_id,
         reason=current_mode.reason,
     )
+    # Build the retriever selected by OPS_API_RETRIEVER_TYPE. Default is
+    # 'keyword' so existing deployments stay on the historical backend;
+    # operators can opt in to 'openai' (text-embedding-3-small) for a
+    # roughly 2.1x recall@5 improvement once the index is built via
+    # scripts/build_rag_index.py. If the factory call fails (e.g. the
+    # openai index is missing), fall back to keyword rather than blocking
+    # app startup.
+    rag_index_override = resolved_settings.retriever_rag_index_path or None
+    try:
+        retriever_instance = create_retriever(
+            resolved_settings.retriever_type,
+            rag_index_path=rag_index_override,
+        )
+    except Exception as exc:
+        logger.warning(
+            "retriever_fallback type=%s error=%s -- using keyword retriever",
+            resolved_settings.retriever_type,
+            exc,
+        )
+        retriever_instance = create_retriever("keyword")
+
     services = AppServices(
         settings=resolved_settings,
         session_factory=session_factory,
@@ -803,7 +829,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 model_id=resolved_settings.llm_model_id,
                 timeout_seconds=resolved_settings.llm_timeout_seconds,
                 max_retries=resolved_settings.llm_max_retries,
-            )
+            ),
+            retriever=retriever_instance,
         ),
         dispatcher=ExecutionDispatcher.default(adapter_kind="mock"),
         planner=ActionDispatchPlanner(),
