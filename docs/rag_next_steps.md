@@ -4,17 +4,18 @@
 
 ## 현재 상태
 
-- `data/rag/pepper_expert_seed_chunks.jsonl` 기준 RAG seed chunk는 219개다.
+- `data/rag/pepper_expert_seed_chunks.jsonl` 기준 RAG seed chunk는 250개다.
 - `scripts/build_rag_index.py --skip-embeddings`로 로컬 JSON 인덱스를 재생성할 수 있다.
 - `scripts/validate_rag_chunks.py`로 JSONL 필수 필드, 중복 `chunk_id`, citation 경고를 확인할 수 있다.
 - `scripts/search_rag_index.py`는 keyword 검색, local TF-IDF + SVD vector score, OpenAI embedding 기반 vector score, ChromaDB vector score, metadata hard filter를 지원한다.
 - `scripts/rag_smoke_test.py`는 기본 query 80개와 metadata filter query 18개, 총 98개를 검증한다.
-- `scripts/evaluate_rag_retrieval.py` 기준 keyword-only는 110개 case hit rate 1.0, MRR 0.9909이고, local vector hybrid는 hit rate 1.0, MRR 0.9955, local-backed Chroma hybrid는 hit rate 1.0, MRR 0.9955, OpenAI-backed Chroma hybrid는 hit rate 1.0, MRR 0.9803이다.
+- `scripts/evaluate_rag_retrieval.py` 기준 keyword-only는 110개 case hit rate 1.0, MRR 0.9909이고, local vector hybrid는 hit rate 1.0, MRR 1.0, local-backed Chroma hybrid는 hit rate 1.0, MRR 0.9955, OpenAI-backed Chroma hybrid는 hit rate 1.0, MRR 0.9803이다.
+- `evals/rag_stage_retrieval_eval_set.jsonl` 기준 stage-specific retrieval eval 16개 case는 keyword-only와 local vector hybrid 모두 hit rate 1.0, MRR 1.0이다.
 - `scripts/build_chroma_index.py`로 persistent Chroma collection을 만들 수 있고, 현재는 local-backed와 OpenAI-backed collection 검증까지 완료했다.
 
 ## 1. Knowledge Expansion
 
-운영용 RAG의 최소 기준인 200개 청크는 달성했다. 다음 확장은 250개 이상과 `farm_case` 계층 보강에 초점을 둔다.
+운영용 RAG의 최소 기준인 200개 청크와 중기 기준 250개 청크는 달성했다. 다음 확장은 `farm_case` 계층 보강과 `Grodan Delta/GT Master` 기반 적고추 수량·병충해 예방 규칙의 단계별 세분화에 초점을 둔다.
 
 우선 확장 대상:
 

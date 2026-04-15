@@ -176,11 +176,15 @@
 - 농촌진흥청 PDF 기반 RAG 정밀 보강 완료: 육묘·재해·영양장애·비가림 구조 기반 지식과 후속 웹 공식 자료 보강까지 반영
 - 농촌진흥청 PDF, 작물기술정보, 작형 일정, 품종 기준, 현장 기술지원, 미숙퇴비·배수불량·과차광·육묘 장해·첫서리·노화묘·품종 민감성 사례 추가로 RAG seed chunk 141개 확장 완료
 - RAG-SRC-001 병해충·토양병·세균병·굴파리·뿌리혹선충·농약 안전사용 장 추가 추출로 균핵병·시들음병·잿빛곰팡이병·흰별무늬병·흰비단병·무름병·세균점무늬병·잎굴파리·뿌리혹선충·잔류농약 규칙을 보강해 RAG seed chunk 219개 확장 완료
+- `Grodan Delta 6.5` 육묘, `Grodan GT Master` 본재배, 수량 증대, 예방형 병충해, 재배단계별 서브에이전트 수집 결과를 반영해 RAG seed chunk 250개 확장 완료
 - RAG 검색 품질 평가 확장: smoke test 98건, retrieval eval 110건 검증 완료
-- 로컬 TF-IDF + SVD vector search PoC 유지: local hybrid retrieval eval 110건 hit rate 1.0, MRR 0.9955
+- 재배단계별 retrieval eval 16건 추가 완료: keyword/local 모두 hit rate 1.0, MRR 1.0
+- 공통 retrieval eval 110건과 stage retrieval eval 16건을 함께 돌리는 통합 검증 entrypoint `scripts/run_rag_validation_suite.py` 추가 완료
+- 로컬 TF-IDF + SVD vector search PoC 유지: local hybrid retrieval eval 110건 hit rate 1.0, MRR 1.0
 - ChromaDB persistent vector store 재검증 완료: local-backed Chroma retrieval eval 110건 hit rate 1.0, MRR 0.9955
 - OpenAI embedding 기반 Chroma collection 재검증 완료: retrieval eval 110건 hit rate 1.0, MRR 0.9803
-- 110개 retrieval eval 재검증 결과 local vector와 local-backed Chroma가 동일 MRR 0.9955로 가장 높고, keyword-only는 0.9909, OpenAI-backed Chroma는 0.9803을 유지
+- 110개 retrieval eval 재검증 결과 local vector MRR은 1.0으로 가장 높고, local-backed Chroma는 0.9955, keyword-only는 0.9909, OpenAI-backed Chroma는 0.9803을 유지
+- 통합 validation suite 기준 aggregate는 `126건`, keyword hit rate `1.0` / MRR `0.9921`, local hit rate `1.0` / MRR `1.0`이다.
 - `region`, `season`, `cultivar`, `greenhouse_type` 메타데이터가 JSON index와 검색 필드에 실제 반영되도록 `scripts/build_rag_index.py`, `scripts/search_rag_index.py` 보정 완료
 - multi-turn contextual retrieval 전략 문서화 완료: `docs/rag_contextual_retrieval_strategy.md`
 - `farm_case` RAG 환류 파이프라인 초안과 후보 스키마 작성: `docs/farm_case_rag_pipeline.md`, `schemas/farm_case_candidate_schema.json`

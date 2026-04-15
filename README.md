@@ -165,12 +165,12 @@
 - repeated adapter timeout/fault -> `safe_mode` latch 연결 완료: zone/site scope 차단 검증 완료
 - 승인 체계 문서화 완료: 위험도 분류, 승인자 역할, UI 요구사항, timeout, 거절 fallback 정리
 - 도메인 데이터 taxonomy/format/curation 기준 추가 완료
-- RAG seed chunk: `219개` 구축 완료
+- RAG seed chunk: `250개` 구축 완료
 - 검색 평가셋: `110개` case로 확장 완료
 - smoke test: `98건` 통과
 - 검색 방식 검증 완료:
   - keyword-only: hit rate `1.0`, MRR `0.9909`
-  - local TF-IDF + SVD: hit rate `1.0`, MRR `0.9955`
+  - local TF-IDF + SVD: hit rate `1.0`, MRR `1.0`
   - Chroma local: hit rate `1.0`, MRR `0.9955`
   - Chroma OpenAI embedding: hit rate `1.0`, MRR `0.9803`
 - multi-turn contextual retrieval 전략 문서화 완료
@@ -191,7 +191,9 @@
 
 ## 현재 핵심 산출물
 
-- `data/rag/pepper_expert_seed_chunks.jsonl`: 적고추 전주기 전문가 지식 219개 청크
+- `data/rag/pepper_expert_seed_chunks.jsonl`: 적고추 전주기 전문가 지식 250개 청크
+- `docs/cultivation_stage_subagents_20260415.md`: 재배단계별 서브에이전트 수집 범위와 stage-aware RAG 반영 기준
+- `docs/grodan_delta_gt_master_yield_pest_research_20260415.md`: `Grodan Delta`/`GT Master` 기반 적고추 수량·병충해 예방 조사 메모
 - `artifacts/rag_index/pepper_expert_index.json`: 로컬 RAG 인덱스
 - `docs/rag_indexing_plan.md`: 인덱싱, 검색, 평가 방식
 - `docs/project_bootstrap.md`: 코드명, monorepo, 공통 디렉터리 기준
@@ -271,7 +273,7 @@
 - `evals/rag_official_priority_eval_set.jsonl`: `farm_case` 혼합 인덱스에서 공식 지침 우선 정렬 회귀셋
 - `scripts/build_rag_index.py`, `scripts/search_rag_index.py`: 기본 인덱싱/검색
 - `scripts/build_chroma_index.py`: ChromaDB 기반 vector index 생성
-- `scripts/evaluate_rag_retrieval.py`, `scripts/rag_smoke_test.py`: 검색 회귀 검증
+- `scripts/evaluate_rag_retrieval.py`, `scripts/run_rag_validation_suite.py`, `scripts/rag_smoke_test.py`: 검색 회귀 검증
 - `scripts/validate_training_examples.py`: 학습/eval JSONL 구조 검증
 - `scripts/audit_training_data_consistency.py`: 학습 seed 중복/잠재 모순 감사
 - `scripts/build_training_jsonl.py`, `scripts/build_eval_jsonl.py`: 학습/eval 합본 JSONL 생성

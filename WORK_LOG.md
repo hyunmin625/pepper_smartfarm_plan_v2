@@ -1742,3 +1742,44 @@
   - 작은 corrective batch (전체의 6~10%)는 negative transfer 위험 큼.
   - 학술적 점수와 운영 적합성은 다르다: ds_v11 raw 0.70 = 3겹 안전망 위에서 validator-후 0.90.
   - Retriever 업그레이드가 fine-tune 반복보다 레버리지 훨씬 큼.
+
+### Phase L: Grodan Delta/GT Master + 수량·병충해 예방 RAG 보강
+- `Grodan Delta NG2.0 Block`, `Grodan wetting instruction`, `GT Master Dry/GT Master`, `Grodan EC/refreshment` 공식 자료와 `농사로`의 점박이응애, 목화진딧물, 담배가루이, 담배나방, 흰가루병 자료를 추가 조사해 [docs/grodan_delta_gt_master_yield_pest_research_20260415.md](/home/user/pepper-smartfarm-plan-v2/docs/grodan_delta_gt_master_yield_pest_research_20260415.md)를 작성했다.
+- `docs/rag_source_inventory.md`에 신규 source `RAG-SRC-026`~`037`을 추가했다. 범위는 `Grodan Delta 6.5` 육묘/정식, `GT Master` root zone steering, 수량 방어용 저온/차광/잎-과실 균형, 예방형 병충해 예찰·방제다.
+- `data/rag/pepper_expert_seed_chunks.jsonl`에 신규 청크 `23건`을 추가해 총 `242건`으로 확장했다. 추가 묶음은 `Grodan direct 0 -> 8+`, 저온/낙화 기반 수량 방어, 탄저병/역병/점박이응애/진딧물/담배가루이/담배나방/흰가루병/총채벌레 예방 규칙을 포함한다.
+- 이번 요청에 맞춘 직접 범위(`Grodan + 수량 증대 + 예방형 병충해`) 기준 bundle count는 `HEAD 14건 -> 작업 후 36건`으로 `2배 이상` 확대했다.
+- `python3 scripts/validate_rag_chunks.py` 결과 `validated rows: 242`, duplicate `0`, warnings `0`, errors `0`을 확인했다.
+
+### Phase M: Grodan 근권 해석 규칙을 rubric/policy 문서에 반영
+- [docs/risk_level_rubric.md](/home/user/pepper-smartfarm-plan-v2/docs/risk_level_rubric.md)에 `GT Master`의 `EC delta 0.3~0.8 안정권`, `<0.3 과급수 watch`, `>1.0 refresh 실패/과소급수 watch`, `first drain without EC drop = direct drainage 의심` 규칙을 반영했다.
+- 같은 문서에 `Delta 6.5` 정식 전 wet weight/saturation evidence를 `unknown` 판단의 핵심 근거로 추가했다. `10x10x6.5cm` block 기준 wet weight `550g` 미만 또는 미측정이면 자동 정식/자동 관수 판단 근거로 쓰지 않는다고 명시했다.
+- [docs/policy_output_validator_spec.md](/home/user/pepper-smartfarm-plan-v2/docs/policy_output_validator_spec.md)의 `HSV-08`을 `evidence sufficiency` 중심으로 확장했다. `Delta 6.5` saturation evidence 부재는 validator가 `unknown + pause_automation + request_human_check`로 보내고, `GT Master high vs medium` 의미 해석은 validator가 아니라 rubric/모델이 맡는다고 분리했다.
+- [docs/site_scope_baseline.md](/home/user/pepper-smartfarm-plan-v2/docs/site_scope_baseline.md)에 현장 기본 해석선을 추가해 site baseline 문서만 봐도 `Delta/GT Master` 운영 전제를 바로 확인할 수 있게 했다.
+
+### Phase N: 재배단계별 서브에이전트 기반 RAG 지식 보강
+- 사용자 요청에 맞춰 `육묘`, `정식/활착`, `영양생장~과실비대`, `수확/건조` 4개 재배단계 서브에이전트로 수집 범위를 분리했다. 중복 소스는 제외하고 stage-aware retrieval에 실익이 큰 항목만 선별했다.
+- [docs/cultivation_stage_subagents_20260415.md](/home/user/pepper-smartfarm-plan-v2/docs/cultivation_stage_subagents_20260415.md)를 신규 작성해 각 서브에이전트의 담당 범위, 우선 소스, overlap 처리 원칙, RAG 반영 결과를 문서화했다.
+- `docs/rag_source_inventory.md`에 `RAG-SRC-038`~`044`를 추가했다. 신규 source 범위는 `건전묘 구매 기준`, `노화묘+고EC+깊은 정식 복합 실패`, `촉성재배 온도/수량 기술`, `4차분지 적화`, `시설해충 예방형 천적 방사`, `건고추 수확`, `건조 및 저장`이다.
+- `data/rag/pepper_expert_seed_chunks.jsonl`에 신규 청크 `8건`을 추가해 총 `250건`으로 확장했다.
+  - `pepper-seedling-purchase-qc-001`
+  - `pepper-overaged-seedling-high-ec-001`
+  - `pepper-forcing-fruitset-temperature-band-001`
+  - `pepper-forcing-technology-yieldgain-001`
+  - `pepper-early-flower-removal-yield-001`
+  - `pepper-greenhouse-pest-preventive-biocontrol-window-001`
+  - `pepper-harvest-80pct-shade-ripen-001`
+  - `pepper-dry-storage-barrierbag-001`
+- 이번 반영으로 stage별 신규 지식은 `육묘 1`, `정식/활착 1`, `본재배 4`, `수확/건조 2` 비중으로 보강됐고, `RAG-SRC-001` 및 기존 Grodan chunk와 겹치는 접목 일반론은 중복 추가하지 않았다.
+
+### Phase O: stage-aware retrieval eval set 추가 및 검증
+- `evals/rag_stage_retrieval_eval_set.jsonl`을 신규 작성했다. 총 `16개 case`이며 `nursery`, `transplanting`, `flowering`, `fruiting`, `harvest_drying_storage` 단계와 `grodan_delta_6_5`, `grodan_gt_master`, `forcing` metadata filter를 함께 검증한다.
+- stage eval은 이번에 추가한 `RAG-SRC-038`~`044`와 기존 Grodan chunk가 실제로 단계별 top-k retrieval에서 기대 청크로 잡히는지 확인하기 위한 전용 세트다.
+- `./.venv/bin/python scripts/evaluate_rag_retrieval.py --eval-set evals/rag_stage_retrieval_eval_set.jsonl --vector-backend keyword --top-k 3 --fail-under 1.0` 결과 `16/16`, `hit_rate 1.0`, `MRR 1.0`을 확인했다.
+- `./.venv/bin/python scripts/evaluate_rag_retrieval.py --eval-set evals/rag_stage_retrieval_eval_set.jsonl --vector-backend local --top-k 3 --fail-under 1.0` 결과도 `16/16`, `hit_rate 1.0`, `MRR 1.0`이었다.
+- 결과 JSON은 `artifacts/reports/rag_stage_retrieval_keyword_20260415.json`, `artifacts/reports/rag_stage_retrieval_local_20260415.json`에 저장했고, 요약은 `artifacts/reports/rag_stage_retrieval_summary_20260415.md`에 남겼다.
+
+### Phase P: 공통 + stage retrieval 통합 validation suite 추가
+- `scripts/run_rag_validation_suite.py`를 신규 작성했다. 기본값으로 공통 retrieval eval `110건`과 stage retrieval eval `16건`을 keyword/local 두 모드로 함께 실행하고, JSON/Markdown 요약 리포트를 출력한다.
+- 실행 명령은 `./.venv/bin/python scripts/run_rag_validation_suite.py --fail-under 1.0 --output-json artifacts/reports/rag_validation_suite_20260415.json --output-md artifacts/reports/rag_validation_suite_20260415.md`로 고정했다.
+- 실행 결과 aggregate 기준 keyword는 `126개 case`, `hit_rate 1.0`, `MRR 0.9921`이고, local은 `126개 case`, `hit_rate 1.0`, `MRR 1.0`이었다.
+- suite별 세부 수치는 공통 eval `110건` keyword `0.9909` / local `1.0`, stage eval `16건` keyword/local 모두 `1.0`이다.

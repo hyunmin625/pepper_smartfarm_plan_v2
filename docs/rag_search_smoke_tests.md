@@ -29,6 +29,7 @@
 ```bash
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --fail-under 1.0
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend local --fail-under 1.0
+./.venv/bin/python scripts/run_rag_validation_suite.py --fail-under 1.0 --output-json artifacts/reports/rag_validation_suite_latest.json --output-md artifacts/reports/rag_validation_suite_latest.md
 ./.venv/bin/python scripts/build_chroma_index.py --embedding-backend local
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0
 ./.venv/bin/python scripts/compare_rag_retrieval_modes.py --candidate-backend local
@@ -37,6 +38,8 @@
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend openai --fail-under 1.0
 ./.venv/bin/python scripts/compare_rag_retrieval_modes.py --candidate-backend chroma --chroma-embedding-backend openai
 ```
+
+`scripts/run_rag_validation_suite.py`는 공통 retrieval eval `110건`과 stage-specific retrieval eval `16건`을 keyword/local 기준으로 한 번에 실행하고 JSON/Markdown 요약을 남긴다.
 
 ## Smoke Test Query
 
@@ -153,7 +156,7 @@
 - 결과 metadata에 `document_id`, `source_url`, `risk_tags`, `sensor_tags`가 포함된다.
 - `citation_required`가 true인 chunk는 `source_url`, `source_pages`, `source_section`을 가진다.
 - 필터 query는 지정한 metadata 조건을 만족하는 chunk만 반환한다.
-- 현재 기준 retrieval eval은 110개 case에서 keyword-only MRR 0.9909, local vector MRR 0.9955, local-backed Chroma MRR 0.9955, OpenAI-backed Chroma MRR 0.9803이다.
+- 현재 기준 retrieval eval은 110개 case에서 keyword-only MRR 0.9909, local vector MRR 1.0, local-backed Chroma MRR 0.9955, OpenAI-backed Chroma MRR 0.9803이다.
 
 ## 다음 개선
 

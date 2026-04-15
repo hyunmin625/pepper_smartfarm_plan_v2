@@ -1,0 +1,292 @@
+{
+  "case_count": 16,
+  "hit_count": 16,
+  "hit_rate": 1.0,
+  "mrr": 1.0,
+  "cases": [
+    {
+      "case_id": "rag-stage-001",
+      "category": "nursery_seedling_purchase_qc",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-seedling-purchase-qc-001"
+      ],
+      "result_ids": [
+        "pepper-seedling-purchase-qc-001",
+        "pepper-overaged-seedling-standard-001",
+        "pepper-seedling-diagnosis-001"
+      ],
+      "filters": {
+        "growth_stage": "nursery"
+      }
+    },
+    {
+      "case_id": "rag-stage-002",
+      "category": "nursery_grodan_delta_wetting",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-grodan-delta-wetting-weight-001"
+      ],
+      "result_ids": [
+        "pepper-grodan-delta-wetting-weight-001",
+        "pepper-grodan-delta-propagation-001",
+        "pepper-grodan-delta-wetting-pace-001"
+      ],
+      "filters": {
+        "growth_stage": "nursery",
+        "cultivation_type": "grodan_delta_6_5"
+      }
+    },
+    {
+      "case_id": "rag-stage-003",
+      "category": "nursery_graft_healing",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-grafting-healing-management-001"
+      ],
+      "result_ids": [
+        "pepper-grafting-healing-management-001",
+        "pepper-plantfactory-healing-001",
+        "pepper-grafting-storage-001"
+      ],
+      "filters": {
+        "growth_stage": "nursery"
+      }
+    },
+    {
+      "case_id": "rag-stage-004",
+      "category": "nursery_seedling_window",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-crop-seedling-window-001"
+      ],
+      "result_ids": [
+        "pepper-crop-seedling-window-001",
+        "pepper-plantfactory-nursery-001",
+        "pepper-grafting-healing-management-001"
+      ],
+      "filters": {
+        "growth_stage": "nursery"
+      }
+    },
+    {
+      "case_id": "rag-stage-005",
+      "category": "transplant_overaged_high_ec",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-overaged-seedling-high-ec-001"
+      ],
+      "result_ids": [
+        "pepper-overaged-seedling-high-ec-001",
+        "pepper-nursery-quality-002",
+        "pepper-overaged-seedling-deep-001"
+      ],
+      "filters": {
+        "growth_stage": "transplanting"
+      }
+    },
+    {
+      "case_id": "rag-stage-006",
+      "category": "transplant_stage_window",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-crop-transplant-stage-001"
+      ],
+      "result_ids": [
+        "pepper-crop-transplant-stage-001",
+        "pepper-lowtemp-transplant-yield-002",
+        "pepper-rainshelter-lowlight-yield-001"
+      ],
+      "filters": {
+        "growth_stage": "transplanting"
+      }
+    },
+    {
+      "case_id": "rag-stage-007",
+      "category": "transplant_lowtemp_duration",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-lowtemp-transplant-yield-002"
+      ],
+      "result_ids": [
+        "pepper-lowtemp-transplant-yield-002",
+        "pepper-transplant-cold-recovery-001",
+        "pepper-transplant-cold-duration-001"
+      ],
+      "filters": {
+        "growth_stage": "transplanting"
+      }
+    },
+    {
+      "case_id": "rag-stage-008",
+      "category": "transplant_gtmaster_rooting",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-grodan-gtmaster-rooting-001"
+      ],
+      "result_ids": [
+        "pepper-grodan-gtmaster-rooting-001"
+      ],
+      "filters": {
+        "growth_stage": "transplanting",
+        "cultivation_type": "grodan_gt_master"
+      }
+    },
+    {
+      "case_id": "rag-stage-009",
+      "category": "flowering_temp_band",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-forcing-fruitset-temperature-band-001"
+      ],
+      "result_ids": [
+        "pepper-forcing-fruitset-temperature-band-001"
+      ],
+      "filters": {
+        "growth_stage": "flowering",
+        "cultivation_type": "forcing"
+      }
+    },
+    {
+      "case_id": "rag-stage-010",
+      "category": "flowering_early_flower_removal",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-early-flower-removal-yield-001"
+      ],
+      "result_ids": [
+        "pepper-early-flower-removal-yield-001",
+        "pepper-orius-release-monitoring-002",
+        "pepper-orius-monitoring-001"
+      ],
+      "filters": {
+        "growth_stage": "flowering"
+      }
+    },
+    {
+      "case_id": "rag-stage-011",
+      "category": "fruiting_forcing_yieldgain",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-forcing-technology-yieldgain-001"
+      ],
+      "result_ids": [
+        "pepper-forcing-technology-yieldgain-001",
+        "pepper-forcing-energy-saving-001",
+        "pepper-forcing-fruitset-temperature-band-001"
+      ],
+      "filters": {
+        "growth_stage": "fruiting",
+        "cultivation_type": "forcing"
+      }
+    },
+    {
+      "case_id": "rag-stage-012",
+      "category": "flowering_preventive_biocontrol",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-greenhouse-pest-preventive-biocontrol-window-001"
+      ],
+      "result_ids": [
+        "pepper-greenhouse-pest-preventive-biocontrol-window-001",
+        "pepper-thrips-biocontrol-001",
+        "pepper-orius-release-timing-001"
+      ],
+      "filters": {
+        "growth_stage": "flowering"
+      }
+    },
+    {
+      "case_id": "rag-stage-013",
+      "category": "flowering_gtmaster_ec_band",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-grodan-ec-fluctuation-band-001"
+      ],
+      "result_ids": [
+        "pepper-grodan-ec-fluctuation-band-001",
+        "pepper-grodan-morning-refresh-volume-001",
+        "pepper-grodan-cycle-size-refresh-001"
+      ],
+      "filters": {
+        "growth_stage": "flowering",
+        "cultivation_type": "grodan_gt_master"
+      }
+    },
+    {
+      "case_id": "rag-stage-014",
+      "category": "fruiting_cycle_refresh",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-grodan-cycle-size-refresh-001"
+      ],
+      "result_ids": [
+        "pepper-grodan-cycle-size-refresh-001",
+        "pepper-grodan-pepper-ec-radiation-001",
+        "pepper-grodan-morning-refresh-volume-001"
+      ],
+      "filters": {
+        "growth_stage": "fruiting",
+        "cultivation_type": "grodan_gt_master"
+      }
+    },
+    {
+      "case_id": "rag-stage-015",
+      "category": "harvest_80pct_shade_ripen",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-harvest-80pct-shade-ripen-001"
+      ],
+      "result_ids": [
+        "pepper-harvest-80pct-shade-ripen-001",
+        "pepper-anthracnose-rain-spray-003"
+      ],
+      "filters": {
+        "growth_stage": "harvest"
+      }
+    },
+    {
+      "case_id": "rag-stage-016",
+      "category": "drying_storage_barrier_uv",
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "expected_chunk_ids": [
+        "pepper-dry-storage-barrierbag-001"
+      ],
+      "result_ids": [
+        "pepper-dry-storage-barrierbag-001",
+        "pepper-dry-storage-maintenance-001",
+        "pepper-dry-storage-001"
+      ],
+      "filters": {
+        "growth_stage": "harvest_drying_storage"
+      }
+    }
+  ],
+  "mode": "local_vector_keyword",
+  "index": "artifacts/rag_index/pepper_expert_index.json",
+  "eval_set": "evals/rag_stage_retrieval_eval_set.jsonl",
+  "score_config": {
+    "text_match_weight": 2.0,
+    "metadata_match_weight": 3.0,
+    "openai_vector_weight": 10.0,
+    "local_vector_weight": 4.0,
+    "chroma_vector_weight": 10.0,
+    "chroma_local_blend_weight": 4.0
+  }
+}

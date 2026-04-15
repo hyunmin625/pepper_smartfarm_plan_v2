@@ -132,6 +132,7 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 ./.venv/bin/python scripts/build_rag_index.py --skip-embeddings
 ./.venv/bin/python scripts/rag_smoke_test.py
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --fail-under 1.0
+./.venv/bin/python scripts/run_rag_validation_suite.py --fail-under 1.0 --output-json artifacts/reports/rag_validation_suite_latest.json --output-md artifacts/reports/rag_validation_suite_latest.md
 ./.venv/bin/python scripts/build_chroma_index.py --embedding-backend local
 ./.venv/bin/python scripts/evaluate_rag_retrieval.py --vector-backend chroma --chroma-embedding-backend local --fail-under 1.0
 ./.venv/bin/python scripts/build_chroma_index.py --embedding-backend openai
@@ -141,13 +142,16 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 
 현재 검증 상태:
 
-- rows: 219
+- rows: 250
 - duplicate chunk_id: 0
 - validation errors: 0
 - warnings: 0
 - smoke tests: 기본 query 80개, metadata filter query 18개 PASS
 - retrieval eval(keyword): 110개 case, hit rate 1.0, MRR 0.9909
-- retrieval eval(local vector hybrid): 110개 case, hit rate 1.0, MRR 0.9955
+- retrieval eval(local vector hybrid): 110개 case, hit rate 1.0, MRR 1.0
+- stage retrieval eval(keyword): 16개 case, hit rate 1.0, MRR 1.0
+- stage retrieval eval(local vector hybrid): 16개 case, hit rate 1.0, MRR 1.0
+- integrated validation suite(keyword/local, 110+16): aggregate `126개`, keyword hit rate `1.0`, MRR `0.9921`, local hit rate `1.0`, MRR `1.0`
 - retrieval eval(local-backed Chroma hybrid): 110개 case, hit rate 1.0, MRR 0.9955
 - retrieval eval(OpenAI-backed Chroma hybrid): 110개 case, hit rate 1.0, MRR 0.9803
 
@@ -171,7 +175,8 @@ OpenAI embedding 경로를 쓰려면 저장소 루트 `.env`에 `OPENAI_API_KEY`
 1. `data/rag/pepper_expert_seed_chunks.jsonl`을 250개 수준까지 확장하거나 `farm_case` 계층을 별도 증설
 2. `RAG-SRC-001` PDF의 풋마름병, 저장·건조 세부와 양액재배/시설재배 잔여 장 추가 추출
 3. retrieval 결과를 주기별 고정 리포트로 남기는 자동화 보강
-4. `text` vs `chunk_summary` 임베딩 입력과 hybrid 가중치 재검토
-5. Semantic + Keyword 하이브리드 검색 가중치 최적화
-6. `docs/rag_contextual_retrieval_strategy.md` 기준으로 최근 3~5일 컨텍스트를 retrieval query builder에 실제 반영
-7. 운영 로그와 센서 구간을 `farm_case` RAG 후보로 변환하는 파이프라인 설계
+4. 110개 공통 eval과 16개 stage eval을 함께 돌리는 통합 검증 entrypoint 정리
+5. `text` vs `chunk_summary` 임베딩 입력과 hybrid 가중치 재검토
+6. Semantic + Keyword 하이브리드 검색 가중치 최적화
+7. `docs/rag_contextual_retrieval_strategy.md` 기준으로 최근 3~5일 컨텍스트를 retrieval query builder에 실제 반영
+8. 운영 로그와 센서 구간을 `farm_case` RAG 후보로 변환하는 파이프라인 설계

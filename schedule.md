@@ -43,6 +43,12 @@
 - 즉시 우선순위는 `real shadow window` 누적, blind50 validator 잔여 `5건` 축소, extended200 validator 잔여 `42건` 우선순위 batch 설계, synthetic shadow `day0` residual `4건` 해소다.
 - 운영/API 쪽 즉시 우선순위는 real PostgreSQL smoke, `TimescaleDB` 기반 real sensor chart/zone history의 통합관제 웹 반영, policy source versioning/UI 반영이다.
 
+## 즉시 조정 사항 (2026-04-15)
+
+- `Grodan Delta 6.5` 육묘, `Grodan GT Master` 본재배, 수량 증대, 예방형 병충해 범위까지 RAG source와 seed chunk를 보강해 총 `250개` 청크를 확보했다.
+- 재배단계별 서브에이전트 결과를 반영한 stage-specific retrieval eval `16건`을 추가했고 keyword/local 모두 `16/16`, `MRR 1.0`으로 통과했다.
+- 공통 retrieval eval `110건`과 stage eval `16건`을 함께 돌리는 통합 검증 entrypoint `scripts/run_rag_validation_suite.py`를 추가했다.
+
 ---
 
 ## Week 1 — AI 준비 구축 + 데이터 구조 확정

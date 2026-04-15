@@ -395,7 +395,9 @@
     - [x] 96개 평가셋 기준 4모드 재검증 완료 (keyword 0.9896, local 1.0, Chroma local 0.9948, Chroma OpenAI 0.9826)
     - [x] 4모드 비교를 더 긴 평가셋(40 case)으로 재검증
     - [x] 4모드 비교를 계절·센서 이상·현장 사례 케이스 포함 80 case로 재검증
-    - [x] 110개 평가셋 기준 4모드 재검증 완료 (keyword 0.9909, local 0.9955, Chroma local 0.9955, Chroma OpenAI 0.9803)
+    - [x] 110개 평가셋 기준 4모드 재검증 완료 (keyword 0.9909, local 1.0, Chroma local 0.9955, Chroma OpenAI 0.9803)
+    - [x] 재배단계별 retrieval eval 16건 추가 (`evals/rag_stage_retrieval_eval_set.jsonl`, keyword/local 모두 hit rate 1.0, MRR 1.0)
+    - [x] 공통 110건 + stage 16건 통합 검증 entrypoint 추가 (`scripts/run_rag_validation_suite.py`)
 
 ## 2.7 AI 준비/MLOps 기반 구축
 - [x] AI_MLOPS_PLAN.md 유지관리

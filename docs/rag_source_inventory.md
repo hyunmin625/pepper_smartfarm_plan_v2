@@ -11,6 +11,7 @@
 | 3 | 근권/양액/배지/EC/pH | 함수율, EC, pH, 뿌리 갈변, 과습 판단 | `rootzone_diagnosis`, `nutrient_risk` |
 | 4 | 병해충/생리장해 | 역병, 탄저병, 총채벌레, 진딧물, 바이러스 위험 | `pest_disease_risk` |
 | 5 | 수확/건조/저장 | 건고추 수확 후 건조·저장 위험 판단 | `harvest_drying_storage` |
+| 6 | Grodan block/slab + 수량/병충해 예방 | `Grodan Delta` 육묘, `GT Master` 슬래브 운용, 수량 증대, 예방형 예찰 | `grodan_delta_6_5`, `grodan_gt_master`, `yield_improvement`, `preventive_ipm` |
 
 ## 초기 Source 목록
 
@@ -266,6 +267,196 @@
 - metadata_tags: `cultivar:rubihong`, `quality:asta`, `quality:capsaicinoid`, `cultivation:rain_shelter`
 - ingestion_status: ingested_with_review_flag
 
+### RAG-SRC-026. Grodan Delta NG2.0 Block
+
+- URL: https://www.grodan.com/global/products/grodan-delta-ng2-0-block/
+- source_type: official_guideline
+- crop_type: red_pepper (sweet pepper 기준 자료를 동일 `Capsicum annuum` rockwool block 운용 규칙으로 제한 해석)
+- lifecycle_scope: nursery, transplanting
+- expected_use: `Grodan Delta 6.5` 육묘 블록의 급수 용이성, 수직 수분 분포, block-slab interaction 기준 청크화
+- metadata_tags: `cultivation:grodan_delta_6_5`, `operation:nursery_management`, `operation:block_slab_transfer`, `quality:root_uniformity`
+- ingestion_status: ingested
+
+### RAG-SRC-027. Grodan Wetting Instruction Blocks (공식 PDF)
+
+- URL: https://www.grodan.com/syssiteassets/downloads/tools--services/english/grodan-instructions-for-wetting-on-the-floor-eng.pdf
+- source_type: official_guideline
+- crop_type: red_pepper (sweet pepper 포함 채소 육묘 block 공통 wetting 규칙)
+- lifecycle_scope: nursery, transplanting
+- expected_use: `Grodan Delta 6.5` 초기 포수량, 최소 중량, groove 방향, slow multi-pass wetting 기준 청크화
+- metadata_tags: `cultivation:grodan_delta_6_5`, `sensor:block_weight`, `operation:block_wetting`, `risk:under_saturation`
+- ingestion_status: ingested
+
+### RAG-SRC-028. Grodan GT Master Dry NG2.0
+
+- URL: https://www.grodan.com/global/products/grodan-gt-master-dry-ng2-0/
+- source_type: official_guideline
+- crop_type: red_pepper (sweet pepper 기준 자료를 동일 `Capsicum annuum` 슬래브 수분조향 원칙으로 제한 해석)
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: `Grodan GT Master` 계열의 generative steering, WC/EC 넓은 제어 범위, 수량/품질 연결 근거 청크화
+- metadata_tags: `cultivation:grodan_gt_master`, `sensor:wc`, `sensor:ec`, `quality:fruit_quality`
+- ingestion_status: ingested
+
+### RAG-SRC-029. Grodan GT Master NG2.0
+
+- URL: https://www.grodan.com/global/products/grodan-gt-master-ng2-0/
+- source_type: official_guideline
+- crop_type: red_pepper (tomato/cucumber/eggplant 자료지만 stone wool slab rootzone 기능 참고)
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: finely branched root, rapid resaturation, steerability, uniform growth 기준 청크화
+- metadata_tags: `cultivation:grodan_gt_master`, `operation:fertigation`, `quality:root_uniformity`, `quality:yield`
+- ingestion_status: ingested
+
+### RAG-SRC-030. Grodan EC – important parameter for irrigation strategy
+
+- URL: https://www.grodan.com/global/knowledge/root-zone-management/irrigation-and-nutrients/what-is-ec/ec--important-parameter-for-irrigation-strategy/
+- source_type: official_guideline
+- crop_type: red_pepper (greenhouse pepper rootzone EC steering reference)
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: pepper rootzone EC 안정 범위, radiation별 EC, 과급수/과소급수 판정 규칙 청크화
+- metadata_tags: `cultivation:grodan_gt_master`, `sensor:ec`, `sensor:wc`, `operation:ec_monitoring`
+- ingestion_status: ingested
+
+### RAG-SRC-031. Grodan EC management
+
+- URL: https://www.grodan.com/global/knowledge/root-zone-management/irrigation-and-nutrients/what-is-ec/ec-management/
+- source_type: official_guideline
+- crop_type: red_pepper (stone wool slab 공통 rootzone 관리 규칙)
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: drain hole, dripper capacity, direct drainage, morning refresh 기준 청크화
+- metadata_tags: `cultivation:grodan_gt_master`, `sensor:drain_rate`, `sensor:ec`, `operation:drainage_management`
+- ingestion_status: ingested
+
+### RAG-SRC-032. Grodan Effect of cycle size on EC refreshment and EC stability
+
+- URL: https://www.grodan.com/global/knowledge/root-zone-management/irrigation-and-nutrients/what-is-ec/effect-of-cycle-size-on-ec-refreshment-and-ec-stability/
+- source_type: official_guideline
+- crop_type: red_pepper (tomato/pepper 공통 fruit quality disorder 예방용 slab EC refreshment 규칙)
+- lifecycle_scope: flowering, fruiting
+- expected_use: first drain timing, morning gift size, BER/낙과 방지용 EC refreshment 규칙 청크화
+- metadata_tags: `cultivation:grodan_gt_master`, `sensor:first_drain_time`, `sensor:ec`, `risk:fruit_quality_disorder`
+- ingestion_status: ingested
+
+### RAG-SRC-033. 농사로 점박이응애 (urticae)
+
+- URL: https://nongsaro.go.kr/portal/ps/pss/pssa/hlsctSearchDtl.ps?hlsctCode=H00000744&menuId=PS00202&pageIndex=1&pageSize=10
+- source_type: official_guideline
+- crop_type: red_pepper
+- lifecycle_scope: flowering, fruiting, summer_management
+- expected_use: 고온·건조 조건에서의 점박이응애 다발 시기, 세대기간, 예찰 기준 청크화
+- metadata_tags: `risk:spider_mite`, `sensor:temperature`, `sensor:humidity`, `season:summer`
+- ingestion_status: ingested
+
+### RAG-SRC-034. 농사로 목화진딧물 (gossypii)
+
+- URL: https://www.nongsaro.go.kr/portal/ps/pss/pssa/hlsctSearchDtl.ps?hlsctCode=H00000145&menuId=PS00403
+- source_type: official_guideline
+- crop_type: red_pepper
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: 진딧물 증식 주기, 9월 재증가, 바이러스 매개와 감로 피해 기준 청크화
+- metadata_tags: `risk:aphid`, `risk:virus_vector`, `sensor:sticky_trap_count`, `visual:honeydew`
+- ingestion_status: ingested
+
+### RAG-SRC-035. 농사로 담배가루이 (tabaci)
+
+- URL: https://nongsaro.go.kr/portal/ps/pss/pssa/hlsctSearchDtl.ps?hlsctCode=H00000305&menuId=PS00202&pageIndex=1&pageSize=10
+- source_type: official_guideline
+- crop_type: red_pepper (파프리카/과채 시설 해충 규칙을 시설 적고추 예찰에 제한 적용)
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: 방충망, 황색 점착트랩, 트랩 threshold, 예방적 천적 활용 기준 청크화
+- metadata_tags: `risk:whitefly`, `risk:virus_vector`, `sensor:sticky_trap_count`, `operation:screening`
+- ingestion_status: ingested
+
+### RAG-SRC-036. 농사로 담배나방 (assulta)
+
+- URL: https://www.nongsaro.go.kr/portal/ps/pss/pssa/hlsctSearchDtl.ps?hlsctCode=H00000875&menuId=PS00403
+- source_type: official_guideline
+- crop_type: red_pepper (fruit boring ecology를 적고추 과실 피해 예찰 규칙으로 제한 해석)
+- lifecycle_scope: fruiting, harvest
+- expected_use: 과실 가해 peak window, 감염 과실 제거, 방제 적기 청크화
+- metadata_tags: `risk:tobacco_budworm`, `sensor:fruit_damage_rate`, `season:summer_fall`, `operation:fruit_sanitation`
+- ingestion_status: ingested
+
+### RAG-SRC-037. 농사로 흰가루병 (Powdery mildew)
+
+- URL: https://www.nongsaro.go.kr/portal/ps/pss/pssa/sicknsSearchDtl.ps?menuId=PS00202&pageIndex=1&pageSize=10&sicknsCode=D00001162
+- source_type: official_guideline
+- crop_type: red_pepper (시설 과채 공통 흰가루병 환경·방제 원칙 적용)
+- lifecycle_scope: flowering, fruiting, late_season
+- expected_use: 15~28℃, 일조 부족, 밤낮 온도차, 질소 과다 조건에서의 예방형 관리 청크화
+- metadata_tags: `risk:powdery_mildew`, `sensor:temperature`, `sensor:light`, `operation:ventilation`
+- ingestion_status: ingested
+
+### RAG-SRC-038. 농사로 도시농업 농자재 정보 - 모종 구입 및 심기
+
+- URL: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=228603&menuId=PS03172&sSeCode=335001&totalSearchYn=Y
+- source_type: official_guideline
+- crop_type: red_pepper
+- lifecycle_scope: nursery, transplanting
+- expected_use: 구입묘 규격, 뿌리 상태, 병해충 무감염, 정식 깊이 기준 청크화
+- metadata_tags: `operation:seedling_selection`, `risk:poor_seedling`, `visual:rootball_quality`, `sensor:leaf_count`
+- ingestion_status: ingested
+
+### RAG-SRC-039. 농사로 고추 노화묘를 염류 농도가 높은 토지에 깊게 심어 활착이 지연되었어요
+
+- URL: https://www.nongsaro.go.kr/portal/ps/psz/psza/contentSub.ps?cntntsNo=212775&menuId=PS00077&totalSearchYn=Y
+- source_type: field_case
+- crop_type: red_pepper
+- lifecycle_scope: transplanting, early_vegetative_growth
+- expected_use: 노화묘 + 깊은 정식 + 고EC + 저온이 겹친 활착 지연 복합 원인 청크화
+- metadata_tags: `risk:overaged_seedling`, `risk:deep_transplant`, `risk:high_ec`, `sensor:soil_ec`
+- ingestion_status: ingested
+
+### RAG-SRC-040. 농사로 고추(촉성재배) 작업일정
+
+- URL: https://www.nongsaro.go.kr/portal/ps/psb/psbl/workScheduleDtl.ps?cntntsNo=30601&menuId=PS00087
+- source_type: official_guideline
+- crop_type: red_pepper
+- lifecycle_scope: nursery, transplanting, vegetative_growth, flowering, fruiting
+- expected_use: 촉성재배 파종/정식 일정, 개화·과비대 적온, 접목·관비·보온커튼의 수량/비용 효과 청크화
+- metadata_tags: `cultivation:forcing`, `operation:cropping_plan`, `sensor:temperature`, `quality:yield`
+- ingestion_status: ingested
+
+### RAG-SRC-041. 대한민국 정책브리핑 - 고추 어릴 때 꽃 따주면 수확량 2배 높아져
+
+- URL: https://www.korea.kr/briefing/pressReleaseView.do?newsId=156122704
+- source_type: official_research_report
+- crop_type: red_pepper
+- lifecycle_scope: early_vegetative_growth, flowering
+- expected_use: 4차분지까지 적화, 후기 착과 집중, 일시 수확·노동 절감 근거 청크화
+- metadata_tags: `operation:flower_removal`, `quality:yield`, `quality:coloring`, `operation:labor_saving`
+- ingestion_status: ingested
+
+### RAG-SRC-042. 대한민국 정책브리핑 - 시설재배지 해충 친환경 방제로 미리 대응한다
+
+- URL: https://www.korea.kr/briefing/pressReleaseView.do?newsId=156205252
+- source_type: official_research_report
+- crop_type: red_pepper (시설 과채류 공통 해충 생태를 시설 적고추에 제한 적용)
+- lifecycle_scope: vegetative_growth, flowering, fruiting
+- expected_use: 진딧물·응애·총채벌레 예방형 천적 방사 시기와 7월 이후 전환 규칙 청크화
+- metadata_tags: `risk:aphid`, `risk:spider_mite`, `risk:thrips`, `operation:biocontrol`
+- ingestion_status: ingested
+
+### RAG-SRC-043. 농사로 농영상 - 노지 건고추 생산기술 6. 수확
+
+- URL: https://www.nongsaro.go.kr/portal/ps/psb/psby/vodPlay.ps?menuId=PS65512&mvpClipNo=6&mvpNo=742
+- source_type: official_guideline
+- crop_type: dried_red_pepper
+- lifecycle_scope: harvest, harvest_drying_storage
+- expected_use: 80% 착색 수확, 2~3일 그늘 후숙, 탄저병 위험 과실 조기 수확 기준 청크화
+- metadata_tags: `operation:harvesting`, `quality:red_coloring`, `risk:anthracnose`, `operation:shade_ripening`
+- ingestion_status: ingested
+
+### RAG-SRC-044. 농사로 농영상 - 노지 건고추 생산기술 7. 건조 및 저장
+
+- URL: https://www.nongsaro.go.kr/portal/ps/psb/psby/vodPlay.ps?menuId=PS65512&mvpClipNo=7&mvpNo=742
+- source_type: official_guideline
+- crop_type: dried_red_pepper
+- lifecycle_scope: harvest_drying_storage
+- expected_use: 열풍건조 우선, 저장 함수율 15~17%, UV 차단 포장과 저온 저장 기준 청크화
+- metadata_tags: `operation:hot_air_drying`, `sensor:moisture_content`, `operation:storage_packaging`, `risk:reabsorption`
+- ingestion_status: ingested
+
 ## RAG 메타데이터 규칙
 
 각 chunk는 최소한 다음 필드를 가진다.
@@ -301,6 +492,6 @@
 1. `RAG-SRC-001` PDF에서 병해충/IPM 장의 정밀 청크 추가 추출
 2. `RAG-SRC-001` PDF에서 양액재배/시설재배 장의 EC·pH·배양액 청크 추가 추출
 3. 공식 자료와 보조 자료 간 중복/상충 기준 정리
-4. `data/rag/pepper_expert_seed_chunks.jsonl`을 200개 이상으로 확장
+4. `data/rag/pepper_expert_seed_chunks.jsonl`을 260개 이상으로 확장하고 `Grodan Delta/GT Master` 운용 규칙을 계절별·생육단계별로 세분화
 5. 계절·센서 이상·현장 사례 포함 retrieval eval을 100건 이상으로 확장
 6. vector store 기반 citation 검색 품질 평가와 multi-turn contextual retrieval 설계 보강

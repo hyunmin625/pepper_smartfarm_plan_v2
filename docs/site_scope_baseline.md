@@ -58,6 +58,13 @@
   - 육묘 단계의 수분·온도·묘 소질 판단은 `Grodan Delta 6.5` block 기준으로 본다.
   - 정식 이후의 관수, 배액률, 급배액 EC 차이, 근권 회복 속도 판단은 `Grodan GT Master` slab 기준으로 본다.
   - 근권 센서 설치와 배액 수집 위치는 대표 slab 라인을 기준으로 설계한다.
+  - `Delta 6.5`는 정식 전 wet weight와 saturation evidence를 같이 본다. `10x10x6.5cm` block 기준 wet weight `550g` 미만이거나 측정 자체가 없으면 자동 정식 판단 근거로 쓰지 않는다.
+  - `GT Master`는 `WC + drain EC + drain timing/volume` 조합을 기본 근거로 쓴다.
+  - `GT Master` 해석 기준:
+    - `24시간 slab EC 변동폭 0.3~0.8mS/cm`: 대체로 안정권
+    - `0.3 미만`: 과급수 또는 refresh 약화 watch
+    - `1.0 초과`: 과소급수, refresh 실패, 염류 축적 watch
+    - `first drain`이 잡혀도 EC가 안 떨어지면 `direct drainage` 가능성을 먼저 점검한다.
 
 ## 4. 낮/밤 운영 기준
 
