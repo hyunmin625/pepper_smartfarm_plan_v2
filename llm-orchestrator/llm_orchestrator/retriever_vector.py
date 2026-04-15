@@ -296,6 +296,127 @@ class OpenAIEmbeddingRetriever:
         ]
 
 
+class HybridRagRetriever:
+    """Reciprocal Rank Fusion of KeywordRagRetriever + OpenAIEmbeddingRetriever.
+
+    Phase F confirmed two facts that motivate a hybrid approach:
+
+    - ``KeywordRagRetriever`` wins on categories whose eval queries carry
+      very specific Korean domain tokens (climate_risk 0.222 / harvest_drying
+      0.312 / rootzone_diagnosis 0.400 on recall@5). Keyword overlap + trust
+      boost beats dense embeddings when the query literally contains the
+      slab names and tag words the chunks use.
+    - ``OpenAIEmbeddingRetriever`` wins on almost everything else, especially
+      ``safety_policy`` (0.000 → 0.542) and ``edge_case`` (0.088 → 0.471),
+      because 1536-d OpenAI vectors cover paraphrases and synonyms that
+      keyword overlap misses entirely.
+
+    Hybrid (RRF) averages those strengths. At each query we ask both
+    backends for their top ``per_retriever_limit`` hits, score each doc by
+    ``sum(1 / (rrf_k + rank_i))`` across all backends that surfaced it,
+    then return the top ``limit`` by fused score. ``rrf_k = 60`` is the
+    standard RRF constant (Cormack et al. 2009). Each sub-retriever cost
+    is the same as running it directly, so hybrid costs roughly the
+    combined price of its components (still < $0.000005 per query at
+    text-embedding-3-small pricing).
+
+    Interface matches :meth:`KeywordRagRetriever.search` so a caller that
+    swaps in hybrid sees the same ``list[RetrievedChunk]`` shape.
+    """
+
+    def __init__(
+        self,
+        *,
+        corpus_paths: list[Path] | None = None,
+        rag_index_path: Path | str | None = None,
+        rrf_k: int = 60,
+        per_retriever_limit: int = 10,
+    ) -> None:
+        from .retriever import KeywordRagRetriever
+        self._keyword = KeywordRagRetriever(corpus_paths=corpus_paths)
+        self._openai = OpenAIEmbeddingRetriever(rag_index_path=rag_index_path)
+        self._rrf_k = int(rrf_k)
+        self._per_retriever_limit = int(per_retriever_limit)
+
+    @property
+    def rows(self) -> list[dict[str, Any]]:
+        # Expose the denser retriever's rows for logging/smoke parity with
+        # the other backends. The keyword corpus is a jsonl of row dicts,
+        # not RetrievedChunk, so the openai doc list is more useful here.
+        return self._openai.rows
+
+    def search(
+        self,
+        *,
+        query: str,
+        task_type: str,
+        zone_id: str | None = None,
+        growth_stage: str | None = None,
+        limit: int = 5,
+    ) -> list[RetrievedChunk]:
+        kw_hits = self._keyword.search(
+            query=query,
+            task_type=task_type,
+            zone_id=zone_id,
+            growth_stage=growth_stage,
+            limit=self._per_retriever_limit,
+        )
+        oa_hits = self._openai.search(
+            query=query,
+            task_type=task_type,
+            zone_id=zone_id,
+            growth_stage=growth_stage,
+            limit=self._per_retriever_limit,
+        )
+
+        # Fuse by reciprocal rank. Two backends is enough here but the
+        # loop is general so we can add the TF-IDF backend later.
+        fused: dict[str, dict[str, Any]] = {}
+        for backend_label, hits in (("keyword", kw_hits), ("openai", oa_hits)):
+            for rank, chunk in enumerate(hits):
+                cid = chunk.chunk_id
+                entry = fused.get(cid)
+                if entry is None:
+                    entry = {
+                        "chunk": chunk,
+                        "fused_score": 0.0,
+                        "backends": [],
+                    }
+                    fused[cid] = entry
+                # Prefer the openai-sourced RetrievedChunk because it carries
+                # source_section/source_type from the rich index, but keep
+                # whichever we saw first if the keyword retriever found a
+                # chunk the openai one missed.
+                if backend_label == "openai":
+                    entry["chunk"] = chunk
+                entry["fused_score"] += 1.0 / (self._rrf_k + rank + 1)
+                entry["backends"].append(f"{backend_label}#{rank + 1}")
+
+        ordered = sorted(
+            fused.values(),
+            key=lambda item: (-item["fused_score"], item["chunk"].chunk_id),
+        )
+        top = ordered[:limit]
+        result: list[RetrievedChunk] = []
+        for entry in top:
+            base = entry["chunk"]
+            # Re-stamp the fused score into the returned RetrievedChunk so
+            # downstream audit logs capture the blended rank, not whichever
+            # raw similarity happened to come from the last backend.
+            result.append(RetrievedChunk(
+                chunk_id=base.chunk_id,
+                document_id=base.document_id,
+                chunk_summary=base.chunk_summary,
+                source_type=base.source_type,
+                trust_level=base.trust_level,
+                score=round(float(entry["fused_score"]), 4),
+                source_url=base.source_url,
+                source_section=base.source_section,
+                citation_required=base.citation_required,
+            ))
+        return result
+
+
 def create_retriever(
     retriever_type: str,
     *,
@@ -304,9 +425,9 @@ def create_retriever(
 ) -> Any:
     """Factory that instantiates the retriever selected by env/config.
 
-    Keeps the import-time cost of TfidfSvdRagRetriever and
-    OpenAIEmbeddingRetriever lazy: callers that stay on keyword retrieval
-    never load the dense indices.
+    Keeps the import-time cost of TfidfSvdRagRetriever,
+    OpenAIEmbeddingRetriever, and HybridRagRetriever lazy: callers that stay
+    on keyword retrieval never load the dense indices.
     """
     rtype = (retriever_type or "keyword").lower()
     if rtype == "keyword":
@@ -316,4 +437,9 @@ def create_retriever(
         return TfidfSvdRagRetriever(rag_index_path=rag_index_path)
     if rtype in ("openai", "openai_embedding", "text-embedding-3-small"):
         return OpenAIEmbeddingRetriever(rag_index_path=rag_index_path)
+    if rtype in ("hybrid", "rrf", "keyword_openai"):
+        return HybridRagRetriever(
+            corpus_paths=corpus_paths,
+            rag_index_path=rag_index_path,
+        )
     raise ValueError(f"unknown retriever_type: {retriever_type!r}")

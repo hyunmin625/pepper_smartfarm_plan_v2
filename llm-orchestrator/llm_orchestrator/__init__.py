@@ -7,6 +7,7 @@ from .client import ModelConfig, create_completion_client, get_resolved_model_re
 from .model_registry import ResolvedModelReference
 from .retriever import KeywordRagRetriever, RetrievedChunk
 from .retriever_vector import (
+    HybridRagRetriever,
     OpenAIEmbeddingRetriever,
     TfidfSvdRagRetriever,
     create_retriever,
@@ -15,6 +16,7 @@ from .service import LLMOrchestratorService, OrchestratorRequest, OrchestratorRe
 from .tool_registry import ToolDefinition, available_tool_definitions, prompt_tool_catalog, summarize_tool_registry
 
 __all__ = [
+    "HybridRagRetriever",
     "LLMDecisionEnvelope",
     "KeywordRagRetriever",
     "LLMOrchestratorService",

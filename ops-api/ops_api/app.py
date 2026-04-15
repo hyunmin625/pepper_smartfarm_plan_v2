@@ -2175,6 +2175,7 @@ def _dashboard_html() -> str:
       </div>
     </div>
     <div class="flex items-center gap-3 md:gap-5">
+      <span id="headerChampionChip" class="chip chip-dark hidden max-w-[220px] truncate" title="champion model">champion: —</span>
       <div class="hidden md:flex items-center gap-2 text-xs text-muted">
         <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
         <span>System Status: Optimal</span>
@@ -2341,15 +2342,23 @@ def _dashboard_html() -> str:
           </div>
         </div>
         <div class="card xl:col-span-2 flex flex-col">
-          <p class="text-[11px] tracking-wider uppercase text-primary font-bold">Live Operations</p>
-          <h3 class="text-xl font-bold text-ink mb-4">실시간 관제 현황</h3>
-          <div class="bg-primary rounded-2xl p-5 text-white mb-4">
-            <p class="text-[10px] uppercase tracking-wider text-white/60">Current Action</p>
-            <h4 class="text-xl font-bold mt-2 mb-2" id="chatLiveAction">대기 중</h4>
-            <p class="text-xs text-white/80" id="chatLiveDesc">AI 명령을 기다리는 중입니다.</p>
+          <p class="text-[11px] tracking-wider uppercase text-primary font-bold">Grounding Inspector</p>
+          <h3 class="text-xl font-bold text-ink mb-4">마지막 응답 근거</h3>
+          <div id="groundingInspector" class="bg-primary rounded-2xl p-5 text-white mb-4">
+            <p class="text-[10px] uppercase tracking-wider text-white/60">champion</p>
+            <h4 class="text-sm font-bold mt-1 mb-2 break-all" id="groundingModelLabel">대기 중</h4>
+            <div class="text-[11px] text-white/80 space-y-1">
+              <div><span class="text-white/50 uppercase tracking-wider text-[9px] mr-1">provider</span><span id="groundingProvider">—</span></div>
+              <div><span class="text-white/50 uppercase tracking-wider text-[9px] mr-1">zone_hint</span><span id="groundingZoneHint">—</span></div>
+              <div><span class="text-white/50 uppercase tracking-wider text-[9px] mr-1">grounding_keys</span><span id="groundingKeys">—</span></div>
+              <div><span class="text-white/50 uppercase tracking-wider text-[9px] mr-1">attempts</span><span id="groundingAttempts">—</span></div>
+            </div>
           </div>
-          <div class="space-y-3 flex-1 overflow-y-auto custom-scroll" id="chatLiveLogs"></div>
-          <div class="mt-4 bg-surface-low rounded-xl p-4">
+          <div class="mb-4">
+            <p class="text-[10px] uppercase tracking-wider text-muted mb-2">최근 dispatch</p>
+            <div class="space-y-3 max-h-40 overflow-y-auto custom-scroll" id="chatLiveLogs"></div>
+          </div>
+          <div class="mt-auto bg-surface-low rounded-xl p-4">
             <p class="text-[10px] uppercase tracking-wider text-muted mb-2">Zone Health</p>
             <div class="grid grid-cols-3 gap-1" id="chatZoneHealth"></div>
           </div>
@@ -2443,21 +2452,36 @@ def _dashboard_html() -> str:
 
     <!-- 시스템 -->
     <section class="view" data-view="system">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="card">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <div class="card" id="aiRuntimeCard">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-ink">Execution History</h3>
-            <span class="text-[11px] text-muted">최근 dispatch</span>
+            <div>
+              <h3 class="text-sm font-bold text-ink">AI Runtime</h3>
+              <p class="text-[10px] text-muted uppercase tracking-wider">champion · retriever · prompt</p>
+            </div>
+            <span id="aiRuntimeChip" class="chip chip-enabled">활성</span>
           </div>
-          <div id="commandList" class="space-y-3"></div>
+          <div id="aiRuntimeBody" class="space-y-3 text-sm">
+            <div class="placeholder">/ai/config 조회 중...</div>
+          </div>
         </div>
         <div class="card">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-ink">Runtime Info</h3>
-            <span class="text-[11px] text-muted">auth / config</span>
+            <div>
+              <h3 class="text-sm font-bold text-ink">Runtime Mode · Actor</h3>
+              <p class="text-[10px] text-muted uppercase tracking-wider">shadow / approval / execute</p>
+            </div>
+            <span id="runtimeModeChip" class="chip chip-dark">unknown</span>
           </div>
           <div id="runtimeInfo"></div>
         </div>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-ink">Execution History</h3>
+          <span class="text-[11px] text-muted">최근 dispatch</span>
+        </div>
+        <div id="commandList" class="space-y-3"></div>
       </div>
     </section>
 
@@ -2473,6 +2497,9 @@ def _dashboard_html() -> str:
     .metric-card { background: #faf7ef; border-radius: 12px; padding: 12px; }
     .metric-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #657d6a; font-weight: 600; }
     .metric-card .value { font-size: 20px; font-weight: 700; color: #1d2a1f; margin-top: 4px; display: block; }
+    .metric-card.metric-champion { background: #2d5338; color: white; }
+    .metric-card.metric-champion .label { color: rgba(255,255,255,0.7); }
+    .metric-card.metric-champion .value { color: white; font-size: 14px; line-height: 1.25; word-break: break-word; }
     .zone-row { background: #fbf8f1; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
     .alert-row { background: #fbf8f1; border-radius: 12px; padding: 14px; }
     .placeholder { text-align: center; color: #9ba89f; padding: 24px; font-size: 13px; }
@@ -2500,7 +2527,7 @@ def _dashboard_html() -> str:
       document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.dataset.view === name));
       document.querySelectorAll('#sidebarNav a').forEach(a => a.classList.toggle('active', a.dataset.view === name));
       if (name === 'zones') refreshZoneHistory();
-      if (name === 'ai_chat') scrollChatToBottom();
+      if (name === 'ai_chat') { scrollChatToBottom(); renderGroundingInspector(); }
     }
     function toggleSidebar(force) {
       const sidebar = document.getElementById('sidebar');
@@ -2575,24 +2602,32 @@ def _dashboard_html() -> str:
       return 'chip-dark';
     }
     function renderMetrics(summary) {
+      const ai = dashboardState.aiConfig || {};
+      const championLabel = ai.llm_model_family
+        ? ai.llm_model_family.replace(' (ds_v11 frozen)', '')
+        : '—';
+      const championTitle = ai.llm_model_label
+        ? `${ai.llm_model_label} · prompt=${ai.llm_prompt_version || 'sft_v10'} · retriever=${ai.retriever_type || 'keyword'}`
+        : '/ai/config 조회 중';
       const metrics = [
-        ['결정 수', summary.decision_count ?? 0],
-        ['승인 대기', summary.approval_pending_count ?? 0],
-        ['Shadow 리뷰 대기', summary.shadow_review_pending_count ?? 0],
-        ['차단된 결정', summary.blocked_action_count ?? 0],
-        ['Safe Mode 추천', summary.safe_mode_count ?? 0],
-        ['Operator 불일치', summary.operator_disagreement_count ?? 0],
-        ['일치율', summary.operator_agreement_rate ?? 'n/a'],
-        ['실행 명령', summary.command_count ?? 0],
-        ['Policy Event', summary.policy_event_count ?? 0],
-        ['Policy Block', summary.policy_blocked_count ?? 0],
-        ['Alerts', summary.alert_count ?? 0],
-        ['Robot Task', summary.robot_task_count ?? 0],
-        ['Robot Candidate', summary.robot_candidate_count ?? 0],
-        ['Policy (enabled/total)', ((summary.policy_count ?? 0) - (summary.policy_disabled_count ?? 0)) + '/' + (summary.policy_count ?? 0)],
+        ['Champion', championLabel, 'metric-champion', championTitle],
+        ['결정 수', summary.decision_count ?? 0, '', ''],
+        ['승인 대기', summary.approval_pending_count ?? 0, '', ''],
+        ['Shadow 리뷰 대기', summary.shadow_review_pending_count ?? 0, '', ''],
+        ['차단된 결정', summary.blocked_action_count ?? 0, '', ''],
+        ['Safe Mode 추천', summary.safe_mode_count ?? 0, '', ''],
+        ['Operator 불일치', summary.operator_disagreement_count ?? 0, '', ''],
+        ['일치율', summary.operator_agreement_rate ?? 'n/a', '', ''],
+        ['실행 명령', summary.command_count ?? 0, '', ''],
+        ['Policy Event', summary.policy_event_count ?? 0, '', ''],
+        ['Policy Block', summary.policy_blocked_count ?? 0, '', ''],
+        ['Alerts', summary.alert_count ?? 0, '', ''],
+        ['Robot Task', summary.robot_task_count ?? 0, '', ''],
+        ['Robot Candidate', summary.robot_candidate_count ?? 0, '', ''],
+        ['Policy (enabled/total)', ((summary.policy_count ?? 0) - (summary.policy_disabled_count ?? 0)) + '/' + (summary.policy_count ?? 0), '', ''],
       ];
-      document.getElementById('metricGrid').innerHTML = metrics.map(([label, value]) => `
-        <div class="metric-card">
+      document.getElementById('metricGrid').innerHTML = metrics.map(([label, value, extra, title]) => `
+        <div class="metric-card ${extra || ''}" ${title ? `title="${escapeHtml(title)}"` : ''}>
           <div class="label">${label}</div>
           <strong class="value">${value}</strong>
         </div>
@@ -2783,13 +2818,24 @@ def _dashboard_html() -> str:
       if (mini) mini.innerHTML = `<div class="truncate">${actor.actor_id} · ${actor.role}</div>`;
       const runtime = document.getElementById('runtimeInfo');
       if (runtime) {
+        const mode = (dashboardState.runtimeMode && dashboardState.runtimeMode.mode) || '—';
+        const reason = (dashboardState.runtimeMode && dashboardState.runtimeMode.reason) || '—';
         runtime.innerHTML = `
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-muted">actor_id</span><span class="font-bold">${actor.actor_id}</span></div>
+            <div class="flex justify-between"><span class="text-muted">mode</span><span class="font-bold">${mode}</span></div>
+            <div class="flex justify-between"><span class="text-muted">reason</span><span class="font-bold text-[11px] text-ink text-right truncate max-w-[60%]">${escapeHtml(reason)}</span></div>
+            <div class="flex justify-between pt-2 border-t border-outline/20"><span class="text-muted">actor_id</span><span class="font-bold">${actor.actor_id}</span></div>
             <div class="flex justify-between"><span class="text-muted">role</span><span class="font-bold">${actor.role}</span></div>
             <div class="flex justify-between"><span class="text-muted">auth_mode</span><span class="font-bold">${actor.auth_mode}</span></div>
           </div>
         `;
+      }
+      const modeChip = document.getElementById('runtimeModeChip');
+      if (modeChip) {
+        const mode = (dashboardState.runtimeMode && dashboardState.runtimeMode.mode) || 'unknown';
+        const cls = mode === 'execute' ? 'chip-critical' : (mode === 'approval' ? 'chip-warn' : 'chip-enabled');
+        modeChip.className = `chip ${cls}`;
+        modeChip.textContent = mode;
       }
     }
     function renderPolicies(items) {
@@ -3067,7 +3113,8 @@ def _dashboard_html() -> str:
     }
 
     // ===== AI Chat =====
-    const chatState = { messages: [], sending: false };
+    const chatState = { messages: [], sending: false, lastGrounding: null };
+    const dashboardState = { runtimeMode: null, aiConfig: null };
     function chatBubbleUser(content, ts) {
       return `<div class="flex justify-end">
         <div>
@@ -3129,28 +3176,84 @@ def _dashboard_html() -> str:
       renderChat();
     }
     async function loadAiConfig() {
-      // Fetches the live LLM/retriever config so the AI assistant badge shows
-      // which fine-tune checkpoint is actually answering. Non-blocking — if
-      // the call fails the badge stays on the "loading" placeholder.
+      // Fetches the live LLM/retriever config so operators can always see
+      // which fine-tune checkpoint is actually answering across three
+      // surfaces: the AI 어시스턴트 card subtitle, the global header
+      // champion chip, and the 시스템 > AI Runtime card body. Non-blocking —
+      // if the call fails the UI falls back to placeholder copy but the
+      // chat path still works.
       const meta = document.getElementById('aiAssistantMeta');
       const chip = document.getElementById('aiAssistantModelChip');
-      if (!meta) return;
+      const headerChip = document.getElementById('headerChampionChip');
+      const runtimeBody = document.getElementById('aiRuntimeBody');
       try {
         const res = await apiFetch('/ai/config', { method: 'GET' });
         const d = res?.data || {};
+        dashboardState.aiConfig = d;
         const provider = d.llm_provider || 'unknown';
         const family = d.llm_model_family || d.llm_model_id || 'unknown';
         const label = d.llm_model_label || d.llm_model_id || 'unknown';
         const prompt = d.llm_prompt_version || 'sft_v10';
         const retriever = d.retriever_type || 'keyword';
-        meta.textContent = `${family} · ${prompt} · retriever=${retriever}`;
+        const systemPrompt = d.chat_system_prompt_id || 'chat_v2';
+
+        if (meta) meta.textContent = `${family} · ${prompt} · retriever=${retriever}`;
         if (chip) {
           chip.textContent = `champion: ${label}`;
           chip.classList.remove('hidden');
         }
+        if (headerChip) {
+          headerChip.textContent = `champion: ${family}`;
+          headerChip.classList.remove('hidden');
+          headerChip.title = `${label} · prompt=${prompt} · retriever=${retriever}`;
+        }
+        if (runtimeBody) {
+          runtimeBody.innerHTML = `
+            <div class="flex justify-between"><span class="text-muted">provider</span><span class="font-bold">${provider}</span></div>
+            <div class="flex justify-between"><span class="text-muted">model_label</span><span class="font-bold text-[11px] truncate max-w-[60%]" title="${label}">${label}</span></div>
+            <div class="flex justify-between"><span class="text-muted">model_family</span><span class="font-bold text-[11px] truncate max-w-[60%]">${family}</span></div>
+            <div class="flex justify-between"><span class="text-muted">prompt_version</span><span class="font-bold">${prompt}</span></div>
+            <div class="flex justify-between"><span class="text-muted">retriever</span><span class="font-bold">${retriever}</span></div>
+            <div class="flex justify-between"><span class="text-muted">chat_system_prompt</span><span class="font-bold">${systemPrompt}</span></div>
+          `;
+        }
       } catch (err) {
-        meta.textContent = '파인튜닝 모델 구성 조회 실패 — /ai/chat은 그래도 동작합니다.';
+        if (meta) meta.textContent = '파인튜닝 모델 구성 조회 실패 — /ai/chat은 그래도 동작합니다.';
+        if (runtimeBody) runtimeBody.innerHTML = '<div class="placeholder">/ai/config 조회 실패</div>';
       }
+    }
+    function renderGroundingInspector() {
+      // Surfaces the model_id / provider / zone_hint / grounding_keys from
+      // the most recent /ai/chat response so operators can audit what the
+      // chat assistant actually grounded on. Non-destructive — when no
+      // chat has happened yet it shows the /ai/config champion defaults.
+      const labelEl = document.getElementById('groundingModelLabel');
+      const provEl  = document.getElementById('groundingProvider');
+      const zoneEl  = document.getElementById('groundingZoneHint');
+      const keysEl  = document.getElementById('groundingKeys');
+      const atmpEl  = document.getElementById('groundingAttempts');
+      if (!labelEl) return;
+      const g = chatState.lastGrounding;
+      if (!g) {
+        const ai = dashboardState.aiConfig || {};
+        labelEl.textContent = ai.llm_model_label || '대기 중';
+        provEl.textContent = ai.llm_provider || '—';
+        zoneEl.textContent = '—';
+        keysEl.textContent = '아직 대화 없음';
+        atmpEl.textContent = '—';
+        return;
+      }
+      const tail = (g.model_id || '').startsWith('ft:')
+        ? g.model_id.slice(g.model_id.lastIndexOf(':') + 1)
+        : (g.model_id || '—');
+      labelEl.textContent = tail;
+      labelEl.title = g.model_id || '';
+      provEl.textContent = g.provider || '—';
+      zoneEl.textContent = g.zone_hint || '—';
+      keysEl.textContent = (g.grounding_keys && g.grounding_keys.length)
+        ? g.grounding_keys.join(', ')
+        : '—';
+      atmpEl.textContent = (g.attempts != null) ? String(g.attempts) : '—';
     }
     async function sendChatMessage() {
       if (chatState.sending) return;
@@ -3171,6 +3274,15 @@ def _dashboard_html() -> str:
         const reply = res?.data?.reply?.content || '응답을 읽어오지 못했습니다.';
         chatState.messages = chatState.messages.filter(m => m.role !== 'pending');
         chatState.messages.push({ role: 'assistant', content: reply, ts: nowLabel() });
+        // Update grounding inspector so operator can see what the model saw
+        chatState.lastGrounding = {
+          model_id: res?.data?.model_id,
+          provider: res?.data?.provider,
+          zone_hint: res?.data?.zone_hint,
+          grounding_keys: res?.data?.grounding_keys,
+          attempts: res?.data?.attempts,
+        };
+        renderGroundingInspector();
       } catch (err) {
         chatState.messages = chatState.messages.filter(m => m.role !== 'pending');
         chatState.messages.push({ role: 'error', content: 'AI 호출 실패: ' + err.message });
@@ -3224,6 +3336,7 @@ def _dashboard_html() -> str:
       try {
         const response = await apiFetch('/dashboard/data');
         const data = response.data;
+        dashboardState.runtimeMode = data.runtime_mode;
         document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
         renderAuthContext(response.actor);
         renderMetrics(data.summary);
@@ -3275,7 +3388,7 @@ def _dashboard_html() -> str:
     setupNav();
     showView('overview');
     renderChat();
-    loadAiConfig();
+    loadAiConfig().then(() => { renderGroundingInspector(); });
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
   </script>
