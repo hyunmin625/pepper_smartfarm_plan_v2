@@ -22,10 +22,13 @@ MIGRATION_PATHS: tuple[Path, ...] = (
 
 
 def build_engine(database_url: str):
-    if database_url.startswith("sqlite:///"):
-        sqlite_path = Path(database_url.removeprefix("sqlite:///"))
-        sqlite_path.parent.mkdir(parents=True, exist_ok=True)
-        return create_engine(database_url, connect_args={"check_same_thread": False})
+    normalized = database_url.strip()
+    if not (
+        normalized.startswith("postgresql://") or normalized.startswith("postgresql+")
+    ):
+        raise RuntimeError(
+            "ops-api runtime requires PostgreSQL/TimescaleDB. SQLite is no longer allowed."
+        )
     return create_engine(database_url)
 
 
@@ -91,9 +94,11 @@ def init_db(session_factory: sessionmaker[Session]) -> None:
     session = session_factory()
     engine = session.get_bind()
     session.close()
-    if engine.dialect.name == "postgresql":
-        apply_postgres_migrations(engine)
-    Base.metadata.create_all(engine)
+    if engine.dialect.name != "postgresql":
+        raise RuntimeError(
+            "ops-api init_db requires PostgreSQL/TimescaleDB. SQLite is no longer allowed."
+        )
+    apply_postgres_migrations(engine)
 
 
 @contextmanager

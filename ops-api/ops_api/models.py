@@ -252,10 +252,9 @@ class RobotTaskRecord(Base):
 # ---------------------------------------------------------------------------
 # TimescaleDB sensor time-series records.
 #
-# These tables are created by infra/postgres/002_timescaledb_sensor_readings.sql
-# on real PostgreSQL (with TimescaleDB extension installed). On sqlite they are
-# created as plain tables via Base.metadata.create_all so unit/smoke tests can
-# still exercise the writer + reader paths without a Postgres instance.
+# These tables are created only by
+# infra/postgres/002_timescaledb_sensor_readings.sql on PostgreSQL with the
+# TimescaleDB extension installed. SQLite runtime is no longer supported.
 # ---------------------------------------------------------------------------
 
 

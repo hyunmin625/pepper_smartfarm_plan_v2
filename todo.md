@@ -904,7 +904,8 @@
 - [x] error response test 작성 (`scripts/validate_ops_api_error_responses.py`)
 - [x] load test 최소 시나리오 작성 (`scripts/validate_ops_api_load_scenario.py`)
 - [x] localhost server smoke 작성 (`scripts/validate_ops_api_server_smoke.py`)
-- [ ] real PostgreSQL smoke 실행 (`scripts/validate_ops_api_postgres_smoke.py`)
+- [x] real PostgreSQL smoke 실행 (`scripts/validate_ops_api_postgres_smoke.py`)
+- [x] PostgreSQL/TimescaleDB 자동 bootstrap + Web UI 실행 매뉴얼 작성 (`scripts/ensure_ops_api_postgres_db.py`, `scripts/run_ops_api_postgres_stack.sh`, `docs/ops_api_postgres_runbook.md`, `README.md`, `ops-api/README.md`)
 
 ---
 

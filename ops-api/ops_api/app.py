@@ -574,9 +574,9 @@ def _group_timeseries(
 
     Production deployments will route 5m/30m queries to the
     ``zone_metric_5m`` / ``zone_metric_30m`` continuous aggregates from
-    migration 002. Here we provide a portable fallback that aggregates on
-    the fly so the smoke tests can run against sqlite without
-    TimescaleDB.
+    migration 002. The current read path keeps an in-process aggregation
+    fallback so the API response contract stays stable until the direct
+    continuous-aggregate query path is wired in.
     """
 
     series: dict[str, list[dict[str, Any]]] = {}
@@ -1148,10 +1148,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if from_ts >= to_ts:
             raise HTTPException(status_code=400, detail="from must be earlier than to")
         # Phase 3 read path: interval -> hypertable. The 5m and 30m
-        # branches degrade to raw aggregation on sqlite where the
-        # continuous aggregate views from migration 002 are absent;
-        # in production PostgreSQL+TimescaleDB they would target
-        # zone_metric_5m / zone_metric_30m directly.
+        # branches currently aggregate the fetched rows in-process;
+        # production PostgreSQL+TimescaleDB should be switched to direct
+        # zone_metric_5m / zone_metric_30m reads once that query path is
+        # finalized.
         stmt = (
             select(SensorReadingRecord)
             .where(

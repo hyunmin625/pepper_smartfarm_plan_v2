@@ -134,15 +134,14 @@ python3 scripts/validate_state_estimator_raw_loader.py
 python3 scripts/validate_sensor_to_state_estimator_integration.py
 python3 scripts/validate_llm_orchestrator_service.py
 python3 scripts/validate_llm_response_parser.py
+set -a
+source .env
+set +a
+python3 scripts/ensure_ops_api_postgres_db.py
+python3 scripts/apply_ops_api_migrations.py
 python3 scripts/bootstrap_ops_api_reference_data.py
-python3 scripts/validate_ops_api_auth.py
-python3 scripts/validate_ops_api_schema_models.py
-python3 scripts/validate_ops_api_error_responses.py
-python3 scripts/validate_ops_api_flow.py
-python3 scripts/validate_ops_api_load_scenario.py
-python3 scripts/validate_ops_api_shadow_mode.py
-python3 scripts/validate_ops_api_server_smoke.py
 python3 scripts/validate_ops_api_postgres_smoke.py
+python3 scripts/validate_ops_api_server_smoke.py
 python3 scripts/validate_policy_engine_precheck.py
 python3 scripts/validate_execution_gateway_flow.py
 python3 scripts/validate_execution_dispatcher.py
@@ -156,15 +155,16 @@ python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_
 
 - OpenAI online smoke는 `.env`와 네트워크가 열린 환경에서 `champion -> ds_v11` FT model alias, retrieval, strict JSON, validator 경로까지 통과했다. 다만 CI나 운영 비밀관리 경로에 얹은 상태는 아직 아니다.
 - Gemini frontier path는 `gemini_flash_frontier -> gemini-2.5-flash` alias와 `sft_v11_rag_frontier` prompt로 연결할 수 있게 됐다. 다만 production champion 전환은 아니며, `extended200 + blind50 + real shadow` 게이트를 다시 통과해야 한다.
-- `ops-api`는 로컬 검증에서 SQLite를 쓰고, 운영 전환용 PostgreSQL은 DDL과 reference seed/bootstrap까지 준비했다. `policy_events` table/index와 blocked/approval event persistence도 같은 스키마에 포함됐다. `scripts/validate_ops_api_postgres_smoke.py`도 추가했지만, 이 환경에는 PostgreSQL URL과 driver가 없어 현재는 `blocked` 상태로만 확인했다.
-- `ops-api`의 auth/role, schema validation, error envelope, minimal load scenario, localhost server smoke 테스트는 로컬 스크립트로 닫았다. `scripts/validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄워 HTTP 경로를 통과시켰고, 이 과정에서 `prompt_catalog` 런타임 import 경로 버그도 함께 수정했다.
+- `ops-api` 런타임은 이제 `PostgreSQL/TimescaleDB only`다. `SQLite` fallback은 제거했고, bootstrap과 dashboard smoke도 같은 PostgreSQL 경로를 사용한다.
+- `scripts/validate_ops_api_postgres_smoke.py`는 이 환경에서 실제로 통과했다. seeded count는 `zones 5 / sensors 29 / devices 20 / policies 20`이고 decision/alert/robot_task round trip도 확인했다.
+- `scripts/validate_ops_api_server_smoke.py`도 PostgreSQL URL 기준으로 실제 `uvicorn`을 띄워 HTTP 경로를 통과시킨다.
 - dashboard의 auth context / policy management 패널과 policy enable/disable API는 구현됐지만, native `sensor_series` 스파크라인을 넘어서는 `TimescaleDB` 기반 real sensor 시계열 차트와 정책 편집의 세부 폼 편집 UI는 아직 없다.
 - approval mode의 실제 장치 실행은 현재 `mock` adapter 기준이다.
 - real shadow log 적재 경로는 열렸지만, 실제 운영 window를 충분히 누적한 상태는 아니다.
 
 ## 다음 우선순위
 
-1. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-2. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
-3. `TimescaleDB` actual writer와 native 시계열 화면을 구현해 real sensor 시계열 차트와 zone history를 스마트팜 통합관제 dashboard에 연결
-4. `policy-engine` source versioning과 정책 편집 폼 UI를 추가
+1. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
+2. `policy-engine` source versioning과 정책 편집 폼 UI를 추가
+3. blind50/extended200 validator residual을 줄이기
+4. 실센서 cutover 이후 live sensor stream으로 `/dashboard` 운영 검증을 반복하기

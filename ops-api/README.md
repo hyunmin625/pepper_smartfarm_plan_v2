@@ -9,22 +9,46 @@ FastAPI 기반 운영 백엔드다.
 - `ops_api/planner.py`: 승인된 action을 `execution-gateway` 요청으로 변환
 - `ops_api/seed.py`: sensor/device/policy seed JSON을 reference catalog로 적재
 - `ops_api/logging.py`, `ops_api/errors.py`: logger와 공통 예외 응답 경로
-- 기본 검증 환경은 `SQLite + mock PLC adapter`
-- 운영 전환용 PostgreSQL/TimescaleDB DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1), [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)에 둔다.
+
+운영 DB는 `PostgreSQL + TimescaleDB`만 허용한다. `SQLite`는 지원하지 않는다.
+
+## 운영 실행
+
+가장 빠른 실행 방법은 아래 한 줄이다.
+
+```bash
+bash scripts/run_ops_api_postgres_stack.sh
+```
+
+이 스크립트는 아래 순서를 자동으로 수행한다.
+
+1. `.env` 로드
+2. `scripts/ensure_ops_api_postgres_db.py`로 대상 DB 자동 생성
+3. `scripts/apply_ops_api_migrations.py`로 canonical schema 적용
+4. `scripts/bootstrap_ops_api_reference_data.py`로 `zones/sensors/devices/policies` seed 적재
+5. `.venv/bin/python -m uvicorn ops_api.app:create_app --factory` 실행
+
+상세 절차는 [docs/ops_api_postgres_runbook.md](/home/user/pepper_smartfarm_plan_v2/docs/ops_api_postgres_runbook.md)에 정리한다.
 
 ## bootstrap
 
 ```bash
-python3 scripts/apply_ops_api_migrations.py
+set -a
+source .env
+set +a
+
+.venv/bin/python scripts/ensure_ops_api_postgres_db.py
+.venv/bin/python scripts/apply_ops_api_migrations.py
+.venv/bin/python scripts/bootstrap_ops_api_reference_data.py
 ```
 
-운영용 PostgreSQL에서는 `infra/postgres/001_initial_schema.sql` → `002_timescaledb_sensor_readings.sql` 순서로 canonical migration을 적용한다. SQLite 개발 환경은 기존처럼 SQLAlchemy `create_all` 경로를 사용한다.
+`OPS_API_DATABASE_URL` 대상 PostgreSQL DB를 만든 뒤 canonical migration과 reference seed를 적용한다.
 
-```bash
-python3 scripts/bootstrap_ops_api_reference_data.py
-```
+운영 DDL은 아래 세 파일이 canonical source다.
 
-현재 `OPS_API_DATABASE_URL` 대상 DB에 schema를 만든 뒤 기본 `zones/sensors/devices/policies` reference catalog를 seed한다. PostgreSQL이면 SQL migration을 먼저 적용하고, SQLite면 `create_all` fallback을 사용한다.
+- [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)
+- [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)
+- [infra/postgres/003_automation_rules.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/003_automation_rules.sql:1)
 
 ## auth
 
@@ -44,17 +68,27 @@ python3 scripts/bootstrap_ops_api_reference_data.py
 ## validation
 
 ```bash
-python3 scripts/validate_ops_api_auth.py
-python3 scripts/validate_ops_api_schema_models.py
-python3 scripts/validate_ops_api_error_responses.py
-python3 scripts/validate_ops_api_flow.py
-python3 scripts/validate_ops_api_load_scenario.py
-python3 scripts/validate_ops_api_shadow_mode.py
-python3 scripts/validate_ops_api_server_smoke.py
-python3 scripts/validate_ops_api_postgres_smoke.py
+set -a
+source .env
+set +a
+
+.venv/bin/python scripts/validate_ops_api_postgres_smoke.py
+.venv/bin/python scripts/validate_ops_api_server_smoke.py
 ```
 
-- `validate_ops_api_server_smoke.py`는 실제 `uvicorn`을 띄운 뒤 localhost HTTP 경로를 점검한다.
-  - 현재 smoke 범위: `GET /auth/me`, `GET/POST /runtime/mode`, `GET /policies`, `GET /policies/events`, `POST /policies/{policy_id}`, `POST /decisions/evaluate-zone`, `POST /actions/approve`, `GET /dashboard/data`
-- `validate_ops_api_flow.py`는 SQLite 기준으로 `blocked / approval_required` policy event가 approval dispatch 경로에서 실제 적재되는지까지 검증한다.
-- `validate_ops_api_postgres_smoke.py`는 `OPS_API_POSTGRES_SMOKE_URL` 또는 `OPS_API_DATABASE_URL`가 PostgreSQL URL이고 driver(`psycopg`/`psycopg2`)가 설치돼 있을 때만 실제 smoke를 수행한다. 환경이 없으면 `blocked` 상태로 종료한다.
+- `validate_ops_api_postgres_smoke.py`
+  - PostgreSQL/TimescaleDB schema bootstrap
+  - reference seed count
+  - decision/alert/robot_task write-read round trip
+- `validate_ops_api_server_smoke.py`
+  - 실제 `uvicorn` 기동
+  - `GET /auth/me`
+  - `GET/POST /runtime/mode`
+  - `GET /policies`
+  - `GET /policies/events`
+  - `POST /policies/{policy_id}`
+  - `POST /decisions/evaluate-zone`
+  - `POST /actions/approve`
+  - `GET /dashboard/data`
+
+모든 운영 smoke는 `.venv` + PostgreSQL URL 기준으로만 수행한다.

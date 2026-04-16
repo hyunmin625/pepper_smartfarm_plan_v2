@@ -18,6 +18,8 @@
 
 현재는 구현 코드가 없으므로 루트의 Markdown 문서가 핵심 산출물입니다. 구현이 시작되면 `todo.md`의 계획에 맞춰 `docs/`, `data/`, `experiments/`, `infra/`와 서비스 디렉터리(`sensor-ingestor/`, `state-estimator/`, `policy-engine/`, `llm-orchestrator/`, `execution-gateway/`)를 추가합니다.
 
+`ops-api`와 통합제어 Web UI 실행은 앞으로 `PostgreSQL/TimescaleDB only` 기준으로 다룹니다. 다른 AI/에이전트도 `SQLite` bootstrap, `SQLite` smoke, `SQLite` dashboard 실행을 제안하거나 사용하면 안 됩니다.
+
 ## 빌드, 테스트, 개발 명령
 
 현재 별도 빌드 시스템이나 테스트 러너는 없습니다. 문서 변경 시 아래 명령으로 기본 확인을 수행합니다.
@@ -27,6 +29,11 @@
 - `git status -sb`: 커밋 전 변경 파일 확인
 
 코드가 추가되면 실제 실행 명령을 이 문서와 `README.md`에 함께 기록합니다. 예: `pytest`, `docker compose up`, `npm test`.
+
+현재 통합제어 Web UI 기준 명령은 아래 두 가지입니다.
+
+- `bash scripts/run_ops_api_postgres_stack.sh`
+- `.venv/bin/python scripts/validate_ops_api_postgres_smoke.py`
 
 ## 작성 스타일과 명명 규칙
 
@@ -52,6 +59,6 @@ PR에는 변경 요약, 변경한 파일, 검증 방법, 안전성 또는 운영
 
 ## 보안과 설정 주의사항
 
-API 키, 온실 접속 정보, PLC 주소, 실제 센서 endpoint, 운영 DB 접속 정보는 커밋하지 않습니다. 필요한 경우 `.env.example`처럼 예시 파일만 만들고 실제 값은 placeholder로 둡니다.
+API 키, 온실 접속 정보, PLC 주소, 실제 센서 endpoint, 운영 DB 접속 정보는 커밋하지 않습니다. 필요한 경우 예시 파일만 만들고 실제 값은 placeholder로 둡니다.
 
 LLM, 정책, 프롬프트, 스키마는 버전 관리 대상입니다. 자동 제어와 관련된 변경은 반드시 정책 엔진, 실행 게이트, 감사 로그 관점에서 함께 검토합니다.

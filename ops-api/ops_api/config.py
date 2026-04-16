@@ -7,6 +7,21 @@ from pathlib import Path
 from .bootstrap import REPO_ROOT
 
 
+def _require_postgres_database_url(database_url: str) -> str:
+    normalized = database_url.strip()
+    if not normalized:
+        raise RuntimeError(
+            "OPS_API_DATABASE_URL must be set to a PostgreSQL URL. "
+            "SQLite runtime is no longer allowed."
+        )
+    if normalized.startswith("postgresql://") or normalized.startswith("postgresql+"):
+        return normalized
+    raise RuntimeError(
+        "OPS_API_DATABASE_URL must point to PostgreSQL/TimescaleDB. "
+        "SQLite runtime is no longer allowed."
+    )
+
+
 @dataclass(frozen=True)
 class Settings:
     database_url: str
@@ -31,9 +46,11 @@ class Settings:
 
 def load_settings() -> Settings:
     return Settings(
-        database_url=os.getenv(
-            "OPS_API_DATABASE_URL",
-            f"sqlite:///{REPO_ROOT / 'artifacts' / 'runtime' / 'ops_api' / 'ops_api.db'}",
+        database_url=_require_postgres_database_url(
+            os.getenv(
+                "OPS_API_DATABASE_URL",
+                "",
+            )
         ),
         runtime_mode_path=Path(
             os.getenv(

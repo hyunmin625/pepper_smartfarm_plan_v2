@@ -2,6 +2,20 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
+## 2026-04-17
+
+### ops-api PostgreSQL only 전환 + 통합제어 Web UI 실행 매뉴얼 정리
+- 사용자 요청에 따라 앞으로 `ops-api`와 통합제어 Web UI는 `PostgreSQL/TimescaleDB only` 기준으로만 다루기로 고정했다. `ops-api/ops_api/config.py`와 `ops-api/ops_api/database.py`는 이미 SQLite URL을 거부하도록 바뀐 상태였고, 이번에 문서/스크립트/검증 경로까지 같은 원칙으로 맞췄다.
+- `scripts/ensure_ops_api_postgres_db.py`를 추가해 `OPS_API_DATABASE_URL`의 대상 DB가 없으면 admin DB(`postgres` 또는 `template1`)에 붙어 자동 생성하도록 했다.
+- `scripts/run_ops_api_postgres_stack.sh`를 추가해 `.env` 로드 -> DB 생성 -> canonical migration 적용 -> reference seed 적재 -> `uvicorn ops_api.app:create_app --factory` 실행을 한 번에 처리하도록 만들었다.
+- `docs/ops_api_postgres_runbook.md`를 새로 작성했고, `README.md`와 `ops-api/README.md`에도 같은 실행 경로와 smoke 절차를 반영했다. 다른 에이전트가 기준을 바로 알 수 있도록 `AGENTS.md`에 `PostgreSQL/TimescaleDB only` 규칙도 추가했다.
+- `scripts/validate_ops_api_server_smoke.py`도 PostgreSQL URL만 받도록 바꿨다. 실행 전에 `ensure_ops_api_postgres_db.py`, `apply_ops_api_migrations.py`, `bootstrap_ops_api_reference_data.py`를 먼저 호출한 뒤 실제 `uvicorn` smoke를 수행한다.
+- `ops-api/ops_api/models.py`와 `ops-api/ops_api/app.py`의 시계열 주석도 현재 기준에 맞게 고쳤다. 더 이상 SQLite fallback을 설명하지 않고, 5m/30m 조회는 direct continuous aggregate query로 바꿀 예정인 현재 상태만 남겼다.
+- 상태 문서 반영:
+  - `PROJECT_STATUS.md`: 로컬 통합 기준을 PostgreSQL/TimescaleDB로 상향, `real PostgreSQL smoke` 완료 반영
+  - `docs/runtime_integration_status.md`: bootstrap/validation 명령을 PostgreSQL 기준으로 정리
+  - `todo.md`: `real PostgreSQL smoke 실행`과 `Web UI 실행 매뉴얼 작성` 완료 처리
+
 ## 2026-04-15
 
 ### v11 초과 재도전 준비용 batch24 corrective seed 추가

@@ -27,10 +27,11 @@
 17. `docs/timescaledb_schema_design.md`: raw/snapshot/downsampling/compression 스키마 기준
 18. `docs/native_realtime_dashboard_plan.md`: 초단위 실시간 SSE + uPlot 시각화 결정 (Grafana 임베드 supersede)
 19. `ops-api/README.md`: 운영 API, 역할 권한, seed/bootstrap 절차
-20. `schedule.md`: 개정 실행 순서와 8주 일정
-21. `todo.md`: 세부 작업 체크리스트
-22. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-23. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+20. `docs/ops_api_postgres_runbook.md`: PostgreSQL/TimescaleDB 자동 구축과 `/dashboard` 실행 절차
+21. `schedule.md`: 개정 실행 순서와 8주 일정
+22. `todo.md`: 세부 작업 체크리스트
+23. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+24. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -106,8 +107,8 @@
 - `ops-api`는 `policy_evaluations`, `operator_reviews`를 별도 저장해 shadow→approval 전환에 필요한 운영자 검토와 validator 결과를 같이 남긴다.
 - approval dispatch 경로는 이제 `policy_events`도 저장한다. `zone_state` 제약을 dispatch raw payload로 다시 전파하고, `blocked / approval_required` 이벤트를 `/policies/events`와 dashboard summary에서 바로 볼 수 있다.
 - `POST /policies/{policy_id}`와 dashboard의 `Auth Context`/`Policy Management` 패널을 추가해 현재 actor/role 확인과 policy enable/disable 토글까지 운영 화면에서 수행할 수 있게 했다.
-- PostgreSQL DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1), [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)로 고정했고, [scripts/apply_ops_api_migrations.py](/home/user/pepper-smartfarm-plan-v2/scripts/apply_ops_api_migrations.py:1)로 canonical 적용 순서를 초기화한다. 로컬 검증은 `SQLite + mock PLC adapter`로 닫았다.
-- `scripts/validate_ops_api_server_smoke.py`로 실제 `uvicorn` localhost HTTP smoke도 통과했고, smoke 범위에 `GET /auth/me`, `GET /policies`, `POST /policies/{policy_id}`까지 포함했다.
+- PostgreSQL DDL은 [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1), [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1), [infra/postgres/003_automation_rules.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/003_automation_rules.sql:1)로 고정했고, [scripts/ensure_ops_api_postgres_db.py](/home/user/pepper_smartfarm_plan_v2/scripts/ensure_ops_api_postgres_db.py:1), [scripts/apply_ops_api_migrations.py](/home/user/pepper-smartfarm-plan-v2/scripts/apply_ops_api_migrations.py:1), [scripts/bootstrap_ops_api_reference_data.py](/home/user/pepper-smartfarm-plan-v2/scripts/bootstrap_ops_api_reference_data.py:1), [scripts/run_ops_api_postgres_stack.sh](/home/user/pepper_smartfarm_plan_v2/scripts/run_ops_api_postgres_stack.sh:1)로 canonical bootstrap 순서를 자동화했다.
+- `.venv` + PostgreSQL 기준 [scripts/validate_ops_api_postgres_smoke.py](/home/user/pepper-smartfarm-plan-v2/scripts/validate_ops_api_postgres_smoke.py:1)와 [scripts/validate_ops_api_server_smoke.py](/home/user/pepper_smartfarm_plan_v2/scripts/validate_ops_api_server_smoke.py:1)가 모두 실전 경로 smoke 기준으로 동작한다.
 - `bash -lc "set -a; source .env >/dev/null 2>&1; set +a; python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10"` 기준 OpenAI online smoke도 통과했다. `champion` alias는 현재 `ds_v11` FT model id로 해석되고, retrieval/strict JSON/validator 경로가 실제 응답으로 검증됐다.
 - Gemini runtime path도 `python3 scripts/run_llm_orchestrator_smoke.py --provider gemini --model-id gemini_flash_frontier --prompt-version sft_v11_rag_frontier`로 연결할 수 있게 열어 두었다. 다만 이 경로는 아직 challenger/shadow lane이다.
 - `policy-engine/policy_engine/loader.py`, `precheck.py`를 추가해 dispatch 직전 seed policy를 다시 평가하도록 연결했다. 현재 `HSV-04` 관수 경로 degraded block, `HSV-09` fertigation approval escalation이 `execution-gateway` preflight에서 실제로 강제된다.
@@ -188,6 +189,19 @@
 - `farm_case`가 포함된 혼합 인덱스에서 공식 지침 우선 정렬 가드레일 구현 완료:
   - `scripts/search_rag_index.py`
   - `evals/rag_official_priority_eval_set.jsonl`
+
+## 통합제어 Web UI 실행
+
+`ops-api` 런타임은 이제 `PostgreSQL/TimescaleDB only`다. `SQLite`는 허용하지 않는다.
+
+- 자동 실행: `bash scripts/run_ops_api_postgres_stack.sh`
+- 실행 문서: `docs/ops_api_postgres_runbook.md`
+- 서비스 상세: `ops-api/README.md`
+
+기본 접속 주소는 아래와 같다.
+
+- health: `http://127.0.0.1:8000/health`
+- dashboard: `http://127.0.0.1:8000/dashboard`
 
 ## 현재 핵심 산출물
 

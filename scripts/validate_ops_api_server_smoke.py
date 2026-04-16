@@ -18,6 +18,14 @@ from urllib.request import Request, urlopen
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _resolve_postgres_url() -> str | None:
+    for name in ("OPS_API_POSTGRES_SMOKE_URL", "OPS_API_DATABASE_URL"):
+        value = os.getenv(name, "").strip()
+        if value.startswith("postgresql://") or value.startswith("postgresql+"):
+            return value
+    return None
+
+
 def _reserve_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -44,10 +52,24 @@ def _request_json(url: str, *, method: str = "GET", payload: dict | None = None,
 
 
 def main() -> int:
+    postgres_url = _resolve_postgres_url()
+    if not postgres_url:
+        print(
+            json.dumps(
+                {
+                    "status": "blocked",
+                    "reason": "postgres URL is not configured",
+                    "expected_env": ["OPS_API_POSTGRES_SMOKE_URL", "OPS_API_DATABASE_URL"],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
     errors: list[str] = []
     server_log_tail: list[str] = []
     with tempfile.TemporaryDirectory(prefix="ops-api-server-smoke-") as tmp_dir:
-        db_path = Path(tmp_dir) / "ops_api_server.db"
         runtime_mode_path = Path(tmp_dir) / "runtime_mode.json"
         server_log = Path(tmp_dir) / "uvicorn.log"
         port = _reserve_port()
@@ -65,13 +87,41 @@ def main() -> int:
         env.update(
             {
                 "PYTHONPATH": os.pathsep.join(pythonpath_entries),
-                "OPS_API_DATABASE_URL": f"sqlite:///{db_path}",
+                "OPS_API_DATABASE_URL": postgres_url,
                 "OPS_API_RUNTIME_MODE_PATH": str(runtime_mode_path),
                 "OPS_API_LLM_PROVIDER": "stub",
                 "OPS_API_MODEL_ID": "pepper-ops-local-stub",
                 "OPS_API_AUTH_MODE": "disabled",
             }
         )
+
+        for bootstrap_cmd in (
+            [sys.executable, str(REPO_ROOT / "scripts" / "ensure_ops_api_postgres_db.py")],
+            [sys.executable, str(REPO_ROOT / "scripts" / "apply_ops_api_migrations.py")],
+            [sys.executable, str(REPO_ROOT / "scripts" / "bootstrap_ops_api_reference_data.py")],
+        ):
+            completed = subprocess.run(
+                bootstrap_cmd,
+                cwd=str(REPO_ROOT),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            if completed.returncode != 0:
+                print(
+                    json.dumps(
+                        {
+                            "status": "failed",
+                            "reason": "bootstrap command failed before server smoke",
+                            "command": bootstrap_cmd,
+                            "stdout": completed.stdout,
+                            "stderr": completed.stderr,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                )
+                return completed.returncode
 
         process = subprocess.Popen(
             [
