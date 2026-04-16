@@ -48,6 +48,7 @@ def bootstrap_reference_data(session_factory) -> None:
             record.priority = str(entry.get("priority") or "optional")
             record.description = str(entry.get("description") or "")
             record.metadata_json = json.dumps(entry, ensure_ascii=False)
+        session.flush()
 
         existing_sensors = {row.sensor_id: row for row in session.query(SensorRecord).all()}
         for entry in catalog.get("sensors", []):

@@ -595,10 +595,14 @@ def _group_timeseries(
 
     bucket_accumulator: dict[tuple[str, datetime], list[float]] = {}
     bucket_quality: dict[tuple[str, datetime], str] = {}
+    from datetime import timezone as _tz
     for row in rows:
         if row.metric_value_double is None or row.measured_at is None:
             continue
-        epoch = int(row.measured_at.timestamp())
+        # sensor_readings.measured_at is stored as naive UTC (TIMESTAMP
+        # WITHOUT TIME ZONE); .timestamp() on a naive datetime interprets
+        # it in local tz, which shifts buckets off on non-UTC hosts.
+        epoch = int(row.measured_at.replace(tzinfo=_tz.utc).timestamp())
         bucket_epoch = epoch - (epoch % bucket_seconds)
         bucket_start = datetime.utcfromtimestamp(bucket_epoch)
         key = (row.metric_name, bucket_start)

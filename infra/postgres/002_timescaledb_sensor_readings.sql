@@ -36,9 +36,8 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
 );
 
 SELECT create_hypertable(
-    'sensor_readings',
-    by_range('measured_at'),
-    chunk_time_interval => INTERVAL '1 day',
+    'sensor_readings'::regclass,
+    by_range('measured_at', INTERVAL '1 day'),
     if_not_exists => TRUE
 );
 
@@ -82,9 +81,8 @@ CREATE TABLE IF NOT EXISTS zone_state_snapshots (
 );
 
 SELECT create_hypertable(
-    'zone_state_snapshots',
-    by_range('measured_at'),
-    chunk_time_interval => INTERVAL '7 days',
+    'zone_state_snapshots'::regclass,
+    by_range('measured_at', INTERVAL '7 days'),
     if_not_exists => TRUE
 );
 

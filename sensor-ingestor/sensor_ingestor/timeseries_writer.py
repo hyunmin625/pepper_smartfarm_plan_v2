@@ -177,9 +177,14 @@ class TimeseriesWriter:
 
 
 def _parse_timestamp(value: Any) -> datetime | None:
+    # Store tz-aware values as naive UTC so the sensor_readings hypertable
+    # (TIMESTAMP WITHOUT TIME ZONE) stays aligned with ops-api reads that
+    # use datetime.utcnow(). Previously this converted to the local tz,
+    # which broke zone history queries on non-UTC hosts.
+    from datetime import timezone
     if isinstance(value, datetime):
         if value.tzinfo is not None:
-            return value.astimezone(tz=None).replace(tzinfo=None)
+            return value.astimezone(timezone.utc).replace(tzinfo=None)
         return value
     if isinstance(value, str) and value:
         text = value.replace("Z", "+00:00")
@@ -188,7 +193,7 @@ def _parse_timestamp(value: Any) -> datetime | None:
         except ValueError:
             return None
         if parsed.tzinfo is not None:
-            return parsed.astimezone(tz=None).replace(tzinfo=None)
+            return parsed.astimezone(timezone.utc).replace(tzinfo=None)
         return parsed
     return None
 
