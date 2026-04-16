@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Decision Support | Smart Farm OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#00e3fd",
+                        "error-container": "#f95630",
+                        "on-secondary": "#cbffda",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-tint": "#006a26",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#abadaf",
+                        "on-primary": "#cfffcd",
+                        "on-primary-fixed-variant": "#006d27",
+                        "tertiary-dim": "#005863",
+                        "primary-fixed": "#87ff94",
+                        "on-secondary-fixed-variant": "#00633a",
+                        "secondary-fixed": "#76f2aa",
+                        "inverse-primary": "#87ff94",
+                        "surface-bright": "#f5f7f9",
+                        "on-error-container": "#520c00",
+                        "primary-fixed-dim": "#78f088",
+                        "secondary-container": "#76f2aa",
+                        "surface-container-high": "#dfe3e6",
+                        "on-secondary-fixed": "#004326",
+                        "secondary": "#00693e",
+                        "tertiary-container": "#00e3fd",
+                        "surface-container": "#e5e9eb",
+                        "secondary-fixed-dim": "#67e39d",
+                        "outline": "#747779",
+                        "on-error": "#ffefec",
+                        "on-surface-variant": "#595c5e",
+                        "tertiary-fixed-dim": "#00d4ec",
+                        "on-tertiary-container": "#004d57",
+                        "error-dim": "#b92902",
+                        "background": "#f5f7f9",
+                        "error": "#b02500",
+                        "primary-dim": "#005d20",
+                        "on-tertiary-fixed-variant": "#005762",
+                        "on-secondary-container": "#005933",
+                        "inverse-surface": "#0b0f10",
+                        "primary": "#006a26",
+                        "surface-container-low": "#eef1f3",
+                        "on-primary-fixed": "#004c19",
+                        "on-tertiary": "#d8f8ff",
+                        "tertiary": "#006571",
+                        "on-surface": "#2c2f31",
+                        "surface-container-highest": "#d9dde0",
+                        "surface-dim": "#d0d5d8",
+                        "surface-variant": "#d9dde0",
+                        "on-primary-container": "#006122",
+                        "primary-container": "#87ff94",
+                        "secondary-dim": "#005c35",
+                        "surface": "#f5f7f9",
+                        "on-tertiary-fixed": "#003840",
+                        "on-background": "#2c2f31"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "1rem",
+                        "xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 overflow-y-auto h-full w-64 border-r-0 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">eco</span>
+</div>
+<div>
+<div class="text-lg font-bold text-green-800 dark:text-green-500 font-headline leading-tight">Digital Agronomist</div>
+<div class="text-xs font-medium text-slate-500 uppercase tracking-widest">Precision Control</div>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">precision_manufacturing</span> Area Monitoring
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm tracking-tight text-green-700 dark:text-green-400 font-bold border-l-4 border-green-700 bg-green-50/50 dark:bg-green-900/20" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">gavel</span> Decision Support
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">psychology</span> AI Assistant
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">notifications</span> Notifications
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">smart_toy</span> Robot Control
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">settings_input_component</span> Facility Control
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">event_note</span> Policies
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span> System Settings
+                </a>
+</nav>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-6 py-3 w-full border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
+<div class="flex items-center gap-8">
+<span class="text-xl font-black text-green-800 dark:text-green-500 font-headline">SmartFarm OS</span>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-64" placeholder="Search recommendations..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined">notifications_active</span>
+</button>
+<div class="flex items-center gap-3 pl-2 border-l border-slate-100">
+<div class="text-right">
+<div class="text-sm font-bold text-on-surface">Dr. Aris Thorne</div>
+<div class="text-[10px] uppercase tracking-tighter text-slate-500">Chief Agronomist</div>
+</div>
+<img class="w-10 h-10 rounded-full object-cover" data-alt="portrait of a professional male scientist in his 40s wearing glasses and a lab coat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-s4uxiMloTEUinhpwhTSES8Af2Fwz8af3Ec0nBgAPvHyIYywlY6F0UkZUjp9P2tsXPp3GD809pg0otpxSVafGve96EUqUvKnih1iCmY3sV8vk5UdtRKrHYiy0uc4GuxjcN6fTPfD3DTgBYvYd_iDjoUOwlBFjadriKqbyPSFoMdSakohODYXsqEuTFeXwaoGjqoljUWMqedtJMvd9SsIXRnG6NsGuai1ua_PU8xIq4Vp6sLOYOrtctyDlYya5OUjuFUPulK0M-OKt"/>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-8 max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h1 class="text-3xl font-extrabold text-on-surface tracking-tight mb-2">Decision Support</h1>
+<p class="text-on-surface-variant font-body">AI-driven actionable insights and intervention requests for Sector 7-G.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface text-sm font-bold flex items-center gap-2 hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined text-sm">history</span> Review Logs
+                    </button>
+<button class="px-6 py-2.5 rounded-full bg-primary text-on-primary text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm">auto_awesome</span> Generate Report
+                    </button>
+</div>
+</div>
+<!-- Bento Grid - Recommendation Summary -->
+<div class="grid grid-cols-12 gap-6 mb-12">
+<!-- AI Forecast Card -->
+<div class="col-span-12 lg:col-span-4 bg-gradient-to-br from-primary to-secondary p-8 rounded-lg shadow-sm flex flex-col justify-between min-h-[240px] text-white">
+<div>
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest">Yield Forecast</span>
+<span class="material-symbols-outlined text-white/60">trending_up</span>
+</div>
+<div class="text-5xl font-black font-headline tracking-tighter mb-1">+14.2%</div>
+<p class="text-on-secondary/80 text-sm">Projected increase if current fertigation adjustments are approved within 4 hours.</p>
+</div>
+<div class="flex items-center gap-2 mt-4 text-xs font-bold text-white">
+<span class="material-symbols-outlined text-sm">check_circle</span> Confidence Score: 98.4%
+                    </div>
+</div>
+<!-- Climate Context -->
+<div class="col-span-12 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface-container-lowest p-6 rounded-lg flex flex-col justify-between">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Humidity</span>
+<div class="text-2xl font-bold font-headline">68%</div>
+<div class="text-xs text-secondary font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span> Stable
+                        </div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg flex flex-col justify-between">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Temp</span>
+<div class="text-2xl font-bold font-headline">24.1°C</div>
+<div class="text-xs text-error-dim font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> High Alert
+                        </div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg flex flex-col justify-between">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Soil pH</span>
+<div class="text-2xl font-bold font-headline">6.4</div>
+<div class="text-xs text-secondary font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span> Optimal
+                        </div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg flex flex-col justify-between">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Lux Level</span>
+<div class="text-2xl font-bold font-headline">42.5k</div>
+<div class="text-xs text-slate-400 font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">remove</span> Consistent
+                        </div>
+</div>
+</div>
+</div>
+<!-- Approval List -->
+<div class="space-y-8">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold text-on-surface">Pending Actions</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-error-container/20 text-error-dim text-[11px] font-black tracking-widest uppercase">3 Urgent</span>
+</div>
+<!-- Recommendation Card 1 -->
+<div class="bg-surface-container-lowest rounded-lg p-1 overflow-hidden">
+<div class="flex flex-col md:flex-row">
+<div class="md:w-1/3 p-8 border-r border-slate-50 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-4">
+<span class="w-2 h-2 rounded-full bg-error-dim"></span>
+<span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pest Control • Sector 4</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Targeted Spodoptera Excision</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                    AI detected initial larvae clustering on Sector 4 tomato foliage. Recommend deployment of Micro-Drones for precision pheromone application.
+                                </p>
+</div>
+<div class="mt-8 pt-6 border-t border-slate-50">
+<div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Request Origin</div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-tertiary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-xs text-on-tertiary-container">smart_toy</span>
+</div>
+<span class="text-xs font-medium">Vision-Node v4.2</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-8 bg-surface-bright/50">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<div class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Justification Data</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center text-sm">
+<span class="text-slate-500">Infection Rate</span>
+<span class="font-bold">2.4% Canopy</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-error w-[24%] h-full"></div>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-slate-500">Spread Velocity</span>
+<span class="font-bold text-error-dim">High (+0.8%/hr)</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-slate-500">Weather Risk</span>
+<span class="font-bold">Low (No Wind)</span>
+</div>
+</div>
+</div>
+<div>
+<div class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Impact Analysis</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-primary">verified</span>
+<span class="text-sm font-bold">Conservation Alpha</span>
+</div>
+<p class="text-xs text-slate-500 leading-normal">
+                                            Immediate action prevents 85% crop loss in adjacent sectors. Chemical usage reduced by 92% compared to broad spraying.
+                                        </p>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-3 mt-10">
+<button class="px-8 py-3 rounded-full text-slate-600 font-bold text-sm hover:bg-slate-100 active:scale-95 transition-all">Reject</button>
+<button class="px-8 py-3 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">Approve &amp; Deploy</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommendation Card 2 -->
+<div class="bg-surface-container-lowest rounded-lg p-1 overflow-hidden">
+<div class="flex flex-col md:flex-row">
+<div class="md:w-1/3 p-8 border-r border-slate-50 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-4">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fertigation • Hydro-Zone A</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Nitrogen Optimization</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                    Real-time leaf colorimetry suggests mild N-deficiency in Row 12-18. Adjust nutrient solution ratio for Phase 3 growth.
+                                </p>
+</div>
+<div class="mt-8 pt-6 border-t border-slate-50">
+<div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Request Origin</div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-xs text-on-primary-container">psychology</span>
+</div>
+<span class="text-xs font-medium">Agron-AI Engine</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-8 bg-surface-bright/50">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<div class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Justification Data</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center text-sm">
+<span class="text-slate-500">Current N-P-K</span>
+<span class="font-bold">14-14-14</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-slate-500">Proposed N-P-K</span>
+<span class="font-bold text-primary">18-12-14</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-slate-500">Water Consumption</span>
+<span class="font-bold text-secondary">-5% Efficient</span>
+</div>
+</div>
+</div>
+<div>
+<div class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Impact Analysis</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+<span class="text-sm font-bold">Biomass Expansion</span>
+</div>
+<p class="text-xs text-slate-500 leading-normal">
+                                            Estimated 3.2kg increase per vine. Solution prevents potential leaf chlorosis before visible symptoms appear.
+                                        </p>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-3 mt-10">
+<button class="px-8 py-3 rounded-full text-slate-600 font-bold text-sm hover:bg-slate-100 active:scale-95 transition-all">Reject</button>
+<button class="px-8 py-3 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">Approve &amp; Deploy</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Map Context -->
+<div class="mt-12">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-xl font-bold text-on-surface">Spatial Verification</h2>
+<span class="text-xs text-slate-400 font-medium italic">Sectors highlighting active requests</span>
+</div>
+<div class="w-full h-80 rounded-lg relative overflow-hidden bg-slate-200">
+<img class="w-full h-full object-cover" data-alt="aerial satellite view of high-tech geometric greenhouse facility with solar panels and diverse plant zones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBHnv7ZxNBkDwVPe0QI3iGolAezt4SqMD7SFrqlP4GodXfobvM9cO08GvOjFTjHMHJXNa_yDki4pOF8b4HISAs3ClusLNTc3RadVSAO_NqKPwSlrZIdzDLVJM1u7to2MbizNCgzHB4tLVvKwDbpMaTpSOuIqNuzou2ctzlP1dMJHWm6keSDQdaV6s-51XxgPNAnorsp09_IyjDD8v-STYwm-SD6K3iZYtbFHdKRbozCqT6Mg2_fsh9JmA7FaqG3iy2sP_3VACr2sa5"/>
+<div class="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
+<!-- Map Overlays -->
+<div class="absolute top-10 left-40 w-24 h-24 border-2 border-error rounded-lg bg-error/20 flex items-center justify-center backdrop-blur-[2px]">
+<span class="material-symbols-outlined text-error font-bold">priority_high</span>
+</div>
+<div class="absolute bottom-20 right-80 w-32 h-20 border-2 border-primary rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-[2px]">
+<span class="material-symbols-outlined text-primary font-bold">opacity</span>
+</div>
+<!-- Legend -->
+<div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md p-4 rounded-lg flex gap-6 border border-white/50 shadow-xl">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="text-[10px] font-bold uppercase text-slate-600">Pest Hazard</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-[10px] font-bold uppercase text-slate-600">Nutrient Sync</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartFarm OS - Policies &amp; Events</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#00e3fd",
+                    "error-container": "#f95630",
+                    "on-secondary": "#cbffda",
+                    "inverse-on-surface": "#9a9d9f",
+                    "surface-tint": "#006a26",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#abadaf",
+                    "on-primary": "#cfffcd",
+                    "on-primary-fixed-variant": "#006d27",
+                    "tertiary-dim": "#005863",
+                    "primary-fixed": "#87ff94",
+                    "on-secondary-fixed-variant": "#00633a",
+                    "secondary-fixed": "#76f2aa",
+                    "inverse-primary": "#87ff94",
+                    "surface-bright": "#f5f7f9",
+                    "on-error-container": "#520c00",
+                    "primary-fixed-dim": "#78f088",
+                    "secondary-container": "#76f2aa",
+                    "surface-container-high": "#dfe3e6",
+                    "on-secondary-fixed": "#004326",
+                    "secondary": "#00693e",
+                    "tertiary-container": "#00e3fd",
+                    "surface-container": "#e5e9eb",
+                    "secondary-fixed-dim": "#67e39d",
+                    "outline": "#747779",
+                    "on-error": "#ffefec",
+                    "on-surface-variant": "#595c5e",
+                    "tertiary-fixed-dim": "#00d4ec",
+                    "on-tertiary-container": "#004d57",
+                    "error-dim": "#b92902",
+                    "background": "#f5f7f9",
+                    "error": "#b02500",
+                    "primary-dim": "#005d20",
+                    "on-tertiary-fixed-variant": "#005762",
+                    "on-secondary-container": "#005933",
+                    "inverse-surface": "#0b0f10",
+                    "primary": "#006a26",
+                    "surface-container-low": "#eef1f3",
+                    "on-primary-fixed": "#004c19",
+                    "on-tertiary": "#d8f8ff",
+                    "tertiary": "#006571",
+                    "on-surface": "#2c2f31",
+                    "surface-container-highest": "#d9dde0",
+                    "surface-dim": "#d0d5d8",
+                    "surface-variant": "#d9dde0",
+                    "on-primary-container": "#006122",
+                    "primary-container": "#87ff94",
+                    "secondary-dim": "#005c35",
+                    "surface": "#f5f7f9",
+                    "on-tertiary-fixed": "#003840",
+                    "on-background": "#2c2f31"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.25rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 overflow-y-auto h-full w-64 border-r-0 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">eco</span>
+</div>
+<div>
+<div class="text-lg font-bold text-green-800 dark:text-green-500">Digital Agronomist</div>
+<div class="text-xs font-manrope font-medium tracking-tight text-slate-500">Precision Control</div>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">precision_manufacturing</span> Area Monitoring
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">gavel</span> Decision Support
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">psychology</span> AI Assistant
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">notifications</span> Notifications
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">smart_toy</span> Robot Control
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">settings_input_component</span> Facility Control
+                </a>
+<!-- ACTIVE TAB: Policies -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-manrope text-sm tracking-tight text-green-700 dark:text-green-400 font-bold border-l-4 border-green-700 bg-green-50/50 dark:bg-green-900/20 duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">event_note</span> Policies
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight duration-150 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">settings</span> System Settings
+                </a>
+</nav>
+</div>
+<div class="mt-auto px-6 py-8">
+<div class="p-4 rounded-xl bg-surface-container-high/50 flex flex-col gap-2">
+<div class="text-[10px] uppercase tracking-widest font-bold text-slate-500">System Status</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<div class="text-xs font-semibold">Nodes Active</div>
+</div>
+</div>
+</div>
+</aside>
+<main class="ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-8 py-4 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40 shadow-sm dark:shadow-none">
+<div class="flex items-center gap-6 flex-1">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search policies or events..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-5">
+<button class="relative p-2 rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-slate-600">notifications_active</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-100">
+<div class="text-right hidden sm:block">
+<div class="text-sm font-bold leading-none">Alex Rivers</div>
+<div class="text-[10px] text-slate-500">Senior Agronomist</div>
+</div>
+<img alt="User Profile" class="w-10 h-10 rounded-full object-cover" data-alt="portrait of a professional agronomist in a modern workspace with clean studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQxCNMVTQJAA8hXXsBnIk22Sh9IhiiEVo0bVMnJCaz-TjuGYWE2PtL310Z4EiTqI8I3u3WMX05_AAFEzyP7RaoRyreWFC27co3ty5VX6rhwTvmxhi_2pcxZ2olFZXTyXg2Xoh085z35PJ1Exg2upTh6pEkxZEgnj5mWxyE5BNpktfZ5m33eeozBNHS41XeGt_uLjQRivNkgZdN0OCuLiSQOBdW3jk63imRiWYdsjltNVmi5HDjIoR5ZdI7U9yUXC-gVwQ3pEf4fiSY"/>
+</div>
+</div>
+</header>
+<section class="p-8 space-y-8">
+<!-- Header & Action -->
+<div class="flex justify-between items-end">
+<div>
+<h1 class="text-4xl font-black text-on-surface tracking-tight">Policies &amp; Automation</h1>
+<p class="text-on-surface-variant mt-2 font-medium">Manage logic-driven triggers and operational schedules for Zone A-12.</p>
+</div>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold shadow-lg hover:opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined">add_circle</span>
+                    Create New Policy
+                </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Rule Builder: Main Content -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">data_object</span>
+                                Logic Flow Builder
+                            </h2>
+<div class="flex gap-2">
+<span class="bg-primary-container text-on-primary-container text-[10px] font-bold uppercase px-2 py-1 rounded">Draft Mode</span>
+</div>
+</div>
+<!-- Visual Logic Builder Shell -->
+<div class="space-y-4 relative">
+<!-- Rule Step: Trigger -->
+<div class="flex items-center gap-4 group">
+<div class="w-12 h-12 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-primary/20">
+<span class="material-symbols-outlined">sensors</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-5 rounded-lg border-b-4 border-primary/30 group-hover:border-primary transition-all">
+<label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">If (Trigger)</label>
+<div class="flex items-center justify-between">
+<span class="font-semibold text-on-surface">Ambient Temperature exceeds 30°C</span>
+<button class="text-primary text-xs font-bold hover:underline">Edit Condition</button>
+</div>
+</div>
+</div>
+<!-- Connector Line -->
+<div class="ml-6 w-0.5 h-8 bg-slate-200"></div>
+<!-- Rule Step: Action -->
+<div class="flex items-center gap-4 group">
+<div class="w-12 h-12 flex-shrink-0 rounded-full bg-secondary/10 flex items-center justify-center text-secondary border-2 border-secondary/20">
+<span class="material-symbols-outlined">settings_remote</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-5 rounded-lg border-b-4 border-secondary/30 group-hover:border-secondary transition-all">
+<label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Then (Action)</label>
+<div class="flex items-center justify-between">
+<span class="font-semibold text-on-surface">Activate Shade Screens (75% Opacity)</span>
+<button class="text-secondary text-xs font-bold hover:underline">Change Action</button>
+</div>
+</div>
+</div>
+<!-- Connector Line -->
+<div class="ml-6 w-0.5 h-8 bg-slate-200"></div>
+<!-- Rule Step: Notification -->
+<div class="flex items-center gap-4 group">
+<div class="w-12 h-12 flex-shrink-0 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary border-2 border-tertiary/20">
+<span class="material-symbols-outlined">alternate_email</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-5 rounded-lg border-b-4 border-tertiary/30 group-hover:border-tertiary transition-all">
+<label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">And Notify</label>
+<div class="flex items-center justify-between">
+<span class="font-semibold text-on-surface">Send High-Heat Alert to Facility Team</span>
+<button class="text-tertiary text-xs font-bold hover:underline">Edit List</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-10 flex justify-end gap-3">
+<button class="px-6 py-2 rounded-full border border-outline-variant font-bold text-sm text-on-surface hover:bg-surface-container-high transition-colors">Discard</button>
+<button class="px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm shadow-md transition-transform active:scale-95">Save &amp; Enable Policy</button>
+</div>
+</div>
+<!-- Active Policies Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 border-b border-surface-container">
+<h2 class="font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">list_alt</span>
+                                Active Operations
+                            </h2>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-4 text-[10px] uppercase font-black text-slate-500">Status</th>
+<th class="px-6 py-4 text-[10px] uppercase font-black text-slate-500">Policy Name</th>
+<th class="px-6 py-4 text-[10px] uppercase font-black text-slate-500">Frequency</th>
+<th class="px-6 py-4 text-[10px] uppercase font-black text-slate-500">Last Run</th>
+<th class="px-6 py-4 text-[10px] uppercase font-black text-slate-500 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-xs font-bold">Enabled</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="font-bold text-sm">Night-Cycle Humidity Stabilizer</div>
+<div class="text-[10px] text-slate-400">Target: Greenhouse Zone B</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium">Interval (30m)</td>
+<td class="px-6 py-4 text-xs text-slate-500">14 mins ago</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-2 text-slate-400 hover:text-error transition-colors"><span class="material-symbols-outlined">pause_circle</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-xs font-bold">Enabled</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="font-bold text-sm">Automated Soil Enrichment</div>
+<div class="text-[10px] text-slate-400">Target: Vertical Racks 1-9</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium">Daily at 05:00</td>
+<td class="px-6 py-4 text-xs text-slate-500">6 hours ago</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-2 text-slate-400 hover:text-error transition-colors"><span class="material-symbols-outlined">pause_circle</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Sidebar Content: Scheduler & Event History -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Recurring Task Scheduler -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">calendar_today</span>
+                                Today's Schedule
+                            </h2>
+<button class="text-xs font-bold text-primary">Full Calendar</button>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-low rounded-lg border-l-4 border-primary">
+<div class="text-[10px] font-bold text-primary uppercase">14:00 - 15:30</div>
+<div class="text-sm font-bold mt-1">Full System Diagnostics</div>
+<div class="text-[10px] text-slate-500">Automated drone flyover &amp; node check</div>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg border-l-4 border-slate-300">
+<div class="text-[10px] font-bold text-slate-500 uppercase">18:00</div>
+<div class="text-sm font-bold mt-1">Watering Cycle - Zone A</div>
+<div class="text-[10px] text-slate-500">Optimized based on soil moisture data</div>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg border-l-4 border-slate-300 opacity-60">
+<div class="text-[10px] font-bold text-slate-400 uppercase">22:00</div>
+<div class="text-sm font-bold mt-1">Security Sweep</div>
+<div class="text-[10px] text-slate-500">Infrared perimeter scan</div>
+</div>
+</div>
+</div>
+<!-- Event History Log -->
+<div class="bg-secondary-dim text-on-secondary p-6 rounded-xl shadow-sm overflow-hidden relative group">
+<!-- Background abstract graphic -->
+<div class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[160px]">history</span>
+</div>
+<h2 class="font-bold flex items-center gap-2 mb-4 relative z-10">
+<span class="material-symbols-outlined">timeline</span>
+                            Real-time Event Log
+                        </h2>
+<div class="space-y-3 relative z-10">
+<div class="flex gap-3 items-start text-xs border-l border-on-secondary/20 pl-4 relative before:absolute before:left-[-4.5px] before:top-1 before:w-2 before:h-2 before:bg-primary-fixed before:rounded-full">
+<div class="flex-1">
+<span class="font-bold text-primary-fixed">Policy Executed:</span> Temperature mitigation engaged in Sector 3.
+                                    <div class="text-[10px] opacity-60 mt-1">09:42:12 AM</div>
+</div>
+</div>
+<div class="flex gap-3 items-start text-xs border-l border-on-secondary/20 pl-4 relative before:absolute before:left-[-4.5px] before:top-1 before:w-2 before:h-2 before:bg-white before:rounded-full">
+<div class="flex-1">
+<span class="font-bold">Manual Override:</span> Lighting intensity increased by User 'alex_admin'.
+                                    <div class="text-[10px] opacity-60 mt-1">09:15:05 AM</div>
+</div>
+</div>
+<div class="flex gap-3 items-start text-xs border-l border-on-secondary/20 pl-4 relative before:absolute before:left-[-4.5px] before:top-1 before:w-2 before:h-2 before:bg-error-container before:rounded-full">
+<div class="flex-1">
+<span class="font-bold text-error-container">Alert Triggered:</span> Reservoir levels below 10%.
+                                    <div class="text-[10px] opacity-60 mt-1">08:30:00 AM</div>
+</div>
+</div>
+<div class="flex gap-3 items-start text-xs border-l border-on-secondary/20 pl-4 relative before:absolute before:left-[-4.5px] before:top-1 before:w-2 before:h-2 before:bg-white before:rounded-full">
+<div class="flex-1">
+<span class="font-bold">System Boot:</span> Gateway node 'GW-04' reported online.
+                                    <div class="text-[10px] opacity-60 mt-1">06:00:12 AM</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors">Export Daily Log (.CSV)</button>
+</div>
+<!-- AI Insights Mini Card -->
+<div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-tertiary">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-xs font-bold uppercase text-tertiary">Policy Suggestion</span>
+</div>
+<p class="text-sm font-medium text-slate-700 leading-relaxed">
+                            "Based on the 7-day forecast, you can save <span class="text-primary font-bold">12% water</span> by deferring irrigation cycles to match predicted rainfall."
+                        </p>
+<button class="mt-4 text-xs font-bold text-tertiary-dim flex items-center gap-1 hover:gap-2 transition-all">
+                            Apply Suggestion <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Contextual FAB (Restricted to Automation Screen) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-[32px]">bolt</span>
+</button>
+</main>
+<!-- Footer Meta -->
+<footer class="ml-64 px-8 py-6 text-slate-400 text-[10px] font-medium flex justify-between items-center bg-background">
+<div>© 2024 SMartFarm OS v2.4.0 - Precision Agriculture Systems</div>
+<div class="flex gap-4">
+<a class="hover:text-primary transition-colors" href="#">System Health</a>
+<a class="hover:text-primary transition-colors" href="#">API Documentation</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+</div>
+</footer>
+</body></html>

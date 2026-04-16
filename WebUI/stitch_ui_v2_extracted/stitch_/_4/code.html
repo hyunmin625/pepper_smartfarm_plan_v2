@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Facility Control - SmartFarm OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#00e3fd",
+                        "error-container": "#f95630",
+                        "on-secondary": "#cbffda",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-tint": "#006a26",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#abadaf",
+                        "on-primary": "#cfffcd",
+                        "on-primary-fixed-variant": "#006d27",
+                        "tertiary-dim": "#005863",
+                        "primary-fixed": "#87ff94",
+                        "on-secondary-fixed-variant": "#00633a",
+                        "secondary-fixed": "#76f2aa",
+                        "inverse-primary": "#87ff94",
+                        "surface-bright": "#f5f7f9",
+                        "on-error-container": "#520c00",
+                        "primary-fixed-dim": "#78f088",
+                        "secondary-container": "#76f2aa",
+                        "surface-container-high": "#dfe3e6",
+                        "on-secondary-fixed": "#004326",
+                        "secondary": "#00693e",
+                        "tertiary-container": "#00e3fd",
+                        "surface-container": "#e5e9eb",
+                        "secondary-fixed-dim": "#67e39d",
+                        "outline": "#747779",
+                        "on-error": "#ffefec",
+                        "on-surface-variant": "#595c5e",
+                        "tertiary-fixed-dim": "#00d4ec",
+                        "on-tertiary-container": "#004d57",
+                        "error-dim": "#b92902",
+                        "background": "#f5f7f9",
+                        "error": "#b02500",
+                        "primary-dim": "#005d20",
+                        "on-tertiary-fixed-variant": "#005762",
+                        "on-secondary-container": "#005933",
+                        "inverse-surface": "#0b0f10",
+                        "primary": "#006a26",
+                        "surface-container-low": "#eef1f3",
+                        "on-primary-fixed": "#004c19",
+                        "on-tertiary": "#d8f8ff",
+                        "tertiary": "#006571",
+                        "on-surface": "#2c2f31",
+                        "surface-container-highest": "#d9dde0",
+                        "surface-dim": "#d0d5d8",
+                        "surface-variant": "#d9dde0",
+                        "on-primary-container": "#006122",
+                        "primary-container": "#87ff94",
+                        "secondary-dim": "#005c35",
+                        "surface": "#f5f7f9",
+                        "on-tertiary-fixed": "#003840",
+                        "on-background": "#2c2f31"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "1rem",
+                        "xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7f9;
+            color: #2c2f31;
+        }
+        h1, h2, h3 {
+            font-family: 'Manrope', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar Shell -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 overflow-y-auto h-full w-64 border-r-0 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" data-icon="potted_plant">potted_plant</span>
+</div>
+<div>
+<div class="text-lg font-bold text-green-800 dark:text-green-500 font-manrope">Digital Agronomist</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Precision Control</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Area Monitoring</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Decision Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-manrope text-sm font-medium tracking-tight">AI Assistant</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Robot Control</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-green-700 dark:text-green-400 font-bold border-l-4 border-green-700 bg-green-50/50 dark:bg-green-900/20 rounded-r-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Facility Control</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-manrope text-sm font-medium tracking-tight">Policies</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-manrope text-sm font-medium tracking-tight">System Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-4 mx-4 mb-6 bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-3">
+<img alt="User Profile" class="w-10 h-10 rounded-full object-cover" data-alt="professional agronomist with digital tablet standing in high tech greenhouse facility" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-LneuMOUiaNo2TKOex_uuTYPQBVQggUkqiqJWKQ0Ut06x0XPDpHKFX16tV6gXlzV1kJ5YC3xZeA6SJiohg5Q6wom1unbYPay9Cn9ylcuujMN4POwyFgij120tS4RyLzViRgCQODRZvC1OStOIQQ1xYK3slDtE-jkO7Rmic_ySfySOLFieW-q0lwbN7IZag78ZOG_PumRGaQ-3Xw06dt4yp8tPBwEJrOW53Nbr3WEmL-JQz0JyfCvMhF2W-C07LvsMknvMoKDqlqaM"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Dr. Elena Vance</p>
+<p class="text-[10px] text-slate-500 uppercase font-bold">Senior Agronomist</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center px-8 py-4 w-full sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-sm border-b border-slate-100">
+<div class="flex items-center gap-8 flex-1">
+<div class="text-xl font-black text-green-800 dark:text-green-500 font-manrope">SmartFarm OS</div>
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search devices or protocols..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Control Dashboard Content -->
+<div class="p-8 space-y-8">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<span class="text-[10px] font-bold uppercase tracking-widest text-primary">Environmental Systems</span>
+<h1 class="text-4xl font-extrabold text-on-surface tracking-tight">Facility Control</h1>
+</div>
+<div class="flex gap-3">
+<button class="px-5 py-2.5 bg-surface-container-high text-on-surface font-semibold rounded-full text-sm hover:opacity-80 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg" data-icon="history">history</span>
+                        View History
+                    </button>
+<button class="px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full text-sm hover:opacity-90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg" data-icon="emergency">emergency</span>
+                        Emergency Stop
+                    </button>
+</div>
+</div>
+<!-- Main Control Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- LED Lighting Control (Hero Widget) -->
+<div class="col-span-12 lg:col-span-7 bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+<div class="flex justify-between items-start mb-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined text-2xl" data-icon="light_mode" data-weight="fill">light_mode</span>
+</div>
+<div>
+<h3 class="headline-sm font-bold text-on-surface">LED Spectrum Array</h3>
+<p class="text-sm text-on-surface-variant">Phases: Vegetative Growth (Active)</p>
+</div>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-low p-1 rounded-full">
+<button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors">Manual</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-on-primary shadow-sm">Auto</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<div class="space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Main Intensity</label>
+<span class="text-sm font-bold text-primary">85%</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" type="range"/>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Red Spectrum (660nm)</label>
+<span class="text-sm font-bold text-primary">92%</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" type="range"/>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Blue Spectrum (450nm)</label>
+<span class="text-sm font-bold text-primary">45%</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" type="range"/>
+</div>
+</div>
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/5 to-tertiary/5 border border-primary/10 flex items-center justify-center p-6 min-h-[200px]">
+<img alt="LED Array Visual" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" data-alt="close up of purple and pink led grow lights illuminating vibrant green lettuce plants in a controlled environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx2Q39ywAbQWSgv9F88ksk7mE0OXW56ci6Gkgg_87wUngwmV2uAX8HmPoAltLo1jBBDRmy0KmkhOHGoygxkgGLUCFVEBXiwJp5vdznn0NoDPZDyazI1DXhGDEaiphv2GVMxv1-3MhPqDkl3uJ3MWf2PCj2EO94Yt_RMTFh0lcXhMeVirK0lV-Q4W2wQqZgn14azwIdLQzyUZxB0_Ty4DsavhZUqnwVTMDHAGz9coL-8Vbm8cQr_APcRl5kE9gfNsqMaH6ET-sgrz2T"/>
+<div class="text-center relative z-10">
+<span class="text-6xl font-black text-primary tracking-tighter">85%</span>
+<p class="text-xs font-bold uppercase tracking-[0.2em] text-on-surface mt-2">Current Output</p>
+<div class="mt-4 flex justify-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-[10px] font-bold text-primary uppercase">Array Online</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Climate Controls (Grouped List) -->
+<div class="col-span-12 lg:col-span-5 flex flex-col gap-6">
+<!-- Fan Control Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-container-low rounded-lg flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="air">air</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Ventilation Fans</h4>
+<p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Zone 1-4 Active</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<p class="text-xs font-bold text-tertiary">1400 RPM</p>
+<p class="text-[9px] font-medium text-on-surface-variant uppercase">Flow Rate</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Irrigation Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex items-center justify-between border-l-4 border-tertiary">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-tertiary-container/20 rounded-lg flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="opacity" data-weight="fill">opacity</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Nutrient Delivery</h4>
+<p class="text-[10px] font-bold uppercase tracking-wider text-tertiary">Scheduled: In 2hr</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 text-[10px] font-bold bg-tertiary text-on-tertiary rounded-lg uppercase tracking-widest hover:opacity-90 transition-all">Manual Flush</button>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Shades Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-container-low rounded-lg flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="roller_shades">roller_shades</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Thermal Shades</h4>
+<p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Status: Open (0%)</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Secondary Control Grid -->
+<div class="col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Co2 Generator -->
+<div class="bg-surface-container-low rounded-xl p-6 space-y-4">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="cloud">cloud</span>
+<span class="px-2 py-0.5 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-md">OPTIMAL</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface">CO2 Injection</h5>
+<p class="text-2xl font-black text-primary">820 ppm</p>
+</div>
+<div class="pt-2 border-t border-surface-container-high">
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant mb-1">
+<span>FLOW RATE</span>
+<span>5.2 L/min</span>
+</div>
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-2/3 h-full bg-primary"></div>
+</div>
+</div>
+</div>
+<!-- Dehumidifiers -->
+<div class="bg-surface-container-low rounded-xl p-6 space-y-4">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="water_drop">water_drop</span>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-md">IDLE</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface">Dehumidifiers</h5>
+<p class="text-2xl font-black text-on-surface-variant">58% RH</p>
+</div>
+<div class="pt-2 border-t border-surface-container-high">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-on-surface-variant">AUTO MODE</span>
+<div class="w-8 h-4 bg-surface-container-highest rounded-full relative">
+<div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Nutrient Tank A -->
+<div class="bg-surface-container-low rounded-xl p-6 space-y-4">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="science">science</span>
+<span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-md">LOW LEVEL</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface">Nutrient Tank A</h5>
+<p class="text-2xl font-black text-error">12%</p>
+</div>
+<div class="pt-2 border-t border-surface-container-high">
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-[12%] h-full bg-error"></div>
+</div>
+<p class="text-[9px] mt-2 font-bold text-error uppercase">Refill Required</p>
+</div>
+</div>
+<!-- Nutrient Tank B -->
+<div class="bg-surface-container-low rounded-xl p-6 space-y-4">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="science">science</span>
+<span class="px-2 py-0.5 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-md">FULL</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface">Nutrient Tank B</h5>
+<p class="text-2xl font-black text-primary">94%</p>
+</div>
+<div class="pt-2 border-t border-surface-container-high">
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-[94%] h-full bg-primary"></div>
+</div>
+<p class="text-[9px] mt-2 font-bold text-on-surface-variant uppercase">Last Refill: 4h ago</p>
+</div>
+</div>
+</div>
+<!-- Live Map / Spatial Control -->
+<div class="col-span-12 bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+<div class="flex justify-between items-center mb-8">
+<div>
+<h3 class="headline-sm font-bold text-on-surface">Spatial Node Overlay</h3>
+<p class="text-sm text-on-surface-variant">Real-time device positioning and sensor telemetry.</p>
+</div>
+<div class="flex gap-2">
+<span class="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant uppercase bg-surface-container-low px-3 py-1.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Online
+                            </span>
+<span class="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant uppercase bg-surface-container-low px-3 py-1.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Scheduled
+                            </span>
+</div>
+</div>
+<div class="relative w-full h-[400px] rounded-xl overflow-hidden bg-slate-100 group">
+<img alt="Facility Map" class="w-full h-full object-cover" data-alt="architectural blueprint floor plan of a massive industrial greenhouse facility with technical annotations and equipment symbols" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDISvE03bD-bAUvOGN58zfBlagJhqPMtoIDgHyQZ8RPzD4uALLpzYbU9XeBu1_MuiwtBTjdD0loXWsa9flQkscnz4hnZhM9q29hTfB9py-3ZgwOnMkGCHqzVLmuA7Pkid9iti6RNyJhe4xHQ8ne_OyIqXnoz-n9x3_gHHOAy6sTzJaMa-mo9NJdo0giRpIP2ye4I7kY24BbneCX9n1Oi7JFbnD5LiUy0oyy10-ot7PMwOGthVeXT7K1u4nm43kAeFdohuIpr4r7GLGW"/>
+<!-- Overlaying Interactive Nodes -->
+<div class="absolute inset-0 bg-primary/5">
+<!-- Node 1 -->
+<div class="absolute top-1/4 left-1/3 group/node">
+<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="air">air</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-on-surface text-white text-[10px] p-2 rounded-lg opacity-0 group-hover/node:opacity-100 transition-opacity pointer-events-none">
+<p class="font-bold">Fan Node #102</p>
+<p class="text-primary-container">Active - 1200 RPM</p>
+</div>
+</div>
+<!-- Node 2 -->
+<div class="absolute top-1/2 right-1/4 group/node">
+<div class="w-8 h-8 bg-tertiary rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="light_mode">light_mode</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-on-surface text-white text-[10px] p-2 rounded-lg opacity-0 group-hover/node:opacity-100 transition-opacity pointer-events-none">
+<p class="font-bold">LED Node #45</p>
+<p class="text-tertiary-container">Intensity: 85%</p>
+</div>
+</div>
+<!-- Node 3 -->
+<div class="absolute bottom-1/4 left-1/4 group/node">
+<div class="w-8 h-8 bg-error rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 bg-on-surface text-white text-[10px] p-2 rounded-lg opacity-0 group-hover/node:opacity-100 transition-opacity pointer-events-none">
+<p class="font-bold">Sensor Node #22</p>
+<p class="text-error-container">Connectivity Issue - Check Hub</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Stats -->
+<footer class="mt-auto p-8 border-t border-slate-100 flex justify-between items-center text-on-surface-variant">
+<div class="flex gap-8">
+<div class="text-[10px] font-bold uppercase tracking-widest">
+<p class="text-slate-400">System Uptime</p>
+<p class="text-primary">14d 05h 22m</p>
+</div>
+<div class="text-[10px] font-bold uppercase tracking-widest">
+<p class="text-slate-400">Active Protocols</p>
+<p class="text-on-surface">Veg-Phase 4.2</p>
+</div>
+<div class="text-[10px] font-bold uppercase tracking-widest">
+<p class="text-slate-400">Total Power Draw</p>
+<p class="text-on-surface">12.4 kW/h</p>
+</div>
+</div>
+<div class="text-[10px] font-bold text-slate-400">
+                © 2024 SMARTFARM OS - ALL SYSTEMS OPERATIONAL
+            </div>
+</footer>
+</main>
+</body></html>

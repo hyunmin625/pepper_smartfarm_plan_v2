@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Area Monitoring | SmartFarm OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#00e3fd",
+                    "error-container": "#f95630",
+                    "on-secondary": "#cbffda",
+                    "inverse-on-surface": "#9a9d9f",
+                    "surface-tint": "#006a26",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#abadaf",
+                    "on-primary": "#cfffcd",
+                    "on-primary-fixed-variant": "#006d27",
+                    "tertiary-dim": "#005863",
+                    "primary-fixed": "#87ff94",
+                    "on-secondary-fixed-variant": "#00633a",
+                    "secondary-fixed": "#76f2aa",
+                    "inverse-primary": "#87ff94",
+                    "surface-bright": "#f5f7f9",
+                    "on-error-container": "#520c00",
+                    "primary-fixed-dim": "#78f088",
+                    "secondary-container": "#76f2aa",
+                    "surface-container-high": "#dfe3e6",
+                    "on-secondary-fixed": "#004326",
+                    "secondary": "#00693e",
+                    "tertiary-container": "#00e3fd",
+                    "surface-container": "#e5e9eb",
+                    "secondary-fixed-dim": "#67e39d",
+                    "outline": "#747779",
+                    "on-error": "#ffefec",
+                    "on-surface-variant": "#595c5e",
+                    "tertiary-fixed-dim": "#00d4ec",
+                    "on-tertiary-container": "#004d57",
+                    "error-dim": "#b92902",
+                    "background": "#f5f7f9",
+                    "error": "#b02500",
+                    "primary-dim": "#005d20",
+                    "on-tertiary-fixed-variant": "#005762",
+                    "on-secondary-container": "#005933",
+                    "inverse-surface": "#0b0f10",
+                    "primary": "#006a26",
+                    "surface-container-low": "#eef1f3",
+                    "on-primary-fixed": "#004c19",
+                    "on-tertiary": "#d8f8ff",
+                    "tertiary": "#006571",
+                    "on-surface": "#2c2f31",
+                    "surface-container-highest": "#d9dde0",
+                    "surface-dim": "#d0d5d8",
+                    "surface-variant": "#d9dde0",
+                    "on-primary-container": "#006122",
+                    "primary-container": "#87ff94",
+                    "secondary-dim": "#005c35",
+                    "surface": "#f5f7f9",
+                    "on-tertiary-fixed": "#003840",
+                    "on-background": "#2c2f31"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.25rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary-container">
+<!-- SideNavBar Shell -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 overflow-y-auto bg-slate-50 dark:bg-slate-900 h-full w-64 border-r-0 z-50">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">eco</span>
+</div>
+<div>
+<div class="text-lg font-bold text-green-800 dark:text-green-500">Digital Agronomist</div>
+<div class="text-xs font-manrope font-medium tracking-tight text-slate-500">Precision Control</div>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-green-700 dark:text-green-400 font-bold border-l-4 border-green-700 bg-green-50/50 dark:bg-green-900/20 font-manrope text-sm tracking-tight scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+                    Area Monitoring
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">gavel</span>
+                    Decision Support
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">psychology</span>
+                    AI Assistant
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">notifications</span>
+                    Notifications
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+                    Robot Control
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-manrope text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+                    Facility Control
+                </a>
+</nav>
+</div>
+<div class="mt-auto px-6 py-8 border-t border-slate-100/50">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium" href="#">
+<span class="material-symbols-outlined">settings</span>
+                System Settings
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-8 py-4 w-full sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-sm dark:shadow-none">
+<div class="flex items-center gap-6">
+<h1 class="text-xl font-black text-green-800 dark:text-green-500 tracking-tight">SmartFarm OS</h1>
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search sectors, sensors, or alerts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 transition-opacity">
+<span class="material-symbols-outlined">notifications_active</span>
+</button>
+<div class="flex items-center gap-3 ml-2 pl-4 border-l border-slate-100">
+<div class="text-right">
+<p class="text-xs font-bold text-on-surface">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest">Head Agronomist</p>
+</div>
+<img alt="User Profile" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" data-alt="professional portrait of a male agronomist in a clean white shirt with soft natural lighting and blurred greenery background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdOcmiy6hZ9KwBfI_gW_ww7pTdIAgvFpQGsVEMU1V5SnaLCTSPpKU_rpQyU01-Yz5ZwijCoQ5SPtunjWleBQ6fVet4xt1Cyfez1pwsYwN2PMVYnb17NnlekPyIQUV6au3EY5zP_XJUQ7pwW1R523aZ7-aPkYRrTgVq4RITz-vNsGN2UyWl-QFBYnMXI8BL5XdaVIO1Q7_puwE-DQ0AT9DwZNf66NQBszozKWhhvtUwl731ARuTupsue2kxWPHDx5m1KskCfaY7RSg_"/>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-[1600px] mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+<div>
+<div class="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[10px] mb-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        Live Monitoring Active
+                    </div>
+<h2 class="text-4xl font-extrabold text-on-surface tracking-tight">Sector A: Hydroponic Block</h2>
+<p class="text-slate-500 mt-2 font-medium">Precision tracking for 4,200 vertical leafy green units.</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-high text-on-surface px-5 py-2.5 rounded-full font-bold text-sm hover:opacity-80 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+                        History
+                    </button>
+<button class="bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">settings_input_component</span>
+                        Override Controls
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Main Map / 3D Visualization -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-low rounded-lg overflow-hidden relative group min-h-[500px]">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="high angle 3d architectural rendering of a modern futuristic glass greenhouse with structural lines and digital data overlays" data-location="Greenhouse Complex A" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDO9kHZcB4i9UdNQb_sUFien_OU-azDQ67avKTEZig0LfC7Lup-OPfjIQNGGpaAHGU_D605pqn7NcvXAXkOxfIX0y6YoRyTVLliRdAMwNO5cDFojZLU97-0590nbwqEPKJcr-AutLR99QfLH7-U1BkF4pPMU_oXRQqfM7iqKBzLtBPkBAO5N1xb_pFuOOIrpGg5VGM3CmgMjgUIWPP8QnBTMp0HoXXEtGqBc5MYOh52zItygnM43irvKwH1DV0WM6NIV-pa1rOXOXQM')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+<!-- Map Overlays -->
+<div class="absolute top-6 left-6 flex gap-2">
+<div class="glass-panel px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold text-on-surface">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                            3D VIEW
+                        </div>
+<div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold text-white hover:bg-white/30 cursor-pointer">
+                            HEATMAP
+                        </div>
+</div>
+<!-- Interactive Nodes -->
+<div class="absolute top-1/3 left-1/4 group/node">
+<div class="w-4 h-4 bg-primary rounded-full ring-4 ring-primary/20 animate-ping absolute"></div>
+<div class="w-4 h-4 bg-primary rounded-full relative cursor-pointer"></div>
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 glass-panel p-3 rounded-xl opacity-0 group-hover/node:opacity-100 transition-opacity w-40">
+<p class="text-[10px] font-bold text-slate-500 uppercase">Node #A-102</p>
+<p class="text-sm font-bold text-on-surface">24.5°C | 62% RH</p>
+</div>
+</div>
+<div class="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+<div class="glass-panel p-4 rounded-xl flex gap-8">
+<div>
+<p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Active Sensors</p>
+<p class="text-2xl font-extrabold text-on-surface">128</p>
+</div>
+<div class="w-px h-10 bg-slate-200"></div>
+<div>
+<p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Status</p>
+<p class="text-2xl font-extrabold text-primary">Optimal</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-on-surface shadow-lg hover:bg-slate-50"><span class="material-symbols-outlined">zoom_in</span></button>
+<button class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-on-surface shadow-lg hover:bg-slate-50"><span class="material-symbols-outlined">3d_rotation</span></button>
+</div>
+</div>
+</div>
+<!-- Live Camera Feeds -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<div class="bg-surface-container-lowest rounded-lg p-6 shadow-sm flex flex-col h-full">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-headline-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">videocam</span>
+                                Live Feeds
+                            </h3>
+<span class="text-[10px] font-bold text-error uppercase flex items-center gap-1">
+<span class="w-1 h-1 rounded-full bg-error"></span> REC
+                            </span>
+</div>
+<div class="space-y-4 flex-grow">
+<div class="relative rounded-xl overflow-hidden aspect-video group">
+<img alt="Camera Feed 1" class="w-full h-full object-cover" data-alt="wide angle shot of vertical farming rows with purple led grow lights and lush green lettuce leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoMdcbg9Is06dtqHZ8uV8tgunxORLjrAOu3t4MNQP1g5IO-SFqicFj6sUNJmrTcTwx-2eGM_SaV9YObwDUeXuXybXnjdGxaeMqcHvxHRSxFAyJol_vqyVRCgyKTbpceCPWV28e8zrbo3pz5z2FCFK5ru1fuJkPlf_WHMUHm7wyTfwUl2h23I_tTnraNWRknwKa29_pq2Q5vwCBdUu01M6nq5mYzCLNoNZnKEgfO7OMjB9rYSruQu9KnpCfHAB4G-zYlV3t3w58wOPX"/>
+<div class="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold">CAM 01 - NORTH</div>
+</div>
+<div class="relative rounded-xl overflow-hidden aspect-video group">
+<img alt="Camera Feed 2" class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" data-alt="close up of microgreens under bright hydroponic lighting systems with water mist visible" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS1tfrdhtMORr8a79W6vDKCEATvJseskoUHcMzE1cDYWZ4QXZbXDs5N_RtlxOYsGUrXeGrY9E9OjKjUWqs_QKzmVY7w7_nRf25_f7jDqrz7lDHTQfY7YCNvWSFD3hqPiqwdynOz4FgAmQ6EIJxgeilNIbXrFWzno03K9_BbAoeTa_rT-nokd6GkL-ZWr7-mWkDNEdZSGJB33qdwlXHZBzoSzhSten80GMqCbUBPX1GqBg8_5J7IeYwBYkV1X7e6-QMbWqKx7iF3Iey"/>
+<div class="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold">CAM 02 - CENTER</div>
+</div>
+</div>
+<button class="mt-6 w-full py-3 border border-slate-100 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                            View All 8 Cameras
+                        </button>
+</div>
+</div>
+<!-- Metric Charts Row -->
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest rounded-lg p-6 shadow-sm border border-transparent hover:border-primary/10 transition-all">
+<div class="flex justify-between items-start mb-8">
+<div>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Temperature</p>
+<h3 class="text-4xl font-extrabold text-on-surface">24.8<span class="text-slate-400 font-light text-2xl">°C</span></h3>
+</div>
+<div class="bg-primary-container text-on-primary-container px-2 py-1 rounded-md text-[10px] font-black">+1.2%</div>
+</div>
+<!-- Mock Chart SVG -->
+<div class="h-24 w-full flex items-end gap-1">
+<div class="bg-primary/10 w-full h-[40%] rounded-t-sm"></div>
+<div class="bg-primary/10 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[65%] rounded-t-sm"></div>
+<div class="bg-primary/30 w-full h-[60%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[75%] rounded-t-sm"></div>
+<div class="bg-primary/60 w-full h-[90%] rounded-t-sm"></div>
+<div class="bg-primary w-full h-[100%] rounded-t-sm"></div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest rounded-lg p-6 shadow-sm border border-transparent hover:border-tertiary/10 transition-all">
+<div class="flex justify-between items-start mb-8">
+<div>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Humidity</p>
+<h3 class="text-4xl font-extrabold text-on-surface">62<span class="text-slate-400 font-light text-2xl">%</span></h3>
+</div>
+<div class="bg-tertiary/10 text-tertiary px-2 py-1 rounded-md text-[10px] font-black">STABLE</div>
+</div>
+<!-- Mock Chart SVG -->
+<div class="h-24 w-full flex items-end gap-1">
+<div class="bg-tertiary/40 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-tertiary/40 w-full h-[68%] rounded-t-sm"></div>
+<div class="bg-tertiary/40 w-full h-[72%] rounded-t-sm"></div>
+<div class="bg-tertiary/40 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-tertiary/40 w-full h-[71%] rounded-t-sm"></div>
+<div class="bg-tertiary/40 w-full h-[69%] rounded-t-sm"></div>
+<div class="bg-tertiary/60 w-full h-[70%] rounded-t-sm"></div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest rounded-lg p-6 shadow-sm border border-transparent hover:border-secondary/10 transition-all">
+<div class="flex justify-between items-start mb-8">
+<div>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CO2 Concentration</p>
+<h3 class="text-4xl font-extrabold text-on-surface">840<span class="text-slate-400 font-light text-2xl">ppm</span></h3>
+</div>
+<div class="bg-error-container/10 text-error-dim px-2 py-1 rounded-md text-[10px] font-black">-4.5%</div>
+</div>
+<!-- Mock Chart SVG -->
+<div class="h-24 w-full flex items-end gap-1">
+<div class="bg-secondary/10 w-full h-[100%] rounded-t-sm"></div>
+<div class="bg-secondary/10 w-full h-[95%] rounded-t-sm"></div>
+<div class="bg-secondary/20 w-full h-[85%] rounded-t-sm"></div>
+<div class="bg-secondary/30 w-full h-[80%] rounded-t-sm"></div>
+<div class="bg-secondary/40 w-full h-[75%] rounded-t-sm"></div>
+<div class="bg-secondary/50 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-secondary/60 w-full h-[65%] rounded-t-sm"></div>
+</div>
+</div>
+<!-- Sector Selector / Health -->
+<div class="col-span-12 bg-white/40 backdrop-blur-md rounded-xl p-2 border border-white flex gap-2">
+<button class="flex-1 py-4 px-6 rounded-lg bg-white shadow-sm flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black">A</div>
+<div class="text-left">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sector A</p>
+<p class="text-sm font-bold text-on-surface">Hydroponics</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[92%]"></div>
+</div>
+<span class="text-xs font-bold text-primary">92% Health</span>
+</div>
+</button>
+<button class="flex-1 py-4 px-6 rounded-lg hover:bg-white/50 transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-4 opacity-60">
+<div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-black">B</div>
+<div class="text-left">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sector B</p>
+<p class="text-sm font-bold text-on-surface">Soil-Based</p>
+</div>
+</div>
+<div class="flex items-center gap-3 opacity-60">
+<div class="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[88%]"></div>
+</div>
+<span class="text-xs font-bold text-primary">88% Health</span>
+</div>
+</button>
+<button class="flex-1 py-4 px-6 rounded-lg hover:bg-white/50 transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-4 opacity-60">
+<div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-black">C</div>
+<div class="text-left">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sector C</p>
+<p class="text-sm font-bold text-on-surface">Seedlings</p>
+</div>
+</div>
+<div class="flex items-center gap-3 opacity-60">
+<div class="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[95%]"></div>
+</div>
+<span class="text-xs font-bold text-secondary">95% Health</span>
+</div>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual FAB -->
+<button class="fixed bottom-8 right-8 w-16 h-16 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group z-50">
+<span class="material-symbols-outlined text-3xl">smart_toy</span>
+<span class="absolute right-20 bg-on-surface text-white text-[10px] font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Deploy Harvester Bot</span>
+</button>
+</body></html>

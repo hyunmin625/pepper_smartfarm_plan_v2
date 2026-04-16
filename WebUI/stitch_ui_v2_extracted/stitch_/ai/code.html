@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartFarm OS - AI Assistant</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#00e3fd",
+                    "error-container": "#f95630",
+                    "on-secondary": "#cbffda",
+                    "inverse-on-surface": "#9a9d9f",
+                    "surface-tint": "#006a26",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#abadaf",
+                    "on-primary": "#cfffcd",
+                    "on-primary-fixed-variant": "#006d27",
+                    "tertiary-dim": "#005863",
+                    "primary-fixed": "#87ff94",
+                    "on-secondary-fixed-variant": "#00633a",
+                    "secondary-fixed": "#76f2aa",
+                    "inverse-primary": "#87ff94",
+                    "surface-bright": "#f5f7f9",
+                    "on-error-container": "#520c00",
+                    "primary-fixed-dim": "#78f088",
+                    "secondary-container": "#76f2aa",
+                    "surface-container-high": "#dfe3e6",
+                    "on-secondary-fixed": "#004326",
+                    "secondary": "#00693e",
+                    "tertiary-container": "#00e3fd",
+                    "surface-container": "#e5e9eb",
+                    "secondary-fixed-dim": "#67e39d",
+                    "outline": "#747779",
+                    "on-error": "#ffefec",
+                    "on-surface-variant": "#595c5e",
+                    "tertiary-fixed-dim": "#00d4ec",
+                    "on-tertiary-container": "#004d57",
+                    "error-dim": "#b92902",
+                    "background": "#f5f7f9",
+                    "error": "#b02500",
+                    "primary-dim": "#005d20",
+                    "on-tertiary-fixed-variant": "#005762",
+                    "on-secondary-container": "#005933",
+                    "inverse-surface": "#0b0f10",
+                    "primary": "#006a26",
+                    "surface-container-low": "#eef1f3",
+                    "on-primary-fixed": "#004c19",
+                    "on-tertiary": "#d8f8ff",
+                    "tertiary": "#006571",
+                    "on-surface": "#2c2f31",
+                    "surface-container-highest": "#d9dde0",
+                    "surface-dim": "#d0d5d8",
+                    "surface-variant": "#d9dde0",
+                    "on-primary-container": "#006122",
+                    "primary-container": "#87ff94",
+                    "secondary-dim": "#005c35",
+                    "surface": "#f5f7f9",
+                    "on-tertiary-fixed": "#003840",
+                    "on-background": "#2c2f31"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.25rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar Navigation (SideNavBar) -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 overflow-y-auto h-full w-64 border-r-0 bg-slate-50 dark:bg-slate-900 z-50">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">agriculture</span>
+</div>
+<div>
+<div class="text-lg font-bold text-green-800 dark:text-green-500 font-headline leading-tight">Digital Agronomist</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Precision Control</div>
+</div>
+</div>
+<nav class="space-y-1">
+<!-- Navigation Items -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">precision_manufacturing</span>
+                    Area Monitoring
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">gavel</span>
+                    Decision Support
+                </a>
+<!-- Active Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-green-700 dark:text-green-400 font-bold border-l-4 border-green-700 bg-green-50/50 dark:bg-green-900/20 font-manrope text-sm tracking-tight scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+                    AI Assistant
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">notifications</span>
+                    Notifications
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+                    Robot Control
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+                    Facility Control
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">event_note</span>
+                    Policies
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-green-600 font-manrope text-sm font-medium tracking-tight hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    System Settings
+                </a>
+</nav>
+</div>
+<div class="mt-auto p-6">
+<div class="bg-surface-container-low p-4 rounded-xl">
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter mb-2">Resource Usage</div>
+<div class="w-full bg-slate-200 h-1.5 rounded-full mb-1">
+<div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+<div class="text-[10px] text-on-surface-variant">65% of monthly compute used</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- Header (TopNavBar) -->
+<header class="flex justify-between items-center px-8 py-4 w-full sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-sm dark:shadow-none border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-8">
+<span class="text-xl font-black text-green-800 dark:text-green-500 font-headline">SmartFarm OS</span>
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 placeholder-slate-400" placeholder="Search sensors, logs, or reports..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface transition-colors">
+<span class="material-symbols-outlined">notifications_active</span>
+</button>
+<div class="h-10 w-px bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<div class="text-sm font-bold text-on-surface leading-none">Dr. Elena Thorne</div>
+<div class="text-xs text-on-surface-variant">Chief Agronomist</div>
+</div>
+<img alt="User Profile" class="w-10 h-10 rounded-full object-cover ring-2 ring-primary/10" data-alt="professional portrait of a middle-aged woman scientist with glasses in a modern clean laboratory setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuv8xg6fFwuaXREzfw1RP7Pmspq4qeEOq01UvYI2p9194BUpAeQpH5k4F34Ci9dKJZzVuN3fJA5j1p6IlPEChxvybO03IeEX59pblLW5wPLVOlkfO3Uh21k4wWOubVV7-GoIf2zqUcEoCi_x-VM6m3WAEwjYM61D699Nt0qERdkVw2KoZxXK3rF77sTGUja9qmyByzRxUi0xq_U-kH4SUN5Y-hI4WAmSZ7Tx9pzBX4iT8Lt1RWzJUuP_M2YiUIq-2rIdOwOZZZBpsL"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<section class="flex-grow flex gap-0">
+<!-- Chat Interface -->
+<div class="flex-grow flex flex-col max-w-4xl mx-auto px-6 py-8">
+<!-- Chat History Window -->
+<div class="flex-grow space-y-8 overflow-y-auto pb-12">
+<!-- System Greeting -->
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div class="space-y-4 max-w-2xl">
+<div class="bg-surface-container-lowest p-6 rounded-xl rounded-tl-none shadow-sm border border-surface-container">
+<p class="text-on-surface leading-relaxed">Good morning, Dr. Thorne. I've finished the morning analysis. Sector B is showing slightly elevated soil moisture, while the nitrogen levels in the Hydro-Pod Alpha are optimal. How can I assist your monitoring today?</p>
+</div>
+<!-- Quick Action Shortcuts -->
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary hover:text-on-primary transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">water_drop</span>
+                                    Optimize watering schedule
+                                </button>
+<button class="px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary hover:text-on-primary transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">health_and_safety</span>
+                                    Crop health Sector B
+                                </button>
+<button class="px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary hover:text-on-primary transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                                    Yield forecast 2024
+                                </button>
+</div>
+</div>
+</div>
+<!-- User Question -->
+<div class="flex gap-4 flex-row-reverse">
+<div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-surface-container">
+<img alt="Elena" class="w-full h-full object-cover" data-alt="professional woman in lab coat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNONk8VGhsRdRoEB5wEBTCvg4v-4bCXiBgQ4NrEdfWfPsJfeCGA-SGZE1VpIHcsD3pNXpFh9MW1tHdZL_tFNxzTxZnodElnntmT32oqAsXVqU0wU4dpZP2cshGNi-f4F-vZ18M93YaHsQXaiXixvi8r0P7aBy8dpaqr_DJQhKwKL-euVJ08zdF4D_2RCS1_t8bXIrc_k6oatftwSFNEVz_3DyJ4xwje9efENp_dLWZHmPmVfmYsVwPjL_0GR5izafCdz9sFRHVrSmk"/>
+</div>
+<div class="bg-primary text-on-primary p-6 rounded-xl rounded-tr-none shadow-md max-w-xl">
+<p class="leading-relaxed">How is the crop health in Sector B? Specifically looking for any signs of early blight detected by the drone patrol.</p>
+</div>
+</div>
+<!-- AI Insights Display -->
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div class="space-y-6 w-full max-w-3xl">
+<div class="bg-surface-container-lowest p-6 rounded-xl rounded-tl-none shadow-sm border border-surface-container">
+<div class="flex items-center gap-2 text-primary mb-4">
+<span class="material-symbols-outlined text-xl">verified</span>
+<span class="font-bold font-headline">Sector B Analysis Complete</span>
+</div>
+<p class="text-on-surface leading-relaxed mb-6">Drone Scan #842-X (processed 14 mins ago) shows high chlorophyll density. No visual indicators of early blight detected. However, leaf temperature is up by 1.2°C compared to yesterday.</p>
+<!-- Insight Grid (Asymmetric) -->
+<div class="grid grid-cols-12 gap-4">
+<div class="col-span-7 bg-surface-container-low p-4 rounded-xl flex items-center justify-between border border-primary/5">
+<div>
+<div class="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">Health Index</div>
+<div class="text-2xl font-black text-primary font-headline">98.4%</div>
+</div>
+<div class="w-16 h-10 bg-primary/10 rounded flex items-end p-1 gap-0.5">
+<div class="bg-primary/40 w-full h-4 rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-6 rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-5 rounded-t-sm"></div>
+<div class="bg-primary w-full h-8 rounded-t-sm"></div>
+</div>
+</div>
+<div class="col-span-5 bg-surface-container-low p-4 rounded-xl border border-primary/5">
+<div class="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">Alerts</div>
+<div class="flex items-center gap-2 text-secondary-dim font-bold mt-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                            0 Threats
+                                        </div>
+</div>
+<div class="col-span-12 relative overflow-hidden h-32 rounded-xl">
+<img alt="Sector B Drone View" class="w-full h-full object-cover" data-alt="high angle view of vibrant green vegetable fields in a geometric agricultural pattern with soft sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNeYF4-2hupRG2yC6Ihvcxv3IaoGYwKgOsBFfND6bi-e-C__ZhpJTgW0-cDV_7ewTt94HFP7FAOAbu1OoVs5cAaDOXOtKfWN6DHTPHPsUx-jNM6wVx8ClaFMVuQda6f-5HNL8JmL1M97hXO5Pox_O42F-C97WYbslQ9kCXGq1ihiefFAAjD4xI6C0T8eiujXx-VX6AtYFAQBmyDMYVbkjCTwAZ9izTLAgWEC4_qKghyLzLIQteSL9ehKwTJPchwe9dyLEzYXdNEVcX"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+<span class="text-white text-xs font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">videocam</span>
+                                                Live Feed: Drone Patrol 04
+                                            </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area (Fixed at bottom of main content) -->
+<div class="sticky bottom-8 mt-4">
+<div class="bg-surface-container-lowest shadow-[0_-10px_40px_-15px_rgba(0,106,38,0.1)] rounded-2xl p-4 border border-surface-container flex flex-col gap-3">
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<input class="flex-grow border-none bg-transparent focus:ring-0 text-on-surface font-medium placeholder-slate-400" placeholder="Ask anything about your farm operations..." type="text"/>
+<button class="bg-primary text-on-primary w-12 h-12 rounded-xl flex items-center justify-center shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+<div class="flex items-center gap-4 px-2 border-t border-surface-container pt-3">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-green-100 border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-green-700">sensors</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-blue-700">cloud</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-amber-100 border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-amber-700">robot</span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">3 Systems Connected</span>
+</div>
+</div>
+</div>
+</div>
+<!-- History Sidebar (Right Side) -->
+<aside class="w-80 bg-surface-container-low p-6 flex flex-col border-l border-slate-100 h-full overflow-y-auto">
+<div class="mb-8">
+<h3 class="text-sm font-bold font-headline text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">history</span>
+                        Recent Consultations
+                    </h3>
+<div class="space-y-4">
+<div class="p-3 bg-white rounded-xl shadow-sm border-l-4 border-primary hover:bg-surface-bright transition-colors cursor-pointer group">
+<div class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">2 Hours Ago</div>
+<div class="text-xs font-bold group-hover:text-primary transition-colors">Yield Optimization Sector A</div>
+<div class="text-[10px] text-slate-400 mt-1">Status: Implemented</div>
+</div>
+<div class="p-3 bg-white/40 rounded-xl hover:bg-white transition-colors cursor-pointer group">
+<div class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Yesterday</div>
+<div class="text-xs font-bold group-hover:text-primary transition-colors">Water Pump #4 Malfunction</div>
+<div class="text-[10px] text-slate-400 mt-1">Status: Resolved</div>
+</div>
+<div class="p-3 bg-white/40 rounded-xl hover:bg-white transition-colors cursor-pointer group">
+<div class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">May 12, 2024</div>
+<div class="text-xs font-bold group-hover:text-primary transition-colors">Soil Nutrient Report Q2</div>
+<div class="text-[10px] text-slate-400 mt-1">Status: Archived</div>
+</div>
+</div>
+</div>
+<div class="mt-auto">
+<div class="bg-gradient-to-br from-primary to-primary-dim p-5 rounded-2xl text-on-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-3xl">lightbulb</span>
+<span class="text-[10px] font-black tracking-widest uppercase border border-on-primary/30 px-2 py-0.5 rounded">AI PRO</span>
+</div>
+<div class="text-sm font-bold mb-1">New Skill Available</div>
+<div class="text-[11px] opacity-80 leading-relaxed mb-4">You can now ask me to generate predictive harvesting schedules based on real-time market prices.</div>
+<button class="w-full bg-white/20 hover:bg-white/30 backdrop-blur text-white text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors">
+                            Enable Skill
+                        </button>
+</div>
+</div>
+</aside>
+</section>
+</main>
+<!-- Contextual FAB (Hidden on AI page as per suppression rule, but here for structural completeness) -->
+</body></html>
