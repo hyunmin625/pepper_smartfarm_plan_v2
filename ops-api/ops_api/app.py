@@ -2259,79 +2259,159 @@ def _dashboard_html() -> str:
   <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <script>
+    // Stitch v2 "Digital Agronomist" palette
+    // - background  #f5f7f9, surface lowest #ffffff
+    // - primary     #006a26 (vivid growth green)
+    // - tertiary    #006571 (atmosphere)
+    // - error       #b02500
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            'ink': '#1d2a1f',
-            'muted': '#657d6a',
-            'surface': '#fff9ed',
-            'surface-low': '#f9f3e8',
+            'ink': '#2c2f31',
+            'muted': '#595c5e',
+            'background': '#f5f7f9',
+            'surface': '#f5f7f9',
+            'surface-low': '#eef1f3',
             'surface-lowest': '#ffffff',
-            'surface-container': '#f3ede2',
-            'surface-container-high': '#ede7dd',
-            'surface-dim': '#dfd9cf',
-            'outline': '#c1c8c0',
-            'primary': '#2d5338',
-            'primary-dim': '#456b4f',
-            'primary-container': '#bfeac7',
-            'on-primary-container': '#294e35',
-            'secondary': '#546255',
-            'secondary-container': '#d7e7d6',
-            'tertiary': '#763a20',
-            'tertiary-container': '#935135',
-            'warn': '#8a4a2f',
-            'critical': '#7a2f21',
-            'sidebar': '#1d2a1f',
-            'sidebar-hover': '#2d5338',
+            'surface-container': '#e5e9eb',
+            'surface-container-high': '#dfe3e6',
+            'surface-bright': '#ffffff',
+            'surface-dim': '#d0d5d8',
+            'outline': '#abadaf',
+            'outline-variant': '#abadaf',
+            'primary': '#006a26',
+            'primary-dim': '#005d20',
+            'primary-container': '#87ff94',
+            'on-primary': '#ffffff',
+            'on-primary-container': '#006122',
+            'secondary': '#00693e',
+            'secondary-container': '#76f2aa',
+            'tertiary': '#006571',
+            'tertiary-container': '#cdf2f9',
+            'warn': '#b46a1d',
+            'critical': '#b02500',
+            'error': '#b02500',
+            'error-container': '#ffdad4',
+            'sidebar': '#eef1f3',
+            'sidebar-hover': '#e0e7e2',
           },
           fontFamily: {
-            sans: ['Pretendard', 'Noto Sans KR', 'system-ui', 'sans-serif'],
+            sans: ['Pretendard', 'Inter', 'Noto Sans KR', 'system-ui', 'sans-serif'],
+            headline: ['Manrope', 'Pretendard', 'Noto Sans KR', 'system-ui', 'sans-serif'],
           },
           boxShadow: {
-            'soft': '0 8px 28px rgba(44,60,47,0.06)',
-            'softer': '0 4px 12px rgba(0,0,0,0.02)',
+            'soft': '0 18px 48px -22px rgba(44,47,49,0.18)',
+            'softer': '0 8px 24px -16px rgba(44,47,49,0.12)',
+            'glow-primary': '0 8px 28px -12px rgba(0,106,38,0.45)',
           },
         },
       },
     }
   </script>
   <style>
-    html, body { background-color: #f7f4ec; }
-    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #f7f4ec; background-image: linear-gradient(180deg, #f0eadf 0%, #f7f4ec 100%); color: #1d2a1f; min-height: 100vh; }
+    /* ─────────────────────────────────────────────────────────────
+       Stitch v2 "Digital Agronomist" — global tokens & primitives
+       Philosophy: tonal layering, no 1px borders for sectioning,
+       generous whitespace, glass overlays, rounded-full pills.
+
+       ACCESSIBILITY (60-70대 저시력 사용자 대응):
+       - 베이스 폰트 16px → 17.5px (root font-size 109%)
+       - line-height 1.55 (가독성 우선)
+       - 모든 text-[9~13px] arbitrary 클래스를 자동 승급 (아래 a11y 블록)
+       - chip / metric / nav-link 컴포넌트 모두 키움
+       ───────────────────────────────────────────────────────────── */
+    html { font-size: 17.5px; background-color: #f5f7f9; }
+    body {
+      font-family: 'Pretendard', 'Inter', 'Noto Sans KR', system-ui, sans-serif;
+      background: #f5f7f9;
+      color: #2c2f31;
+      min-height: 100vh;
+      line-height: 1.55;
+      letter-spacing: -0.005em;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    /* a11y — auto-promote tiny arbitrary Tailwind sizes to readable minimums */
+    [class*="text-[9px]"]  { font-size: 13px !important; }
+    [class*="text-[10px]"] { font-size: 14px !important; }
+    [class*="text-[11px]"] { font-size: 15px !important; }
+    [class*="text-[12px]"] { font-size: 15px !important; }
+    [class*="text-[13px]"] { font-size: 16px !important; }
+    [class*="text-[14px]"] { font-size: 16px !important; }
+    /* Tailwind utility size bumps */
+    .text-xs  { font-size: 14px !important; line-height: 1.5; }
+    .text-sm  { font-size: 16px !important; line-height: 1.55; }
+    .text-base{ font-size: 17px !important; }
+    .text-lg  { font-size: 20px !important; }
+    .text-xl  { font-size: 23px !important; }
+    .text-2xl { font-size: 28px !important; }
+    .text-3xl { font-size: 34px !important; }
+    h1, h2, h3, h4 { font-family: 'Manrope', 'Pretendard', 'Noto Sans KR', system-ui, sans-serif; letter-spacing: -0.015em; }
+    .font-headline { font-family: 'Manrope', 'Pretendard', 'Noto Sans KR', system-ui, sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     .msf { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
     .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #c1c8c0; border-radius: 999px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #d0d5d8; border-radius: 999px; }
     .view { display: none; }
-    .view.active { display: block; }
-    .chip { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
-    .chip-enabled { background: #eef4e7; color: #28523a; }
-    .chip-warn { background: #f7e5db; color: #7a2f21; }
-    .chip-critical { background: #ffdad6; color: #93000a; }
-    .chip-dark { background: #ece8dd; color: #4b544d; }
-    .chip-accent { background: #2d5338; color: white; }
-    .kpi strong { color: #1d2a1f; }
-    .glass { background-color: rgba(255, 249, 237, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .view.active { display: block; animation: viewFade 0.28s ease; }
+    @keyframes viewFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    /* Status chips — pill, no border, soft tonal containers
+       (a11y: 폰트 13px / padding 7-14, 이전 10px/5-11에서 키움) */
+    .chip {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 999px;
+      font-size: 13px !important; font-weight: 700; line-height: 1.1;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .chip-enabled  { background: #d6f5dc; color: #006a26; }
+    .chip-enabled::before  { content: ''; width: 8px; height: 8px; border-radius: 999px; background: #006a26; flex-shrink: 0; }
+    .chip-warn     { background: #fde9d3; color: #8a4a18; }
+    .chip-warn::before     { content: ''; width: 8px; height: 8px; border-radius: 999px; background: #b46a1d; flex-shrink: 0; }
+    .chip-critical { background: #ffdad4; color: #9a1f00; }
+    .chip-critical::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: #b02500; animation: pulseDot 1.6s ease-in-out infinite; flex-shrink: 0; }
+    .chip-dark     { background: #e5e9eb; color: #2c2f31; }
+    .chip-accent   { background: #006a26; color: #ffffff; }
+    @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+    .kpi strong { color: #2c2f31; }
+
+    /* Frosted-glass surface — used by sticky header, modals */
+    .glass {
+      background-color: rgba(245, 247, 249, 0.78);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+    }
+
     /* Mobile drawer overlay — hidden on desktop so the workspace is not dimmed */
-    #sidebarBackdrop { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.4); z-index: 40; }
+    #sidebarBackdrop { display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 27, 0.32); z-index: 40; backdrop-filter: blur(2px); }
     @media (max-width: 1023px) {
-      #sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      #sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1); }
       #sidebar.open { transform: translateX(0); }
       #sidebarBackdrop.open { display: block; }
     }
   </style>
 </head>
 <body class="min-h-screen">
-  <aside id="sidebar" class="fixed left-0 top-0 h-screen w-64 flex flex-col bg-sidebar text-white z-50 shadow-soft">
-    <div class="px-6 py-6 border-b border-white/10">
-      <h1 class="text-lg font-bold tracking-tight">iFarm 통합제어</h1>
-      <p class="text-[10px] tracking-[0.15em] uppercase text-white/60 mt-1">적고추 온실 · iFarm Integrated Control</p>
+  <aside id="sidebar" class="fixed left-0 top-0 h-screen w-72 flex flex-col bg-surface-low text-ink z-50">
+    <div class="px-6 py-7">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-on-primary-container msf">eco</span>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-[15px] font-extrabold font-headline text-primary tracking-tight">iFarm 통합제어</h1>
+          <p class="text-[10px] tracking-[0.14em] uppercase text-muted mt-0.5">Digital Agronomist</p>
+        </div>
+      </div>
     </div>
-    <nav id="sidebarNav" class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scroll">
+    <nav id="sidebarNav" class="flex-1 px-3 py-2 space-y-1 overflow-y-auto custom-scroll">
       <a data-view="overview" class="nav-link active">
         <span class="material-symbols-outlined text-[20px]">dashboard</span>
         <span>대시보드</span>
@@ -2377,72 +2457,160 @@ def _dashboard_html() -> str:
         <span>시스템</span>
       </a>
     </nav>
-    <div class="px-4 py-4 border-t border-white/10 space-y-3">
-      <div class="flex items-center gap-2 text-[11px] text-white/75">
-        <span>운영 모드</span>
-        <span id="modeBadge" class="chip chip-enabled">loading</span>
+    <div class="px-5 py-5 space-y-3">
+      <div class="rounded-2xl bg-surface-lowest p-4 shadow-softer">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] uppercase tracking-[0.12em] font-bold text-muted">운영 모드</span>
+          <span id="modeBadge" class="chip chip-enabled">loading</span>
+        </div>
+        <div id="authContextMini" class="text-[11px] text-muted leading-snug"></div>
+        <button onclick="toggleMode()" class="mt-3 w-full bg-primary hover:bg-primary-dim text-white text-[11px] font-bold uppercase tracking-wider rounded-full py-2.5 transition shadow-glow-primary">모드 전환</button>
       </div>
-      <div id="authContextMini" class="text-[11px] text-white/60"></div>
-      <button onclick="toggleMode()" class="w-full bg-primary hover:bg-primary-dim text-white text-xs font-semibold rounded-lg py-2 transition">모드 전환</button>
     </div>
   </aside>
   <div id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
 
-  <header class="lg:ml-64 sticky top-0 h-16 z-30 glass border-b border-outline/30 flex items-center justify-between px-4 md:px-8">
+  <header class="lg:ml-72 sticky top-0 min-h-[88px] z-30 glass flex items-center justify-between px-5 md:px-10 py-4">
     <div class="flex items-center gap-3">
-      <button onclick="toggleSidebar()" class="lg:hidden text-ink p-2 hover:bg-surface-container rounded-lg">
+      <button onclick="toggleSidebar()" class="lg:hidden text-ink p-2 hover:bg-surface-low rounded-full">
         <span class="material-symbols-outlined">menu</span>
       </button>
       <div>
-        <h2 id="viewTitle" class="text-lg md:text-xl font-bold text-ink">대시보드</h2>
-        <p id="viewSub" class="text-[11px] text-muted hidden md:block">전체 운영 현황 요약</p>
+        <p class="text-[10px] uppercase tracking-[0.14em] text-primary font-bold leading-none">Live Monitoring</p>
+        <h2 id="viewTitle" class="text-lg md:text-xl font-extrabold font-headline text-ink mt-1 leading-none">대시보드</h2>
+        <p id="viewSub" class="text-[11px] text-muted hidden md:block mt-0.5">전체 운영 현황 요약</p>
       </div>
     </div>
     <div class="flex items-center gap-3 md:gap-5">
       <span id="headerChampionChip" class="chip chip-dark hidden max-w-[220px] truncate" title="champion model">champion: —</span>
-      <div class="hidden md:flex items-center gap-2 text-xs text-muted">
+      <div class="hidden md:flex items-center gap-2 text-[11px] text-muted font-semibold">
         <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
         <span>System Status: Optimal</span>
       </div>
-      <span class="material-symbols-outlined text-ink cursor-pointer">notifications</span>
+      <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-low transition text-muted">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
       <div id="authContext" class="hidden md:block"></div>
     </div>
   </header>
 
-  <main class="lg:ml-64 px-4 md:px-8 py-6 md:py-8 max-w-[1600px]">
+  <main class="lg:ml-72 px-5 md:px-10 py-7 md:py-9 max-w-[1700px]">
 
     <!-- 대시보드 -->
     <section class="view active" data-view="overview">
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6" id="metricGrid"></div>
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-5">
-        <div class="card lg:col-span-3">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-ink">구역 상태 요약</h3>
-            <span class="text-[11px] text-muted uppercase tracking-wider">Real-Time Environmental Monitoring</span>
-          </div>
-          <div id="zoneList" class="space-y-3"></div>
+
+      <!-- Hero strip — kicker + headline + actions -->
+      <div class="hero-strip mb-6">
+        <div>
+          <span class="section-kicker">Live Monitoring Active</span>
+          <h2 class="text-2xl md:text-3xl font-extrabold font-headline text-ink mt-3 leading-tight">적고추 온실 통합제어</h2>
+          <p class="text-[12px] md:text-[13px] text-muted mt-2 max-w-xl leading-relaxed">AI · Validator · Gateway 3-layer safety pipeline · TimescaleDB 실시간 센서 스트림 · runtime gate 기반 자동 제어</p>
         </div>
-        <div class="card lg:col-span-2 bg-primary text-white !bg-primary">
-          <p class="text-[11px] tracking-wider uppercase text-white/60 mb-1">Shadow Window Summary</p>
-          <h3 class="text-xl font-bold mb-4 text-white">Automation Strategy Review</h3>
-          <div id="shadowWindow"></div>
+        <div class="hidden md:flex items-center gap-2">
+          <button onclick="showView('shadow')" class="btn-secondary">
+            <span class="material-symbols-outlined text-[16px]">history</span>
+            <span>Shadow Window</span>
+          </button>
+          <button onclick="showView('automation')" class="btn-primary">
+            <span class="material-symbols-outlined text-[16px]">tune</span>
+            <span>Override Controls</span>
+          </button>
         </div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-ink">최근 알림</h3>
-            <span class="text-[11px] text-muted">View All Alerts</span>
-          </div>
-          <div id="alertListOverview" class="space-y-3"></div>
+
+      <!-- Metric strip — sensor snapshot -->
+      <div class="mb-6">
+        <div class="flex items-end justify-between mb-3 px-1">
+          <span class="section-kicker">Sensor Snapshot</span>
+          <span class="text-[10px] uppercase tracking-[0.12em] text-muted font-bold">Live · Auto-refresh 5s</span>
         </div>
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-ink">최근 실행</h3>
-            <span class="text-[11px] text-muted">Full Audit Log</span>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="metricGrid"></div>
+      </div>
+
+      <!-- Hero asymmetric — greenhouse visual + right rail -->
+      <div class="hero-grid mb-6">
+
+        <!-- LEFT — greenhouse visual + zone list -->
+        <div class="card !p-0 overflow-hidden">
+          <div class="greenhouse-visual">
+            <!-- Sensor pins (mock positions; live values come from /metrics endpoints) -->
+            <div class="sensor-pin" style="top: 28%; left: 22%;"><span class="pin-label">Zone A · 24.5°C</span></div>
+            <div class="sensor-pin" style="top: 58%; left: 52%;"><span class="pin-label">Zone B · 62%RH</span></div>
+            <div class="sensor-pin" style="top: 36%; left: 78%;"><span class="pin-label">CO₂ 840 ppm</span></div>
+
+            <!-- Hero overlay text -->
+            <div class="absolute top-5 left-5 z-10">
+              <span class="section-kicker" style="color:#006a26;">Greenhouse Visual</span>
+              <h3 class="text-base font-extrabold font-headline text-ink mt-2 leading-none">GH-PEPPER-01</h3>
+              <p class="text-[11px] text-muted mt-1">3 zones · 12 nodes online</p>
+            </div>
+
+            <!-- Live camera mock -->
+            <div class="absolute bottom-5 left-5 z-10 bg-white rounded-2xl shadow-soft p-3 flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-ink flex items-center justify-center relative overflow-hidden">
+                <span class="material-symbols-outlined text-white msf">videocam</span>
+                <div class="absolute top-1 right-1 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                </div>
+              </div>
+              <div class="leading-tight">
+                <p class="text-[9px] uppercase tracking-[0.12em] text-muted font-bold">Live Feed</p>
+                <p class="text-[12px] font-extrabold font-headline text-ink">CAM-01 · Zone A</p>
+              </div>
+            </div>
           </div>
-          <div id="commandListOverview" class="space-y-3"></div>
+
+          <div class="px-6 md:px-7 pt-5 pb-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="section-kicker">Zone Status</span>
+                <h3 class="text-base font-extrabold font-headline text-ink mt-1">구역 상태 요약</h3>
+              </div>
+              <button onclick="showView('zones')" class="text-[11px] uppercase tracking-[0.10em] font-bold text-primary hover:underline">View All ›</button>
+            </div>
+            <div id="zoneList" class="space-y-3"></div>
+          </div>
         </div>
+
+        <!-- RIGHT rail — shadow strategy + schedule -->
+        <div class="space-y-5">
+          <!-- Shadow window — primary gradient hero card -->
+          <div class="card text-white" style="background: linear-gradient(155deg, #006a26 0%, #00833a 55%, #00913a 100%); box-shadow: 0 24px 56px -28px rgba(0,106,38,0.55);">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-[10px] tracking-[0.14em] uppercase text-white/75 font-bold">Shadow Window</p>
+              <span class="material-symbols-outlined text-white/70 text-[18px]">visibility</span>
+            </div>
+            <h3 class="text-lg font-extrabold font-headline mb-4 leading-tight">Automation Strategy Review</h3>
+            <div id="shadowWindow" class="text-white/90 text-[12px] leading-relaxed"></div>
+          </div>
+
+          <!-- Schedule rail (uses commandListOverview as audit timeline) -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="section-kicker">Audit Trail</span>
+                <h3 class="text-base font-extrabold font-headline text-ink mt-1">최근 실행</h3>
+              </div>
+              <button onclick="showView('system')" class="text-[11px] uppercase tracking-[0.10em] font-bold text-primary hover:underline">Logs ›</button>
+            </div>
+            <div id="commandListOverview" class="space-y-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom — alerts wide card -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <span class="section-kicker">Active Alerts</span>
+            <h3 class="text-base font-extrabold font-headline text-ink mt-1">최근 알림 · validator · risk · policy</h3>
+          </div>
+          <button onclick="showView('alerts')" class="btn-secondary">
+            <span class="material-symbols-outlined text-[16px]">notifications_active</span>
+            <span>View All Alerts</span>
+          </button>
+        </div>
+        <div id="alertListOverview" class="space-y-3"></div>
       </div>
     </section>
 
@@ -2456,10 +2624,10 @@ def _dashboard_html() -> str:
             <p class="text-[11px] text-muted mt-1">TimescaleDB / SSE 기반 초단위 실시간 · uPlot canvas 렌더링</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <select id="historyZoneId" class="bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs">
+            <select id="historyZoneId" class="bg-surface-low rounded-xl px-3 py-2 text-xs">
               <option value="gh-01-zone-a">gh-01-zone-a</option>
             </select>
-            <select id="historyWindow" class="bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs">
+            <select id="historyWindow" class="bg-surface-low rounded-xl px-3 py-2 text-xs">
               <option value="60">최근 60초</option>
               <option value="300" selected>최근 5분</option>
               <option value="1800">최근 30분</option>
@@ -2491,9 +2659,9 @@ def _dashboard_html() -> str:
           <p class="text-[11px] tracking-wider uppercase text-primary font-bold mb-1">Intelligent Decision Engine</p>
           <h3 class="text-lg font-bold text-ink mb-4">신규 Decision 요청</h3>
           <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-2">Zone Select</label>
-          <input id="zoneId" value="gh-01-zone-a" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-sm" />
+          <input id="zoneId" value="gh-01-zone-a" class="w-full bg-surface-low rounded-xl px-3 py-2 text-sm" />
           <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Target Task</label>
-          <select id="taskType" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-sm">
+          <select id="taskType" class="w-full bg-surface-low rounded-xl px-3 py-2 text-sm">
             <option value="state_judgement">state_judgement</option>
             <option value="action_recommendation">action_recommendation</option>
             <option value="failure_response">failure_response</option>
@@ -2501,11 +2669,11 @@ def _dashboard_html() -> str:
             <option value="forbidden_action">forbidden_action</option>
           </select>
           <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Growth Stage</label>
-          <input id="growthStage" value="fruiting" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-sm" />
+          <input id="growthStage" value="fruiting" class="w-full bg-surface-low rounded-xl px-3 py-2 text-sm" />
           <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Current State JSON</label>
-          <textarea id="currentState" rows="6" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs font-mono">{ "air_temp_c": 27.5, "rh_pct": 71.0, "substrate_moisture_pct": 54.0, "co2_ppm": 430, "feed_ph": 5.9 }</textarea>
+          <textarea id="currentState" rows="6" class="w-full bg-surface-low rounded-xl px-3 py-2 text-xs font-mono">{ "air_temp_c": 27.5, "rh_pct": 71.0, "substrate_moisture_pct": 54.0, "co2_ppm": 430, "feed_ph": 5.9 }</textarea>
           <label class="block text-[11px] uppercase tracking-wider font-bold text-muted mb-1 mt-3">Sensor Quality JSON</label>
-          <textarea id="sensorQuality" rows="2" class="w-full bg-surface-low border border-outline/50 rounded-lg px-3 py-2 text-xs font-mono">{ "overall": "good" }</textarea>
+          <textarea id="sensorQuality" rows="2" class="w-full bg-surface-low rounded-xl px-3 py-2 text-xs font-mono">{ "overall": "good" }</textarea>
           <div class="flex gap-2 mt-4">
             <button onclick="submitDecision()" class="flex-1 bg-primary text-white font-semibold rounded-lg py-2 text-sm flex items-center justify-center gap-1">
               <span class="material-symbols-outlined text-[18px]">send</span>
@@ -2530,9 +2698,9 @@ def _dashboard_html() -> str:
     <section class="view" data-view="ai_chat">
       <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 h-[calc(100vh-9rem)]">
         <div class="card xl:col-span-3 flex flex-col min-h-[500px]">
-          <div class="flex items-center justify-between pb-4 border-b border-outline/30">
+          <div class="flex items-center justify-between pb-4 border-b border-surface-container">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-sidebar flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-glow-primary">
                 <span class="material-symbols-outlined msf text-white text-[22px]">psychology</span>
               </div>
               <div>
@@ -2549,7 +2717,7 @@ def _dashboard_html() -> str:
             </div>
           </div>
           <div id="chatMessages" class="flex-1 overflow-y-auto custom-scroll py-4 space-y-4"></div>
-          <div class="border-t border-outline/30 pt-4">
+          <div class="border-t border-surface-container pt-4">
             <div class="bg-surface-low rounded-2xl p-2 flex items-end gap-2 shadow-softer">
               <textarea id="chatInput" rows="2" placeholder="온실 운영 관련 질문이나 명령을 입력하세요 (예: 'zone-a의 현재 EC 농도 확인해줘')" class="flex-1 bg-transparent border-none text-sm resize-none focus:ring-0 px-2 py-2 custom-scroll"></textarea>
               <button id="chatSendBtn" onclick="sendChatMessage()" class="bg-primary text-white p-3 rounded-xl hover:opacity-90 transition disabled:opacity-40">
@@ -2703,35 +2871,35 @@ def _dashboard_html() -> str:
           <div class="grid grid-cols-2 gap-3">
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">rule_id *</span>
-              <input type="text" id="ruleField_rule_id" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="rh-rain-close-vent">
+              <input type="text" id="ruleField_rule_id" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="rh-rain-close-vent">
             </label>
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">name *</span>
-              <input type="text" id="ruleField_name" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="강우 시 천장 닫기">
+              <input type="text" id="ruleField_name" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="강우 시 천장 닫기">
             </label>
           </div>
           <label class="block">
             <span class="block text-[10px] text-muted uppercase mb-1">description</span>
-            <textarea id="ruleField_description" rows="2" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="강우량이 0.5mm/10min를 넘으면 천장 개폐기를 닫는다"></textarea>
+            <textarea id="ruleField_description" rows="2" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="강우량이 0.5mm/10min를 넘으면 천장 개폐기를 닫는다"></textarea>
           </label>
           <div class="grid grid-cols-3 gap-3">
             <label class="block col-span-1">
               <span class="block text-[10px] text-muted uppercase mb-1">zone_id</span>
-              <input type="text" id="ruleField_zone_id" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="(전 구역)">
+              <input type="text" id="ruleField_zone_id" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="(전 구역)">
             </label>
             <label class="block col-span-1">
               <span class="block text-[10px] text-muted uppercase mb-1">priority</span>
-              <input type="number" id="ruleField_priority" value="100" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <input type="number" id="ruleField_priority" value="100" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
             </label>
             <label class="block col-span-1">
               <span class="block text-[10px] text-muted uppercase mb-1">cooldown 분</span>
-              <input type="number" id="ruleField_cooldown_minutes" value="15" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <input type="number" id="ruleField_cooldown_minutes" value="15" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
             </label>
           </div>
           <div class="grid grid-cols-3 gap-3">
             <label class="block col-span-1">
               <span class="block text-[10px] text-muted uppercase mb-1">sensor_key *</span>
-              <select id="ruleField_sensor_key" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <select id="ruleField_sensor_key" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <optgroup label="외부 기상">
                   <option value="ext_air_temp_c">외부 온도 (℃)</option>
                   <option value="ext_rh_pct">외부 습도 (%)</option>
@@ -2766,7 +2934,7 @@ def _dashboard_html() -> str:
             </label>
             <label class="block col-span-1">
               <span class="block text-[10px] text-muted uppercase mb-1">operator *</span>
-              <select id="ruleField_operator" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <select id="ruleField_operator" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="gt">&gt; (초과)</option>
                 <option value="gte">&ge; (이상)</option>
                 <option value="lt">&lt; (미만)</option>
@@ -2777,23 +2945,23 @@ def _dashboard_html() -> str:
             </label>
             <label class="block col-span-1">
               <span class="block text-[10px] text-muted uppercase mb-1">threshold_value</span>
-              <input type="number" step="any" id="ruleField_threshold_value" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <input type="number" step="any" id="ruleField_threshold_value" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
             </label>
           </div>
           <div class="grid grid-cols-2 gap-3" id="ruleFieldBetweenRow" style="display:none;">
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">threshold_min</span>
-              <input type="number" step="any" id="ruleField_threshold_min" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <input type="number" step="any" id="ruleField_threshold_min" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
             </label>
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">threshold_max</span>
-              <input type="number" step="any" id="ruleField_threshold_max" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <input type="number" step="any" id="ruleField_threshold_max" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
             </label>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">target_device_type *</span>
-              <select id="ruleField_target_device_type" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <select id="ruleField_target_device_type" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="roof_vent">천장 개폐기 (roof_vent)</option>
                 <option value="hvac_geothermal">지하수 냉난방기 (hvac_geothermal)</option>
                 <option value="humidifier">가습기 (humidifier)</option>
@@ -2806,17 +2974,17 @@ def _dashboard_html() -> str:
             </label>
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">target_action *</span>
-              <input type="text" id="ruleField_target_action" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="adjust_vent">
+              <input type="text" id="ruleField_target_action" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="adjust_vent">
             </label>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">target_device_id</span>
-              <input type="text" id="ruleField_target_device_id" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink" placeholder="(선택)">
+              <input type="text" id="ruleField_target_device_id" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="(선택)">
             </label>
             <label class="block">
               <span class="block text-[10px] text-muted uppercase mb-1">runtime_mode_gate *</span>
-              <select id="ruleField_runtime_mode_gate" required class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink">
+              <select id="ruleField_runtime_mode_gate" required class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="shadow">shadow (로그만)</option>
                 <option value="approval" selected>approval (승인 요청)</option>
                 <option value="execute">execute (바로 실행)</option>
@@ -2825,9 +2993,9 @@ def _dashboard_html() -> str:
           </div>
           <label class="block">
             <span class="block text-[10px] text-muted uppercase mb-1">action_payload (JSON)</span>
-            <textarea id="ruleField_action_payload" rows="2" class="w-full rounded-lg border border-outline/40 px-3 py-2 bg-surface-low text-ink font-mono text-[11px]" placeholder='{"target_position_pct": 0}'></textarea>
+            <textarea id="ruleField_action_payload" rows="2" class="w-full rounded-xl px-3 py-2 bg-surface-low text-ink focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono text-[11px]" placeholder='{"target_position_pct": 0}'></textarea>
           </label>
-          <div class="flex items-center justify-between pt-4 border-t border-outline/30">
+          <div class="flex items-center justify-between pt-4 border-t border-surface-container">
             <label class="flex items-center gap-2 text-xs">
               <input type="checkbox" id="ruleField_enabled" checked class="rounded">
               <span>활성화</span>
@@ -2893,24 +3061,273 @@ def _dashboard_html() -> str:
   </main>
 
   <style>
-    .card { background: #fffdf7; border-radius: 18px; padding: 20px; box-shadow: 0 8px 28px rgba(44,60,47,0.04); }
-    @media (min-width: 768px) { .card { padding: 24px; } }
-    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); cursor: pointer; transition: all 0.15s; }
-    .nav-link:hover { background: rgba(45, 83, 56, 0.5); color: white; }
-    .nav-link.active { background: #456b4f; color: white; font-weight: 700; }
-    .decision-card { background: #fffdf7; border: 1px solid rgba(193, 200, 192, 0.3); border-radius: 14px; padding: 16px; }
-    .metric-card { background: #faf7ef; border-radius: 12px; padding: 12px; }
-    .metric-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #657d6a; font-weight: 600; }
-    .metric-card .value { font-size: 20px; font-weight: 700; color: #1d2a1f; margin-top: 4px; display: block; }
-    .metric-card.metric-champion { background: #2d5338; color: white; }
-    .metric-card.metric-champion .label { color: rgba(255,255,255,0.7); }
-    .metric-card.metric-champion .value { color: white; font-size: 14px; line-height: 1.25; word-break: break-word; }
-    .zone-row { background: #fbf8f1; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
-    .alert-row { background: #fbf8f1; border-radius: 12px; padding: 14px; }
-    .placeholder { text-align: center; color: #9ba89f; padding: 24px; font-size: 13px; }
-    .chat-bubble-user { max-width: 80%; background: #2d5338; color: white; padding: 12px 16px; border-radius: 18px 18px 4px 18px; font-size: 13px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .chat-bubble-ai { max-width: 88%; background: #fffdf7; color: #1d2a1f; padding: 14px 18px; border-radius: 18px 18px 18px 4px; font-size: 13px; line-height: 1.55; border: 1px solid rgba(193, 200, 192, 0.3); }
-    .chat-bubble-error { background: #ffdad6; color: #93000a; }
+    /* ─────────────────────────────────────────────────────────────
+       Component layer — Stitch v2 surface hierarchy
+       L0 background (#f5f7f9) → L1 surface-low (#eef1f3) →
+       L2 surface-lowest (#ffffff). No 1px borders for sectioning.
+       ───────────────────────────────────────────────────────────── */
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 18px 48px -28px rgba(44,47,49,0.16), 0 2px 6px -2px rgba(44,47,49,0.04);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 24px 56px -28px rgba(44,47,49,0.22), 0 4px 10px -4px rgba(44,47,49,0.06); }
+    @media (min-width: 768px) { .card { padding: 30px; } }
+
+    /* Sidebar nav — light surface with primary pill indicator on the left */
+    .nav-link {
+      position: relative;
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; margin: 0 6px;
+      border-radius: 14px;
+      font-size: 16px; font-weight: 600;
+      color: #595c5e;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+      white-space: nowrap;
+    }
+    .nav-link .material-symbols-outlined { font-size: 24px !important; }
+    .nav-link:hover { background: #e0e7e2; color: #006a26; }
+    .nav-link.active {
+      background: #d6f5dc;
+      color: #006a26;
+      font-weight: 700;
+    }
+    .nav-link.active::before {
+      content: '';
+      position: absolute; left: -10px; top: 8px; bottom: 8px;
+      width: 4px; border-radius: 999px;
+      background: #006a26;
+    }
+    .nav-link.active .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500; }
+
+    /* Decision/list cards — tonal surface, no border */
+    .decision-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 8px 24px -18px rgba(44,47,49,0.14);
+    }
+
+    /* Metric cards — Stitch hero metric with bottom accent
+       (a11y: label 13px / value 30px, 이전 10/24에서 키움) */
+    .metric-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 20px 22px;
+      box-shadow: 0 8px 24px -18px rgba(44,47,49,0.14);
+      border-bottom: 4px solid #d6f5dc;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      min-width: 0;
+    }
+    .metric-card:hover { transform: translateY(-2px); border-bottom-color: #006a26; box-shadow: 0 14px 32px -20px rgba(0,106,38,0.30); }
+    .metric-card .label {
+      font-size: 13px !important; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #595c5e; font-weight: 700;
+      font-family: 'Manrope', 'Pretendard', sans-serif;
+      line-height: 1.3;
+    }
+    .metric-card .value {
+      font-size: 30px !important; font-weight: 800; color: #2c2f31;
+      margin-top: 8px; display: block;
+      font-family: 'Manrope', 'Pretendard', sans-serif;
+      letter-spacing: -0.02em; line-height: 1.1;
+      word-break: keep-all;
+    }
+    .metric-card.metric-champion {
+      background: linear-gradient(135deg, #006a26 0%, #00913a 100%);
+      color: #ffffff;
+      border-bottom-color: #87ff94;
+    }
+    .metric-card.metric-champion .label { color: rgba(255,255,255,0.85); }
+    .metric-card.metric-champion .value {
+      color: #ffffff; font-size: 17px !important;
+      line-height: 1.3; word-break: break-word; font-weight: 700;
+    }
+
+    /* Zone & alert rows — surface-low with rounded corners, no border */
+    .zone-row {
+      background: #eef1f3;
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px;
+      font-size: 16px;
+      transition: background 0.18s ease;
+      flex-wrap: wrap;
+    }
+    .zone-row:hover { background: #e5e9eb; }
+    .alert-row {
+      background: #eef1f3;
+      border-radius: 14px;
+      padding: 18px 22px;
+      font-size: 16px;
+      transition: background 0.18s ease;
+    }
+    .alert-row:hover { background: #e5e9eb; }
+
+    .placeholder { text-align: center; color: #abadaf; padding: 32px; font-size: 16px; }
+
+    /* Chat bubbles — primary gradient for user, surface-lowest for AI
+       (a11y: 16px 본문 / line-height 1.6) */
+    .chat-bubble-user {
+      max-width: 80%;
+      background: linear-gradient(135deg, #006a26 0%, #00833a 100%);
+      color: #ffffff;
+      padding: 16px 22px;
+      border-radius: 22px 22px 6px 22px;
+      font-size: 16px !important; line-height: 1.6;
+      box-shadow: 0 8px 24px -14px rgba(0,106,38,0.45);
+    }
+    .chat-bubble-ai {
+      max-width: 88%;
+      background: #ffffff;
+      color: #2c2f31;
+      padding: 18px 22px;
+      border-radius: 22px 22px 22px 6px;
+      font-size: 16px !important; line-height: 1.65;
+      box-shadow: 0 8px 24px -18px rgba(44,47,49,0.16);
+    }
+    .chat-bubble-error { background: #ffdad4; color: #9a1f00; }
+
+    /* Primary action button — rounded-full, with subtle glow */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #006a26; color: #ffffff;
+      padding: 13px 24px; border-radius: 999px;
+      font-size: 15px !important; font-weight: 700; letter-spacing: 0.02em;
+      box-shadow: 0 8px 24px -12px rgba(0,106,38,0.55);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 32px -12px rgba(0,106,38,0.6); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary .material-symbols-outlined { font-size: 20px !important; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #eef1f3; color: #2c2f31;
+      padding: 13px 22px; border-radius: 999px;
+      font-size: 15px !important; font-weight: 700;
+      transition: background 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-secondary:hover { background: #dfe3e6; }
+    .btn-secondary .material-symbols-outlined { font-size: 20px !important; }
+
+    /* Form inputs — bigger touch targets and font-size for low vision */
+    input[type="text"], input[type="number"], input[type="email"], input[type="password"],
+    select, textarea {
+      font-size: 16px !important;
+      line-height: 1.5;
+      padding: 12px 14px !important;
+    }
+    label { font-size: 14px !important; }
+
+    /* ─────────────────────────────────────────────────────────────
+       Layout primitives — Stitch v3 hero & asymmetric grids
+       ───────────────────────────────────────────────────────────── */
+    .hero-strip {
+      position: relative;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px;
+      padding: 32px 36px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #ffffff 0%, #eef1f3 100%);
+      box-shadow: 0 18px 48px -28px rgba(44,47,49,0.18);
+      overflow: hidden;
+      flex-wrap: wrap;
+    }
+    .hero-strip::after {
+      content: '';
+      position: absolute; right: -60px; top: -60px;
+      width: 220px; height: 220px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(0,106,38,0.10) 0%, rgba(0,106,38,0) 70%);
+      pointer-events: none;
+    }
+    .hero-strip > * { position: relative; z-index: 1; }
+    .section-kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px !important; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: #006a26;
+    }
+    .section-kicker::before {
+      content: ''; width: 6px; height: 6px; border-radius: 999px; background: #006a26;
+      box-shadow: 0 0 0 4px rgba(0,106,38,0.15);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 1180px) {
+      .hero-grid { grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; }
+    }
+
+    /* Greenhouse visual mock — radial gradient + sensor pin overlay */
+    .greenhouse-visual {
+      position: relative;
+      min-height: 260px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 28% 32%, rgba(0,106,38,0.18) 0%, rgba(0,106,38,0) 38%),
+        radial-gradient(circle at 72% 64%, rgba(0,101,113,0.16) 0%, rgba(0,101,113,0) 42%),
+        linear-gradient(135deg, #eaf3ec 0%, #dfeff2 100%);
+      overflow: hidden;
+    }
+    .greenhouse-visual::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(44,47,49,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(44,47,49,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+    }
+    .sensor-pin {
+      position: absolute; display: inline-flex; align-items: center; justify-content: center;
+      width: 14px; height: 14px;
+    }
+    .sensor-pin::before {
+      content: ''; position: absolute; inset: 0; border-radius: 999px;
+      background: #006a26; opacity: 0.55;
+      animation: pulseRing 1.8s ease-out infinite;
+    }
+    .sensor-pin::after {
+      content: ''; width: 8px; height: 8px; border-radius: 999px;
+      background: #006a26; box-shadow: 0 0 0 3px #ffffff;
+      position: relative; z-index: 1;
+    }
+    .sensor-pin .pin-label {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      background: #ffffff; color: #2c2f31;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 10px; font-weight: 700; white-space: nowrap;
+      box-shadow: 0 8px 20px -10px rgba(44,47,49,0.30);
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      80% { transform: scale(2.4); opacity: 0; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
+    /* Schedule timeline rail */
+    .timeline-item {
+      position: relative; padding-left: 18px;
+      border-left: 2px solid #eef1f3;
+      padding-bottom: 14px;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item.is-now { border-left-color: #006a26; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -7px; top: 0;
+      width: 12px; height: 12px; border-radius: 999px;
+      background: #ffffff; border: 3px solid #d0d5d8;
+    }
+    .timeline-item.is-now::before { border-color: #006a26; box-shadow: 0 0 0 4px rgba(0,106,38,0.18); }
   </style>
 
   <script>
@@ -3533,7 +3950,7 @@ def _dashboard_html() -> str:
     function chatBubbleAssistant(content, ts) {
       return `<div class="flex flex-col gap-2">
         <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center">
+          <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-glow-primary">
             <span class="material-symbols-outlined msf text-white text-[14px]">psychology</span>
           </div>
           <span class="text-[11px] font-bold text-primary uppercase tracking-wider">AI AGRO-SYSTEM</span>
