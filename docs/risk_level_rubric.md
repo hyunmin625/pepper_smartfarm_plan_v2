@@ -119,6 +119,7 @@
 - `Delta 6.5` 육묘/정식은 block saturation evidence를 같이 본다. `10x10x6.5cm` block 기준 wet weight `550g` 미만이거나 측정 자체가 없으면 자동 정식/자동 관수 판단 근거로 쓰지 않는다.
 - 충분한 근거와 실제 crop stress 조합이 있을 때만 `high`
 - `GT Master dry-back + 새벽 WC 저하 + 반복 잎 처짐`은 충분한 근거가 있는 rootzone stress로 보고 `high`를 준다.
+- `GT Master`에서 `feed EC 대비 drain EC 차이가 2.0mS/cm 이상 + drain 비율 20% 미만`은 염류 집적/근권 스트레스 signal로 보고 `high`. 이 경우 필수 action은 `create_alert + request_human_check`이며, `observe_only` 단독 금지다. `adjust_fertigation`은 현장 확인 전 기본값이 아니다.
 - `GT Master` 해석 기본선:
   - `24시간 slab EC 변동폭 0.3~0.8mS/cm`: 대체로 안정권
   - `0.3 미만`: 과급수 또는 refresh 약화 watch
@@ -137,7 +138,8 @@
 
 - 안전 차단 상황이면 `critical`
 - 작업 생성 가능한 일반 운영 상황은 주로 `medium` 또는 `high`
-- top-level `risk_level`보다 `robot_tasks` contract completeness가 더 중요하다.
+- 후보 중 하나가 `blocked`(통로 장애물/pallet/작업자 등 접근 차단)면 우회·회피(`skip_area`)가 먼저 필요하므로 `risk_level=high`로 올린다. `medium`으로 내려가지 않는다.
+- top-level `risk_level`보다 `robot_tasks` contract completeness가 더 중요하지만, 계약과 `risk_level`은 같이 맞춘다.
 
 ## 5. 빠른 판정 규칙
 
@@ -149,7 +151,9 @@
 - 근거는 충분하고 즉시 대응이 필요한 crop stress면: `high`
 - `GT Master dry-back + 낮은 새벽 WC + 반복 잎 처짐 + EC 변동폭 과대`면: `high`
 - `GT Master`에서 drain이 너무 빨리 잡히고 EC가 안 떨어지면: `medium`에서 시작해 `direct drainage` 점검
+- `GT Master에서 feed EC 대비 drain EC 차이가 2.0mS/cm 이상이고 drain 비율이 20% 미만`이면: `high`, `create_alert + request_human_check` 필수, `observe_only` 단독 금지
 - `Delta 6.5 nursery + post-sunset humid + leaf wet duration 증가`면: `high`
+- `robot_task_prioritization`에서 후보 중 하나가 blocked면: `high`, `skip_area` 먼저
 - 검토/관찰 위주면: `medium`
 - 정보성 follow-up이면: `low`
 

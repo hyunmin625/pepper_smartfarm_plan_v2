@@ -1823,3 +1823,27 @@
 - Phase A~E 평가 artifact (`artifacts/reports/frontier_gemini_*`, `artifacts/reports/regrade/C_gemini_*`, `artifacts/reports/validator_postprocess/C_gemini_*`, `artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`)는 **역사 기록으로 보존**한다. 이들은 "왜 Gemini 경로를 폐기했는지"의 실측 근거다.
 - `scripts/evaluate_fine_tuned_model.py`의 `--provider {openai,gemini,minimax}` CLI 분기와 `scripts/apply_validator_postprocess.py`, `scripts/regrade_eval_results.py`의 gemini 파일 경로 대응 코드도 **유지**한다. 과거 jsonl 재채점/재검증 경로가 필요할 수 있어서다. 신규 Gemini 평가 실행은 계획에 없다.
 - `llm-orchestrator/llm_orchestrator/client.py`의 `GeminiCompletionClient` 구현도 **유지**한다. 제거는 더 큰 리팩터 변경이며 현재 의존 경로가 남아 있을 수 있다. 필요시 별도 과제로 이관한다.
+
+---
+
+## 2026-04-17 — Hybrid RRF retriever 벤치마크 (quota blocked) + blind50 residual 5건 rubric/validator 조정
+
+### Hybrid RRF retriever 벤치마크
+- `scripts/benchmark_hybrid_retriever.py` 신규. `evals/rag_retrieval_eval_set.jsonl` (110) + `evals/rag_stage_retrieval_eval_set.jsonl` (16) 총 **126 case**에 대해 recall@5, any_hit@5, MRR을 keyword / tfidf / openai / hybrid 4경로로 측정하는 벤치마크 툴.
+- **OpenAI quota 고갈**: `text-embedding-3-small` 호출이 429 `insufficient_quota`로 전량 실패. openai/hybrid retriever 본 라운드 측정 불가. 단일 `embeddings.create` 호출도 재현 실패.
+- Local-only 재실행 결과: **keyword 0.9444 / tfidf 0.7698**. 단 이 eval set은 token-rich 쿼리로 구성되어 keyword에 유리하다 — Phase F의 decision eval 250 case(keyword 0.164 / openai 0.352)와는 축이 다르다.
+- **운영 영향**: `.env`의 `OPS_API_RETRIEVER_TYPE=openai` 설정은 quota 복구 전까지 ops-api live 검색을 실패시킨다. 한시적으로 `OPS_API_RETRIEVER_TYPE=keyword`로 롤백 검토가 권장된다.
+- 결정 이관: hybrid 승격 여부 판정은 quota 복구 이후 Phase F 방식(decision eval 250 case)으로 재실행한다.
+- 산출물: `artifacts/reports/hybrid_retriever_benchmark.md` (포스트모템), `hybrid_retriever_benchmark.json` (quota-failed run raw), `hybrid_retriever_benchmark_local_only.md` + `.json` (keyword + tfidf).
+
+### blind50 validator 잔여 5건 처리 확정
+- 기준 리포트: `artifacts/reports/validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_blind_holdout50.md`. 잔여 5건 = `data_and_model 3 / risk_rubric_and_data 2`.
+- Phase K-1 fine-tune iteration 종결 이후 추가 corrective training submit은 옵션이 아니므로, 이번 라운드는 rubric 명시 보강 + validator scope 경계 명문화 + dataset scale-up 이관으로 처리했다.
+- **rubric 강화** (`docs/risk_level_rubric.md`):
+  - §4 `robot_task_prioritization`에 "후보 중 하나가 blocked면 high, skip_area 먼저" 엔트리 추가 — `blind-robot-004` 정렬
+  - §4 `rootzone_diagnosis / nutrient_risk`와 §5 빠른 판정 규칙에 "GT Master feed-drain EC 차이 2.0 이상 + drain 비율 20% 미만 → high, `create_alert + request_human_check` 필수, `observe_only` 단독 금지" 엔트리 추가 — `blind-expert-003` 정렬
+- **validator out-of-scope 경계 추가** (`docs/policy_output_validator_spec.md` §8): `GT Master EC gradient > 2.0 + drain rate < 20%`, `robot_task blocked candidate` 두 항목을 score-chasing 원칙에 따라 validator 신규 규칙 **금지** 목록에 추가했다. 기존 `GT Master dry-back`, `Delta 6.5 nursery cold+humid`와 같은 처리 원칙을 유지한다.
+- **dataset scale-up 이관**: `blind-action-004`, `blind-expert-010` (GT Master dry-back Cluster B) 2건은 rubric은 이미 충분하고 validator는 out-of-scope이므로, Phase K-1 후속 dataset scale-up 프로젝트에서 batch22 cluster B 24건과 함께 재투입한다.
+- **효과 범위**: rubric 변경은 ds_v11 출력을 바꾸지 않는다(fine-tune 종결). 본 작업은 (a) 향후 라벨 기준 통일, (b) shadow mode operator agreement 기준 명문화, (c) validator scope 경계 명문화로 다른 에이전트의 실수 HSV 규칙 추가 방지를 목표로 한다.
+- 계획 doc: `docs/blind50_residual_post_ds_v11_closure_plan.md` 신규. 5건별 처리 결정, 후속 트리거(shadow 50건 누적 또는 dataset scale-up 승인), validator 사용 금지 이유 명시.
+- `todo.md`의 L93 (blind50 잔여 5건 targeted fix 여부 확정)을 `[x]`로 닫았다.

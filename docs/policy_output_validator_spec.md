@@ -124,16 +124,19 @@ validator가 **직접 판단하지 않는 것**:
 
 ## 8. Validator Out-Of-Scope
 
-아래 두 유형은 현재 라운드에서 validator로 직접 고치지 않는다.
+아래 유형은 validator로 직접 고치지 않는다.
 
 - `GT Master dry-back + 낮은 새벽 WC + 반복 잎 처짐`
 - `Delta 6.5 nursery + post-sunset humid + leaf wet duration 증가`
+- `GT Master EC gradient > 2.0mS/cm + drain rate < 20%` (2026-04-17 추가)
+- `robot_task 후보 중 하나가 blocked` (2026-04-17 추가)
 
 이유:
 
-- 두 케이스는 hard safety invariant나 output schema 문제보다 `도메인 의미 일반화` 문제에 가깝다.
+- 위 케이스들은 hard safety invariant나 output schema 문제보다 `도메인 의미 일반화` 문제에 가깝다.
 - 여기까지 validator로 덮기 시작하면 score chasing 규칙이 되고, 제품 일반화에 불리하다.
-- 따라서 위 두 케이스는 `docs/risk_level_rubric.md`와 training sample batch13, Grodan rootzone 해석 규칙으로 해결한다.
+- 따라서 위 케이스들은 `docs/risk_level_rubric.md`와 dataset scale-up 시 training sample 재투입으로 해결한다.
+- 2026-04-17 blind50 잔여 5건의 최종 처리 계획은 [docs/blind50_residual_post_ds_v11_closure_plan.md](blind50_residual_post_ds_v11_closure_plan.md)에 고정한다.
 
 ## 7. 관련 문서
 
