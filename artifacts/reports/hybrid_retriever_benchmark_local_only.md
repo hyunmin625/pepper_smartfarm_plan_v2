@@ -1,0 +1,275 @@
+# Hybrid RRF retriever benchmark
+
+- eval case count: **126**
+- top-k: **5**
+- retrievers: keyword, tfidf
+
+## Aggregate
+
+| retriever | case_count | recall@k | any_hit@k | MRR | elapsed_sec |
+|---|---:|---:|---:|---:|---:|
+| **keyword** | 126 | 0.9444 | 0.9444 | 0.9114 | 1.16 |
+| **tfidf** | 126 | 0.7698 | 0.7698 | 0.6060 | 0.41 |
+
+## Per-category recall@k
+
+| category | n | keyword | tfidf |
+|---|---:|---:|---:|
+| ammonia_compost | 1 | 1.000 | 0.000 |
+| ammonia_remediation | 1 | 1.000 | 0.000 |
+| anthracnose_rain_spread | 1 | 1.000 | 1.000 |
+| anthracnose_rainshelter_sanitation | 1 | 1.000 | 1.000 |
+| aphid_coverage_resistance | 1 | 1.000 | 1.000 |
+| aphid_virus_spray_window | 1 | 1.000 | 1.000 |
+| boron_diagnosis | 1 | 1.000 | 1.000 |
+| boron_recovery | 1 | 1.000 | 1.000 |
+| budworm_pheromone_layout | 1 | 1.000 | 1.000 |
+| calcium_boron | 1 | 1.000 | 1.000 |
+| climate_heat | 1 | 0.000 | 1.000 |
+| cold_duration | 1 | 1.000 | 1.000 |
+| cold_injury_replanting | 1 | 1.000 | 1.000 |
+| cold_recovery | 1 | 1.000 | 1.000 |
+| crop_env_thresholds | 1 | 1.000 | 1.000 |
+| cultivar_fruitset | 1 | 1.000 | 1.000 |
+| cultivar_haevichi_filter | 1 | 1.000 | 1.000 |
+| cultivar_honggoeun | 1 | 1.000 | 0.000 |
+| cultivar_phytophthora | 1 | 1.000 | 1.000 |
+| cultivar_rubihong_filter | 1 | 1.000 | 1.000 |
+| curved_fruit_cropping_shift | 1 | 1.000 | 0.000 |
+| curved_fruit_heat | 1 | 1.000 | 1.000 |
+| drought_irrigation | 1 | 1.000 | 1.000 |
+| dry_storage_maintenance | 1 | 1.000 | 1.000 |
+| drying_precure | 1 | 1.000 | 1.000 |
+| drying_storage_barrier_uv | 1 | 1.000 | 0.000 |
+| establishment_herbicide_acidity | 1 | 1.000 | 1.000 |
+| establishment_remediation | 1 | 1.000 | 0.000 |
+| fertigation_ec | 1 | 1.000 | 1.000 |
+| filter_cheongyang_winter | 1 | 0.000 | 1.000 |
+| filter_cultivar_wongang | 1 | 0.000 | 1.000 |
+| filter_south_region | 1 | 1.000 | 1.000 |
+| firstfrost_flowerdrop | 1 | 1.000 | 1.000 |
+| flowerdrop_heavy_shading | 1 | 1.000 | 1.000 |
+| flowering_early_flower_removal | 1 | 1.000 | 0.000 |
+| flowering_gtmaster_ec_band | 1 | 1.000 | 0.000 |
+| flowering_pollination | 1 | 1.000 | 1.000 |
+| flowering_preventive_biocontrol | 1 | 1.000 | 0.000 |
+| flowering_temp_band | 1 | 1.000 | 0.000 |
+| forcing_energy_saving | 1 | 1.000 | 1.000 |
+| fruiting_cycle_refresh | 1 | 1.000 | 0.000 |
+| fruiting_forcing_yieldgain | 1 | 1.000 | 0.000 |
+| fusarium_rotation_liming | 1 | 1.000 | 1.000 |
+| fusarium_symptom_diff | 1 | 1.000 | 1.000 |
+| graymold_infection_window | 1 | 1.000 | 1.000 |
+| green_packaging_condensation | 1 | 1.000 | 1.000 |
+| green_storage_temperature | 1 | 1.000 | 1.000 |
+| hail_recovery | 1 | 1.000 | 0.000 |
+| harvest_80pct_shade_ripen | 1 | 1.000 | 0.000 |
+| harvest_pungency | 1 | 1.000 | 1.000 |
+| heat_injury_recovery | 1 | 1.000 | 1.000 |
+| hotair_split_drying | 1 | 1.000 | 1.000 |
+| house_drying_hygiene | 1 | 1.000 | 1.000 |
+| hydroponic_coir_prewash | 1 | 1.000 | 1.000 |
+| hydroponic_mixer_check | 1 | 1.000 | 0.000 |
+| hydroponic_postharvest_disinfection | 1 | 1.000 | 1.000 |
+| hydroponic_training | 1 | 1.000 | 1.000 |
+| irrigation_tensiometer | 1 | 1.000 | 1.000 |
+| leafminer_temperature_generation | 1 | 1.000 | 1.000 |
+| leafminer_three_spray | 1 | 1.000 | 1.000 |
+| lowtemp_recovery | 1 | 1.000 | 1.000 |
+| metadata_filter_section | 1 | 1.000 | 1.000 |
+| metadata_filter_stage_trust | 1 | 1.000 | 1.000 |
+| monsoon_prevention | 1 | 1.000 | 1.000 |
+| morning_light | 1 | 1.000 | 1.000 |
+| normal_schedule | 1 | 1.000 | 1.000 |
+| nursery_curling_overwet | 1 | 1.000 | 1.000 |
+| nursery_graft_healing | 1 | 1.000 | 1.000 |
+| nursery_grodan_delta_wetting | 1 | 1.000 | 0.000 |
+| nursery_seedling_purchase_qc | 1 | 1.000 | 0.000 |
+| nursery_seedling_window | 1 | 1.000 | 1.000 |
+| nursery_transplant | 1 | 1.000 | 1.000 |
+| nutrient_diagnosis | 1 | 1.000 | 1.000 |
+| orius_monitoring | 1 | 1.000 | 1.000 |
+| orius_release | 1 | 1.000 | 1.000 |
+| overaged_seedling_deep | 1 | 0.000 | 0.000 |
+| pest_disease_vision | 1 | 0.000 | 1.000 |
+| pesticide_greenhouse_winter_filter | 1 | 1.000 | 1.000 |
+| pesticide_mix_order | 1 | 1.000 | 0.000 |
+| pesticide_residue_concentration | 1 | 1.000 | 1.000 |
+| physiological_disorders | 1 | 1.000 | 0.000 |
+| phytophthora_early_incidence | 1 | 1.000 | 1.000 |
+| phytophthora_phosphite | 1 | 1.000 | 1.000 |
+| phytophthora_rye_highridge | 1 | 1.000 | 0.000 |
+| plug_substrate | 1 | 1.000 | 1.000 |
+| policy_safety | 1 | 1.000 | 0.000 |
+| poor_drainage_overwet | 1 | 1.000 | 1.000 |
+| poor_drainage_remediation | 1 | 1.000 | 1.000 |
+| postharvest_storage | 1 | 1.000 | 1.000 |
+| postharvest_wash_hygiene | 1 | 1.000 | 1.000 |
+| powder_packaging_oxygen | 1 | 1.000 | 1.000 |
+| rain_shelter_calendar | 1 | 1.000 | 0.000 |
+| rainshelter_density | 1 | 1.000 | 1.000 |
+| rainshelter_fertigation_interval | 1 | 1.000 | 1.000 |
+| rainshelter_fertigation_salinity | 1 | 1.000 | 1.000 |
+| rainshelter_fertilizer_ec | 1 | 1.000 | 1.000 |
+| rainshelter_frost_cover | 1 | 1.000 | 1.000 |
+| rainshelter_lowlight_pungency | 1 | 1.000 | 1.000 |
+| rainshelter_lowlight_yield | 1 | 0.000 | 1.000 |
+| rainshelter_mulch_leaching | 1 | 1.000 | 1.000 |
+| rainshelter_side_shoot | 1 | 1.000 | 1.000 |
+| rainshelter_structure | 1 | 1.000 | 1.000 |
+| rainshelter_topping | 1 | 1.000 | 0.000 |
+| red_storage_ethylene | 1 | 1.000 | 1.000 |
+| root_browning_profile | 1 | 1.000 | 1.000 |
+| root_browning_winter_heating | 1 | 1.000 | 1.000 |
+| rootknot_fumigation | 1 | 1.000 | 1.000 |
+| rootzone_overwet | 1 | 1.000 | 1.000 |
+| sclerotinia_infection_window | 1 | 1.000 | 1.000 |
+| sclerotinia_mulch_drip | 1 | 1.000 | 1.000 |
+| seed_priming | 1 | 1.000 | 1.000 |
+| seedling_window | 1 | 1.000 | 1.000 |
+| semiforcing_schedule | 1 | 1.000 | 1.000 |
+| soft_rot_insect_wound | 1 | 1.000 | 1.000 |
+| southern_blight_diagnosis | 1 | 1.000 | 1.000 |
+| sundry_rack | 1 | 1.000 | 1.000 |
+| transplant_gtmaster_rooting | 1 | 1.000 | 0.000 |
+| transplant_lowtemp_duration | 1 | 1.000 | 0.000 |
+| transplant_overaged_high_ec | 1 | 1.000 | 0.000 |
+| transplant_stage | 1 | 1.000 | 1.000 |
+| transplant_stage_window | 1 | 1.000 | 1.000 |
+| typhoon_response | 1 | 1.000 | 0.000 |
+| white_star_spot_sanitation | 1 | 1.000 | 0.000 |
+| whitefly_plastic_house_filter | 1 | 0.000 | 1.000 |
+| whitefly_swirskii_release | 1 | 1.000 | 1.000 |
+| whitefly_threshold_control | 1 | 1.000 | 1.000 |
+
+## Head-to-head winners (by category)
+
+| category | n | best retriever | recall@k | runner-up | recall@k |
+|---|---:|---|---:|---|---:|
+| ammonia_compost | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| ammonia_remediation | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| anthracnose_rain_spread | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| anthracnose_rainshelter_sanitation | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| aphid_coverage_resistance | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| aphid_virus_spray_window | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| boron_diagnosis | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| boron_recovery | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| budworm_pheromone_layout | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| calcium_boron | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| climate_heat | 1 | **tfidf** | 1.000 | keyword | 0.000 |
+| cold_duration | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| cold_injury_replanting | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| cold_recovery | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| crop_env_thresholds | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| cultivar_fruitset | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| cultivar_haevichi_filter | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| cultivar_honggoeun | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| cultivar_phytophthora | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| cultivar_rubihong_filter | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| curved_fruit_cropping_shift | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| curved_fruit_heat | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| drought_irrigation | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| dry_storage_maintenance | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| drying_precure | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| drying_storage_barrier_uv | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| establishment_herbicide_acidity | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| establishment_remediation | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| fertigation_ec | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| filter_cheongyang_winter | 1 | **tfidf** | 1.000 | keyword | 0.000 |
+| filter_cultivar_wongang | 1 | **tfidf** | 1.000 | keyword | 0.000 |
+| filter_south_region | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| firstfrost_flowerdrop | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| flowerdrop_heavy_shading | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| flowering_early_flower_removal | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| flowering_gtmaster_ec_band | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| flowering_pollination | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| flowering_preventive_biocontrol | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| flowering_temp_band | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| forcing_energy_saving | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| fruiting_cycle_refresh | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| fruiting_forcing_yieldgain | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| fusarium_rotation_liming | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| fusarium_symptom_diff | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| graymold_infection_window | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| green_packaging_condensation | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| green_storage_temperature | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| hail_recovery | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| harvest_80pct_shade_ripen | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| harvest_pungency | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| heat_injury_recovery | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| hotair_split_drying | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| house_drying_hygiene | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| hydroponic_coir_prewash | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| hydroponic_mixer_check | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| hydroponic_postharvest_disinfection | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| hydroponic_training | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| irrigation_tensiometer | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| leafminer_temperature_generation | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| leafminer_three_spray | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| lowtemp_recovery | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| metadata_filter_section | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| metadata_filter_stage_trust | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| monsoon_prevention | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| morning_light | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| normal_schedule | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| nursery_curling_overwet | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| nursery_graft_healing | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| nursery_grodan_delta_wetting | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| nursery_seedling_purchase_qc | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| nursery_seedling_window | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| nursery_transplant | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| nutrient_diagnosis | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| orius_monitoring | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| orius_release | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| overaged_seedling_deep | 1 | **keyword** | 0.000 | tfidf | 0.000 |
+| pest_disease_vision | 1 | **tfidf** | 1.000 | keyword | 0.000 |
+| pesticide_greenhouse_winter_filter | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| pesticide_mix_order | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| pesticide_residue_concentration | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| physiological_disorders | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| phytophthora_early_incidence | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| phytophthora_phosphite | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| phytophthora_rye_highridge | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| plug_substrate | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| policy_safety | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| poor_drainage_overwet | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| poor_drainage_remediation | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| postharvest_storage | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| postharvest_wash_hygiene | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| powder_packaging_oxygen | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rain_shelter_calendar | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| rainshelter_density | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_fertigation_interval | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_fertigation_salinity | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_fertilizer_ec | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_frost_cover | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_lowlight_pungency | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_lowlight_yield | 1 | **tfidf** | 1.000 | keyword | 0.000 |
+| rainshelter_mulch_leaching | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_side_shoot | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_structure | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rainshelter_topping | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| red_storage_ethylene | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| root_browning_profile | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| root_browning_winter_heating | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rootknot_fumigation | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| rootzone_overwet | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| sclerotinia_infection_window | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| sclerotinia_mulch_drip | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| seed_priming | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| seedling_window | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| semiforcing_schedule | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| soft_rot_insect_wound | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| southern_blight_diagnosis | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| sundry_rack | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| transplant_gtmaster_rooting | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| transplant_lowtemp_duration | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| transplant_overaged_high_ec | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| transplant_stage | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| transplant_stage_window | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| typhoon_response | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| white_star_spot_sanitation | 1 | **keyword** | 1.000 | tfidf | 0.000 |
+| whitefly_plastic_house_filter | 1 | **tfidf** | 1.000 | keyword | 0.000 |
+| whitefly_swirskii_release | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+| whitefly_threshold_control | 1 | **keyword** | 1.000 | tfidf | 1.000 |
+

@@ -1,0 +1,5547 @@
+{
+  "k": 5,
+  "case_count": 126,
+  "eval_files": [
+    "evals/rag_retrieval_eval_set.jsonl",
+    "evals/rag_stage_retrieval_eval_set.jsonl"
+  ],
+  "retrievers": [
+    "keyword",
+    "tfidf"
+  ],
+  "rag_index_path": "artifacts/rag_index/pepper_openai_embed_index.json",
+  "results": [
+    {
+      "name": "keyword",
+      "k": 5,
+      "case_count": 126,
+      "elapsed_sec": 1.16,
+      "avg_recall@k": 0.9444,
+      "avg_any_hit@k": 0.9444,
+      "MRR": 0.9114,
+      "categories": {
+        "climate_heat": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "rootzone_overwet": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fertigation_ec": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "pest_disease_vision": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "nursery_transplant": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "policy_safety": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "flowering_pollination": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "irrigation_tensiometer": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "postharvest_storage": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rain_shelter_calendar": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "lowtemp_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "monsoon_prevention": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "typhoon_response": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "hail_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "metadata_filter_stage_trust": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "metadata_filter_section": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "green_storage_temperature": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "green_packaging_condensation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "red_storage_ethylene": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "dry_storage_maintenance": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "powder_packaging_oxygen": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "house_drying_hygiene": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "hotair_split_drying": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "postharvest_wash_hygiene": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "plug_substrate": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "drought_irrigation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cold_injury_replanting": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "heat_injury_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nutrient_diagnosis": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "calcium_boron": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "physiological_disorders": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "morning_light": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_structure": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_fertilizer_ec": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_lowlight_yield": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "rainshelter_lowlight_pungency": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_fertigation_salinity": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_mulch_leaching": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_frost_cover": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_density": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "crop_env_thresholds": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "seed_priming": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "seedling_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "transplant_stage": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "harvest_pungency": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "semiforcing_schedule": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "normal_schedule": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "forcing_energy_saving": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_phytophthora": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_fruitset": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_honggoeun": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "hydroponic_coir_prewash": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "hydroponic_mixer_check": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "hydroponic_training": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "hydroponic_postharvest_disinfection": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "root_browning_profile": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "root_browning_winter_heating": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "establishment_herbicide_acidity": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "establishment_remediation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "boron_diagnosis": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "boron_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "orius_release": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "orius_monitoring": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cold_duration": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cold_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "curved_fruit_heat": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "curved_fruit_cropping_shift": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "filter_cultivar_wongang": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "filter_cheongyang_winter": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "filter_south_region": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "ammonia_compost": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "ammonia_remediation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "poor_drainage_overwet": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "poor_drainage_remediation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "flowerdrop_heavy_shading": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nursery_curling_overwet": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "firstfrost_flowerdrop": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "overaged_seedling_deep": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "cultivar_haevichi_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_rubihong_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "phytophthora_early_incidence": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "phytophthora_rye_highridge": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "phytophthora_phosphite": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "anthracnose_rain_spread": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "anthracnose_rainshelter_sanitation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "whitefly_threshold_control": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "whitefly_swirskii_release": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "aphid_virus_spray_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "aphid_coverage_resistance": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "budworm_pheromone_layout": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_side_shoot": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_topping": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_fertigation_interval": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "drying_precure": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "sundry_rack": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "whitefly_plastic_house_filter": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "sclerotinia_infection_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "sclerotinia_mulch_drip": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fusarium_symptom_diff": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fusarium_rotation_liming": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "graymold_infection_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "white_star_spot_sanitation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "southern_blight_diagnosis": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "soft_rot_insect_wound": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "leafminer_temperature_generation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "leafminer_three_spray": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rootknot_fumigation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "pesticide_residue_concentration": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "pesticide_mix_order": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "pesticide_greenhouse_winter_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nursery_seedling_purchase_qc": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nursery_grodan_delta_wetting": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nursery_graft_healing": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nursery_seedling_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "transplant_overaged_high_ec": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "transplant_stage_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "transplant_lowtemp_duration": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "transplant_gtmaster_rooting": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "flowering_temp_band": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "flowering_early_flower_removal": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fruiting_forcing_yieldgain": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "flowering_preventive_biocontrol": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "flowering_gtmaster_ec_band": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fruiting_cycle_refresh": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "harvest_80pct_shade_ripen": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "drying_storage_barrier_uv": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        }
+      },
+      "per_case": [
+        {
+          "case_id": "rag-eval-001",
+          "category": "climate_heat",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenhouse-climate-001",
+            "farm-case-001",
+            "pepper-broad-mite-symptom-001",
+            "pepper-calcium-boron-001",
+            "pepper-cold-injury-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-002",
+          "category": "rootzone_overwet",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rootzone-001",
+            "pepper-boron-excess-recovery-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-root-browning-winter-heating-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-003",
+          "category": "fertigation_ec",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-001",
+            "pepper-hydroponic-mixer-check-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-forcing-technology-yieldgain-001",
+            "pepper-hydroponic-irrigation-volume-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-004",
+          "category": "pest_disease_vision",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-anthracnose-rainshelter-sanitation-002",
+            "pepper-harvest-80pct-shade-ripen-001",
+            "pepper-monsoon-prevention-001",
+            "pepper-red-harvest-window-001",
+            "pepper-typhoon-response-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-005",
+          "category": "nursery_transplant",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-lifecycle-001",
+            "pepper-normal-schedule-001",
+            "pepper-nursery-quality-002",
+            "pepper-openfield-calendar-001",
+            "pepper-rain-shelter-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-006",
+          "category": "policy_safety",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-agent-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-007",
+          "category": "flowering_pollination",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-flowering-pollen-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-cultivar-fruitset-stability-001",
+            "pepper-cultivar-selection-green-001",
+            "pepper-dampingoff-prevention-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-008",
+          "category": "irrigation_tensiometer",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-irrigation-tensiometer-001",
+            "pepper-heat-injury-001",
+            "pepper-physiological-disorders-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-009",
+          "category": "postharvest_storage",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-green-packaging-condensation-001",
+            "pepper-green-storage-temperature-001",
+            "pepper-postharvest-wash-hygiene-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-010",
+          "category": "rain_shelter_calendar",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rain-shelter-calendar-001",
+            "pepper-greenhouse-climate-001",
+            "pepper-humidity-fruitset-001",
+            "pepper-irrigation-tensiometer-001",
+            "pepper-rainshelter-density-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-011",
+          "category": "lowtemp_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-calcium-boron-001",
+            "pepper-cold-injury-001",
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-cultivar-selection-green-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-012",
+          "category": "monsoon_prevention",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-monsoon-prevention-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-phytophthora-early-incidence-002",
+            "farm-case-004",
+            "pepper-cultivar-phytophthora-resistance-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-013",
+          "category": "typhoon_response",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-typhoon-response-001",
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-drought-001",
+            "pepper-heat-injury-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-014",
+          "category": "hail_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-hail-recovery-001",
+            "pepper-rainshelter-density-001",
+            "pepper-rainshelter-side-shoot-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-015",
+          "category": "metadata_filter_stage_trust",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grafting-lowtemp-yield-001",
+            "pepper-transplant-001",
+            "pepper-flowering-pollen-001",
+            "pepper-fusarium-temperature-window-001",
+            "pepper-greenhouse-climate-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-016",
+          "category": "metadata_filter_section",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-drying-001",
+            "pepper-dry-storage-001",
+            "pepper-calcium-boron-001",
+            "pepper-crop-harvest-pungency-001",
+            "pepper-cultivar-selection-dry-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-017",
+          "category": "green_storage_temperature",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-green-storage-temperature-001",
+            "pepper-green-packaging-condensation-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-barrierbag-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-018",
+          "category": "green_packaging_condensation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-green-packaging-condensation-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-calcium-boron-001",
+            "pepper-graymold-infection-window-001",
+            "pepper-green-harvest-logistics-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-019",
+          "category": "red_storage_ethylene",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-red-storage-ethylene-001",
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-barrierbag-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-early-flower-removal-yield-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-020",
+          "category": "dry_storage_maintenance",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dry-storage-maintenance-001",
+            "pepper-dry-storage-001",
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-shading-strategy-001",
+            "pepper-tobacco-budworm-peakwindow-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-021",
+          "category": "powder_packaging_oxygen",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-green-storage-temperature-001",
+            "pepper-greenpepper-type-001",
+            "pepper-rainshelter-lowlight-pungency-001",
+            "pepper-cultivar-honggoeun-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-022",
+          "category": "house_drying_hygiene",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-house-drying-hygiene-001",
+            "pepper-mite-predator-001",
+            "pepper-physiological-disorders-001",
+            "farm-case-006",
+            "pepper-broad-mite-symptom-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-023",
+          "category": "hotair_split_drying",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hotair-drying-split-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-024",
+          "category": "postharvest_wash_hygiene",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-postharvest-wash-hygiene-001",
+            "farm-case-009",
+            "pepper-budworm-spray-window-001",
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-maintenance-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-025",
+          "category": "plug_substrate",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-plug-substrate-001",
+            "pepper-calcium-boron-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-soil-001",
+            "pepper-greenhouse-poor-drainage-overwet-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-026",
+          "category": "drought_irrigation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-drought-001",
+            "pepper-cultivar-selection-dry-001",
+            "pepper-phytophthora-rye-highridge-002"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-027",
+          "category": "cold_injury_replanting",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cold-injury-001",
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-flowering-pollen-001",
+            "pepper-humidity-fruitset-001",
+            "pepper-plantfactory-healing-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-028",
+          "category": "heat_injury_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-heat-injury-001",
+            "pepper-broad-mite-symptom-001",
+            "pepper-calcium-boron-001",
+            "pepper-drought-001",
+            "farm-case-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-029",
+          "category": "nutrient_diagnosis",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-calcium-boron-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-physiological-disorders-001",
+            "pepper-dampingoff-prevention-001",
+            "pepper-powdery-mildew-prevention-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-030",
+          "category": "calcium_boron",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-calcium-boron-001",
+            "pepper-broad-mite-symptom-001",
+            "pepper-drought-001",
+            "pepper-heat-injury-001",
+            "pepper-irrigation-tensiometer-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-031",
+          "category": "physiological_disorders",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-physiological-disorders-001",
+            "pepper-flowering-pollen-001",
+            "pepper-irrigation-tensiometer-001",
+            "pepper-firstfrost-flowerdrop-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-032",
+          "category": "morning_light",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-morning-light-001",
+            "pepper-humidity-fruitset-001",
+            "pepper-budworm-pheromone-layout-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-drought-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-033",
+          "category": "rainshelter_structure",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-structure-001",
+            "pepper-rainshelter-topping-001",
+            "pepper-early-flower-removal-yield-001",
+            "pepper-greenhouse-climate-001",
+            "pepper-humidity-fruitset-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-034",
+          "category": "rainshelter_fertilizer_ec",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-soil-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-calcium-boron-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-035",
+          "category": "rainshelter_lowlight_yield",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-curved-fruit-cropping-shift-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-grafting-lowtemp-yield-001",
+            "pepper-green-harvest-logistics-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-036",
+          "category": "rainshelter_lowlight_pungency",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-lowlight-pungency-001",
+            "pepper-calcium-boron-001",
+            "pepper-cultivar-selection-green-001",
+            "pepper-dry-storage-barrierbag-001",
+            "pepper-grafting-fruit-traits-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-037",
+          "category": "rainshelter_fertigation_salinity",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-fertilizer-ec-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-038",
+          "category": "rainshelter_mulch_leaching",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-mulch-leaching-001",
+            "pepper-budworm-damage-lifecycle-001",
+            "pepper-ipm-scouting-hygiene-001",
+            "pepper-leafminer-three-spray-001",
+            "pepper-pesticide-phytotoxicity-causes-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-039",
+          "category": "rainshelter_frost_cover",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-frost-cover-001",
+            "pepper-forcing-technology-yieldgain-001",
+            "pepper-curved-fruit-heat-rootzone-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-crop-seed-priming-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-040",
+          "category": "rainshelter_density",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-density-001",
+            "pepper-anthracnose-preventive-spray-002",
+            "pepper-anthracnose-resistance-rotation-003",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-budworm-pheromone-layout-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-041",
+          "category": "crop_env_thresholds",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-env-thresholds-001",
+            "pepper-nursery-virus-vector-001",
+            "pepper-phytophthora-001",
+            "pepper-phytophthora-phosphite-002",
+            "pepper-greenhouse-poor-drainage-overwet-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-042",
+          "category": "seed_priming",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-seed-priming-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-drying-precure-001",
+            "pepper-forcing-fruitset-temperature-band-001",
+            "pepper-grafting-healing-management-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-043",
+          "category": "seedling_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-seedling-window-001",
+            "pepper-flowering-pollen-001",
+            "pepper-grafting-healing-management-001",
+            "pepper-greenhouse-climate-001",
+            "pepper-nursery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-044",
+          "category": "transplant_stage",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-transplant-stage-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-cold-injury-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-early-flower-removal-yield-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-045",
+          "category": "harvest_pungency",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-harvest-pungency-001",
+            "pepper-drying-precure-001",
+            "pepper-harvest-001",
+            "pepper-harvest-days-by-type-001",
+            "pepper-drying-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-046",
+          "category": "semiforcing_schedule",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-semiforcing-schedule-001",
+            "pepper-normal-schedule-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-openfield-calendar-001",
+            "pepper-rain-shelter-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-047",
+          "category": "normal_schedule",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-normal-schedule-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-openfield-calendar-001",
+            "pepper-rain-shelter-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-048",
+          "category": "forcing_energy_saving",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-forcing-energy-saving-001",
+            "pepper-forcing-technology-yieldgain-001",
+            "pepper-curved-fruit-cropping-shift-001",
+            "pepper-crop-seed-priming-001",
+            "pepper-forcing-fruitset-temperature-band-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-049",
+          "category": "cultivar_phytophthora",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-grafting-disease-resistance-001",
+            "pepper-phytophthora-cultural-prevention-003",
+            "pepper-anthracnose-resistance-rotation-003"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-050",
+          "category": "cultivar_fruitset",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-fruitset-stability-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-flowering-pollen-001",
+            "pepper-forcing-fruitset-temperature-band-001",
+            "pepper-greenpepper-type-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-051",
+          "category": "cultivar_honggoeun",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-honggoeun-001",
+            "pepper-cultivar-rubihong-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-052",
+          "category": "hydroponic_coir_prewash",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-coir-prewash-001",
+            "pepper-cold-injury-001",
+            "pepper-flowering-pollen-001",
+            "pepper-grafting-storage-001",
+            "pepper-heat-injury-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-053",
+          "category": "hydroponic_mixer_check",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-mixer-check-001",
+            "pepper-hydroponic-001",
+            "pepper-calcium-boron-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-plug-substrate-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-054",
+          "category": "hydroponic_training",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-training-001",
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-ipm-scouting-hygiene-001",
+            "pepper-rainshelter-density-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-055",
+          "category": "hydroponic_postharvest_disinfection",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-ipm-scouting-hygiene-001",
+            "pepper-hydroponic-postharvest-disinfection-001",
+            "pepper-bacterial-spot-hotwater-seed-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-dampingoff-prevention-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-056",
+          "category": "root_browning_profile",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-rootzone-001",
+            "pepper-dry-storage-001",
+            "pepper-green-storage-temperature-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-057",
+          "category": "root_browning_winter_heating",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-winter-heating-001",
+            "pepper-dampingoff-prevention-001",
+            "pepper-graymold-temperature-range-001",
+            "pepper-irrigation-tensiometer-001",
+            "pepper-orius-release-monitoring-002"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-058",
+          "category": "establishment_herbicide_acidity",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-establishment-herbicide-acidity-001",
+            "farm-case-003",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-establishment-remediation-001",
+            "pepper-rootzone-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-059",
+          "category": "establishment_remediation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-establishment-remediation-001",
+            "pepper-root-browning-winter-heating-001",
+            "pepper-phytophthora-rye-highridge-002",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-whitefly-trap-threshold-002"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-060",
+          "category": "boron_diagnosis",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-boron-excess-diagnosis-001",
+            "pepper-calcium-boron-001",
+            "pepper-flowering-pollen-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-boron-excess-recovery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-061",
+          "category": "boron_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-boron-excess-recovery-001",
+            "pepper-boron-excess-diagnosis-001",
+            "pepper-establishment-ammonia-remediation-001",
+            "pepper-budworm-damage-lifecycle-001",
+            "pepper-calcium-boron-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-062",
+          "category": "orius_release",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-release-monitoring-002",
+            "pepper-orius-release-timing-001",
+            "pepper-orius-monitoring-001",
+            "pepper-green-harvest-logistics-001",
+            "pepper-heat-injury-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-063",
+          "category": "orius_monitoring",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-monitoring-001",
+            "pepper-orius-release-monitoring-002",
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-whitefly-biocontrol-repeat-001",
+            "pepper-nursery-curling-recovery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-064",
+          "category": "cold_duration",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-duration-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-drought-001",
+            "pepper-dry-storage-barrierbag-001",
+            "pepper-drying-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-065",
+          "category": "cold_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-recovery-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-calcium-boron-001",
+            "pepper-transplant-cold-duration-001",
+            "pepper-aphid-virus-biocontrol-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-066",
+          "category": "curved_fruit_heat",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-curved-fruit-heat-rootzone-001",
+            "pepper-nursery-curling-recovery-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-crop-seed-priming-001",
+            "pepper-dry-storage-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-067",
+          "category": "curved_fruit_cropping_shift",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-curved-fruit-cropping-shift-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-normal-schedule-001",
+            "pepper-budworm-spray-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-068",
+          "category": "filter_cultivar_wongang",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-phytophthora-cultural-prevention-003",
+            "pepper-anthracnose-resistance-rotation-003",
+            "pepper-aphid-coverage-resistance-001",
+            "pepper-bacterial-spot-sanitation-resistance-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-069",
+          "category": "filter_cheongyang_winter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dampingoff-prevention-001",
+            "pepper-flowering-pollen-001",
+            "pepper-grafting-lowtemp-yield-001",
+            "pepper-graymold-infection-window-001",
+            "pepper-greenhouse-climate-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-070",
+          "category": "filter_south_region",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-curved-fruit-cropping-shift-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-071",
+          "category": "ammonia_compost",
+          "expected_count": 1,
+          "top_ids": [
+            "farm-case-003",
+            "pepper-establishment-ammonia-compost-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-root-soil-physical-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-072",
+          "category": "ammonia_remediation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-establishment-ammonia-remediation-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-dampingoff-prevention-001",
+            "pepper-forcing-technology-yieldgain-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-073",
+          "category": "poor_drainage_overwet",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-grafting-healing-management-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-flowering-pollen-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-074",
+          "category": "poor_drainage_remediation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenhouse-poor-drainage-remediation-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-forcing-fruitset-temperature-band-001",
+            "pepper-green-packaging-condensation-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-075",
+          "category": "flowerdrop_heavy_shading",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-flowerdrop-heavy-shading-001",
+            "pepper-yield-leaf-fruit-balance-001",
+            "pepper-yield-shade-humidity-balance-001",
+            "pepper-drought-001",
+            "pepper-green-storage-temperature-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-076",
+          "category": "nursery_curling_overwet",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-nursery-curling-overwet-001",
+            "pepper-nursery-curling-recovery-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-calcium-boron-001",
+            "pepper-dampingoff-prevention-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-077",
+          "category": "firstfrost_flowerdrop",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-firstfrost-flowerdrop-001",
+            "pepper-firstfrost-terminate-crop-001",
+            "pepper-drought-001",
+            "pepper-heat-injury-001",
+            "pepper-rain-shelter-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-078",
+          "category": "overaged_seedling_deep",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-phytophthora-001",
+            "pepper-southern-blight-early-fungicide-001",
+            "farm-case-010",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-establishment-ammonia-compost-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-079",
+          "category": "cultivar_haevichi_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-openfield-calendar-001",
+            "pepper-greenhouse-pest-preventive-biocontrol-window-001",
+            "pepper-lifecycle-001",
+            "pepper-normal-schedule-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-080",
+          "category": "cultivar_rubihong_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-rubihong-001",
+            "pepper-budworm-pheromone-layout-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-flowering-pollen-001",
+            "pepper-greenhouse-climate-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-081",
+          "category": "phytophthora_early_incidence",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-phytophthora-early-incidence-002",
+            "pepper-crop-transplant-stage-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-monsoon-prevention-001",
+            "pepper-aphid-virus-biocontrol-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-082",
+          "category": "phytophthora_rye_highridge",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-phytophthora-rye-highridge-002",
+            "pepper-crop-env-thresholds-001",
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-cultivar-selection-dry-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-083",
+          "category": "phytophthora_phosphite",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-phytophthora-phosphite-002",
+            "pepper-phytophthora-phosphite-003",
+            "pepper-budworm-spray-window-001",
+            "pepper-calcium-boron-001",
+            "pepper-crop-env-thresholds-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-084",
+          "category": "anthracnose_rain_spread",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-anthracnose-rain-spread-002",
+            "pepper-anthracnose-preventive-spray-002",
+            "pepper-anthracnose-rainshelter-sanitation-002",
+            "pepper-anthracnose-rain-spray-003",
+            "pepper-anthracnose-resistance-rotation-003"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-085",
+          "category": "anthracnose_rainshelter_sanitation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-anthracnose-rainshelter-sanitation-002",
+            "pepper-humidity-fruitset-001",
+            "pepper-monsoon-prevention-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-graymold-alternating-fungicide-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-086",
+          "category": "whitefly_threshold_control",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-whitefly-threshold-control-001",
+            "pepper-whitefly-biocontrol-repeat-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-green-harvest-logistics-001",
+            "pepper-leafminer-three-spray-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-087",
+          "category": "whitefly_swirskii_release",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-budworm-pheromone-layout-001",
+            "pepper-grafting-storage-001",
+            "pepper-harvest-80pct-shade-ripen-001",
+            "pepper-humidity-fruitset-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-088",
+          "category": "aphid_virus_spray_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-greenhouse-pest-preventive-biocontrol-window-001",
+            "pepper-normal-schedule-001",
+            "pepper-nursery-virus-vector-001",
+            "pepper-openfield-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-089",
+          "category": "aphid_coverage_resistance",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-aphid-coverage-resistance-001",
+            "pepper-pesticide-phytotoxicity-causes-001",
+            "pepper-pesticide-postwash-log-001",
+            "pepper-anthracnose-resistance-rotation-003",
+            "pepper-aphid-virus-biocontrol-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-090",
+          "category": "budworm_pheromone_layout",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-budworm-pheromone-layout-001",
+            "pepper-spidermite-hotdry-risk-002",
+            "pepper-crop-seedling-window-001",
+            "pepper-flowering-pollen-001",
+            "pepper-grafting-storage-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-091",
+          "category": "rainshelter_side_shoot",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-flowering-pollen-001",
+            "pepper-greenhouse-climate-001",
+            "pepper-humidity-fruitset-001",
+            "pepper-irrigation-tensiometer-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-092",
+          "category": "rainshelter_topping",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-topping-001",
+            "pepper-grafting-storage-001",
+            "pepper-rainshelter-structure-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-093",
+          "category": "rainshelter_fertigation_interval",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-early-flower-removal-yield-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-094",
+          "category": "drying_precure",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-drying-precure-001",
+            "pepper-harvest-001",
+            "pepper-crop-harvest-pungency-001",
+            "pepper-crop-seed-priming-001",
+            "pepper-early-flower-removal-yield-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-095",
+          "category": "sundry_rack",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sundry-rack-001",
+            "pepper-heat-injury-001",
+            "pepper-house-drying-hygiene-001",
+            "pepper-mite-predator-001",
+            "pepper-orius-release-monitoring-002"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-096",
+          "category": "whitefly_plastic_house_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-establishment-ammonia-remediation-001",
+            "pepper-aphid-virus-biocontrol-001",
+            "pepper-cold-injury-001",
+            "pepper-crop-harvest-pungency-001",
+            "pepper-drying-precure-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-097",
+          "category": "sclerotinia_infection_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sclerotinia-infection-window-001",
+            "pepper-grafting-storage-001",
+            "pepper-harvest-80pct-shade-ripen-001",
+            "pepper-postharvest-wash-hygiene-001",
+            "pepper-rain-shelter-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-098",
+          "category": "sclerotinia_mulch_drip",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sclerotinia-mulch-drip-001",
+            "pepper-phytophthora-rye-highridge-002",
+            "pepper-sclerotinia-canopy-nitrogen-001",
+            "pepper-sclerotinia-infection-window-001",
+            "pepper-sclerotinia-pathogen-survival-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-099",
+          "category": "fusarium_symptom_diff",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-fusarium-symptom-diff-001",
+            "pepper-fusarium-acidic-sandy-soil-001",
+            "pepper-fusarium-rotation-liming-001",
+            "pepper-fusarium-seed-survival-001",
+            "pepper-fusarium-temperature-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-100",
+          "category": "fusarium_rotation_liming",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-fusarium-rotation-liming-001",
+            "pepper-calcium-boron-001",
+            "pepper-fusarium-acidic-sandy-soil-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-crop-env-thresholds-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-101",
+          "category": "graymold_infection_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-graymold-infection-window-001",
+            "pepper-graymold-alternating-fungicide-001",
+            "pepper-graymold-temperature-range-001",
+            "pepper-graymold-ventilation-density-001",
+            "pepper-graymold-wound-flower-entry-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-102",
+          "category": "white_star_spot_sanitation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-white-star-spot-sanitation-001",
+            "pepper-bacterial-spot-nursery-symptom-001",
+            "pepper-drought-001",
+            "pepper-white-star-spot-ecology-001",
+            "pepper-white-star-spot-symptom-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-103",
+          "category": "southern_blight_diagnosis",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-southern-blight-diagnosis-001",
+            "farm-case-010",
+            "pepper-southern-blight-high-temperature-001",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-crop-harvest-pungency-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-104",
+          "category": "soft_rot_insect_wound",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-soft-rot-wound-insect-prevention-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-budworm-damage-lifecycle-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-ipm-scouting-hygiene-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-105",
+          "category": "leafminer_temperature_generation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-leafminer-temperature-generation-001",
+            "pepper-anthracnose-preventive-spray-002",
+            "pepper-anthracnose-rain-spray-003",
+            "pepper-aphid-virus-biocontrol-001",
+            "pepper-bacterial-spot-high-temp-wound-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-106",
+          "category": "leafminer_three_spray",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-leafminer-three-spray-001",
+            "pepper-budworm-damage-lifecycle-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-rainshelter-mulch-leaching-001",
+            "pepper-rainshelter-side-shoot-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-107",
+          "category": "rootknot_fumigation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rootknot-fumigation-sealing-001",
+            "pepper-rootknot-solarization-rice-rotation-001",
+            "pepper-early-flower-removal-yield-001",
+            "pepper-green-storage-temperature-001",
+            "pepper-leafminer-three-spray-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-108",
+          "category": "pesticide_residue_concentration",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-pesticide-residue-concentration-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-pesticide-adjuvant-compatibility-001",
+            "pepper-pesticide-export-mrl-selection-001",
+            "pepper-pesticide-phytotoxicity-causes-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-109",
+          "category": "pesticide_mix_order",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-pesticide-mix-order-001",
+            "pepper-pesticide-postwash-log-001",
+            "pepper-pesticide-precheck-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-110",
+          "category": "pesticide_greenhouse_winter_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-pesticide-residue-greenhouse-winter-001",
+            "pepper-grafting-purpose-001",
+            "pepper-graymold-temperature-range-001",
+            "pepper-graymold-ventilation-density-001",
+            "pepper-greenhouse-pest-preventive-biocontrol-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-001",
+          "category": "nursery_seedling_purchase_qc",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-seedling-purchase-qc-001",
+            "pepper-overaged-seedling-deep-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-flowering-pollen-001",
+            "pepper-grafting-sanitization-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-002",
+          "category": "nursery_grodan_delta_wetting",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grodan-delta-wetting-weight-001",
+            "farm-case-009",
+            "pepper-establishment-ammonia-remediation-001",
+            "pepper-establishment-remediation-001",
+            "pepper-grodan-delta-propagation-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-003",
+          "category": "nursery_graft_healing",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grafting-healing-management-001",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-grafting-position-001",
+            "pepper-grafting-sanitization-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-004",
+          "category": "nursery_seedling_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-seedling-window-001",
+            "pepper-plantfactory-nursery-001",
+            "pepper-flowering-pollen-001",
+            "pepper-grafting-healing-management-001",
+            "pepper-humidity-fruitset-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-005",
+          "category": "transplant_overaged_high_ec",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-overaged-seedling-high-ec-001",
+            "pepper-overaged-seedling-deep-001",
+            "pepper-establishment-ammonia-compost-001",
+            "pepper-calcium-boron-001",
+            "pepper-crop-seedling-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-006",
+          "category": "transplant_stage_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-transplant-stage-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-cold-injury-001",
+            "pepper-crop-seedling-window-001",
+            "pepper-early-flower-removal-yield-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-007",
+          "category": "transplant_lowtemp_duration",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-recovery-001",
+            "pepper-lowtemp-transplant-yield-002",
+            "pepper-transplant-cold-duration-001",
+            "pepper-transplant-001",
+            "pepper-aphid-virus-biocontrol-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-008",
+          "category": "transplant_gtmaster_rooting",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grodan-gtmaster-rooting-001",
+            "pepper-grodan-delta-propagation-001",
+            "pepper-fusarium-acidic-sandy-soil-001",
+            "pepper-nursery-quality-002",
+            "farm-case-003"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-009",
+          "category": "flowering_temp_band",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-forcing-fruitset-temperature-band-001",
+            "pepper-flowering-pollen-001",
+            "pepper-nursery-curling-recovery-001",
+            "pepper-green-packaging-condensation-001",
+            "pepper-greenhouse-climate-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-010",
+          "category": "flowering_early_flower_removal",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-early-flower-removal-yield-001",
+            "pepper-bacterial-spot-sanitation-resistance-001",
+            "pepper-cultivar-selection-dry-001",
+            "pepper-forcing-technology-yieldgain-001",
+            "pepper-green-storage-temperature-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-011",
+          "category": "fruiting_forcing_yieldgain",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-forcing-technology-yieldgain-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-rainshelter-frost-cover-001",
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-barrierbag-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-012",
+          "category": "flowering_preventive_biocontrol",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenhouse-pest-preventive-biocontrol-window-001",
+            "pepper-aphid-virus-biocontrol-001",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-openfield-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-013",
+          "category": "flowering_gtmaster_ec_band",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grodan-ec-fluctuation-band-001",
+            "pepper-pesticide-solution-24h-001",
+            "pepper-physiological-disorders-001",
+            "pepper-plantfactory-nursery-001",
+            "pepper-hydroponic-mixer-check-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-014",
+          "category": "fruiting_cycle_refresh",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grodan-cycle-size-refresh-001",
+            "pepper-grodan-direct-drainage-001",
+            "pepper-grodan-gtmaster-rooting-001",
+            "pepper-grodan-morning-refresh-volume-001",
+            "pepper-grodan-pepper-ec-radiation-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-015",
+          "category": "harvest_80pct_shade_ripen",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-red-harvest-window-001",
+            "pepper-red-harvest-curing-001",
+            "pepper-harvest-80pct-shade-ripen-001",
+            "pepper-grafting-storage-001",
+            "pepper-dry-storage-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-016",
+          "category": "drying_storage_barrier_uv",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dry-storage-barrierbag-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-dry-storage-001",
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-drying-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "tfidf",
+      "k": 5,
+      "case_count": 126,
+      "elapsed_sec": 0.41,
+      "avg_recall@k": 0.7698,
+      "avg_any_hit@k": 0.7698,
+      "MRR": 0.606,
+      "categories": {
+        "climate_heat": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rootzone_overwet": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fertigation_ec": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "pest_disease_vision": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nursery_transplant": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "policy_safety": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "flowering_pollination": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "irrigation_tensiometer": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.25
+        },
+        "postharvest_storage": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rain_shelter_calendar": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "lowtemp_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "monsoon_prevention": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "typhoon_response": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "hail_recovery": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "metadata_filter_stage_trust": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "metadata_filter_section": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "green_storage_temperature": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "green_packaging_condensation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "red_storage_ethylene": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.2
+        },
+        "dry_storage_maintenance": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "powder_packaging_oxygen": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "house_drying_hygiene": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "hotair_split_drying": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "postharvest_wash_hygiene": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "plug_substrate": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "drought_irrigation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cold_injury_replanting": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "heat_injury_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "nutrient_diagnosis": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "calcium_boron": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "physiological_disorders": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "morning_light": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "rainshelter_structure": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.2
+        },
+        "rainshelter_fertilizer_ec": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_lowlight_yield": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "rainshelter_lowlight_pungency": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "rainshelter_fertigation_salinity": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_mulch_leaching": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "rainshelter_frost_cover": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "rainshelter_density": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "crop_env_thresholds": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.25
+        },
+        "seed_priming": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "seedling_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "transplant_stage": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "harvest_pungency": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "semiforcing_schedule": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "normal_schedule": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "forcing_energy_saving": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_phytophthora": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_fruitset": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.25
+        },
+        "cultivar_honggoeun": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "hydroponic_coir_prewash": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "hydroponic_mixer_check": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "hydroponic_training": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "hydroponic_postharvest_disinfection": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "root_browning_profile": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "root_browning_winter_heating": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "establishment_herbicide_acidity": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "establishment_remediation": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "boron_diagnosis": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "boron_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "orius_release": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "orius_monitoring": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cold_duration": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cold_recovery": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "curved_fruit_heat": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "curved_fruit_cropping_shift": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "filter_cultivar_wongang": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "filter_cheongyang_winter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "filter_south_region": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "ammonia_compost": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "ammonia_remediation": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "poor_drainage_overwet": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "poor_drainage_remediation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "flowerdrop_heavy_shading": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "nursery_curling_overwet": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.25
+        },
+        "firstfrost_flowerdrop": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "overaged_seedling_deep": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "cultivar_haevichi_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "cultivar_rubihong_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "phytophthora_early_incidence": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "phytophthora_rye_highridge": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "phytophthora_phosphite": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "anthracnose_rain_spread": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "anthracnose_rainshelter_sanitation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "whitefly_threshold_control": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "whitefly_swirskii_release": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "aphid_virus_spray_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "aphid_coverage_resistance": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "budworm_pheromone_layout": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "rainshelter_side_shoot": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rainshelter_topping": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "rainshelter_fertigation_interval": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "drying_precure": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "sundry_rack": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.2
+        },
+        "whitefly_plastic_house_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "sclerotinia_infection_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "sclerotinia_mulch_drip": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fusarium_symptom_diff": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "fusarium_rotation_liming": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "graymold_infection_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "white_star_spot_sanitation": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "southern_blight_diagnosis": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "soft_rot_insect_wound": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "leafminer_temperature_generation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "leafminer_three_spray": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "rootknot_fumigation": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "pesticide_residue_concentration": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "pesticide_mix_order": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "pesticide_greenhouse_winter_filter": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.3333
+        },
+        "nursery_seedling_purchase_qc": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "nursery_grodan_delta_wetting": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "nursery_graft_healing": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.5
+        },
+        "nursery_seedling_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 1.0
+        },
+        "transplant_overaged_high_ec": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "transplant_stage_window": {
+          "count": 1,
+          "recall@k": 1.0,
+          "any_hit@k": 1.0,
+          "MRR": 0.25
+        },
+        "transplant_lowtemp_duration": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "transplant_gtmaster_rooting": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "flowering_temp_band": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "flowering_early_flower_removal": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "fruiting_forcing_yieldgain": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "flowering_preventive_biocontrol": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "flowering_gtmaster_ec_band": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "fruiting_cycle_refresh": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "harvest_80pct_shade_ripen": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        },
+        "drying_storage_barrier_uv": {
+          "count": 1,
+          "recall@k": 0.0,
+          "any_hit@k": 0.0,
+          "MRR": 0.0
+        }
+      },
+      "per_case": [
+        {
+          "case_id": "rag-eval-001",
+          "category": "climate_heat",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-climate-001",
+            "pepper-light-001",
+            "pepper-flowerdrop-heavy-shading-001",
+            "farm-case-001",
+            "pepper-shading-strategy-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-002",
+          "category": "rootzone_overwet",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rootzone-001",
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-flooding-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-salinity-diagnosis-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-003",
+          "category": "fertigation_ec",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-001",
+            "pepper-hydroponic-mixer-check-001",
+            "pepper-hydroponic-ec-stage-001",
+            "pepper-hydroponic-ph-001",
+            "pepper-agent-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-004",
+          "category": "pest_disease_vision",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-pest-001",
+            "pepper-virus-epidemiology-001",
+            "pepper-nursery-virus-vector-001",
+            "pepper-virus-001",
+            "pepper-anthracnose-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-005",
+          "category": "nursery_transplant",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-lifecycle-001",
+            "pepper-nursery-quality-002",
+            "pepper-crop-seedling-window-001",
+            "pepper-seedling-diagnosis-001",
+            "pepper-overaged-seedling-standard-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-006",
+          "category": "policy_safety",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cold-injury-001",
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-hail-recovery-001",
+            "farm-case-003",
+            "pepper-tunnel-frost-window-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-007",
+          "category": "flowering_pollination",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-flowering-pollen-001",
+            "pepper-physiological-disorders-001",
+            "pepper-light-001",
+            "pepper-heat-injury-001",
+            "pepper-morning-light-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-008",
+          "category": "irrigation_tensiometer",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-irrigation-control-001",
+            "pepper-rootzone-001",
+            "pepper-seedling-irrigation-001",
+            "pepper-irrigation-tensiometer-001",
+            "pepper-root-browning-overwet-profile-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.25,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-009",
+          "category": "postharvest_storage",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-green-storage-temperature-001",
+            "pepper-drying-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-010",
+          "category": "rain_shelter_calendar",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-topping-001",
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-rainshelter-density-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-011",
+          "category": "lowtemp_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-duration-001",
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-cold-injury-001",
+            "pepper-transplant-cold-recovery-001",
+            "pepper-tunnel-frost-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-012",
+          "category": "monsoon_prevention",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-monsoon-prevention-001",
+            "pepper-phytophthora-001",
+            "pepper-phytophthora-waterlogging-002",
+            "pepper-phytophthora-early-incidence-002",
+            "pepper-anthracnose-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-013",
+          "category": "typhoon_response",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-monsoon-prevention-001",
+            "pepper-phytophthora-001",
+            "pepper-phytophthora-early-incidence-002",
+            "pepper-phytophthora-waterlogging-002",
+            "pepper-flooding-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-014",
+          "category": "hail_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-duration-001",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-transplant-cold-recovery-001",
+            "pepper-crop-transplant-stage-001",
+            "pepper-overaged-seedling-deep-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-015",
+          "category": "metadata_filter_stage_trust",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-001",
+            "pepper-lifecycle-001",
+            "pepper-nursery-001",
+            "pepper-seedling-hardening-001",
+            "pepper-nursery-seasonal-management-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-016",
+          "category": "metadata_filter_section",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-drying-001",
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-hotair-drying-split-001",
+            "pepper-dry-storage-001",
+            "pepper-cultivar-honggoeun-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-017",
+          "category": "green_storage_temperature",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-green-storage-temperature-001",
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-green-packaging-condensation-001",
+            "pepper-powder-packaging-oxygen-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-018",
+          "category": "green_packaging_condensation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-green-packaging-condensation-001",
+            "pepper-dry-storage-001",
+            "pepper-green-storage-temperature-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-sundry-rack-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-019",
+          "category": "red_storage_ethylene",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-drying-001",
+            "pepper-dry-storage-001",
+            "pepper-red-storage-ethylene-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.2,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-020",
+          "category": "dry_storage_maintenance",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dry-storage-maintenance-001",
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-drying-001",
+            "pepper-dry-storage-001",
+            "pepper-hotair-drying-split-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-021",
+          "category": "powder_packaging_oxygen",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-dry-storage-001",
+            "pepper-drying-001",
+            "pepper-green-storage-temperature-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-022",
+          "category": "house_drying_hygiene",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sundry-rack-001",
+            "pepper-house-drying-hygiene-001",
+            "farm-case-006",
+            "pepper-hotair-drying-split-001",
+            "pepper-drying-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-023",
+          "category": "hotair_split_drying",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sundry-rack-001",
+            "pepper-hotair-drying-split-001",
+            "pepper-drying-001",
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-postharvest-wash-hygiene-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-024",
+          "category": "postharvest_wash_hygiene",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-postharvest-wash-hygiene-001",
+            "pepper-red-harvest-window-001",
+            "pepper-red-harvest-curing-001",
+            "pepper-harvest-days-by-type-001",
+            "pepper-harvest-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-025",
+          "category": "plug_substrate",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-ph-001",
+            "pepper-hydroponic-water-ph-buffer-001",
+            "pepper-plug-substrate-001",
+            "pepper-soil-001",
+            "pepper-hydroponic-ec-stage-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-026",
+          "category": "drought_irrigation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-drought-001",
+            "pepper-plug-substrate-001",
+            "pepper-salinity-diagnosis-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-soil-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-027",
+          "category": "cold_injury_replanting",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cold-injury-001",
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-hail-recovery-001",
+            "pepper-tunnel-frost-window-001",
+            "pepper-transplant-cold-duration-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-028",
+          "category": "heat_injury_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-heat-injury-001",
+            "pepper-flowerdrop-heavy-shading-001",
+            "farm-case-001",
+            "pepper-firstfrost-flowerdrop-001",
+            "pepper-transplant-cold-duration-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-029",
+          "category": "nutrient_diagnosis",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-nutrient-diagnosis-001",
+            "pepper-calcium-boron-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-soil-001",
+            "pepper-boron-excess-diagnosis-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-030",
+          "category": "calcium_boron",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-calcium-boron-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-drought-001",
+            "pepper-boron-excess-diagnosis-001",
+            "pepper-physiological-disorders-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-031",
+          "category": "physiological_disorders",
+          "expected_count": 1,
+          "top_ids": [],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-032",
+          "category": "morning_light",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-light-001",
+            "pepper-morning-light-001",
+            "pepper-greenhouse-climate-001",
+            "pepper-climate-001",
+            "pepper-shading-strategy-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-033",
+          "category": "rainshelter_structure",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-rainshelter-structure-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.2,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-034",
+          "category": "rainshelter_fertilizer_ec",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-soil-001",
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-hydroponic-ph-001",
+            "pepper-nutrient-diagnosis-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-035",
+          "category": "rainshelter_lowlight_yield",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-recovery-001",
+            "pepper-rainshelter-lowlight-yield-001",
+            "pepper-transplant-cold-duration-001",
+            "pepper-tunnel-frost-window-001",
+            "pepper-rainshelter-side-shoot-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-036",
+          "category": "rainshelter_lowlight_pungency",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-honggoeun-001",
+            "pepper-cultivar-rubihong-001",
+            "pepper-rainshelter-lowlight-pungency-001",
+            "pepper-greenpepper-type-001",
+            "pepper-crop-harvest-pungency-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-037",
+          "category": "rainshelter_fertigation_salinity",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-rainshelter-topping-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-038",
+          "category": "rainshelter_mulch_leaching",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sclerotinia-rotation-flooding-001",
+            "pepper-rainshelter-mulch-leaching-001",
+            "pepper-rootknot-solarization-rice-rotation-001",
+            "pepper-sclerotinia-pathogen-survival-001",
+            "pepper-sclerotinia-mulch-drip-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-039",
+          "category": "rainshelter_frost_cover",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-tunnel-frost-window-001",
+            "pepper-rainshelter-frost-cover-001",
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-cold-injury-001",
+            "pepper-regional-cropping-system-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-040",
+          "category": "rainshelter_density",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-aphid-virus-biocontrol-001",
+            "pepper-rainshelter-density-001",
+            "pepper-thrips-tswv-control-001",
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-virus-epidemiology-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-041",
+          "category": "crop_env_thresholds",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-ph-001",
+            "pepper-hydroponic-water-ph-buffer-001",
+            "pepper-soil-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-phytophthora-phosphite-002"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.25,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-042",
+          "category": "seed_priming",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-seed-priming-001",
+            "pepper-plug-substrate-001",
+            "pepper-plantfactory-nursery-001",
+            "pepper-crop-env-thresholds-001",
+            "pepper-bacterial-spot-hotwater-seed-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-043",
+          "category": "seedling_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-seedling-window-001",
+            "pepper-plantfactory-nursery-001",
+            "pepper-nursery-001",
+            "pepper-nursery-quality-002",
+            "pepper-nursery-curling-recovery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-044",
+          "category": "transplant_stage",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-transplant-stage-001",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-tunnel-frost-window-001",
+            "pepper-transplant-cold-recovery-001",
+            "pepper-transplant-cold-duration-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-045",
+          "category": "harvest_pungency",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-harvest-001",
+            "pepper-drying-precure-001",
+            "pepper-crop-harvest-pungency-001",
+            "pepper-drying-001",
+            "pepper-harvest-days-by-type-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-046",
+          "category": "semiforcing_schedule",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-semiforcing-schedule-001",
+            "pepper-normal-schedule-001",
+            "pepper-openfield-calendar-001",
+            "pepper-rain-shelter-calendar-001",
+            "pepper-forcing-energy-saving-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-047",
+          "category": "normal_schedule",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-normal-schedule-001",
+            "pepper-openfield-calendar-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-rain-shelter-calendar-001",
+            "pepper-regional-cropping-system-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-048",
+          "category": "forcing_energy_saving",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-forcing-energy-saving-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-normal-schedule-001",
+            "pepper-openfield-calendar-001",
+            "pepper-rain-shelter-calendar-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-049",
+          "category": "cultivar_phytophthora",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-grafting-rootstock-classification-001",
+            "pepper-cultivar-selection-dry-001",
+            "pepper-phytophthora-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-050",
+          "category": "cultivar_fruitset",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenpepper-type-001",
+            "pepper-cultivar-selection-green-001",
+            "pepper-cultivar-selection-dry-001",
+            "pepper-cultivar-fruitset-stability-001",
+            "pepper-cultivar-rain-shelter-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.25,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-051",
+          "category": "cultivar_honggoeun",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenpepper-type-001",
+            "pepper-cultivar-selection-green-001",
+            "pepper-cultivar-selection-dry-001",
+            "pepper-cultivar-fruitset-stability-001",
+            "pepper-cultivar-rain-shelter-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-052",
+          "category": "hydroponic_coir_prewash",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-plug-substrate-001",
+            "pepper-hydroponic-ph-001",
+            "pepper-hydroponic-coir-prewash-001",
+            "pepper-hydroponic-ec-stage-001",
+            "pepper-hydroponic-water-ph-buffer-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-053",
+          "category": "hydroponic_mixer_check",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-ph-001",
+            "pepper-hydroponic-water-ph-buffer-001",
+            "pepper-hydroponic-001",
+            "pepper-agent-001",
+            "pepper-soil-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-054",
+          "category": "hydroponic_training",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-hydroponic-training-001",
+            "pepper-rainshelter-density-001",
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-fertigation-level-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-055",
+          "category": "hydroponic_postharvest_disinfection",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-postharvest-disinfection-001",
+            "pepper-white-star-spot-sanitation-001",
+            "pepper-ipm-scouting-hygiene-001",
+            "pepper-bacterial-spot-hotwater-seed-001",
+            "pepper-hydroponic-coir-prewash-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-056",
+          "category": "root_browning_profile",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-salinity-diagnosis-001",
+            "pepper-rootzone-001",
+            "pepper-establishment-remediation-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-057",
+          "category": "root_browning_winter_heating",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-winter-heating-001",
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-rootzone-001",
+            "pepper-flooding-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-058",
+          "category": "establishment_herbicide_acidity",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-establishment-herbicide-acidity-001",
+            "pepper-plug-substrate-001",
+            "pepper-hydroponic-ph-001",
+            "pepper-soil-001",
+            "pepper-hydroponic-water-ph-buffer-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-059",
+          "category": "establishment_remediation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-overaged-seedling-deep-001",
+            "pepper-establishment-ammonia-compost-001",
+            "pepper-crop-transplant-stage-001",
+            "pepper-overaged-seedling-standard-001",
+            "pepper-cultivar-haevichi-cold-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-060",
+          "category": "boron_diagnosis",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-boron-excess-diagnosis-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-calcium-boron-001",
+            "pepper-boron-excess-recovery-001",
+            "pepper-broad-mite-symptom-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-061",
+          "category": "boron_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-boron-excess-recovery-001",
+            "pepper-boron-excess-diagnosis-001",
+            "pepper-calcium-boron-001",
+            "pepper-nutrient-diagnosis-001",
+            "pepper-flowerdrop-light-balance-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-062",
+          "category": "orius_release",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-release-timing-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-orius-monitoring-001",
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-whitefly-biocontrol-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-063",
+          "category": "orius_monitoring",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-monitoring-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-orius-release-timing-001",
+            "pepper-mite-predator-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-064",
+          "category": "cold_duration",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-duration-001",
+            "pepper-transplant-cold-recovery-001",
+            "pepper-lowtemp-regional-recovery-001",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-tunnel-frost-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-065",
+          "category": "cold_recovery",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-duration-001",
+            "pepper-transplant-cold-recovery-001",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-crop-transplant-stage-001",
+            "pepper-lowtemp-regional-recovery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-066",
+          "category": "curved_fruit_heat",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-flowerdrop-heavy-shading-001",
+            "pepper-curved-fruit-heat-rootzone-001",
+            "pepper-light-001",
+            "pepper-morning-light-001",
+            "pepper-curved-fruit-cropping-shift-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-067",
+          "category": "curved_fruit_cropping_shift",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-normal-schedule-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-rain-shelter-calendar-001",
+            "pepper-regional-cropping-system-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-068",
+          "category": "filter_cultivar_wongang",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-cultivar-resistance-stack-001",
+            "pepper-cultivar-selection-dry-001",
+            "farm-case-004",
+            "pepper-cultivar-rain-shelter-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-069",
+          "category": "filter_cheongyang_winter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-winter-heating-001",
+            "pepper-greenhouse-poor-drainage-remediation-001",
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-curved-fruit-heat-rootzone-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-070",
+          "category": "filter_south_region",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-curved-fruit-cropping-shift-001",
+            "pepper-forcing-energy-saving-001",
+            "pepper-regional-cropping-system-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-normal-schedule-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-071",
+          "category": "ammonia_compost",
+          "expected_count": 1,
+          "top_ids": [],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-072",
+          "category": "ammonia_remediation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-virus-001",
+            "pepper-virus-epidemiology-001",
+            "pepper-tswv-early-house-001",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-pest-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-073",
+          "category": "poor_drainage_overwet",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-root-browning-winter-heating-001",
+            "pepper-root-browning-overwet-profile-001",
+            "pepper-flooding-001",
+            "pepper-rootzone-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-074",
+          "category": "poor_drainage_remediation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-winter-heating-001",
+            "pepper-flooding-001",
+            "pepper-greenhouse-poor-drainage-remediation-001",
+            "pepper-greenhouse-poor-drainage-overwet-001",
+            "pepper-phytophthora-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-075",
+          "category": "flowerdrop_heavy_shading",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-heat-injury-001",
+            "pepper-shading-strategy-001",
+            "pepper-flowerdrop-heavy-shading-001",
+            "pepper-light-001",
+            "farm-case-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-076",
+          "category": "nursery_curling_overwet",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-dampingoff-prevention-001",
+            "pepper-seedling-irrigation-001",
+            "pepper-bacterial-spot-nursery-symptom-001",
+            "pepper-nursery-curling-overwet-001",
+            "pepper-nursery-seasonal-management-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.25,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-077",
+          "category": "firstfrost_flowerdrop",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-firstfrost-flowerdrop-001",
+            "pepper-drought-001",
+            "pepper-orius-monitoring-001",
+            "pepper-rootknot-solarization-rice-rotation-001",
+            "pepper-salinity-diagnosis-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-078",
+          "category": "overaged_seedling_deep",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-seedling-diagnosis-001",
+            "pepper-nursery-quality-002",
+            "pepper-seedling-irrigation-001",
+            "pepper-lifecycle-001",
+            "pepper-crop-seedling-window-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-079",
+          "category": "cultivar_haevichi_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-overaged-seedling-deep-001",
+            "pepper-crop-transplant-stage-001",
+            "pepper-regional-cropping-system-001",
+            "pepper-overaged-seedling-standard-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-080",
+          "category": "cultivar_rubihong_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-rubihong-001",
+            "pepper-cultivar-honggoeun-001",
+            "pepper-greenpepper-type-001",
+            "pepper-rainshelter-lowlight-pungency-001",
+            "pepper-drying-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-081",
+          "category": "phytophthora_early_incidence",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-phytophthora-early-incidence-002",
+            "pepper-monsoon-prevention-001",
+            "pepper-phytophthora-001",
+            "pepper-southern-blight-early-fungicide-001",
+            "farm-case-004"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-082",
+          "category": "phytophthora_rye_highridge",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-cultivar-phytophthora-resistance-001",
+            "pepper-phytophthora-001",
+            "pepper-grafting-rootstock-classification-001",
+            "pepper-phytophthora-waterlogging-002",
+            "pepper-grafting-disease-resistance-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-083",
+          "category": "phytophthora_phosphite",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-water-ph-buffer-001",
+            "pepper-phytophthora-phosphite-002",
+            "pepper-hydroponic-ph-001",
+            "pepper-soil-001",
+            "pepper-fusarium-acidic-sandy-soil-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-084",
+          "category": "anthracnose_rain_spread",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-anthracnose-001",
+            "pepper-anthracnose-rainshelter-sanitation-002",
+            "pepper-anthracnose-rain-spread-002",
+            "pepper-typhoon-response-001",
+            "pepper-monsoon-prevention-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-085",
+          "category": "anthracnose_rainshelter_sanitation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-anthracnose-rainshelter-sanitation-002",
+            "pepper-typhoon-response-001",
+            "pepper-anthracnose-rain-spread-002",
+            "pepper-anthracnose-001",
+            "pepper-monsoon-prevention-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-086",
+          "category": "whitefly_threshold_control",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-whitefly-threshold-control-001",
+            "pepper-whitefly-species-001",
+            "pepper-whitefly-biocontrol-001",
+            "pepper-leafminer-three-spray-001",
+            "pepper-thrips-monitoring-chemical-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-087",
+          "category": "whitefly_swirskii_release",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-whitefly-biocontrol-001",
+            "pepper-orius-monitoring-001",
+            "pepper-mite-predator-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-088",
+          "category": "aphid_virus_spray_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-virus-001",
+            "pepper-tswv-early-house-001",
+            "pepper-virus-epidemiology-001",
+            "pepper-pest-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-089",
+          "category": "aphid_coverage_resistance",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-aphid-coverage-resistance-001",
+            "pepper-pesticide-phytotoxicity-causes-001",
+            "pepper-pesticide-precheck-001",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-pesticide-postwash-log-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-090",
+          "category": "budworm_pheromone_layout",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-thrips-taiwan-ecology-001",
+            "pepper-budworm-pheromone-layout-001",
+            "pepper-budworm-damage-lifecycle-001",
+            "pepper-soft-rot-symptom-001",
+            "pepper-light-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-091",
+          "category": "rainshelter_side_shoot",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-topping-001",
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-density-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-092",
+          "category": "rainshelter_topping",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-monitoring-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-crop-seed-priming-001",
+            "pepper-mite-predator-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-093",
+          "category": "rainshelter_fertigation_interval",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rainshelter-fertigation-interval-001",
+            "pepper-rainshelter-fertigation-level-001",
+            "pepper-rainshelter-side-shoot-001",
+            "pepper-rainshelter-fertigation-salinity-001",
+            "pepper-rainshelter-topping-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-094",
+          "category": "drying_precure",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-harvest-001",
+            "pepper-drying-precure-001",
+            "pepper-harvest-days-by-type-001",
+            "pepper-red-harvest-window-001",
+            "pepper-red-harvest-curing-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-095",
+          "category": "sundry_rack",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-release-timing-001",
+            "pepper-house-drying-hygiene-001",
+            "pepper-orius-monitoring-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-sundry-rack-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.2,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-096",
+          "category": "whitefly_plastic_house_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-orius-monitoring-001",
+            "pepper-orius-release-timing-001",
+            "pepper-whitefly-biocontrol-001",
+            "pepper-thrips-biocontrol-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-097",
+          "category": "sclerotinia_infection_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sclerotinia-infection-window-001",
+            "pepper-sclerotinia-rotation-flooding-001",
+            "pepper-sclerotinia-pathogen-survival-001",
+            "pepper-sclerotinia-mulch-drip-001",
+            "pepper-white-star-spot-ecology-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-098",
+          "category": "sclerotinia_mulch_drip",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sclerotinia-mulch-drip-001",
+            "pepper-sclerotinia-rotation-flooding-001",
+            "pepper-sclerotinia-canopy-nitrogen-001",
+            "pepper-graymold-ventilation-density-001",
+            "pepper-sclerotinia-infection-window-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-099",
+          "category": "fusarium_symptom_diff",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-fusarium-symptom-diff-001",
+            "pepper-fusarium-rotation-liming-001",
+            "pepper-southern-blight-diagnosis-001",
+            "pepper-fusarium-seed-survival-001",
+            "pepper-fusarium-acidic-sandy-soil-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-100",
+          "category": "fusarium_rotation_liming",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-ph-001",
+            "pepper-hydroponic-water-ph-buffer-001",
+            "pepper-fusarium-rotation-liming-001",
+            "pepper-fusarium-acidic-sandy-soil-001",
+            "pepper-soil-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-101",
+          "category": "graymold_infection_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-sclerotinia-infection-window-001",
+            "pepper-graymold-infection-window-001",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-semiforcing-schedule-001",
+            "pepper-normal-schedule-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-102",
+          "category": "white_star_spot_sanitation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-white-star-spot-symptom-001",
+            "pepper-bacterial-spot-nursery-symptom-001",
+            "pepper-white-star-spot-ecology-001",
+            "pepper-southern-blight-diagnosis-001",
+            "pepper-spidermite-ecology-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-103",
+          "category": "southern_blight_diagnosis",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-southern-blight-diagnosis-001",
+            "farm-case-010",
+            "pepper-southern-blight-early-fungicide-001",
+            "pepper-fusarium-symptom-diff-001",
+            "farm-case-004"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-104",
+          "category": "soft_rot_insect_wound",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-soft-rot-wound-insect-prevention-001",
+            "pepper-soft-rot-symptom-001",
+            "pepper-graymold-wound-flower-entry-001",
+            "pepper-budworm-damage-lifecycle-001",
+            "pepper-soft-rot-temperature-waterborne-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-105",
+          "category": "leafminer_temperature_generation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-leafminer-temperature-generation-001",
+            "pepper-fusarium-temperature-window-001",
+            "pepper-rootknot-temperature-cycle-001",
+            "pepper-leafminer-symptom-scouting-001",
+            "pepper-white-star-spot-ecology-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-106",
+          "category": "leafminer_three_spray",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-leafminer-three-spray-001",
+            "pepper-budworm-spray-window-001",
+            "pepper-thrips-monitoring-chemical-001",
+            "pepper-phytophthora-phosphite-002",
+            "pepper-whitefly-threshold-control-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-107",
+          "category": "rootknot_fumigation",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-rootknot-fumigation-sealing-001",
+            "pepper-fusarium-rotation-liming-001",
+            "pepper-rootknot-solarization-rice-rotation-001",
+            "pepper-leafminer-three-spray-001",
+            "pepper-fusarium-acidic-sandy-soil-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-108",
+          "category": "pesticide_residue_concentration",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-pesticide-export-mrl-selection-001",
+            "pepper-pesticide-residue-concentration-001",
+            "farm-case-009",
+            "pepper-pesticide-precheck-001",
+            "pepper-pesticide-residue-greenhouse-winter-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-109",
+          "category": "pesticide_mix_order",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-pesticide-postwash-log-001",
+            "pepper-pesticide-precheck-001",
+            "pepper-pesticide-solution-24h-001",
+            "pepper-pesticide-adjuvant-compatibility-001",
+            "pepper-pesticide-phytotoxicity-causes-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-eval-110",
+          "category": "pesticide_greenhouse_winter_filter",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-root-browning-winter-heating-001",
+            "pepper-greenhouse-poor-drainage-remediation-001",
+            "pepper-pesticide-residue-greenhouse-winter-001",
+            "pepper-firstfrost-terminate-crop-001",
+            "pepper-greenhouse-poor-drainage-overwet-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.3333,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-001",
+          "category": "nursery_seedling_purchase_qc",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-nursery-quality-002",
+            "pepper-crop-seedling-window-001",
+            "pepper-seedling-diagnosis-001",
+            "pepper-nursery-seasonal-management-001",
+            "pepper-nursery-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-002",
+          "category": "nursery_grodan_delta_wetting",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-plug-substrate-001",
+            "pepper-lifecycle-001",
+            "pepper-nursery-quality-002",
+            "pepper-fusarium-acidic-sandy-soil-001",
+            "pepper-rootknot-fumigation-sealing-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-003",
+          "category": "nursery_graft_healing",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-grafting-stage-001",
+            "pepper-grafting-healing-management-001",
+            "pepper-grafting-storage-001",
+            "pepper-plantfactory-healing-001",
+            "pepper-grafting-tray-selection-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.5,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-004",
+          "category": "nursery_seedling_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-seedling-window-001",
+            "pepper-plantfactory-nursery-001",
+            "pepper-nursery-quality-002",
+            "pepper-seedling-diagnosis-001",
+            "pepper-nursery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 1.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-005",
+          "category": "transplant_overaged_high_ec",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-plug-substrate-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-hydroponic-ec-stage-001",
+            "pepper-establishment-herbicide-acidity-001",
+            "pepper-soil-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-006",
+          "category": "transplant_stage_window",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-tunnel-frost-window-001",
+            "pepper-regional-cropping-system-001",
+            "pepper-openfield-calendar-001",
+            "pepper-crop-transplant-stage-001",
+            "pepper-transplant-cold-recovery-001"
+          ],
+          "recall@k": 1.0,
+          "any_hit": 1,
+          "rr": 0.25,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-007",
+          "category": "transplant_lowtemp_duration",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-cold-recovery-001",
+            "pepper-transplant-cold-duration-001",
+            "pepper-cultivar-haevichi-cold-001",
+            "pepper-tunnel-frost-window-001",
+            "pepper-transplant-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-008",
+          "category": "transplant_gtmaster_rooting",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-transplant-001",
+            "pepper-lifecycle-001",
+            "pepper-seedling-hardening-001",
+            "pepper-overaged-seedling-deep-001",
+            "pepper-crop-transplant-stage-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-009",
+          "category": "flowering_temp_band",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-crop-env-thresholds-001",
+            "pepper-flowering-pollen-001",
+            "pepper-fusarium-temperature-window-001",
+            "pepper-phytophthora-phosphite-002",
+            "pepper-transplant-cold-recovery-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-010",
+          "category": "flowering_early_flower_removal",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-monitoring-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-whitefly-swirskii-release-001",
+            "pepper-thrips-taiwan-ecology-001",
+            "pepper-orius-release-timing-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-011",
+          "category": "fruiting_forcing_yieldgain",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-greenhouse-climate-001",
+            "pepper-humidity-fruitset-001",
+            "pepper-rainshelter-structure-001",
+            "pepper-dry-storage-001",
+            "pepper-green-storage-temperature-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-012",
+          "category": "flowering_preventive_biocontrol",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-orius-release-timing-001",
+            "pepper-aphid-virus-biocontrol-001",
+            "pepper-thrips-biocontrol-001",
+            "pepper-aphid-virus-spray-window-001",
+            "pepper-orius-monitoring-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-013",
+          "category": "flowering_gtmaster_ec_band",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-plug-substrate-001",
+            "pepper-hydroponic-ec-stage-001",
+            "pepper-hydroponic-ph-001",
+            "pepper-rainshelter-fertilizer-ec-001",
+            "pepper-hydroponic-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-014",
+          "category": "fruiting_cycle_refresh",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-hydroponic-ph-001",
+            "pepper-hydroponic-water-ph-buffer-001",
+            "pepper-hydroponic-ec-stage-001",
+            "pepper-hydroponic-001",
+            "pepper-hydroponic-mixer-check-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-015",
+          "category": "harvest_80pct_shade_ripen",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-postharvest-wash-hygiene-001",
+            "pepper-red-harvest-window-001",
+            "pepper-red-harvest-curing-001",
+            "pepper-harvest-days-by-type-001",
+            "pepper-drying-precure-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        },
+        {
+          "case_id": "rag-stage-016",
+          "category": "drying_storage_barrier_uv",
+          "expected_count": 1,
+          "top_ids": [
+            "pepper-powder-packaging-oxygen-001",
+            "pepper-dry-storage-001",
+            "pepper-dry-storage-maintenance-001",
+            "pepper-drying-001",
+            "pepper-green-storage-temperature-001"
+          ],
+          "recall@k": 0.0,
+          "any_hit": 0,
+          "rr": 0.0,
+          "note": ""
+        }
+      ]
+    }
+  ]
+}
