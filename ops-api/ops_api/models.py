@@ -374,6 +374,12 @@ class AutomationRuleTriggerRecord(Base):
 
     - ``shadow_logged``: runtime_mode was shadow, trigger recorded only.
     - ``approval_pending``: wrote an ApprovalRecord-compatible proposed_action.
+    - ``approved``: operator approved via ``/automation/triggers/{id}/approve``
+      (Phase P-3). Dispatch to the execution gateway is wired in Phase Q
+      via a DecisionRecord FK; until then an approved trigger means the
+      operator has signalled intent but the command has not yet been
+      sent.
+    - ``rejected``: operator rejected via ``/automation/triggers/{id}/reject``.
     - ``dispatched``: execution_gateway accepted the command.
     - ``blocked_validator``: output_validator rejected the proposed action.
     - ``blocked_guard``: execution-gateway guard rejected (worker_present etc.).
@@ -398,5 +404,14 @@ class AutomationRuleTriggerRecord(Base):
         ForeignKey("decisions.id"), nullable=True
     )
     note: Mapped[str] = mapped_column(Text, default="")
+    # Phase P-3 operator review fields. ``reviewed_by`` holds the actor
+    # that moved the trigger out of ``approval_pending`` via
+    # ``POST /automation/triggers/{id}/approve`` or ``/reject``. The
+    # trigger ``status`` transitions to ``approved`` or ``rejected``
+    # respectively. Dispatch itself is wired in Phase Q once automation
+    # triggers get a first-class DecisionRecord FK.
+    reviewed_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    review_reason: Mapped[str] = mapped_column(Text, default="")
 
     rule: Mapped[AutomationRuleRecord] = relationship(back_populates="triggers")

@@ -405,4 +405,7 @@ def serialize_trigger(trigger: AutomationRuleTriggerRecord) -> dict[str, Any]:
         "runtime_mode": trigger.runtime_mode,
         "decision_id": trigger.decision_id,
         "note": trigger.note,
+        "reviewed_by": trigger.reviewed_by,
+        "reviewed_at": trigger.reviewed_at.isoformat() if trigger.reviewed_at else None,
+        "review_reason": trigger.review_reason,
     }

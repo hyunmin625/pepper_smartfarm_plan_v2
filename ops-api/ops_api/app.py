@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -20,6 +21,7 @@ from .api_models import (
     AutomationRuleRequest,
     AutomationRuleToggleRequest,
     AutomationRuleUpdateRequest,
+    AutomationTriggerReviewRequest,
     ChatRequest,
     EvaluateZoneRequest,
     ErrorResponse,
@@ -31,6 +33,7 @@ from .api_models import (
     ShadowReviewRequest,
 )
 from .automation import evaluate_rules, serialize_rule, serialize_trigger
+from .automation_runner import AutomationRunner
 from .auth import ROLE_PERMISSIONS, ActorIdentity, get_authenticated_actor, require_permission
 from .bootstrap import configure_repo_paths
 from .config import Settings, load_settings
@@ -88,6 +91,7 @@ class AppServices:
     dispatcher: ExecutionDispatcher
     planner: ActionDispatchPlanner
     realtime_broker: "RealtimeBroker"
+    automation_runner: "AutomationRunner | None" = None
 
 
 def _loads_json(raw: str | None, default: Any) -> Any:
@@ -832,6 +836,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         retriever_instance = create_retriever("keyword")
 
+    automation_runner = AutomationRunner(
+        session_factory=session_factory,
+        settings=resolved_settings,
+    )
+
     services = AppServices(
         settings=resolved_settings,
         session_factory=session_factory,
@@ -847,12 +856,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         dispatcher=ExecutionDispatcher.default(adapter_kind="mock"),
         planner=ActionDispatchPlanner(),
         realtime_broker=RealtimeBroker(),
+        automation_runner=automation_runner,
     )
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        await automation_runner.start()
+        try:
+            yield
+        finally:
+            await automation_runner.stop()
 
     app = FastAPI(
         title="Pepper Smartfarm Ops API",
         version="0.2.0",
         description="LLM 의사결정, approval dispatch, shadow review, 운영 카탈로그를 제공하는 백엔드",
+        lifespan=lifespan,
         openapi_tags=[
             {"name": "system", "description": "health, auth, runtime mode"},
             {"name": "decisions", "description": "LLM evaluation and history"},
@@ -2036,16 +2055,86 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     def list_automation_triggers(
         limit: int = 50,
+        status: str | None = None,
+        zone_id: str | None = None,
         session: Session = Depends(get_session),
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
         limit = max(1, min(int(limit), 200))
-        rows = session.scalars(
-            select(AutomationRuleTriggerRecord)
-            .order_by(AutomationRuleTriggerRecord.triggered_at.desc())
-            .limit(limit)
-        ).all()
+        stmt = select(AutomationRuleTriggerRecord)
+        if status:
+            stmt = stmt.where(AutomationRuleTriggerRecord.status == status)
+        if zone_id:
+            stmt = stmt.where(AutomationRuleTriggerRecord.zone_id == zone_id)
+        stmt = stmt.order_by(AutomationRuleTriggerRecord.triggered_at.desc()).limit(limit)
+        rows = session.scalars(stmt).all()
         return _ok({"triggers": [serialize_trigger(r) for r in rows]}, actor=actor)
+
+    @app.post(
+        "/automation/triggers/{trigger_id}/approve",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={
+            401: {"model": ErrorResponse},
+            403: {"model": ErrorResponse},
+            404: {"model": ErrorResponse},
+            409: {"model": ErrorResponse},
+        },
+    )
+    def approve_automation_trigger(
+        trigger_id: int,
+        payload: AutomationTriggerReviewRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("approve_actions")),
+    ) -> dict[str, Any]:
+        trigger = session.get(AutomationRuleTriggerRecord, trigger_id)
+        if trigger is None:
+            raise HTTPException(status_code=404, detail="automation trigger not found")
+        if trigger.status != "approval_pending":
+            raise HTTPException(
+                status_code=409,
+                detail=f"trigger status must be approval_pending (got {trigger.status})",
+            )
+        trigger.status = "approved"
+        trigger.reviewed_by = actor.actor_id
+        trigger.reviewed_at = utc_now()
+        trigger.review_reason = payload.reason
+        session.commit()
+        session.refresh(trigger)
+        return _ok(serialize_trigger(trigger), actor=actor, meta={"reviewed": "approved"})
+
+    @app.post(
+        "/automation/triggers/{trigger_id}/reject",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={
+            401: {"model": ErrorResponse},
+            403: {"model": ErrorResponse},
+            404: {"model": ErrorResponse},
+            409: {"model": ErrorResponse},
+        },
+    )
+    def reject_automation_trigger(
+        trigger_id: int,
+        payload: AutomationTriggerReviewRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("approve_actions")),
+    ) -> dict[str, Any]:
+        trigger = session.get(AutomationRuleTriggerRecord, trigger_id)
+        if trigger is None:
+            raise HTTPException(status_code=404, detail="automation trigger not found")
+        if trigger.status != "approval_pending":
+            raise HTTPException(
+                status_code=409,
+                detail=f"trigger status must be approval_pending (got {trigger.status})",
+            )
+        trigger.status = "rejected"
+        trigger.reviewed_by = actor.actor_id
+        trigger.reviewed_at = utc_now()
+        trigger.review_reason = payload.reason
+        session.commit()
+        session.refresh(trigger)
+        return _ok(serialize_trigger(trigger), actor=actor, meta={"reviewed": "rejected"})
 
     @app.post(
         "/automation/evaluate",

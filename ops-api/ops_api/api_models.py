@@ -212,3 +212,7 @@ class AutomationEvaluateRequest(BaseModel):
     zone_id: str | None = None
     runtime_mode_override: Literal["shadow", "approval", "execute"] | None = None
     sensor_snapshot: dict[str, float] = Field(default_factory=dict)
+
+
+class AutomationTriggerReviewRequest(BaseModel):
+    reason: str = Field(default="", max_length=500)

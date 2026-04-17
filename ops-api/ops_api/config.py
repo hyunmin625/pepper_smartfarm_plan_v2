@@ -42,6 +42,19 @@ class Settings:
     # the recall@5 benchmark that motivates the 'openai' option.
     retriever_type: str = "keyword"
     retriever_rag_index_path: str = ""
+    # Automation runner (Phase P). Opt-in via OPS_API_AUTOMATION_ENABLED=true
+    # because the background tick should only run once real sensor data
+    # is flowing through sensor_readings. Default False keeps short-lived
+    # test harnesses and local dev bootstrap free of the asyncio loop.
+    # When enabled the FastAPI lifespan starts a background task that
+    # periodically builds a per-zone sensor snapshot from
+    # ``sensor_readings`` and feeds it into ``evaluate_rules`` so
+    # operator-defined automation rules fire without manual
+    # /automation/evaluate calls. See docs/automation_runner_design.md
+    # for the full flow.
+    automation_enabled: bool = False
+    automation_interval_sec: float = 15.0
+    automation_snapshot_window_sec: float = 120.0
 
 
 def load_settings() -> Settings:
@@ -79,4 +92,25 @@ def load_settings() -> Settings:
         llm_max_retries=int(os.getenv("OPS_API_LLM_MAX_RETRIES", "3")),
         retriever_type=os.getenv("OPS_API_RETRIEVER_TYPE", "keyword"),
         retriever_rag_index_path=os.getenv("OPS_API_RETRIEVER_RAG_INDEX_PATH", ""),
+        automation_enabled=_parse_bool(
+            os.getenv("OPS_API_AUTOMATION_ENABLED", "false"),
+            default=False,
+        ),
+        automation_interval_sec=float(
+            os.getenv("OPS_API_AUTOMATION_INTERVAL_SEC", "15")
+        ),
+        automation_snapshot_window_sec=float(
+            os.getenv("OPS_API_AUTOMATION_SNAPSHOT_WINDOW_SEC", "120")
+        ),
     )
+
+
+def _parse_bool(raw: str | None, *, default: bool) -> bool:
+    if raw is None:
+        return default
+    value = raw.strip().lower()
+    if value in {"true", "1", "yes", "on"}:
+        return True
+    if value in {"false", "0", "no", "off"}:
+        return False
+    return default
