@@ -836,9 +836,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         retriever_instance = create_retriever("keyword")
 
+    dispatcher = ExecutionDispatcher.default(adapter_kind="mock")
     automation_runner = AutomationRunner(
         session_factory=session_factory,
         settings=resolved_settings,
+        dispatcher=dispatcher,
     )
 
     services = AppServices(
@@ -853,7 +855,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ),
             retriever=retriever_instance,
         ),
-        dispatcher=ExecutionDispatcher.default(adapter_kind="mock"),
+        dispatcher=dispatcher,
         planner=ActionDispatchPlanner(),
         realtime_broker=RealtimeBroker(),
         automation_runner=automation_runner,

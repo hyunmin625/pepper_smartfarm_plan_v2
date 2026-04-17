@@ -13,16 +13,22 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from sqlalchemy import desc, distinct, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from .api_models import AUTOMATION_SENSOR_KEYS
 from .automation import EvaluationReport, evaluate_rules
+from .automation_dispatcher import DispatchSummary, dispatch_approved_triggers
 from .config import Settings
 from .models import AutomationRuleRecord, SensorReadingRecord, utc_now
 from .runtime_mode import load_runtime_mode
+
+
+if TYPE_CHECKING:  # pragma: no cover
+    from execution_gateway.dispatch import ExecutionDispatcher
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +41,7 @@ class TickResult:
     matched_rules: int
     snapshot_keys: int
     error: str = ""
+    dispatched: list[DispatchSummary] = field(default_factory=list)
 
 
 class AutomationRunner:
@@ -45,6 +52,13 @@ class AutomationRunner:
     snapshot per zone that has enabled rules, and calls
     :func:`evaluate_rules` with ``persist=True`` so triggers land in
     ``automation_rule_triggers``.
+
+    When a dispatcher is supplied (Phase Q wiring), the tick also flushes
+    any ``status='approved'`` triggers that operators approved in the
+    previous interval: each one is mapped to a synthetic
+    :class:`DecisionRecord` and handed to
+    ``ExecutionDispatcher.dispatch_device_command``. Without a dispatcher
+    the runner still works — it just leaves approved triggers in place.
     """
 
     def __init__(
@@ -52,9 +66,11 @@ class AutomationRunner:
         *,
         session_factory: sessionmaker[Session],
         settings: Settings,
+        dispatcher: "ExecutionDispatcher | None" = None,
     ) -> None:
         self.session_factory = session_factory
         self.settings = settings
+        self.dispatcher = dispatcher
         self._task: asyncio.Task[None] | None = None
         self._stop_event: asyncio.Event | None = None
 
@@ -124,8 +140,6 @@ class AutomationRunner:
         session = self.session_factory()
         try:
             zones = self._discover_active_zones(session)
-            if not zones:
-                return results
             for zone_id in zones:
                 try:
                     snapshot = self._build_zone_snapshot(session, zone_id)
@@ -161,9 +175,40 @@ class AutomationRunner:
                     )
                     if raise_on_error:
                         raise
+            # Phase Q: flush approved triggers regardless of whether any
+            # zone was discovered above. Operators may have approved
+            # rows from a previous tick after the corresponding rule
+            # was disabled, and we still want those to dispatch.
+            dispatched = self._flush_approved(session)
+            if dispatched:
+                results.append(
+                    TickResult(
+                        zone_id=None,
+                        evaluated_rules=0,
+                        matched_rules=0,
+                        snapshot_keys=0,
+                        dispatched=dispatched,
+                    )
+                )
         finally:
             session.close()
         return results
+
+    def _flush_approved(self, session: Session) -> list[DispatchSummary]:
+        """Hand every ``status='approved'`` trigger to the dispatcher.
+
+        Without a wired dispatcher the approved row stays pending, so a
+        runner deployed in a test harness that doesn't need dispatch
+        (e.g., smoke of evaluate_rules only) keeps working unchanged.
+        """
+
+        if self.dispatcher is None:
+            return []
+        try:
+            return dispatch_approved_triggers(session, self.dispatcher)
+        except Exception:  # pragma: no cover - defensive
+            logger.exception("automation_runner approved_flush failed")
+            return []
 
     # ------------------------------------------------------------------
     # Snapshot assembly

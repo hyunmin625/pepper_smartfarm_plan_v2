@@ -21,6 +21,7 @@ ALTER TABLE automation_rule_triggers
             'approved',
             'rejected',
             'dispatched',
+            'dispatch_fault',
             'blocked_validator',
             'blocked_guard',
             'cooldown_skipped'

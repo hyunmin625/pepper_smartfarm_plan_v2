@@ -374,13 +374,13 @@ class AutomationRuleTriggerRecord(Base):
 
     - ``shadow_logged``: runtime_mode was shadow, trigger recorded only.
     - ``approval_pending``: wrote an ApprovalRecord-compatible proposed_action.
-    - ``approved``: operator approved via ``/automation/triggers/{id}/approve``
-      (Phase P-3). Dispatch to the execution gateway is wired in Phase Q
-      via a DecisionRecord FK; until then an approved trigger means the
-      operator has signalled intent but the command has not yet been
-      sent.
+    - ``approved``: operator approved via ``/automation/triggers/{id}/approve``.
+      Phase Q ``dispatch_approved_triggers`` flushes these into the
+      execution gateway on the next AutomationRunner tick.
     - ``rejected``: operator rejected via ``/automation/triggers/{id}/reject``.
     - ``dispatched``: execution_gateway accepted the command.
+    - ``dispatch_fault``: dispatcher call failed (adapter error / rule
+      row missing). Left as a terminal state for operator inspection.
     - ``blocked_validator``: output_validator rejected the proposed action.
     - ``blocked_guard``: execution-gateway guard rejected (worker_present etc.).
     - ``cooldown_skipped``: rule matched but was within cooldown window.
