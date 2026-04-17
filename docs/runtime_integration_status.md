@@ -147,14 +147,13 @@ python3 scripts/validate_execution_gateway_flow.py
 python3 scripts/validate_execution_dispatcher.py
 python3 scripts/run_llm_orchestrator_smoke.py --provider stub --model-id champion
 python3 scripts/run_llm_orchestrator_smoke.py --provider openai --model-id champion --prompt-version sft_v10
-python3 scripts/run_llm_orchestrator_smoke.py --provider gemini --model-id gemini_flash_frontier --prompt-version sft_v11_rag_frontier
 python3 -m py_compile state-estimator/state_estimator/*.py llm-orchestrator/llm_orchestrator/*.py ops-api/ops_api/*.py
 ```
 
 ## 현재 한계
 
 - OpenAI online smoke는 `.env`와 네트워크가 열린 환경에서 `champion -> ds_v11` FT model alias, retrieval, strict JSON, validator 경로까지 통과했다. 다만 CI나 운영 비밀관리 경로에 얹은 상태는 아직 아니다.
-- Gemini frontier path는 `gemini_flash_frontier -> gemini-2.5-flash` alias와 `sft_v11_rag_frontier` prompt로 연결할 수 있게 됐다. 다만 production champion 전환은 아니며, `extended200 + blind50 + real shadow` 게이트를 다시 통과해야 한다.
+- **폐기 (2026-04-17)**: Gemini frontier path (`gemini_flash_frontier -> gemini-2.5-flash` + `sft_v11_rag_frontier`) 계획 폐기. Phase A~E 실측 기준 결정 경로 부적합 확정. runtime alias와 `.env` GEMINI 설정은 제거됐다.
 - `ops-api` 런타임은 이제 `PostgreSQL/TimescaleDB only`다. `SQLite` fallback은 제거했고, bootstrap과 dashboard smoke도 같은 PostgreSQL 경로를 사용한다.
 - `scripts/validate_ops_api_postgres_smoke.py`는 이 환경에서 실제로 통과했다. seeded count는 `zones 5 / sensors 29 / devices 20 / policies 20`이고 decision/alert/robot_task round trip도 확인했다.
 - `scripts/validate_ops_api_server_smoke.py`도 PostgreSQL URL 기준으로 실제 `uvicorn`을 띄워 HTTP 경로를 통과시킨다.

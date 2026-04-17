@@ -49,8 +49,7 @@
 # 제품 수준 재평가 우선 작업
 
 - [ ] `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit freeze 상태 유지
-- [x] RAG-first frontier challenger를 `gemini-2.5-flash`로 고정하고 runtime alias `gemini_flash_frontier` + `gemini` provider smoke 경로를 연다 (`llm-orchestrator/llm_orchestrator/client.py`, `llm-orchestrator/llm_orchestrator/model_registry.py`, `artifacts/runtime/llm_orchestrator/model_registry.json`, `scripts/run_llm_orchestrator_smoke.py`, `.env.example`)
-- [ ] `gemini_flash_frontier + sft_v11_rag_frontier`를 `extended200 + blind_holdout50 + real shadow` 기준으로 다시 평가하고 production 승격 여부를 판정
+- [~] **폐기 (2026-04-17)**: `gemini_flash_frontier` frontier challenger 계획 전체 폐기. Phase A~E 실측에서 `gemini-2.5-flash` (thinking) ext 0.37 / blind 0.50으로 `ds_v11` (0.70/0.70) 대비 열세였고, reasoning/thinking 모델이 이 프로젝트 JSON strict + instruction-heavy 결정 경로에 구조적으로 부적합함이 확정됐다. runtime alias / `sft_v11_rag_frontier` prompt / `.env` GEMINI 설정은 설정/레지스트리에서 제거한다. 과거 평가 artifact는 역사 기록으로 보존한다.
 - [x] `scripts/build_openai_sft_datasets.py`로 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread` split 시뮬레이션과 결과 기록
 - [x] `docs/risk_level_rubric.md` 기준으로 기존 training/eval의 `risk_level` 전수 점검
 - [x] `python3 scripts/report_risk_slice_coverage.py` 기준 mismatch `failure_safe_mode_risk_not_critical 4`, `failure_safe_mode_actions_missing 3`, `safety_hard_block_actions_missing 1` 정리

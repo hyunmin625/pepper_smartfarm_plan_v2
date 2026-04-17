@@ -1797,3 +1797,29 @@
 - 실행 명령은 `./.venv/bin/python scripts/run_rag_validation_suite.py --fail-under 1.0 --output-json artifacts/reports/rag_validation_suite_20260415.json --output-md artifacts/reports/rag_validation_suite_20260415.md`로 고정했다.
 - 실행 결과 aggregate 기준 keyword는 `126개 case`, `hit_rate 1.0`, `MRR 0.9921`이고, local은 `126개 case`, `hit_rate 1.0`, `MRR 1.0`이었다.
 - suite별 세부 수치는 공통 eval `110건` keyword `0.9909` / local `1.0`, stage eval `16건` keyword/local 모두 `1.0`이다.
+
+---
+
+## 2026-04-17 — gemini_flash_frontier 계획 전량 폐기
+
+### 배경
+- 2026-04-14에 사용자 결정으로 `gemini-2.5-flash`를 RAG-first frontier challenger alias `gemini_flash_frontier`로 고정하고, runtime alias + `.env` GEMINI 경로 + `sft_v11_rag_frontier` prompt를 모두 연결했다.
+- 이후 Phase A~E 4-way 실측(`artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`)에서 `gemini-2.5-flash` (thinking) `ext 0.37 / blind 0.50`, `MiniMax M2.7` `ext 0.335 / blind 0.22`로 `ds_v11` (0.70/0.70) 대비 열세였다. reasoning/thinking 모델이 JSON strict + instruction-heavy 결정 경로에 구조적으로 부적합함이 두 모델 실측으로 확정됐다.
+- Phase K-1 `artifacts/reports/fine_tune_iteration_final_postmortem.md`에서 production champion을 `ds_v11` 유지로 공식 종결한 이후에도 `gemini_flash_frontier` 승격 평가 todo가 열려 있었다.
+
+### 조치
+- **todo.md**: `RAG-first frontier challenger를 gemini-2.5-flash로 고정` 체크박스를 폐기 마커(`[~]`)로 전환, 승격 평가 todo(`extended200 + blind_holdout50 + real shadow` 기준 재평가)를 폐기 주석으로 교체.
+- **PROJECT_STATUS.md**: 항목 25, 29를 `폐기 (2026-04-17)`로 교체. 폐기 근거와 유지되는 역사 artifact 범위를 명기.
+- **README.md**: `RAG-first frontier challenger 결정` 항목, `Gemini runtime path` 항목을 폐기 마커로 교체.
+- **docs/model_product_readiness_reassessment.md**: `Update 2026-04-14: frontier RAG challenger 선택` 섹션을 `Update 2026-04-17: frontier RAG challenger 폐기` 로 교체.
+- **docs/runtime_integration_status.md**: Gemini smoke 명령 제거, 현재 한계 항목 폐기 마커로 교체.
+- **llm-orchestrator/README.md**: `gemini` provider 표기 옆 폐기 주석 추가, Gemini smoke 블록 삭제, `gemini_flash_frontier` alias 폐기 주석 추가.
+- **llm-orchestrator/llm_orchestrator/model_registry.py**: `gemini_flash_frontier` entry 삭제.
+- **artifacts/runtime/llm_orchestrator/model_registry.json**: `gemini_flash_frontier` entry 삭제.
+- **.env.example**: `GEMINI_API_KEY`, `GOOGLE_API_KEY`, `MINIMAX_API_KEY`, Gemini provider 예시 라인 제거. 파일 상단 주석에서 `OpenAI/Gemini-backed` → `OpenAI-backed` 단순화.
+- **.env / .env.dev.example / .env.staging.example / .env.prod.example**: `GEMINI_API_KEY`, `GOOGLE_API_KEY` 라인 제거. `.env`의 실제 Google/Gemini API key는 삭제됐으므로 사용자는 Google Cloud Console에서 key를 revoke 권장.
+
+### 보존 범위
+- Phase A~E 평가 artifact (`artifacts/reports/frontier_gemini_*`, `artifacts/reports/regrade/C_gemini_*`, `artifacts/reports/validator_postprocess/C_gemini_*`, `artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`)는 **역사 기록으로 보존**한다. 이들은 "왜 Gemini 경로를 폐기했는지"의 실측 근거다.
+- `scripts/evaluate_fine_tuned_model.py`의 `--provider {openai,gemini,minimax}` CLI 분기와 `scripts/apply_validator_postprocess.py`, `scripts/regrade_eval_results.py`의 gemini 파일 경로 대응 코드도 **유지**한다. 과거 jsonl 재채점/재검증 경로가 필요할 수 있어서다. 신규 Gemini 평가 실행은 계획에 없다.
+- `llm-orchestrator/llm_orchestrator/client.py`의 `GeminiCompletionClient` 구현도 **유지**한다. 제거는 더 큰 리팩터 변경이며 현재 의존 경로가 남아 있을 수 있다. 필요시 별도 과제로 이관한다.

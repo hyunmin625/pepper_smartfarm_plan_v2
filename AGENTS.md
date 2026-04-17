@@ -20,6 +20,8 @@
 
 `ops-api`와 통합제어 Web UI 실행은 앞으로 `PostgreSQL/TimescaleDB only` 기준으로 다룹니다. 다른 AI/에이전트도 `SQLite` bootstrap, `SQLite` smoke, `SQLite` dashboard 실행을 제안하거나 사용하면 안 됩니다.
 
+**폐기된 계획 (제안 금지)**: `gemini_flash_frontier` (`gemini-2.5-flash` RAG-first frontier challenger) 계획은 2026-04-17 실측 근거로 전량 폐기됐습니다. 다른 AI/에이전트는 `--provider gemini`, `GEMINI_API_KEY`, `sft_v11_rag_frontier` prompt, `gemini_flash_frontier` alias 기반 smoke/평가/승격 경로를 제안하거나 재도입해서는 안 됩니다. 근거는 `artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`, `docs/model_product_readiness_reassessment.md`의 `Update 2026-04-17` 섹션입니다. production champion은 `ds_v11` frozen FT model로 고정입니다.
+
 ## 빌드, 테스트, 개발 명령
 
 현재 별도 빌드 시스템이나 테스트 러너는 없습니다. 문서 변경 시 아래 명령으로 기본 확인을 수행합니다.

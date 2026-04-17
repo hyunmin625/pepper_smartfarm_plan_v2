@@ -2,11 +2,11 @@
 
 이 문서는 `0.95`를 단순 benchmark score가 아니라, 실제 `건고추 온실 스마트팜에 사용 가능한 AI 모델 제품 수준`으로 다시 해석하기 위한 재평가 메모다.
 
-## Update 2026-04-14: frontier RAG challenger 선택
+## Update 2026-04-17: frontier RAG challenger 폐기
 
-- 사용자 결정에 따라 RAG-first frontier challenger는 `gemini-2.5-flash`로 고정한다.
-- 이 결정은 `production champion 교체`가 아니라 `frontier challenger lane` 선택이다. production baseline은 여전히 `ds_v11` frozen FT model로 유지한다.
-- 따라서 승격 조건은 바뀌지 않는다. `gemini-2.5-flash`도 `extended200 + blind_holdout50 + real shadow` 게이트를 통과하기 전까지는 production으로 올리지 않는다.
+- **2026-04-14 결정 취소**. `gemini-2.5-flash` RAG-first frontier challenger 계획 전량 폐기.
+- 근거: Phase A~E 4-way 실측(`artifacts/reports/ab_full_evaluation.md`, `artifacts/reports/ab_frozen_vs_frontier.md`)에서 `gemini-2.5-flash` (thinking) `ext 0.37 / blind 0.50`, `MiniMax M2.7` `ext 0.335 / blind 0.22`로 `ds_v11` (0.70/0.70) 대비 열세였다. reasoning/thinking 모델이 이 프로젝트 JSON strict + instruction-heavy 결정 경로에 구조적으로 부적합함이 두 모델 실측으로 확정됐다.
+- 조치: `gemini_flash_frontier` alias와 `sft_v11_rag_frontier` prompt를 `model_registry`/`.env` 설정에서 제거한다. production champion은 계속 `ds_v11` frozen baseline이다. 과거 평가 artifact는 역사 기록으로 보존한다.
 
 ## Update 2026-04-13: ds_v11 완료 후 판단
 
