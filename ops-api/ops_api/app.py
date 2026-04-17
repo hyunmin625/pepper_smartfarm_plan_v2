@@ -4247,26 +4247,80 @@ def _dashboard_html() -> str:
     function renderAutomationTriggers() {
       const host = document.getElementById('automationTriggerList');
       if (!host) return;
-      if (!automationState.triggers.length) {
-        host.innerHTML = '<div class="placeholder">trigger 로그가 없습니다.</div>';
-        return;
-      }
       const statusChip = (st) => {
         if (st === 'dispatched') return 'chip-enabled';
+        if (st === 'approved') return 'chip-warn';
         if (st === 'approval_pending') return 'chip-warn';
-        if (st === 'blocked_validator' || st === 'blocked_guard') return 'chip-critical';
+        if (st === 'rejected') return 'chip-critical';
+        if (st === 'dispatch_fault' || st === 'blocked_validator' || st === 'blocked_guard') return 'chip-critical';
         return 'chip-dark';
       };
-      host.innerHTML = automationState.triggers.map(t => `
-        <div class="alert-row">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
-            <span class="chip ${statusChip(t.status)}">${t.status}</span>
-          </div>
-          <div class="text-xs text-ink">rule_id=${t.rule_id} · sensor=${escapeHtml(t.sensor_key)} = ${t.matched_value}</div>
-          <div class="text-[10px] text-muted">runtime=${escapeHtml(t.runtime_mode || '')}${t.note ? ' · ' + escapeHtml(t.note) : ''}</div>
-        </div>
-      `).join('');
+      const renderRow = (t, isPending) => {
+        const reviewLine = (t.reviewed_by || t.reviewed_at)
+          ? `<div class="text-[10px] text-muted mt-1">review: ${escapeHtml(t.reviewed_by || '—')} @ ${escapeHtml(t.reviewed_at || '—')}${t.review_reason ? ' · ' + escapeHtml(t.review_reason) : ''}</div>`
+          : '';
+        const actionRow = isPending
+          ? `<div class="flex gap-2 mt-2">
+              <button onclick="approveAutomationTrigger(${t.id})" class="chip chip-enabled hover:opacity-90">
+                <span class="material-symbols-outlined text-[14px] mr-1">check_circle</span>승인
+              </button>
+              <button onclick="rejectAutomationTrigger(${t.id})" class="chip chip-critical hover:opacity-90">
+                <span class="material-symbols-outlined text-[14px] mr-1">cancel</span>거절
+              </button>
+            </div>`
+          : '';
+        const border = isPending ? ' border-l-4 border-warn' : '';
+        return `
+          <div class="alert-row mb-2${border}">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
+              <span class="chip ${statusChip(t.status)}">${escapeHtml(t.status || '')}</span>
+            </div>
+            <div class="text-xs text-ink">rule_id=${t.rule_id} · sensor=${escapeHtml(t.sensor_key)} = ${t.matched_value}</div>
+            <div class="text-[10px] text-muted">runtime=${escapeHtml(t.runtime_mode || '')}${t.note ? ' · ' + escapeHtml(t.note) : ''}</div>
+            ${reviewLine}
+            ${actionRow}
+          </div>`;
+      };
+      const pending = automationState.triggers.filter(t => t.status === 'approval_pending');
+      const history = automationState.triggers.filter(t => t.status !== 'approval_pending');
+      let html = '';
+      if (pending.length) {
+        html += `<div class="mb-3"><div class="text-[10px] font-bold uppercase tracking-wider text-warn mb-2">승인 대기 · ${pending.length}건</div>${pending.map(t => renderRow(t, true)).join('')}</div>`;
+      }
+      if (history.length) {
+        html += `<div><div class="text-[10px] font-bold uppercase tracking-wider text-muted mb-2">최근 이력</div>${history.map(t => renderRow(t, false)).join('')}</div>`;
+      }
+      if (!html) {
+        html = '<div class="placeholder">trigger 로그가 없습니다.</div>';
+      }
+      host.innerHTML = html;
+    }
+    async function approveAutomationTrigger(triggerId) {
+      const reason = prompt('승인 사유 (선택):') || '';
+      try {
+        await apiFetch(`/automation/triggers/${triggerId}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        });
+        await refreshAutomation();
+      } catch (err) {
+        alert('승인 실패: ' + (err.message || err));
+      }
+    }
+    async function rejectAutomationTrigger(triggerId) {
+      const reason = prompt('거절 사유 (선택):') || '';
+      try {
+        await apiFetch(`/automation/triggers/${triggerId}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        });
+        await refreshAutomation();
+      } catch (err) {
+        alert('거절 실패: ' + (err.message || err));
+      }
     }
     function openAutomationRuleModal(ruleId = null) {
       automationState.editingRuleId = ruleId;
