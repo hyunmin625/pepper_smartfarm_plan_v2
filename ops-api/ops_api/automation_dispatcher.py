@@ -30,6 +30,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .models import (
+    AlertRecord,
     AutomationRuleRecord,
     AutomationRuleTriggerRecord,
     DecisionRecord,
@@ -60,22 +61,29 @@ def dispatch_approved_triggers(
     *,
     limit: int = 50,
     now: datetime | None = None,
+    trigger_ids: list[int] | None = None,
 ) -> list[DispatchSummary]:
     """Flush every ``status='approved'`` trigger through the dispatcher.
 
     Each approved row is claimed one-by-one; failures are isolated so a
     malformed rule or adapter fault doesn't stall the rest of the batch.
+    ``trigger_ids`` narrows the batch to a specific set of primary keys
+    (tests use this to stay isolated from any pre-existing approved rows
+    left behind by other smokes on the shared Postgres fixture).
     Returns a per-trigger summary list so callers can log / expose it.
     """
 
     from execution_gateway.contracts import DeviceCommandRequest  # local to avoid heavy import at startup
 
-    approved = session.scalars(
+    stmt = (
         select(AutomationRuleTriggerRecord)
         .where(AutomationRuleTriggerRecord.status == "approved")
         .order_by(AutomationRuleTriggerRecord.reviewed_at.asc().nullslast())
         .limit(limit)
-    ).all()
+    )
+    if trigger_ids is not None:
+        stmt = stmt.where(AutomationRuleTriggerRecord.id.in_(trigger_ids))
+    approved = session.scalars(stmt).all()
     summaries: list[DispatchSummary] = []
     for trigger in approved:
         rule = session.get(AutomationRuleRecord, trigger.rule_id)
@@ -176,6 +184,15 @@ def _dispatch_single(
         logger.exception("automation dispatch failed trigger_id=%s", trigger.id)
         trigger.status = "dispatch_fault"
         trigger.note = f"dispatcher_error: {exc}"[:500]
+        _emit_fault_alert(
+            session,
+            trigger=trigger,
+            rule=rule,
+            decision_id=decision.id,
+            reasons=["dispatcher_error"],
+            severity="error",
+            summary=f"dispatcher raised: {exc}"[:240],
+        )
         session.commit()
         return DispatchSummary(
             trigger_id=trigger.id,
@@ -210,6 +227,16 @@ def _dispatch_single(
         trigger.status = "dispatch_fault"
 
     trigger.note = ",".join(reasons)[:500]
+    if trigger.status in {"dispatch_fault", "blocked_guard"}:
+        _emit_fault_alert(
+            session,
+            trigger=trigger,
+            rule=rule,
+            decision_id=decision.id,
+            reasons=reasons,
+            severity="warning" if trigger.status == "blocked_guard" else "error",
+            summary=f"automation {trigger.status} for rule {rule.rule_id}",
+        )
     session.commit()
     return DispatchSummary(
         trigger_id=trigger.id,
@@ -218,6 +245,60 @@ def _dispatch_single(
         decision_id=decision.id,
         reasons=reasons,
     )
+
+
+def _emit_fault_alert(
+    session: Session,
+    *,
+    trigger: AutomationRuleTriggerRecord,
+    rule: AutomationRuleRecord,
+    decision_id: int | None,
+    reasons: list[str],
+    severity: str,
+    summary: str,
+) -> None:
+    """Persist an AlertRecord so operators see dispatch failures on the alerts view.
+
+    Without this, dispatch_fault/blocked_guard transitions were silent — the
+    trigger row carried the status but the dashboard summary and /alerts feed
+    had no signal to page on. A nested SAVEPOINT scopes the insert so a FK
+    violation (zone row absent) can't roll back the outer trigger-status
+    transition.
+    """
+
+    from sqlalchemy.exc import SQLAlchemyError
+
+    payload = {
+        "source": "automation_dispatcher",
+        "trigger_id": trigger.id,
+        "rule_id": rule.rule_id,
+        "rule_pk": rule.id,
+        "zone_id": trigger.zone_id or rule.zone_id,
+        "status": trigger.status,
+        "reasons": reasons,
+        "sensor_key": trigger.sensor_key,
+        "matched_value": trigger.matched_value,
+    }
+    alert = AlertRecord(
+        decision_id=decision_id,
+        zone_id=trigger.zone_id or rule.zone_id or "farm-wide",
+        alert_type=f"automation_{trigger.status}",
+        severity=severity,
+        status="active",
+        summary=summary[:500],
+        validator_reason_codes_json=json.dumps(reasons, ensure_ascii=False),
+        payload_json=json.dumps(payload, ensure_ascii=False, default=str),
+    )
+    try:
+        with session.begin_nested():
+            session.add(alert)
+            session.flush()
+    except SQLAlchemyError:
+        logger.warning(
+            "automation alert emit failed trigger_id=%s zone_id=%s — skipping",
+            trigger.id,
+            alert.zone_id,
+        )
 
 
 def _fallback_device_id(

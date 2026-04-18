@@ -41,11 +41,13 @@ from ops_api.automation_runner import AutomationRunner  # noqa: E402
 from ops_api.config import Settings  # noqa: E402
 from ops_api.database import build_session_factory, init_db  # noqa: E402
 from ops_api.models import (  # noqa: E402
+    AlertRecord,
     AutomationRuleRecord,
     AutomationRuleTriggerRecord,
     DecisionRecord,
     DeviceCommandRecord,
     SensorReadingRecord,
+    ZoneRecord,
     utc_now,
 )
 from ops_api.runtime_mode import save_runtime_mode  # noqa: E402
@@ -73,14 +75,20 @@ def _scoped_smoke_run():
     finally:
         session = session_factory()
         try:
+            session.query(AlertRecord).filter(
+                AlertRecord.zone_id.like(f"%{suffix}%")
+            ).delete(synchronize_session=False)
             session.query(AutomationRuleRecord).filter(
-                AutomationRuleRecord.rule_id.like(f"%{suffix}")
+                AutomationRuleRecord.rule_id.like(f"%{suffix}%")
             ).delete(synchronize_session=False)
             session.query(SensorReadingRecord).filter(
-                SensorReadingRecord.zone_id.like(f"%{suffix}")
+                SensorReadingRecord.zone_id.like(f"%{suffix}%")
             ).delete(synchronize_session=False)
             session.query(DecisionRecord).filter(
                 DecisionRecord.request_id.like(f"automation-%{suffix}%")
+            ).delete(synchronize_session=False)
+            session.query(ZoneRecord).filter(
+                ZoneRecord.zone_id.like(f"%{suffix}%")
             ).delete(synchronize_session=False)
             session.commit()
         finally:
@@ -115,9 +123,28 @@ def _make_settings(tmp_root: Path, database_url: str) -> Settings:
     )
 
 
-def _seed_approved_trigger(session_factory, *, suffix: str) -> tuple[int, int]:
+def _seed_approved_trigger(
+    session_factory,
+    *,
+    suffix: str,
+    device_id: str = "gh-01-zone-a--vent-window--01",
+    device_type: str = "vent_window",
+) -> tuple[int, int]:
+    zone_id = f"gh-01-zone-a-{suffix}"
     session = session_factory()
     try:
+        existing_zone = session.query(ZoneRecord).filter(ZoneRecord.zone_id == zone_id).one_or_none()
+        if existing_zone is None:
+            session.add(
+                ZoneRecord(
+                    zone_id=zone_id,
+                    zone_type="greenhouse",
+                    priority="normal",
+                    description="q smoke synthetic",
+                    metadata_json="{}",
+                )
+            )
+            session.commit()
         rule = AutomationRuleRecord(
             rule_id=f"q-smoke-{suffix}-{secrets.token_hex(2)}",
             name=f"q smoke {suffix}",
@@ -130,8 +157,8 @@ def _seed_approved_trigger(session_factory, *, suffix: str) -> tuple[int, int]:
             threshold_max=None,
             hysteresis_value=None,
             cooldown_minutes=60,
-            target_device_type="vent_window",
-            target_device_id="gh-01-zone-a--vent-window--01",
+            target_device_type=device_type,
+            target_device_id=device_id,
             target_action="adjust_vent",
             action_payload_json=json.dumps({"position_pct": 0}),
             priority=10,
@@ -154,8 +181,8 @@ def _seed_approved_trigger(session_factory, *, suffix: str) -> tuple[int, int]:
                 {
                     "action_type": "adjust_vent",
                     "target": {
-                        "target_type": "vent_window",
-                        "target_id": "gh-01-zone-a--vent-window--01",
+                        "target_type": device_type,
+                        "target_id": device_id,
                     },
                     "trigger": {
                         "source": "automation_rule",
@@ -195,7 +222,7 @@ def test_direct_dispatch(db_url: str, suffix: str) -> None:
         dispatcher = ExecutionDispatcher.default(adapter_kind="mock")
         session = session_factory()
         try:
-            summaries = dispatch_approved_triggers(session, dispatcher)
+            summaries = dispatch_approved_triggers(session, dispatcher, trigger_ids=[trigger_pk])
         finally:
             session.close()
 
@@ -228,6 +255,57 @@ def test_direct_dispatch(db_url: str, suffix: str) -> None:
             _assert(
                 cmd_rows[0].action_type == "adjust_vent",
                 "command captures action_type",
+            )
+
+            alert_rows = (
+                verify.query(AlertRecord)
+                .filter(AlertRecord.zone_id.like(f"%{suffix}"))
+                .all()
+            )
+            _assert(
+                all(a.alert_type != "automation_dispatch_fault" for a in alert_rows),
+                "no dispatch_fault alert on happy path",
+            )
+        finally:
+            verify.close()
+
+
+def test_dispatch_fault_alert(db_url: str, suffix: str) -> None:
+    print("[test] dispatcher exception → dispatch_fault emits AlertRecord")
+    with tempfile.TemporaryDirectory() as tmp:
+        settings = _make_settings(Path(tmp), db_url)
+        session_factory = build_session_factory(settings.database_url)
+        rule_pk, trigger_pk = _seed_approved_trigger(
+            session_factory,
+            suffix=suffix,
+            device_id=f"unknown-device-{suffix}",
+        )
+
+        dispatcher = ExecutionDispatcher.default(adapter_kind="mock")
+        session = session_factory()
+        try:
+            summaries = dispatch_approved_triggers(session, dispatcher, trigger_ids=[trigger_pk])
+        finally:
+            session.close()
+
+        scoped = [s for s in summaries if s.trigger_id == trigger_pk]
+        _assert(len(scoped) == 1, "fault summary captured")
+        _assert(scoped[0].status == "dispatch_fault", "status = dispatch_fault")
+
+        verify = session_factory()
+        try:
+            alert_rows = (
+                verify.query(AlertRecord)
+                .filter(AlertRecord.zone_id.like(f"%{suffix}"))
+                .filter(AlertRecord.alert_type == "automation_dispatch_fault")
+                .all()
+            )
+            _assert(len(alert_rows) == 1, "one dispatch_fault AlertRecord emitted")
+            _assert(alert_rows[0].severity == "error", "severity=error for dispatch_fault")
+            _assert(alert_rows[0].status == "active", "alert status=active")
+            _assert(
+                alert_rows[0].decision_id is not None,
+                "alert links back to synthetic decision",
             )
         finally:
             verify.close()
@@ -313,7 +391,7 @@ def test_non_approved_rows_untouched(db_url: str, suffix: str) -> None:
         dispatcher = ExecutionDispatcher.default(adapter_kind="mock")
         session = session_factory()
         try:
-            summaries = dispatch_approved_triggers(session, dispatcher)
+            summaries = dispatch_approved_triggers(session, dispatcher, trigger_ids=[pending_pk])
         finally:
             session.close()
 
@@ -336,6 +414,7 @@ def test_non_approved_rows_untouched(db_url: str, suffix: str) -> None:
 def main() -> int:
     tests = [
         ("direct_dispatch", test_direct_dispatch),
+        ("dispatch_fault_alert", test_dispatch_fault_alert),
         ("runner_tick_flushes", test_runner_tick_flushes),
         ("non_approved_untouched", test_non_approved_rows_untouched),
     ]

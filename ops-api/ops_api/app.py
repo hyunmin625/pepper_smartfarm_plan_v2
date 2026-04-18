@@ -11,7 +11,7 @@ from typing import Any, AsyncIterator
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
-from sqlalchemy import asc, desc, select
+from sqlalchemy import asc, desc, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from .api_models import (
@@ -758,6 +758,17 @@ def _build_dashboard_payload(
     operator_agreement_rate = round(agree_count / len(agreement_rows), 4) if agreement_rows else None
     shadow_window_summary = _compute_shadow_window(shadow_audit_path)
 
+    automation_status_counts: dict[str, int] = dict(
+        session.execute(
+            select(
+                AutomationRuleTriggerRecord.status,
+                func.count(AutomationRuleTriggerRecord.id),
+            )
+            .where(AutomationRuleTriggerRecord.triggered_at >= utc_now() - timedelta(hours=24))
+            .group_by(AutomationRuleTriggerRecord.status)
+        ).all()
+    )
+
     return {
         "runtime_mode": mode_state.as_dict(),
         "summary": {
@@ -777,6 +788,12 @@ def _build_dashboard_payload(
             "policy_event_count": len(policy_event_rows),
             "policy_blocked_count": sum(1 for row in policy_event_rows if row.event_type == "blocked"),
             "policy_approval_count": sum(1 for row in policy_event_rows if row.event_type == "approval_required"),
+            "automation_pending_count": automation_status_counts.get("approval_pending", 0),
+            "automation_dispatched_count": automation_status_counts.get("dispatched", 0),
+            "automation_fault_count": (
+                automation_status_counts.get("dispatch_fault", 0)
+                + automation_status_counts.get("blocked_guard", 0)
+            ),
         },
         "shadow_window": shadow_window_summary,
         "zones": list(latest_zone_items.values()),
@@ -3537,6 +3554,8 @@ def _dashboard_html() -> str:
         ['Policy Event', summary.policy_event_count ?? 0, '', ''],
         ['Policy Block', summary.policy_blocked_count ?? 0, '', ''],
         ['Alerts', summary.alert_count ?? 0, '', ''],
+        ['Automation 대기', summary.automation_pending_count ?? 0, '', '지난 24h approval_pending 트리거'],
+        ['Automation 실패', summary.automation_fault_count ?? 0, '', '지난 24h dispatch_fault + blocked_guard'],
         ['Robot Task', summary.robot_task_count ?? 0, '', ''],
         ['Robot Candidate', summary.robot_candidate_count ?? 0, '', ''],
         ['Policy (enabled/total)', ((summary.policy_count ?? 0) - (summary.policy_disabled_count ?? 0)) + '/' + (summary.policy_count ?? 0), '', ''],
