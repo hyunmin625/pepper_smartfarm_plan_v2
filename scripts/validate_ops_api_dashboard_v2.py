@@ -44,11 +44,17 @@ INDEX_HTML_HOOKS = [
     "iFarm 통합제어 — 대시보드 재설계",
     "--brand:          #006a26",
     "window.__TWEAK_DEFAULTS",
-    'src="src/tokens.jsx"',
-    'src="src/app.jsx"',
+    # Single-bundle babel script with absolute src path (external jsx
+    # files broke under Babel standalone's async loader + base-URL
+    # resolution). Individual jsx files still reachable for debugging.
+    'src="/dashboard/v2/src/bundle.jsx"',
 ]
 
 EXPECTED_JSX_FILES = [
+    ("bundle.jsx", "const STATUS ="),
+    ("bundle.jsx", "function Sidebar"),
+    ("bundle.jsx", "function Dashboard"),
+    ("bundle.jsx", "function App"),
     ("tokens.jsx", "const STATUS ="),
     ("chrome.jsx", "function Sidebar"),
     ("dashboard.jsx", "function Dashboard"),

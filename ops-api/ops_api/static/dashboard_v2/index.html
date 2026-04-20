@@ -225,26 +225,27 @@ window.__TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 </script>
 
-<!-- React + Babel -->
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<!-- React + Babel. SRI integrity 속성은 제거 — unpkg가 minor 버전 갱신하면
+     해시 불일치로 SRI 검증이 실패해 스크립트 전체가 실행되지 않고
+     페이지가 빈 화면이 됨. Babel standalone은 data-presets 명시 필수
+     (외부 .jsx 파일 fetch 변환 시). -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
 <div id="root"></div>
 
-<script type="text/babel" src="src/tokens.jsx"></script>
-<script type="text/babel" src="src/chrome.jsx"></script>
-<script type="text/babel" src="src/dashboard.jsx"></script>
-<script type="text/babel" src="src/decisions.jsx"></script>
-<script type="text/babel" src="src/rules.jsx"></script>
-<script type="text/babel" src="src/alerts.jsx"></script>
-<script type="text/babel" src="src/zones.jsx"></script>
-<script type="text/babel" src="src/chat.jsx"></script>
-<script type="text/babel" src="src/devices.jsx"></script>
-<script type="text/babel" src="src/policies_robot.jsx"></script>
-<script type="text/babel" src="src/designsystem.jsx"></script>
-<script type="text/babel" src="src/app.jsx"></script>
+<!-- 단일 babel 번들: 12개 jsx 모듈을 하나의 transform 컨텍스트에서 실행해야
+     Sidebar/Topbar/Dashboard 등 top-level 선언이 서로 참조 가능함. 외부 src
+     방식은 Babel standalone이 각 파일을 개별 IIFE로 래핑하거나 비순차 로드해서
+     ReferenceError가 나고 빈 화면이 됨. 개별 파일은 /dashboard/v2/src/ 하위에
+     여전히 반환되니 브라우저 DevTools에서 원본은 그대로 열람 가능. -->
+<!-- Use absolute path: the route /dashboard/v2 has no trailing slash, so
+     the browser resolves `src/bundle.jsx` against /dashboard/ and hits
+     /dashboard/src/bundle.jsx (404). Absolute path avoids the base-URL
+     ambiguity regardless of trailing slash. -->
+<script type="text/babel" data-presets="env,react" src="/dashboard/v2/src/bundle.jsx"></script>
 </body>
 </html>
