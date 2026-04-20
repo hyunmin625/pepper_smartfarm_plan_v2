@@ -1,13 +1,22 @@
 // policies.jsx + robot.jsx merged page components
 
 function PolicyRow({ p }) {
+  // Local state so clicking the toggle actually flips it. Phase T-1 keeps
+  // the switch as pure UI (no server call yet); Phase T-2 will wire this
+  // to POST /policies/{id}/toggle or similar.
+  const [enabled, setEnabled] = React.useState(p.enabled);
   return (
     <div className={`card p-4 rail-${p.state}`}>
       <div className="flex items-center gap-4">
         <label className="relative inline-flex items-center cursor-pointer shrink-0">
-          <input type="checkbox" defaultChecked={p.enabled} className="sr-only peer" />
-          <div className="w-11 h-6 rounded-full" style={{ background: p.enabled ? "var(--brand)" : "#cfd6d1" }}>
-            <div className="w-5 h-5 rounded-full bg-white shadow-sm" style={{ transform: `translate(${p.enabled ? 22 : 2}px, 2px)` }}></div>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={e => setEnabled(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 rounded-full transition-colors" style={{ background: enabled ? "var(--brand)" : "#cfd6d1" }}>
+            <div className="w-5 h-5 rounded-full bg-white shadow-sm transition-transform" style={{ transform: `translate(${enabled ? 22 : 2}px, 2px)` }}></div>
           </div>
         </label>
         <div className="flex-1 min-w-0">

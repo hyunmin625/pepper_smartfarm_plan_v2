@@ -1,6 +1,10 @@
 // rules.jsx — Automation rules list + 3-step wizard
 
 function RuleRow({ r, onEdit }) {
+  // Local enabled state — driven entirely by state, not the prop, so
+  // the track color + thumb translate follow the click. Phase T-2 will
+  // replace the setEnabled callback with PATCH /automation/rules/{id}/toggle.
+  const [enabled, setEnabled] = React.useState(r.enabled);
   const modeChip = {
     shadow:   <span className="chip chip-mute"><Icon name="visibility"/> 섀도우</span>,
     approval: <span className="chip chip-warn"><Icon name="how_to_reg"/> 승인 필요</span>,
@@ -8,12 +12,17 @@ function RuleRow({ r, onEdit }) {
   }[r.mode];
 
   return (
-    <div className={`card p-4 ${r.enabled ? "" : "opacity-70"}`}>
+    <div className={`card p-4 ${enabled ? "" : "opacity-70"}`}>
       <div className="flex items-center gap-4">
         <label className="relative inline-flex items-center cursor-pointer shrink-0" onClick={(e) => e.stopPropagation()}>
-          <input type="checkbox" defaultChecked={r.enabled} className="sr-only peer" />
-          <div className="w-11 h-6 rounded-full peer-checked:bg-[var(--brand)] transition-colors" style={{ background: r.enabled ? "var(--brand)" : "#cfd6d1" }}>
-            <div className="w-5 h-5 rounded-full bg-white shadow-sm transition-transform" style={{ transform: `translate(${r.enabled ? 22 : 2}px, 2px)` }}></div>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={e => setEnabled(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 rounded-full transition-colors" style={{ background: enabled ? "var(--brand)" : "#cfd6d1" }}>
+            <div className="w-5 h-5 rounded-full bg-white shadow-sm transition-transform" style={{ transform: `translate(${enabled ? 22 : 2}px, 2px)` }}></div>
           </div>
         </label>
 
