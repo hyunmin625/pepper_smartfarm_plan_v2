@@ -64,7 +64,9 @@ DASHBOARD_HTML_HOOKS = [
     "function closeAutomationTriggerDetail",
     "function renderAutomationTriggerDetail",
     'onclick="openAutomationTriggerDetail(',
-    "linked decision",
+    # Relabel quick-win: the drawer now renders section titles in Korean
+    # (Phase S detail chain surfaces rule + decision + device cmds + alerts).
+    "연결된 실행 기록",
 ]
 
 

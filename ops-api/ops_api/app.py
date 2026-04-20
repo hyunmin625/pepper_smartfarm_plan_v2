@@ -2948,9 +2948,10 @@ def _dashboard_html() -> str:
     <section class="view" data-view="alerts">
       <div class="card">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-ink">Alerts</h3>
-          <span class="text-[11px] text-muted">high / critical / unknown / validator</span>
+          <h3 class="text-sm font-bold text-ink">알림</h3>
+          <span class="text-[11px] text-muted">자동화 · 정책 · 위험도 · 검증</span>
         </div>
+        <div id="alertFilterBar" class="mb-4"></div>
         <div id="alertList" class="space-y-3"></div>
       </div>
     </section>
@@ -3685,34 +3686,137 @@ def _dashboard_html() -> str:
       const zoneDetailed = document.getElementById('zoneListDetailed');
       if (zoneDetailed) zoneDetailed.innerHTML = html;
     }
+    const ALERT_CATEGORY_PREFIXES = [
+      { key: 'automation', label: '자동화', prefix: 'automation_' },
+      { key: 'policy', label: '정책', prefix: 'policy_' },
+      { key: 'risk', label: '위험도', prefix: 'risk_' },
+      { key: 'validator', label: '검증', prefix: 'validator_' },
+    ];
+    function alertCategoryKey(alertType) {
+      const t = String(alertType || '');
+      for (const c of ALERT_CATEGORY_PREFIXES) {
+        if (t.startsWith(c.prefix)) return c.key;
+      }
+      return 'other';
+    }
+    // Translate machine codes (automation_dispatch_fault, policy_violation,
+    // HSV-09 …) into a short Korean sentence so non-engineer operators can
+    // triage without cross-referencing validator spec documents.
+    const REASON_CODE_LABEL = {
+      dispatcher_error: '실행 어댑터 오류',
+      rule_missing: '규칙 행이 사라짐',
+      worker_present: '작업자 감지됨',
+      worker_present_override: '작업자 감지 — 수동 전환',
+      manual_override: '수동 제어 중',
+      safe_mode: '안전 모드 작동',
+      sensor_quality_bad: '센서 품질 이상',
+      sensor_stale: '센서 값 노후',
+      outside_range: '허용 범위 벗어남',
+      cooldown: '쿨다운 기간',
+      approval_missing: '승인 누락',
+      policy_violation: '정책 위반',
+      blocked_action: '동작 차단됨',
+      strict_json_invalid: 'JSON 스키마 위반',
+    };
+    function reasonLabel(code) {
+      if (!code) return '';
+      if (REASON_CODE_LABEL[code]) return REASON_CODE_LABEL[code];
+      if (/^HSV-\d+/i.test(code)) return `안전 규칙 ${code}`;
+      return String(code).split('_').filter(Boolean).join(' ');
+    }
+    const alertsFilterState = { category: 'all', severity: 'all' };
     function renderAlerts(items) {
-      const full = (items || []).map(item => `
+      const all = items || [];
+      const category = alertsFilterState.category;
+      const severity = alertsFilterState.severity;
+      const filtered = all.filter(item => {
+        if (category !== 'all' && alertCategoryKey(item.alert_type) !== category) return false;
+        if (severity !== 'all' && String(item.severity || '') !== severity) return false;
+        return true;
+      });
+      const counts = {
+        all: all.length,
+        automation: 0, policy: 0, risk: 0, validator: 0, other: 0,
+      };
+      all.forEach(item => { counts[alertCategoryKey(item.alert_type)] += 1; });
+
+      const filterBarHost = document.getElementById('alertFilterBar');
+      if (filterBarHost) {
+        const chip = (key, label, n) => {
+          const active = alertsFilterState.category === key ? 'chip-enabled' : 'chip-dark';
+          return `<button onclick="setAlertCategory('${key}')" class="chip ${active} hover:opacity-90">${escapeHtml(label)} · ${n}</button>`;
+        };
+        const sevChip = (key, label) => {
+          const active = alertsFilterState.severity === key ? 'chip-warn' : 'chip-dark';
+          return `<button onclick="setAlertSeverity('${key}')" class="chip ${active} hover:opacity-90">${escapeHtml(label)}</button>`;
+        };
+        filterBarHost.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[10px] uppercase tracking-wider text-muted mr-1">유형</span>
+            ${chip('all', '전체', counts.all)}
+            ${chip('automation', '자동화', counts.automation)}
+            ${chip('policy', '정책', counts.policy)}
+            ${chip('risk', '위험도', counts.risk)}
+            ${chip('validator', '검증', counts.validator)}
+            ${counts.other ? chip('other', '기타', counts.other) : ''}
+          </div>
+          <div class="flex flex-wrap items-center gap-2 mt-2">
+            <span class="text-[10px] uppercase tracking-wider text-muted mr-1">심각도</span>
+            ${sevChip('all', '전체')}
+            ${sevChip('critical', '위험')}
+            ${sevChip('error', '오류')}
+            ${sevChip('warning', '주의')}
+            ${sevChip('info', '정보')}
+          </div>`;
+      }
+
+      const sevChipCls = (sev) => {
+        if (sev === 'critical' || sev === 'error') return 'chip-critical';
+        if (sev === 'warning') return 'chip-warn';
+        return 'chip-dark';
+      };
+      const reasonSummary = (item) => {
+        const codes = item.validator_reason_codes || [];
+        if (!codes.length) return '';
+        const labels = codes.slice(0, 3).map(reasonLabel).filter(Boolean);
+        const extra = codes.length > 3 ? ` 외 ${codes.length - 3}건` : '';
+        return `<div class="text-[10px] text-muted mt-1" title="${escapeHtml(codes.join(', '))}">원인: ${escapeHtml(labels.join(' · '))}${extra}</div>`;
+      };
+      const full = filtered.map(item => `
         <div class="alert-row">
           <div class="flex items-center justify-between mb-1">
-            <span class="text-[11px] text-muted">#${item.decision_id} · ${item.zone_id} · ${item.alert_type}</span>
-            <span class="chip ${item.severity === 'critical' ? 'chip-critical' : 'chip-warn'}">${item.severity}</span>
+            <span class="text-[11px] text-muted">#${item.decision_id ?? '—'} · ${escapeHtml(item.zone_id || '—')} · ${escapeHtml(alertTypeLabel(item.alert_type))}</span>
+            <span class="chip ${sevChipCls(item.severity)}" title="${escapeHtml(item.severity || '')}">${escapeHtml(operatorLabel(item.severity))}</span>
           </div>
-          <div class="text-xs text-ink">${item.summary || 'summary 없음'}</div>
-          <div class="text-[10px] text-muted mt-1">validator: ${(item.validator_reason_codes || []).join(', ') || 'none'}</div>
+          <div class="text-xs text-ink">${escapeHtml(item.summary || '설명 없음')}</div>
+          ${reasonSummary(item)}
         </div>
-      `).join('') || '<div class="placeholder">alert가 없습니다.</div>';
+      `).join('') || `<div class="placeholder">${all.length ? '필터 조건에 해당하는 알림이 없습니다.' : '알림이 없습니다.'}</div>`;
       const main = document.getElementById('alertList');
       if (main) main.innerHTML = full;
       const overview = document.getElementById('alertListOverview');
       if (overview) {
-        overview.innerHTML = (items || []).slice(0, 5).map(item => `
+        overview.innerHTML = all.slice(0, 5).map(item => `
           <div class="flex items-center gap-3 py-2 border-b border-outline/10 last:border-0">
             <div class="w-9 h-9 rounded-full bg-surface-low flex items-center justify-center ${item.severity === 'critical' ? 'text-critical' : 'text-warn'}">
               <span class="material-symbols-outlined text-[18px]">warning</span>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-xs font-bold text-ink truncate">${item.alert_type} · ${item.zone_id}</div>
-              <div class="text-[10px] text-muted truncate">${item.summary || ''}</div>
+              <div class="text-xs font-bold text-ink truncate">${escapeHtml(alertTypeLabel(item.alert_type))} · ${escapeHtml(item.zone_id || '')}</div>
+              <div class="text-[10px] text-muted truncate">${escapeHtml(item.summary || '')}</div>
             </div>
-            <span class="chip ${item.severity === 'critical' ? 'chip-critical' : 'chip-warn'}">${item.severity}</span>
+            <span class="chip ${sevChipCls(item.severity)}" title="${escapeHtml(item.severity || '')}">${escapeHtml(operatorLabel(item.severity))}</span>
           </div>
-        `).join('') || '<div class="placeholder">alert가 없습니다.</div>';
+        `).join('') || '<div class="placeholder">알림이 없습니다.</div>';
       }
+    }
+    function setAlertCategory(key) {
+      alertsFilterState.category = key;
+      renderAlerts(dashboardState.alerts || []);
+    }
+    function setAlertSeverity(key) {
+      alertsFilterState.severity = key;
+      renderAlerts(dashboardState.alerts || []);
     }
     function renderRobotTasks(items) {
       document.getElementById('robotList').innerHTML = (items || []).map(item => `
@@ -4145,7 +4249,7 @@ def _dashboard_html() -> str:
 
     // ===== AI Chat =====
     const chatState = { messages: [], sending: false, lastGrounding: null };
-    const dashboardState = { runtimeMode: null, aiConfig: null };
+    const dashboardState = { runtimeMode: null, aiConfig: null, alerts: [] };
     function chatBubbleUser(content, ts) {
       return `<div class="flex justify-end">
         <div>
@@ -4174,6 +4278,56 @@ def _dashboard_html() -> str:
     }
     function escapeHtml(str) {
       return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    // Operator-friendly label helpers. Backend emits internal enums
+    // (approval_pending, dispatch_fault, automation_blocked_guard …)
+    // but the dashboard is read by non-engineers on site; we map every
+    // enum to a plain-Korean label and use the raw value only in
+    // tooltip / developer-view toggles.
+    const OPERATOR_LABEL = {
+      // automation_rule_triggers.status
+      shadow_logged: '섀도우 기록',
+      approval_pending: '승인 대기',
+      approved: '승인됨',
+      rejected: '거절됨',
+      dispatched: '실행됨',
+      dispatch_fault: '실행 실패',
+      blocked_validator: '검증 차단',
+      blocked_guard: '안전 장치 차단',
+      cooldown_skipped: '쿨다운 대기',
+      // device_commands.status
+      acknowledged: '수락됨',
+      logged_only: '기록만',
+      // alerts.severity
+      info: '정보',
+      warning: '주의',
+      error: '오류',
+      critical: '위험',
+      // alerts.status
+      active: '활성',
+      resolved: '해결됨',
+      acked: '확인됨',
+      // alert_type common prefixes
+      automation_dispatched: '자동화 실행',
+      automation_dispatch_fault: '자동화 실행 실패',
+      automation_blocked_guard: '자동화 안전 차단',
+      automation_blocked_validator: '자동화 검증 차단',
+      policy_violation: '정책 위반',
+      policy_event: '정책 이벤트',
+      risk_elevated: '위험 상승',
+      validator_reject: '검증 거부',
+    };
+    function operatorLabel(value, fallback) {
+      if (value == null || value === '') return fallback || '—';
+      const key = String(value);
+      return OPERATOR_LABEL[key] || (fallback != null ? fallback : key);
+    }
+    function alertTypeLabel(alertType) {
+      if (!alertType) return '알림';
+      if (OPERATOR_LABEL[alertType]) return OPERATOR_LABEL[alertType];
+      // Fallback: turn snake_case → "단어 단어" so ad-hoc alert types
+      // stay readable without us having to enumerate every one.
+      return String(alertType).split('_').filter(Boolean).join(' ');
     }
     function renderChat() {
       const host = document.getElementById('chatMessages');
@@ -4394,10 +4548,10 @@ def _dashboard_html() -> str:
           <div class="alert-row mb-2${border}" data-trigger-id="${t.id}">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
-              <span class="chip ${statusChip(t.status)}">${escapeHtml(t.status || '')}</span>
+              <span class="chip ${statusChip(t.status)}" title="${escapeHtml(t.status || '')}">${escapeHtml(operatorLabel(t.status))}</span>
             </div>
-            <div class="text-xs text-ink">rule_id=${t.rule_id} · sensor=${escapeHtml(t.sensor_key)} = ${t.matched_value}</div>
-            <div class="text-[10px] text-muted">runtime=${escapeHtml(t.runtime_mode || '')}${t.note ? ' · ' + escapeHtml(t.note) : ''}</div>
+            <div class="text-xs text-ink">규칙 #${t.rule_id} · ${escapeHtml(t.sensor_key)} = ${t.matched_value}</div>
+            <div class="text-[10px] text-muted">운영 모드: ${escapeHtml(operatorLabel(t.runtime_mode, t.runtime_mode || '—'))}${t.note ? ' · ' + escapeHtml(t.note) : ''}</div>
             ${reviewLine}
             ${actionRow}
           </div>`;
@@ -4488,69 +4642,69 @@ def _dashboard_html() -> str:
           ${inner}
         </div>`;
 
-      const triggerBlock = sectionCard('trigger', `
+      const triggerBlock = sectionCard('트리거', `
         <div class="flex items-center justify-between mb-2">
           <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
-          <span class="chip ${statusChipCls(t.status)}">${escapeHtml(t.status || '—')}</span>
+          <span class="chip ${statusChipCls(t.status)}" title="${escapeHtml(t.status || '')}">${escapeHtml(operatorLabel(t.status))}</span>
         </div>
         <div class="space-y-1 text-[11px]">
-          ${kv('sensor_key', t.sensor_key)}
-          ${kv('matched_value', t.matched_value)}
-          ${kv('runtime_mode', t.runtime_mode)}
-          ${kv('reviewed_by', t.reviewed_by)}
-          ${kv('reviewed_at', t.reviewed_at)}
-          ${kv('review_reason', t.review_reason)}
-          ${kv('note', t.note)}
+          ${kv('센서', t.sensor_key)}
+          ${kv('측정값', t.matched_value)}
+          ${kv('운영 모드', operatorLabel(t.runtime_mode, t.runtime_mode))}
+          ${kv('검토자', t.reviewed_by)}
+          ${kv('검토 시각', t.reviewed_at)}
+          ${kv('검토 사유', t.review_reason)}
+          ${kv('메모', t.note)}
         </div>`);
 
       const rule = t.rule || null;
-      const ruleBlock = sectionCard('rule', rule
+      const ruleBlock = sectionCard('규칙', rule
         ? `<div class="space-y-1 text-[11px]">
-             ${kv('rule_id', rule.rule_id)}
-             ${kv('name', rule.name)}
-             ${kv('zone_id', rule.zone_id)}
-             ${kv('sensor_key', rule.sensor_key)}
-             ${kv('operator', rule.operator)}
-             ${kv('threshold', rule.threshold_value ?? `${rule.threshold_min} ~ ${rule.threshold_max}`)}
-             ${kv('cooldown_minutes', rule.cooldown_minutes)}
-             ${kv('target_device_type', rule.target_device_type)}
-             ${kv('target_device_id', rule.target_device_id)}
-             ${kv('target_action', rule.target_action)}
-             ${kv('runtime_mode_gate', rule.runtime_mode_gate)}
-             ${kv('enabled', rule.enabled ? 'true' : 'false')}
+             ${kv('규칙 ID', rule.rule_id)}
+             ${kv('규칙명', rule.name)}
+             ${kv('구역', rule.zone_id)}
+             ${kv('센서', rule.sensor_key)}
+             ${kv('연산자', rule.operator)}
+             ${kv('임계값', rule.threshold_value ?? `${rule.threshold_min} ~ ${rule.threshold_max}`)}
+             ${kv('쿨다운(분)', rule.cooldown_minutes)}
+             ${kv('장치 유형', rule.target_device_type)}
+             ${kv('장치 ID', rule.target_device_id)}
+             ${kv('동작', rule.target_action)}
+             ${kv('운영 모드 게이트', operatorLabel(rule.runtime_mode_gate, rule.runtime_mode_gate))}
+             ${kv('활성화', rule.enabled ? '켜짐' : '꺼짐')}
            </div>`
         : '<div class="placeholder text-[11px]">연결된 규칙이 없습니다 (삭제되었을 수 있음).</div>');
 
       const decision = t.decision || null;
       let decisionBlock;
       if (!decision) {
-        decisionBlock = sectionCard('linked decision', '<div class="placeholder text-[11px]">아직 dispatch되지 않아 DecisionRecord가 없습니다. 승인 후 automation_runner tick이 돌면 생성됩니다.</div>');
+        decisionBlock = sectionCard('연결된 실행 기록', '<div class="placeholder text-[11px]">아직 실행되지 않아 기록이 없습니다. 승인 후 다음 주기에 자동으로 실행됩니다.</div>');
       } else {
         const cmdRows = (decision.device_commands || []).map(c => `
           <div class="flex items-center justify-between gap-2 py-1 border-t border-surface-container first:border-t-0">
             <span class="text-[10px] text-muted">#${c.id} · ${escapeHtml(c.created_at || '')}</span>
             <span class="text-[11px] text-ink font-mono">${escapeHtml(c.action_type || '')} → ${escapeHtml(c.target_id || '')}</span>
-            <span class="chip ${statusChipCls(c.status)}">${escapeHtml(c.status || '')}</span>
+            <span class="chip ${statusChipCls(c.status)}" title="${escapeHtml(c.status || '')}">${escapeHtml(operatorLabel(c.status))}</span>
           </div>`).join('');
         const alertRows = (decision.alerts || []).map(a => `
           <div class="flex items-center justify-between gap-2 py-1 border-t border-surface-container first:border-t-0">
             <span class="text-[10px] text-muted">#${a.id} · ${escapeHtml(a.created_at || '')}</span>
-            <span class="text-[11px] text-ink">${escapeHtml(a.alert_type || '')} · ${escapeHtml(a.summary || '')}</span>
-            <span class="chip ${statusChipCls(a.severity)}">${escapeHtml(a.severity || '')}</span>
+            <span class="text-[11px] text-ink">${escapeHtml(alertTypeLabel(a.alert_type))} · ${escapeHtml(a.summary || '')}</span>
+            <span class="chip ${statusChipCls(a.severity)}" title="${escapeHtml(a.severity || '')}">${escapeHtml(operatorLabel(a.severity))}</span>
           </div>`).join('');
-        decisionBlock = sectionCard('linked decision', `
+        decisionBlock = sectionCard('연결된 실행 기록', `
           <div class="space-y-1 text-[11px] mb-2">
-            ${kv('decision_id', decision.id)}
-            ${kv('request_id', decision.request_id)}
-            ${kv('task_type', decision.task_type)}
-            ${kv('model_id', decision.model_id)}
-            ${kv('runtime_mode', decision.runtime_mode)}
-            ${kv('status', decision.status)}
-            ${kv('created_at', decision.created_at)}
+            ${kv('실행 번호', '#' + decision.id)}
+            ${kv('요청 ID', decision.request_id)}
+            ${kv('유형', decision.task_type)}
+            ${kv('모델', decision.model_id)}
+            ${kv('운영 모드', operatorLabel(decision.runtime_mode, decision.runtime_mode))}
+            ${kv('상태', operatorLabel(decision.status, decision.status))}
+            ${kv('생성 시각', decision.created_at)}
           </div>
-          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mt-2 mb-1">device_commands</div>
+          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mt-2 mb-1">장치 명령</div>
           ${cmdRows || '<div class="placeholder text-[11px]">없음</div>'}
-          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mt-3 mb-1">alerts</div>
+          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mt-3 mb-1">알림</div>
           ${alertRows || '<div class="placeholder text-[11px]">없음</div>'}
         `);
       }
@@ -4788,7 +4942,8 @@ def _dashboard_html() -> str:
         renderShadowWindow(data.shadow_window);
         renderPolicies(data.policies || []);
         renderPolicyEvents(data.policy_events || []);
-        renderAlerts(data.alerts);
+        dashboardState.alerts = data.alerts || [];
+        renderAlerts(dashboardState.alerts);
         renderRobotTasks(data.robot_tasks);
         renderRobotCandidates(data.robot_candidates || []);
         renderDeviceStatus(data.zones || []);

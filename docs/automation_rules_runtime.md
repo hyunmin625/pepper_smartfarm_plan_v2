@@ -236,6 +236,7 @@ Phase H 실험에서 확인된 것처럼 GT Master dry-back에는 `adjust_fertig
 - ✅ Phase Q: approved trigger → synthetic DecisionRecord dispatch (`automation_dispatcher.dispatch_approved_triggers`, Alert 연동)
 - ✅ Phase R: `AutomationRuleTriggerRecord ↔ DecisionRecord` 양방향 relationship, `collect_automation_stats` + `task_type_distribution` shadow_window 편입, `GET /automation/triggers/{id}` 상세 엔드포인트
 - ✅ Phase S: 자동화 뷰 trigger 상세 drawer(`#automationTriggerDetailDrawer`) + `openAutomationTriggerDetail`/`renderAutomationTriggerDetail` 핸들러로 rule + linked decision + device_commands + alerts 원스톱 열람
+- ✅ Phase S-2 운영자 친화 라벨 + 알림 필터: `OPERATOR_LABEL`/`operatorLabel`/`alertTypeLabel`/`REASON_CODE_LABEL`/`reasonLabel`로 모든 운영자 노출 enum을 한국어 라벨 + tooltip fallback로 치환하고, `/알림` 뷰에 자동화/정책/위험도/검증 카테고리 필터 + 심각도 필터 + validator reason codes 자연어 요약 추가 (`ops-api/ops_api/app.py`, `scripts/validate_ops_api_operator_labels.py`)
 
 ## 11. 관련 파일
 
