@@ -2286,6 +2286,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def dashboard_root_redirect() -> RedirectResponse:
         return RedirectResponse(url="/dashboard", status_code=307)
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> "HTMLResponse":
+        # Inline transparent 16×16 SVG — stops the spurious 404 that
+        # otherwise clutters the DevTools console on every page load.
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">'
+            '<rect width="16" height="16" rx="3" fill="#006a26"/>'
+            '<text x="8" y="12" text-anchor="middle" font-size="11" '
+            'font-family="Pretendard,sans-serif" fill="#fff" font-weight="700">i</text>'
+            '</svg>'
+        )
+        return HTMLResponse(content=svg, media_type="image/svg+xml")
+
     return app
 
 
