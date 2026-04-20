@@ -3196,6 +3196,25 @@ def _dashboard_html() -> str:
       </div>
     </div>
 
+    <!-- 자동화 trigger 상세 drawer (Phase S) -->
+    <div id="automationTriggerDetailDrawer" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-surface w-full max-w-3xl rounded-2xl p-6 my-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-ink">
+            <span class="material-symbols-outlined align-middle mr-1 text-primary">info</span>
+            <span id="automationTriggerDetailTitle">trigger 상세</span>
+          </h3>
+          <button onclick="closeAutomationTriggerDetail()" class="text-muted hover:text-ink">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div id="automationTriggerDetailError" class="text-[11px] text-critical mb-3 hidden"></div>
+        <div id="automationTriggerDetailBody" class="space-y-4 text-xs text-ink">
+          <div class="placeholder">불러오는 중…</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Shadow Mode -->
     <section class="view" data-view="shadow">
       <div class="card mb-5">
@@ -4356,6 +4375,9 @@ def _dashboard_html() -> str:
         const reviewLine = (t.reviewed_by || t.reviewed_at)
           ? `<div class="text-[10px] text-muted mt-1">review: ${escapeHtml(t.reviewed_by || '—')} @ ${escapeHtml(t.reviewed_at || '—')}${t.review_reason ? ' · ' + escapeHtml(t.review_reason) : ''}</div>`
           : '';
+        const detailBtn = `<button onclick="openAutomationTriggerDetail(${t.id})" class="chip chip-dark hover:opacity-90">
+              <span class="material-symbols-outlined text-[14px] mr-1">info</span>상세
+            </button>`;
         const actionRow = isPending
           ? `<div class="flex gap-2 mt-2">
               <button onclick="approveAutomationTrigger(${t.id})" class="chip chip-enabled hover:opacity-90">
@@ -4364,11 +4386,12 @@ def _dashboard_html() -> str:
               <button onclick="rejectAutomationTrigger(${t.id})" class="chip chip-critical hover:opacity-90">
                 <span class="material-symbols-outlined text-[14px] mr-1">cancel</span>거절
               </button>
+              ${detailBtn}
             </div>`
-          : '';
+          : `<div class="flex gap-2 mt-2">${detailBtn}</div>`;
         const border = isPending ? ' border-l-4 border-warn' : '';
         return `
-          <div class="alert-row mb-2${border}">
+          <div class="alert-row mb-2${border}" data-trigger-id="${t.id}">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
               <span class="chip ${statusChip(t.status)}">${escapeHtml(t.status || '')}</span>
@@ -4418,6 +4441,121 @@ def _dashboard_html() -> str:
       } catch (err) {
         alert('거절 실패: ' + (err.message || err));
       }
+    }
+    async function openAutomationTriggerDetail(triggerId) {
+      // Phase S: full trigger detail via GET /automation/triggers/{id}.
+      // All string interpolation goes through escapeHtml — same pattern as
+      // renderAutomationTriggers above.
+      const drawer = document.getElementById('automationTriggerDetailDrawer');
+      const body = document.getElementById('automationTriggerDetailBody');
+      const title = document.getElementById('automationTriggerDetailTitle');
+      const errEl = document.getElementById('automationTriggerDetailError');
+      if (!drawer || !body) return;
+      drawer.classList.remove('hidden');
+      drawer.classList.add('flex');
+      if (title) title.textContent = `trigger 상세 · #${triggerId}`;
+      if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+      body.innerHTML = '<div class="placeholder">불러오는 중…</div>';
+      try {
+        const res = await apiFetch(`/automation/triggers/${triggerId}`);
+        const t = res?.data || {};
+        body.innerHTML = renderAutomationTriggerDetail(t);
+      } catch (err) {
+        if (errEl) {
+          errEl.textContent = '불러오기 실패: ' + (err.message || err);
+          errEl.classList.remove('hidden');
+        }
+        body.innerHTML = '<div class="placeholder">trigger 상세를 불러오지 못했습니다.</div>';
+      }
+    }
+    function closeAutomationTriggerDetail() {
+      const drawer = document.getElementById('automationTriggerDetailDrawer');
+      if (!drawer) return;
+      drawer.classList.add('hidden');
+      drawer.classList.remove('flex');
+    }
+    function renderAutomationTriggerDetail(t) {
+      const statusChipCls = (st) => {
+        if (st === 'dispatched') return 'chip-enabled';
+        if (st === 'approved' || st === 'approval_pending') return 'chip-warn';
+        if (st === 'rejected' || st === 'dispatch_fault' || st === 'blocked_validator' || st === 'blocked_guard') return 'chip-critical';
+        return 'chip-dark';
+      };
+      const kv = (k, v) => `<div class="flex justify-between gap-3"><span class="text-muted">${escapeHtml(k)}</span><span class="text-ink font-mono break-all">${escapeHtml(v == null ? '—' : String(v))}</span></div>`;
+      const sectionCard = (heading, inner) => `
+        <div class="bg-surface-low rounded-xl p-3">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mb-2">${escapeHtml(heading)}</div>
+          ${inner}
+        </div>`;
+
+      const triggerBlock = sectionCard('trigger', `
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] text-muted">#${t.id} · ${escapeHtml(t.triggered_at || '')}</span>
+          <span class="chip ${statusChipCls(t.status)}">${escapeHtml(t.status || '—')}</span>
+        </div>
+        <div class="space-y-1 text-[11px]">
+          ${kv('sensor_key', t.sensor_key)}
+          ${kv('matched_value', t.matched_value)}
+          ${kv('runtime_mode', t.runtime_mode)}
+          ${kv('reviewed_by', t.reviewed_by)}
+          ${kv('reviewed_at', t.reviewed_at)}
+          ${kv('review_reason', t.review_reason)}
+          ${kv('note', t.note)}
+        </div>`);
+
+      const rule = t.rule || null;
+      const ruleBlock = sectionCard('rule', rule
+        ? `<div class="space-y-1 text-[11px]">
+             ${kv('rule_id', rule.rule_id)}
+             ${kv('name', rule.name)}
+             ${kv('zone_id', rule.zone_id)}
+             ${kv('sensor_key', rule.sensor_key)}
+             ${kv('operator', rule.operator)}
+             ${kv('threshold', rule.threshold_value ?? `${rule.threshold_min} ~ ${rule.threshold_max}`)}
+             ${kv('cooldown_minutes', rule.cooldown_minutes)}
+             ${kv('target_device_type', rule.target_device_type)}
+             ${kv('target_device_id', rule.target_device_id)}
+             ${kv('target_action', rule.target_action)}
+             ${kv('runtime_mode_gate', rule.runtime_mode_gate)}
+             ${kv('enabled', rule.enabled ? 'true' : 'false')}
+           </div>`
+        : '<div class="placeholder text-[11px]">연결된 규칙이 없습니다 (삭제되었을 수 있음).</div>');
+
+      const decision = t.decision || null;
+      let decisionBlock;
+      if (!decision) {
+        decisionBlock = sectionCard('linked decision', '<div class="placeholder text-[11px]">아직 dispatch되지 않아 DecisionRecord가 없습니다. 승인 후 automation_runner tick이 돌면 생성됩니다.</div>');
+      } else {
+        const cmdRows = (decision.device_commands || []).map(c => `
+          <div class="flex items-center justify-between gap-2 py-1 border-t border-surface-container first:border-t-0">
+            <span class="text-[10px] text-muted">#${c.id} · ${escapeHtml(c.created_at || '')}</span>
+            <span class="text-[11px] text-ink font-mono">${escapeHtml(c.action_type || '')} → ${escapeHtml(c.target_id || '')}</span>
+            <span class="chip ${statusChipCls(c.status)}">${escapeHtml(c.status || '')}</span>
+          </div>`).join('');
+        const alertRows = (decision.alerts || []).map(a => `
+          <div class="flex items-center justify-between gap-2 py-1 border-t border-surface-container first:border-t-0">
+            <span class="text-[10px] text-muted">#${a.id} · ${escapeHtml(a.created_at || '')}</span>
+            <span class="text-[11px] text-ink">${escapeHtml(a.alert_type || '')} · ${escapeHtml(a.summary || '')}</span>
+            <span class="chip ${statusChipCls(a.severity)}">${escapeHtml(a.severity || '')}</span>
+          </div>`).join('');
+        decisionBlock = sectionCard('linked decision', `
+          <div class="space-y-1 text-[11px] mb-2">
+            ${kv('decision_id', decision.id)}
+            ${kv('request_id', decision.request_id)}
+            ${kv('task_type', decision.task_type)}
+            ${kv('model_id', decision.model_id)}
+            ${kv('runtime_mode', decision.runtime_mode)}
+            ${kv('status', decision.status)}
+            ${kv('created_at', decision.created_at)}
+          </div>
+          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mt-2 mb-1">device_commands</div>
+          ${cmdRows || '<div class="placeholder text-[11px]">없음</div>'}
+          <div class="text-[10px] font-bold uppercase tracking-wider text-muted mt-3 mb-1">alerts</div>
+          ${alertRows || '<div class="placeholder text-[11px]">없음</div>'}
+        `);
+      }
+
+      return triggerBlock + ruleBlock + decisionBlock;
     }
     function openAutomationRuleModal(ruleId = null) {
       automationState.editingRuleId = ruleId;

@@ -235,6 +235,7 @@ Phase H 실험에서 확인된 것처럼 GT Master dry-back에는 `adjust_fertig
 - ✅ Phase P: `policy_engine.output_validator` + `execution_gateway.guards` 통합, 백그라운드 센서 루프, approval queue 연결
 - ✅ Phase Q: approved trigger → synthetic DecisionRecord dispatch (`automation_dispatcher.dispatch_approved_triggers`, Alert 연동)
 - ✅ Phase R: `AutomationRuleTriggerRecord ↔ DecisionRecord` 양방향 relationship, `collect_automation_stats` + `task_type_distribution` shadow_window 편입, `GET /automation/triggers/{id}` 상세 엔드포인트
+- ✅ Phase S: 자동화 뷰 trigger 상세 drawer(`#automationTriggerDetailDrawer`) + `openAutomationTriggerDetail`/`renderAutomationTriggerDetail` 핸들러로 rule + linked decision + device_commands + alerts 원스톱 열람
 
 ## 11. 관련 파일
 
@@ -249,4 +250,5 @@ Phase H 실험에서 확인된 것처럼 GT Master dry-back에는 `adjust_fertig
 - `scripts/validate_ops_api_automation_review.py` — P-3 approve/reject 회귀 smoke
 - `scripts/validate_ops_api_automation_dispatch.py` — Phase Q dispatch 회귀 smoke
 - `scripts/validate_ops_api_automation_phase_r.py` — Phase R backref + shadow_window + 상세 엔드포인트 회귀 smoke
+- `scripts/validate_ops_api_phase_s_trigger_detail.py` — Phase S trigger 상세 drawer UI hook + 상세 응답 backref 회귀 smoke
 - `docs/automation_rules_runtime.md` — **본 문서**
