@@ -64,7 +64,11 @@ from .runtime_mode import load_runtime_mode, save_runtime_mode
 from .policy_source import DbPolicySource
 from .realtime_broker import RealtimeBroker
 from .seed import bootstrap_reference_data
-from .shadow_mode import build_window_summary_from_paths, capture_shadow_cases
+from .shadow_mode import (
+    build_window_summary_from_paths,
+    capture_shadow_cases,
+    collect_automation_stats,
+)
 
 configure_repo_paths()
 
@@ -1462,6 +1466,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def capture_shadow_runtime_cases(
         payload: ShadowCaptureRequest,
         services=Depends(get_services),
+        session: Session = Depends(get_session),
         actor: ActorIdentity = Depends(require_permission("review_shadow")),
     ) -> dict[str, Any]:
         if not payload.append and "manage_runtime_mode" not in ROLE_PERMISSIONS.get(actor.role, set()):
@@ -1474,6 +1479,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             shadow_audit_log_path=services.settings.shadow_audit_log_path,
             validator_audit_log_path=services.settings.validator_audit_log_path,
             append=payload.append,
+        )
+        summary["automation_stats"] = collect_automation_stats(
+            session,
+            window_start=summary.get("window_start"),
+            window_end=summary.get("window_end"),
         )
         return _ok(
             {
@@ -1491,6 +1501,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     def get_shadow_window_summary(
         services=Depends(get_services),
+        session: Session = Depends(get_session),
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
         audit_path = services.settings.shadow_audit_log_path
@@ -1500,6 +1511,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             summary = build_window_summary_from_paths([audit_path])
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+        summary["automation_stats"] = collect_automation_stats(
+            session,
+            window_start=summary.get("window_start"),
+            window_end=summary.get("window_end"),
+        )
         return _ok(summary, actor=actor)
 
     @app.get(
@@ -2088,6 +2104,68 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         stmt = stmt.order_by(AutomationRuleTriggerRecord.triggered_at.desc()).limit(limit)
         rows = session.scalars(stmt).all()
         return _ok({"triggers": [serialize_trigger(r) for r in rows]}, actor=actor)
+
+    @app.get(
+        "/automation/triggers/{trigger_id}",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={
+            401: {"model": ErrorResponse},
+            403: {"model": ErrorResponse},
+            404: {"model": ErrorResponse},
+        },
+    )
+    def get_automation_trigger_detail(
+        trigger_id: int,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        # Surface the Phase Q dispatch chain on a single row: the trigger itself,
+        # the rule that produced it, and — via the Phase R-1 backref — the
+        # synthetic DecisionRecord plus its DeviceCommandRecord / AlertRecord
+        # children. Lets the dashboard show "what actually happened" for an
+        # approved/dispatched automation without a second query round-trip.
+        trigger = session.get(AutomationRuleTriggerRecord, trigger_id)
+        if trigger is None:
+            raise HTTPException(status_code=404, detail="automation trigger not found")
+        payload: dict[str, Any] = serialize_trigger(trigger)
+        rule = session.get(AutomationRuleRecord, trigger.rule_id)
+        payload["rule"] = serialize_rule(rule) if rule is not None else None
+        decision = trigger.decision
+        if decision is not None:
+            payload["decision"] = {
+                "id": decision.id,
+                "request_id": decision.request_id,
+                "task_type": decision.task_type,
+                "model_id": decision.model_id,
+                "runtime_mode": decision.runtime_mode,
+                "status": decision.status,
+                "created_at": decision.created_at.isoformat() if decision.created_at else None,
+                "device_commands": [
+                    {
+                        "id": cmd.id,
+                        "target_id": cmd.target_id,
+                        "action_type": cmd.action_type,
+                        "status": cmd.status,
+                        "created_at": cmd.created_at.isoformat() if cmd.created_at else None,
+                    }
+                    for cmd in decision.device_commands
+                ],
+                "alerts": [
+                    {
+                        "id": alert.id,
+                        "alert_type": alert.alert_type,
+                        "severity": alert.severity,
+                        "status": alert.status,
+                        "summary": alert.summary,
+                        "created_at": alert.created_at.isoformat() if alert.created_at else None,
+                    }
+                    for alert in decision.alerts
+                ],
+            }
+        else:
+            payload["decision"] = None
+        return _ok(payload, actor=actor)
 
     @app.post(
         "/automation/triggers/{trigger_id}/approve",

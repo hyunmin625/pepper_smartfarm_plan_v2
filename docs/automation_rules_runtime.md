@@ -232,15 +232,21 @@ Phase H 실험에서 확인된 것처럼 GT Master dry-back에는 `adjust_fertig
 - ✅ Phase O-3: Rule engine evaluator (matching + cooldown + gate + trigger 로그)
 - ✅ Phase O-4: UI (목록 + 모달 + trigger 로그)
 - ✅ Phase O-5: 본 문서 + smoke + 커밋/푸시
-- ⏭️ Phase P: `policy_engine.output_validator` + `execution_gateway.guards` 통합, 백그라운드 센서 루프, hysteresis, approval queue 연결
-- ⏭️ Phase Q: `AutomationRuleRecord ↔ DecisionRecord` 양방향 FK, shadow_window 편입
+- ✅ Phase P: `policy_engine.output_validator` + `execution_gateway.guards` 통합, 백그라운드 센서 루프, approval queue 연결
+- ✅ Phase Q: approved trigger → synthetic DecisionRecord dispatch (`automation_dispatcher.dispatch_approved_triggers`, Alert 연동)
+- ✅ Phase R: `AutomationRuleTriggerRecord ↔ DecisionRecord` 양방향 relationship, `collect_automation_stats` + `task_type_distribution` shadow_window 편입, `GET /automation/triggers/{id}` 상세 엔드포인트
 
 ## 11. 관련 파일
 
 - `ops-api/ops_api/models.py` — `AutomationRuleRecord`, `AutomationRuleTriggerRecord`
 - `ops-api/ops_api/api_models.py` — `AutomationRule*Request`, `AUTOMATION_*` enum
 - `ops-api/ops_api/automation.py` — `evaluate_rules`, `RuleMatch`, `EvaluationReport`, `serialize_rule`, `serialize_trigger`
-- `ops-api/ops_api/app.py` — 7 엔드포인트 + 대시보드 view / modal / JS 로직
+- `ops-api/ops_api/automation_dispatcher.py` — Phase Q approved → synthetic DecisionRecord 디스패치, Alert 방출
+- `ops-api/ops_api/shadow_mode.py` — Phase R `collect_automation_stats`, `build_window_summary` 의 `task_type_distribution`/`automation_stats`
+- `ops-api/ops_api/app.py` — 엔드포인트 + 대시보드 view / modal / JS 로직 (Phase R: `GET /automation/triggers/{id}` 상세)
 - `infra/postgres/003_automation_rules.sql` — Postgres 스키마
-- `scripts/validate_ops_api_automation_rules.py` — 회귀 smoke
+- `scripts/validate_ops_api_automation_rules.py` — O단계 회귀 smoke
+- `scripts/validate_ops_api_automation_review.py` — P-3 approve/reject 회귀 smoke
+- `scripts/validate_ops_api_automation_dispatch.py` — Phase Q dispatch 회귀 smoke
+- `scripts/validate_ops_api_automation_phase_r.py` — Phase R backref + shadow_window + 상세 엔드포인트 회귀 smoke
 - `docs/automation_rules_runtime.md` — **본 문서**

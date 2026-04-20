@@ -5,7 +5,10 @@ import json
 import os
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 from llm_orchestrator.runtime import (
     LLMDecisionEnvelope,
@@ -77,7 +80,11 @@ def _distinct_or_mixed(rows: list[dict[str, Any]], key: str) -> str | None:
     return "mixed"
 
 
-def build_window_summary(rows: list[dict[str, Any]], audit_logs: list[str]) -> dict[str, Any]:
+def build_window_summary(
+    rows: list[dict[str, Any]],
+    audit_logs: list[str],
+    automation_stats: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if not rows:
         raise ValueError("shadow audit rows are empty")
 
@@ -92,9 +99,12 @@ def build_window_summary(rows: list[dict[str, Any]], audit_logs: list[str]) -> d
     eval_set_ids = sorted({str(row.get("eval_set_id") or "unknown") for row in rows})
     zone_ids = sorted({str(row.get("zone_id") or "unknown") for row in rows})
     growth_stage_distribution: dict[str, int] = {}
+    task_type_distribution: dict[str, int] = {}
     for row in rows:
         growth_stage = str(row.get("growth_stage") or "unknown")
         growth_stage_distribution[growth_stage] = growth_stage_distribution.get(growth_stage, 0) + 1
+        task_type = str(row.get("task_type") or "unknown")
+        task_type_distribution[task_type] = task_type_distribution.get(task_type, 0) + 1
 
     blocked_action_recommendation_count = sum(
         int(row.get("blocked_action_recommendation_count") or 0) for row in rows
@@ -157,6 +167,13 @@ def build_window_summary(rows: list[dict[str, Any]], audit_logs: list[str]) -> d
         "approval_missing_count": approval_missing_count,
         "policy_mismatch_count": policy_mismatch_count,
         "growth_stage_distribution": sorted(growth_stage_distribution.items()),
+        "task_type_distribution": sorted(task_type_distribution.items()),
+        "automation_stats": automation_stats or {
+            "trigger_count": 0,
+            "status_distribution": [],
+            "rule_counts": [],
+            "linked_decision_count": 0,
+        },
         "promotion_decision": promotion_decision,
         "top_disagreements": [
             {
@@ -175,11 +192,71 @@ def build_window_summary(rows: list[dict[str, Any]], audit_logs: list[str]) -> d
     }
 
 
-def build_window_summary_from_paths(audit_logs: list[Path]) -> dict[str, Any]:
+def build_window_summary_from_paths(
+    audit_logs: list[Path],
+    automation_stats: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for audit_log in audit_logs:
         rows.extend(load_jsonl(audit_log))
-    return build_window_summary(rows, [path.as_posix() for path in audit_logs])
+    return build_window_summary(
+        rows,
+        [path.as_posix() for path in audit_logs],
+        automation_stats=automation_stats,
+    )
+
+
+def collect_automation_stats(
+    session: "Session",
+    *,
+    window_start: str | None,
+    window_end: str | None,
+) -> dict[str, Any]:
+    """Summarize automation triggers that fired in the shadow window.
+
+    Runs as a DB-side companion to the JSONL-sourced shadow audit window so
+    operators see how many automation triggers landed in the same time
+    range, how they split across status, and how many resolved to a
+    DecisionRecord via the Phase Q dispatch path.
+    """
+
+    from datetime import datetime
+    from sqlalchemy import select
+
+    from .models import AutomationRuleTriggerRecord
+
+    def _parse(ts: str | None) -> datetime | None:
+        if not ts:
+            return None
+        try:
+            return datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
+        except ValueError:
+            return None
+
+    start = _parse(window_start)
+    end = _parse(window_end)
+
+    stmt = select(AutomationRuleTriggerRecord)
+    if start is not None:
+        stmt = stmt.where(AutomationRuleTriggerRecord.triggered_at >= start)
+    if end is not None:
+        stmt = stmt.where(AutomationRuleTriggerRecord.triggered_at <= end)
+    triggers = list(session.scalars(stmt))
+
+    status_counts: dict[str, int] = {}
+    rule_counts: dict[int, int] = {}
+    linked = 0
+    for trigger in triggers:
+        status_counts[trigger.status] = status_counts.get(trigger.status, 0) + 1
+        rule_counts[trigger.rule_id] = rule_counts.get(trigger.rule_id, 0) + 1
+        if trigger.decision_id is not None:
+            linked += 1
+    return {
+        "trigger_count": len(triggers),
+        "status_distribution": sorted(status_counts.items()),
+        "rule_counts": sorted(rule_counts.items()),
+        "linked_decision_count": linked,
+    }
 
 
 def capture_shadow_cases(

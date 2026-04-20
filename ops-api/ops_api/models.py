@@ -41,6 +41,9 @@ class DecisionRecord(Base):
     alerts: Mapped[list["AlertRecord"]] = relationship(back_populates="decision")
     robot_candidates: Mapped[list["RobotCandidateRecord"]] = relationship(back_populates="decision")
     robot_tasks: Mapped[list["RobotTaskRecord"]] = relationship(back_populates="decision")
+    automation_triggers: Mapped[list["AutomationRuleTriggerRecord"]] = relationship(
+        back_populates="decision"
+    )
 
 
 class ZoneRecord(Base):
@@ -415,3 +418,4 @@ class AutomationRuleTriggerRecord(Base):
     review_reason: Mapped[str] = mapped_column(Text, default="")
 
     rule: Mapped[AutomationRuleRecord] = relationship(back_populates="triggers")
+    decision: Mapped["DecisionRecord | None"] = relationship(back_populates="automation_triggers")
