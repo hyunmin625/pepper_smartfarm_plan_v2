@@ -11,6 +11,7 @@ from typing import Any, AsyncIterator
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import asc, desc, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -2262,6 +2263,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/dashboard", tags=["dashboard"], response_class=HTMLResponse)
     def dashboard() -> str:
         return _dashboard_html()
+
+    # Phase T-1: Claude Design handoff prototype served as static assets.
+    # The React + Babel-standalone prototype renders against MOCK data for
+    # now; follow-up passes will rewire MOCK → real ops-api endpoints per
+    # view. Kept on a separate route so the existing dashboard continues
+    # working while operators preview the new design.
+    _dashboard_v2_root = Path(__file__).resolve().parent / "static" / "dashboard_v2"
+    if _dashboard_v2_root.is_dir():
+        app.mount(
+            "/dashboard/v2/src",
+            StaticFiles(directory=str(_dashboard_v2_root / "src")),
+            name="dashboard_v2_src",
+        )
+
+        @app.get("/dashboard/v2", tags=["dashboard"], response_class=HTMLResponse)
+        def dashboard_v2() -> str:
+            index_path = _dashboard_v2_root / "index.html"
+            return index_path.read_text(encoding="utf-8")
 
     @app.get("/", include_in_schema=False)
     def dashboard_root_redirect() -> RedirectResponse:

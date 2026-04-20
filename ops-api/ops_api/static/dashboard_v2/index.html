@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440, initial-scale=1" />
+<title>iFarm 통합제어 — 대시보드 재설계</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  :root {
+    --ink:            #0f1a14;
+    --ink-muted:      #4b5a52;
+    --ink-soft:       #6b7a72;
+    --line:           #e3e8e4;
+    --line-soft:      #eef2ee;
+    --surface:        #ffffff;
+    --surface-low:    #f6f8f6;
+    --surface-lower:  #eff3ef;
+
+    --brand:          #006a26;   /* Agricultural Green */
+    --brand-600:      #00853a;
+    --brand-500:      #00913a;
+    --brand-700:      #005a20;
+    --brand-tint:     #e8f2ec;
+    --brand-tint-2:   #d1e6d8;
+
+    --ok:             #0a8f5a;
+    --ok-tint:        #e4f4ec;
+    --warn:           #c77700;
+    --warn-tint:      #fdf0d9;
+    --crit:           #c32222;
+    --crit-tint:      #fbe5e5;
+    --info:           #1d5db3;
+    --info-tint:      #e6effb;
+
+    --radius: 14px;
+    --shadow-card: 0 1px 0 rgba(16,24,20,.04), 0 1px 2px rgba(16,24,20,.04);
+    --shadow-float: 0 10px 30px -12px rgba(16,24,20,.18), 0 2px 6px rgba(16,24,20,.06);
+  }
+  html, body {
+    background: var(--surface-low);
+    color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-feature-settings: "ss01","tnum";
+    -webkit-font-smoothing: antialiased;
+  }
+  .font-display { font-family: "Space Grotesk", "Pretendard Variable", sans-serif; letter-spacing: -0.01em; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .ms { font-family: "Material Symbols Outlined"; font-style: normal; font-weight: 400; line-height: 1; display: inline-block; vertical-align: middle; }
+
+  /* dense, clean card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .card-ghost {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  /* side rail color band */
+  .rail-ok   { box-shadow: inset 4px 0 0 var(--ok); }
+  .rail-warn { box-shadow: inset 4px 0 0 var(--warn); }
+  .rail-crit { box-shadow: inset 4px 0 0 var(--crit); }
+  .rail-brand{ box-shadow: inset 4px 0 0 var(--brand); }
+  .rail-muted{ box-shadow: inset 4px 0 0 #cfd6d1; }
+
+  /* chips */
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .chip .ms { font-size: 14px; }
+  .chip-ok   { background: var(--ok-tint);   color: #0a6b43; border-color: #bde5d2; }
+  .chip-warn { background: var(--warn-tint); color: #8a5200; border-color: #f4d79a; }
+  .chip-crit { background: var(--crit-tint); color: #9b1a1a; border-color: #f2b8b8; }
+  .chip-info { background: var(--info-tint); color: #143f7a; border-color: #c4d6ef; }
+  .chip-mute { background: #eef2ee;         color: #4b5a52; border-color: #dde4de; }
+  .chip-brand{ background: var(--brand-tint);color: var(--brand-700); border-color: var(--brand-tint-2); }
+
+  /* dot */
+  .dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+  .dot-ok{ background: var(--ok); } .dot-warn{ background: var(--warn); }
+  .dot-crit{ background: var(--crit); } .dot-mute{ background: #b4bdb6; }
+
+  /* buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 14px; border-radius: 10px;
+    font-weight: 600; font-size: 14px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    transition: all 120ms ease;
+  }
+  .btn:hover { background: var(--surface-low); }
+  .btn-primary {
+    background: var(--brand); color: #fff; border-color: var(--brand);
+  }
+  .btn-primary:hover { background: var(--brand-700); border-color: var(--brand-700); }
+  .btn-danger {
+    background: var(--surface); color: var(--crit); border-color: #f2b8b8;
+  }
+  .btn-danger:hover { background: var(--crit-tint); }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: var(--surface-lower); }
+  .btn-sm { height: 32px; padding: 0 10px; font-size: 13px; border-radius: 8px; }
+  .btn-lg { height: 48px; padding: 0 18px; font-size: 15px; }
+
+  /* focus */
+  .btn:focus-visible, button:focus-visible, [role=button]:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 2px;
+  }
+
+  /* sparkline animation */
+  @keyframes dashShift { to { stroke-dashoffset: -40; } }
+
+  /* skeleton pulse */
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+  .pulse { animation: pulse 1.8s ease-in-out infinite; }
+
+  /* scroll */
+  .scroll-clean::-webkit-scrollbar { width: 10px; height: 10px; }
+  .scroll-clean::-webkit-scrollbar-thumb { background: #d7ddd8; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+  .scroll-clean::-webkit-scrollbar-track { background: transparent; }
+
+  /* modal backdrop */
+  .backdrop {
+    position: fixed; inset: 0; background: rgba(15,26,20,.38);
+    backdrop-filter: blur(3px);
+    animation: fadeIn 160ms ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes slideUp { from{opacity:0; transform: translateY(12px);} to {opacity:1; transform:none;} }
+  .sheet { animation: slideUp 220ms cubic-bezier(.2,.8,.2,1); }
+
+  /* utility */
+  .grid-auto { display: grid; gap: 16px; }
+  .hairline { border-top: 1px solid var(--line); }
+  .hairline-v { border-left: 1px solid var(--line); }
+
+  /* ambient tinted row */
+  .row-warn { background: linear-gradient(90deg, var(--warn-tint) 0%, transparent 60%); }
+  .row-crit { background: linear-gradient(90deg, var(--crit-tint) 0%, transparent 60%); }
+
+  /* topbar runtime mode */
+  .mode-shadow { background: #eef2ee; color: #4b5a52; }
+  .mode-approval { background: var(--warn-tint); color: #8a5200; }
+  .mode-execute { background: var(--ok-tint); color: #0a6b43; }
+
+  /* sidebar item */
+  .nav-item {
+    display:flex; align-items:center; gap:12px;
+    padding: 10px 12px; border-radius: 10px;
+    color: var(--ink-muted); font-weight: 500; font-size: 14px;
+    cursor: pointer;
+  }
+  .nav-item:hover { background: var(--surface-lower); color: var(--ink); }
+  .nav-item.active { background: var(--brand-tint); color: var(--brand-700); font-weight: 600; }
+  .nav-item.active .ms { color: var(--brand); }
+  .nav-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    color: #8a958f; text-transform: uppercase;
+    padding: 12px 12px 6px;
+  }
+
+  /* signal light trio in header */
+  .sig { display:inline-flex; align-items:center; gap:6px; padding: 4px 9px; border-radius: 8px; background: var(--surface-low); font-size:12px; color: var(--ink-muted); border:1px solid var(--line); }
+
+  /* progressive disclosure */
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+
+  /* dev view JSON */
+  pre.json { font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 12px; background: #0f1a14; color: #c8e6d3; padding: 14px; border-radius: 10px; overflow: auto; line-height: 1.5; }
+
+  /* glyph placeholder for greenhouse */
+  .gh-glyph { background:
+      radial-gradient(circle at 20% 30%, rgba(0,106,38,.12), transparent 40%),
+      radial-gradient(circle at 80% 60%, rgba(0,106,38,.10), transparent 45%),
+      linear-gradient(180deg, #f0f6f1, #e7efe8);
+  }
+
+  /* Responsive — tablet/mobile */
+  @media (max-width: 1180px) {
+    .resp-2col { grid-template-columns: 1fr !important; }
+    .resp-3col { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 900px) {
+    .resp-3col, .resp-2col { grid-template-columns: 1fr !important; }
+    .resp-hide-sm { display: none !important; }
+    .resp-sidebar { width: 72px !important; }
+    .resp-sidebar .nav-item span:not(.chip):not(.ms) { display: none; }
+    .resp-sidebar .nav-group-label { display: none; }
+    .resp-sidebar .nav-item { justify-content: center; }
+  }
+  @media (max-width: 680px) {
+    .resp-sidebar { display: none !important; }
+    .resp-topbar-compact .sig { display: none; }
+  }
+</style>
+
+<!-- Tweaks JSON block -->
+<script>
+window.__TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "density": "comfortable",
+  "labelLocale": "ko",
+  "devViewUnlocked": false,
+  "dashboardLayout": "hero-stats",
+  "approvalStyle": "list",
+  "mockScenario": "rain-event"
+}/*EDITMODE-END*/;
+</script>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="src/tokens.jsx"></script>
+<script type="text/babel" src="src/chrome.jsx"></script>
+<script type="text/babel" src="src/dashboard.jsx"></script>
+<script type="text/babel" src="src/decisions.jsx"></script>
+<script type="text/babel" src="src/rules.jsx"></script>
+<script type="text/babel" src="src/alerts.jsx"></script>
+<script type="text/babel" src="src/zones.jsx"></script>
+<script type="text/babel" src="src/chat.jsx"></script>
+<script type="text/babel" src="src/devices.jsx"></script>
+<script type="text/babel" src="src/policies_robot.jsx"></script>
+<script type="text/babel" src="src/designsystem.jsx"></script>
+<script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>
