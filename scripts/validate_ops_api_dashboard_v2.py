@@ -55,6 +55,10 @@ EXPECTED_JSX_FILES = [
     ("bundle.jsx", "function Sidebar"),
     ("bundle.jsx", "function Dashboard"),
     ("bundle.jsx", "function App"),
+    # Phase T-2b: rules view fetches real data from ops-api.
+    ("bundle.jsx", "fetchAutomationRules"),
+    ("bundle.jsx", "toggleAutomationRuleServer"),
+    ("bundle.jsx", "/automation/rules"),
     ("tokens.jsx", "const STATUS ="),
     ("chrome.jsx", "function Sidebar"),
     ("dashboard.jsx", "function Dashboard"),

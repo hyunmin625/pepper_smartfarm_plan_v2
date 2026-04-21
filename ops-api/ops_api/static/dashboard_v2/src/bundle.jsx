@@ -968,16 +968,32 @@ Object.assign(window, { DecisionsPage, DecisionCard, DecisionDetailModal, Confid
 // ==== rules.jsx ====
 // rules.jsx — Automation rules list + 3-step wizard
 
-function RuleRow({ r, onEdit }) {
-  // Local enabled state — driven entirely by state, not the prop, so
-  // the track color + thumb translate follow the click. Phase T-2 will
-  // replace the setEnabled callback with PATCH /automation/rules/{id}/toggle.
+function RuleRow({ r, onEdit, onToggle }) {
+  // Optimistic toggle: flip locally first, then PATCH; on error revert.
+  // Passing onToggle is optional so MOCK-only callers still render.
   const [enabled, setEnabled] = React.useState(r.enabled);
+  const [pending, setPending] = React.useState(false);
+  React.useEffect(() => { setEnabled(r.enabled); }, [r.enabled]);
   const modeChip = {
     shadow:   <span className="chip chip-mute"><Icon name="visibility"/> 섀도우</span>,
     approval: <span className="chip chip-warn"><Icon name="how_to_reg"/> 승인 필요</span>,
     execute:  <span className="chip chip-ok"><Icon name="bolt"/> 자동 실행</span>,
   }[r.mode];
+
+  const handleToggle = async (e) => {
+    const next = e.target.checked;
+    if (!onToggle) { setEnabled(next); return; }
+    setEnabled(next);
+    setPending(true);
+    try {
+      await onToggle(r.rule_id || r.id, next);
+    } catch (err) {
+      setEnabled(!next); // revert on failure
+      alert("규칙 상태 변경 실패: " + (err.message || err));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className={`card p-4 ${enabled ? "" : "opacity-70"}`}>
@@ -986,10 +1002,11 @@ function RuleRow({ r, onEdit }) {
           <input
             type="checkbox"
             checked={enabled}
-            onChange={e => setEnabled(e.target.checked)}
+            onChange={handleToggle}
+            disabled={pending}
             className="sr-only peer"
           />
-          <div className="w-11 h-6 rounded-full transition-colors" style={{ background: enabled ? "var(--brand)" : "#cfd6d1" }}>
+          <div className="w-11 h-6 rounded-full transition-colors" style={{ background: enabled ? "var(--brand)" : "#cfd6d1", opacity: pending ? 0.6 : 1 }}>
             <div className="w-5 h-5 rounded-full bg-white shadow-sm transition-transform" style={{ transform: `translate(${enabled ? 22 : 2}px, 2px)` }}></div>
           </div>
         </label>
@@ -1224,9 +1241,124 @@ function RuleWizard({ open, onClose, editing }) {
   );
 }
 
+// Phase T-2b: human-readable label tables so server enums render
+// naturally in the "when / then" sentence. Keep them lightweight and
+// fall back to the raw key when unseen, since the server catalogue
+// (21 sensors × 8 device types × 6 operators) can grow.
+const RULES_SENSOR_LABELS = {
+  air_temp_c: "기온 (°C)", rh_pct: "습도 (%)", vpd_kpa: "VPD (kPa)",
+  co2_ppm: "CO₂ (ppm)", par_umol_m2_s: "광량 (μmol)",
+  substrate_moisture_pct: "근권 수분 (%)", substrate_temp_c: "근권 온도 (°C)",
+  substrate_ec_ds_m: "근권 EC (dS/m)",
+  feed_ec_ds_m: "공급 EC (dS/m)", drain_ec_ds_m: "배액 EC (dS/m)",
+  outside_rain_mm_10min: "외부 강우 (mm/10min)",
+  outside_wind_ms: "외부 풍속 (m/s)",
+  outside_temp_c: "외기 (°C)",
+};
+const RULES_OPERATOR_LABELS = {
+  gt: ">", gte: "≥", lt: "<", lte: "≤", eq: "=",
+  between: "범위", ne: "≠",
+};
+const RULES_DEVICE_LABELS = {
+  roof_vent: "천장 개폐기", vent_window: "천장 개폐기",
+  hvac_geothermal: "냉난방기", humidifier: "제습/가습기",
+  fertigation_mixer: "양액 혼합기", irrigation_pump: "관수 밸브",
+  shade_curtain: "차광막", fan_circulation: "순환팬",
+  fan_dehum: "제습팬", co2_injector: "CO₂ 주입기",
+  grow_light: "보광등", heater: "난방기",
+};
+const RULES_ACTION_LABELS = {
+  adjust_vent: "개폐 조정", close_vent: "닫기", open_vent: "열기",
+  set_level: "단계 설정", turn_on: "켜기", turn_off: "끄기",
+};
+
+function adaptServerRule(sr) {
+  // Turn server serialize_rule() output → the shape RuleRow expects.
+  const sensor = RULES_SENSOR_LABELS[sr.sensor_key] || sr.sensor_key || "";
+  const op = RULES_OPERATOR_LABELS[sr.operator] || sr.operator || "";
+  const threshold = sr.threshold_value != null
+    ? sr.threshold_value
+    : (sr.threshold_min != null && sr.threshold_max != null
+        ? `${sr.threshold_min} ~ ${sr.threshold_max}`
+        : "—");
+  const device = RULES_DEVICE_LABELS[sr.target_device_type] || sr.target_device_type || "";
+  const action = RULES_ACTION_LABELS[sr.target_action] || sr.target_action || "";
+  return {
+    id: sr.id,
+    rule_id: sr.rule_id,
+    name: sr.name || sr.rule_id,
+    enabled: !!sr.enabled,
+    when: `${sensor} ${op} ${threshold}`,
+    then: `${device} ${action}`.trim(),
+    mode: sr.runtime_mode_gate || "approval",
+    runs24h: 0,   // Phase T-2c will aggregate /automation/triggers
+    last: "—",
+  };
+}
+
+async function fetchAutomationRules() {
+  const res = await fetch("/automation/rules", { credentials: "same-origin" });
+  if (!res.ok) throw new Error(`GET /automation/rules ${res.status}`);
+  const body = await res.json();
+  const rules = (body?.data?.rules) || [];
+  return rules.map(adaptServerRule);
+}
+
+async function toggleAutomationRuleServer(ruleId, enabled) {
+  const res = await fetch(`/automation/rules/${encodeURIComponent(ruleId)}/toggle`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ enabled }),
+  });
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(`PATCH toggle ${res.status} ${msg.slice(0, 120)}`);
+  }
+}
+
 function RulesPage() {
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(null);
+  const [rules, setRules] = React.useState(null);   // null = loading
+  const [loadError, setLoadError] = React.useState(null);
+  const [filter, setFilter] = React.useState("all");
+
+  const load = React.useCallback(() => {
+    setLoadError(null);
+    fetchAutomationRules()
+      .then(setRules)
+      .catch(err => {
+        setLoadError(err.message || String(err));
+        setRules(MOCK.rules);  // fall back to mock so the page stays usable
+      });
+  }, []);
+  React.useEffect(() => { load(); }, [load]);
+
+  const handleToggle = async (ruleId, enabled) => {
+    await toggleAutomationRuleServer(ruleId, enabled);
+    setRules(prev => (prev || []).map(r => (r.rule_id === ruleId ? { ...r, enabled } : r)));
+  };
+
+  const all = rules || [];
+  const counts = {
+    all: all.length,
+    on: all.filter(r => r.enabled).length,
+    off: all.filter(r => !r.enabled).length,
+    approval: all.filter(r => r.mode === "approval").length,
+  };
+  const filters = [
+    { k: "all", label: "전체", n: counts.all },
+    { k: "on", label: "켜짐", n: counts.on },
+    { k: "off", label: "꺼짐", n: counts.off },
+    { k: "approval", label: "승인 필요", n: counts.approval },
+  ];
+  const visible = all.filter(r => {
+    if (filter === "on") return r.enabled;
+    if (filter === "off") return !r.enabled;
+    if (filter === "approval") return r.mode === "approval";
+    return true;
+  });
 
   return (
     <div className="p-6">
@@ -1236,15 +1368,42 @@ function RulesPage() {
         right={<button className="btn btn-primary" onClick={() => { setEditing(null); setWizardOpen(true); }}><Icon name="add"/> 새 규칙 만들기</button>}
       />
 
+      {loadError && (
+        <div className="card-ghost p-3 mb-4 flex items-start gap-3" style={{ background: "var(--warn-tint)", borderColor: "#f4d79a" }}>
+          <Icon name="cloud_off" style={{ color: "var(--warn)", fontSize: 20 }} />
+          <div className="flex-1 text-[13px]" style={{ color: "#8a5200" }}>
+            규칙을 서버에서 불러오지 못했습니다 — 샘플 데이터를 표시합니다. ({loadError})
+          </div>
+          <button className="btn btn-sm" onClick={load}><Icon name="refresh" style={{ fontSize: 16 }}/> 다시 시도</button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-4">
-        {[["전체", 5],["켜짐", 4],["꺼짐", 1],["승인 필요", 2]].map(([l,n], i) => (
-          <button key={i} className={`btn btn-sm ${i===0 ? "" : "btn-ghost"}`}>{l} <span className="tnum ml-1" style={{ color: "var(--ink-soft)" }}>{n}</span></button>
+        {filters.map(f => (
+          <button key={f.k} onClick={() => setFilter(f.k)}
+            className={`btn btn-sm ${filter === f.k ? "" : "btn-ghost"}`}>
+            {f.label} <span className="tnum ml-1" style={{ color: "var(--ink-soft)" }}>{f.n}</span>
+          </button>
         ))}
       </div>
 
-      <div className="space-y-3 max-w-[960px]">
-        {MOCK.rules.map(r => <RuleRow key={r.id} r={r} onEdit={(r)=>{ setEditing(r); setWizardOpen(true); }} />)}
-      </div>
+      {rules === null ? (
+        <div className="card p-8 text-center text-[13px]" style={{ color: "var(--ink-soft)" }}>
+          <Icon name="hourglass_empty" style={{ fontSize: 24 }} /> 규칙을 불러오는 중…
+        </div>
+      ) : visible.length === 0 ? (
+        <div className="card p-8 text-center text-[13px]" style={{ color: "var(--ink-soft)" }}>
+          {filter === "all" ? "등록된 규칙이 없습니다." : "이 필터에 해당하는 규칙이 없습니다."}
+        </div>
+      ) : (
+        <div className="space-y-3 max-w-[960px]">
+          {visible.map(r => (
+            <RuleRow key={r.rule_id || r.id} r={r}
+              onEdit={(r)=>{ setEditing(r); setWizardOpen(true); }}
+              onToggle={loadError ? null : handleToggle} />
+          ))}
+        </div>
+      )}
 
       <RuleWizard open={wizardOpen} onClose={() => setWizardOpen(false)} editing={editing} />
     </div>
