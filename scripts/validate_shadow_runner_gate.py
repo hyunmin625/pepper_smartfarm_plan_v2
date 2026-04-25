@@ -8,6 +8,10 @@ directly against a TestClient-wrapped ops-api app. We monkey-patch
 the runner's production code path (POST /shadow/cases/capture + GET
 /shadow/window) is exercised end-to-end without binding a socket.
 
+This smoke is PostgreSQL-only. If no PostgreSQL URL is configured through
+``OPS_API_POSTGRES_SMOKE_URL`` or ``OPS_API_DATABASE_URL``, it reports
+``blocked`` and exits 0.
+
 Scenarios:
 
 1. Gate ``promote`` satisfied – ingest four healthy seed cases and
@@ -51,9 +55,17 @@ runner_ns: dict[str, Any] = {"__name__": "push_shadow_cases_to_ops_api"}
 exec(compile(runner_module_path.read_text(encoding="utf-8"), str(runner_module_path), "exec"), runner_ns)
 
 
-def _make_settings(tmp_path: Path) -> Settings:
+def _resolve_postgres_url() -> str | None:
+    for name in ("OPS_API_POSTGRES_SMOKE_URL", "OPS_API_DATABASE_URL"):
+        value = os.getenv(name, "").strip()
+        if value.startswith("postgresql://") or value.startswith("postgresql+"):
+            return value
+    return None
+
+
+def _make_settings(tmp_path: Path, postgres_url: str) -> Settings:
     return Settings(
-        database_url=f"sqlite:///{tmp_path}/ops_api.db",
+        database_url=postgres_url,
         runtime_mode_path=tmp_path / "runtime_mode.json",
         auth_mode="disabled",
         auth_tokens_json="",
@@ -160,6 +172,21 @@ def main() -> int:
     for key in ("OPS_API_AUTH_MODE", "OPS_API_AUTH_TOKENS_JSON"):
         os.environ.pop(key, None)
 
+    postgres_url = _resolve_postgres_url()
+    if not postgres_url:
+        print(
+            json.dumps(
+                {
+                    "status": "blocked",
+                    "reason": "postgres URL is not configured",
+                    "expected_env": ["OPS_API_POSTGRES_SMOKE_URL", "OPS_API_DATABASE_URL"],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
     seed_cases = _load_seed_cases()
     if len(seed_cases) < 4:
         errors.append("seed case pool must contain at least 4 cases for the gate smoke")
@@ -174,7 +201,7 @@ def main() -> int:
         _write_cases(happy_file, seed_cases[:4])
         _write_cases(hold_file, [_make_hold_case(seed_cases[0])])
 
-        app = create_app(settings=_make_settings(tmp_path))
+        app = create_app(settings=_make_settings(tmp_path, postgres_url))
         client = TestClient(app)
         _install_urlopen_shim(client)
 

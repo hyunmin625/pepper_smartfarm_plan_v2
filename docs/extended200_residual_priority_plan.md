@@ -2,7 +2,7 @@
 
 이 문서는 `ds_v11/prompt_v5_methodfix_batch14` frozen baseline 기준 `extended200` validator 잔여 `42건`을 다음 corrective batch로 어떻게 나눌지 정리한다.
 
-상태: 2026-04-25 기준 우선순위 설계 완료. 다음 실행 단위는 `Batch21A. risk_rubric_core` sample 설계/생성이다.
+상태: 2026-04-25 기준 우선순위 설계와 Batch21 corrective sample 생성 완료. 다음 실행 단위는 real shadow 누적 후 Batch21 효과를 재평가하는 것이다.
 
 ## 1. 기준선
 
@@ -67,6 +67,13 @@ corrective intent:
 
 - `18~24건`
 
+생성 결과:
+
+- `20건`
+- `data/examples/state_judgement_samples_batch21a_risk_rubric_core.jsonl`
+- `data/examples/failure_response_samples_batch21a_risk_rubric_core.jsonl`
+- `data/examples/forbidden_action_samples_batch21a_risk_rubric_core.jsonl`
+
 ### Batch21B. `required_action_types_and_evidence_gap`
 
 목표:
@@ -100,6 +107,13 @@ corrective intent:
 
 - `12~16건`
 
+생성 결과:
+
+- `16건`
+- `data/examples/action_recommendation_samples_batch21b_required_actions.jsonl`
+- `data/examples/state_judgement_samples_batch21b_required_actions.jsonl`
+- `data/examples/failure_response_samples_batch21b_required_actions.jsonl`
+
 ### Batch21C. `robot_contract_exactness`
 
 목표:
@@ -122,6 +136,11 @@ corrective intent:
 
 - `4~6건`
 
+생성 결과:
+
+- `6건`
+- `data/examples/robot_task_samples_batch21c_robot_contract_exactness.jsonl`
+
 ## 3. 실행 원칙
 
 - 순서는 `Batch21A -> Batch21B -> Batch21C`로 고정한다.
@@ -131,7 +150,6 @@ corrective intent:
 
 ## 4. 다음 액션
 
-- `Batch21A` sample 설계와 생성
-- `Batch21B` required action corrective sample 설계와 생성
-- `Batch21C` robot exact contract sample 설계와 생성
-- 생성 후 `validate_training_examples`, `audit_training_data_consistency`, `report_risk_slice_coverage` 재실행
+- `synthetic shadow day0` residual `4건`은 재확인 결과 아직 `hold`다. Batch21A/B/C는 이 residual을 future training seed로 덮지만, 모델 출력은 재학습 전까지 변하지 않는다.
+- real shadow case를 더 누적한 뒤 `build_shadow_mode_window_report.py`와 submit preflight에 연결한다.
+- `validate_training_examples`, `audit_training_data_consistency`, `report_risk_slice_coverage --strict`는 2026-04-25 기준 통과했다.

@@ -88,6 +88,18 @@ def recommended_action_types(row: dict[str, Any]) -> set[str]:
     return types
 
 
+def skipped_action_types(row: dict[str, Any]) -> set[str]:
+    output = row_output(row)
+    actions = output.get("skipped_actions")
+    if not isinstance(actions, list):
+        return set()
+    types = set()
+    for item in actions:
+        if isinstance(item, dict) and isinstance(item.get("action_type"), str):
+            types.add(str(item["action_type"]))
+    return types
+
+
 def robot_task_rows(row: dict[str, Any]) -> list[dict[str, Any]]:
     tasks = row_output(row).get("robot_tasks")
     if not isinstance(tasks, list):
@@ -187,7 +199,24 @@ def is_evidence_incomplete_unknown_slice(row: dict[str, Any]) -> bool:
 def is_failure_safe_mode_slice(row: dict[str, Any]) -> bool:
     if task_type_for_row(row) != "failure_response":
         return False
+    constraints = active_constraints(row)
     actions = recommended_action_types(row)
+    skipped_actions = skipped_action_types(row)
+    hard_block_constraints = {
+        "manual_override",
+        "manual_override_active",
+        "worker_present",
+        "worker_present_in_lane",
+        "reentry_pending",
+        "worker_entry_open",
+        "dry_room_manual_inspection",
+    }
+    if (
+        hard_block_constraints & constraints
+        and "block_action" in actions
+        and "enter_safe_mode" in skipped_actions
+    ):
+        return False
     if {"enter_safe_mode", "request_human_check"}.issubset(actions):
         return True
     text = text_blob(row)

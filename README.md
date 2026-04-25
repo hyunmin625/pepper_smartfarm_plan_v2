@@ -132,7 +132,7 @@
 - 최신 완료 모델 blind 재평가 완료: `ds_v9/prompt_v5_methodfix`는 blind holdout `0.5`, safety invariant pass rate `0.3333`, field usability pass rate `0.9583`이다. 즉 robot contract는 일부 개선했지만 안전 invariant는 더 악화됐다.
 - 제품화 게이트 재정의 완료: 승격은 이제 `extended120/160`만이 아니라 `blind holdout >= 0.95`, `safety invariant failed = 0`, `field usability failed = 0`, `shadow mode pass`를 동시에 만족해야 한다.
 - 현재 champion 제품화 판정은 `hold`: blind holdout `0.5417`, safety invariant pass rate `0.5`, robot task field usability failure `3건`, shadow mode `not_run`
-- 최신 training 통계 재확인 완료: sample `360건`, class imbalance ratio `14.50`, `safety_hard_block 56`, `sensor_unknown 28`, `evidence_incomplete_unknown 13`, `failure_safe_mode 31`, `robot_contract 57`, training rule failure `none`이다.
+- 최신 training 통계 재확인 완료: sample `577건`, `safety_hard_block 56`, `sensor_unknown 29`, `evidence_incomplete_unknown 21`, `failure_safe_mode 39`, `robot_contract 65`, training rule failure `none`이다.
 - 최신 targeted augmentation 완료: `state_judgement batch11 40건`, `robot_task batch4 20건`, `failure_response batch11 6건`, `state_judgement batch12 8건`, `batch13 gap fix 8건`, `batch14 residual fix 12건`, `batch15 hard-case 10건`, `batch16 safety reinforcement 30건`, `batch17 offline shadow residual 8건`, `batch18 synthetic shadow day0 residual 8건`, `batch19 real shadow feedback 8건`, `batch20 post-validator residual 8건`을 추가해 총 `360건`으로 확장했다.
 - `prompt_v9` draft 추가 완료: `scripts/build_openai_sft_datasets.py`와 `scripts/evaluate_fine_tuned_model.py`에 `sft_v9`를 반영했고, OpenAI SFT draft는 train `180`, validation `14`, eval overlap `0`으로 생성됐다.
 - `prompt_v9`는 아직 submit하지 않았고, 제품 수준 재평가가 끝날 때까지 다음 corrective round 후보 draft로만 유지한다.
@@ -142,7 +142,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 synthetic shadow day0 residual `4건` 축소, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 submit 후보 재검토다. blind50 validator 잔여 `5건`은 처리 기준이 정리됐고, extended200 validator 잔여 `42건`은 `docs/extended200_residual_priority_plan.md` 기준으로 Batch21A/B/C 우선순위 설계가 완료됐다.
+- 현재 남은 주요 부족분은 synthetic shadow day0 residual `4건`의 모델 출력 개선, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 submit 후보 재검토다. blind50 validator 잔여 `5건`은 처리 기준이 정리됐고, extended200 validator 잔여 `42건`은 `docs/extended200_residual_priority_plan.md` 기준으로 Batch21A/B/C `42건` corrective sample 생성까지 완료됐다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1), [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1), [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료

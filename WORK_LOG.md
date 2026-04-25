@@ -1871,3 +1871,38 @@
 ### extended200 residual
 - `docs/extended200_residual_priority_plan.md`를 2026-04-25 기준 상태로 갱신했다.
 - `todo.md`의 extended200 validator 잔여 `42건` batch 설계 항목을 `[x]`로 닫았다. 다음 실행 단위는 `Batch21A risk_rubric_core` sample 설계/생성이다.
+
+---
+
+## 2026-04-25 — Batch21 corrective samples + shadow/retriever 재검증
+
+### Batch21A/B/C 생성
+- `scripts/generate_batch21_extended200_residual_samples.py` 신규. ds_v11 extended200 validator 잔여 `42건`을 `docs/extended200_residual_priority_plan.md` 기준으로 재현 가능한 JSONL seed로 생성한다.
+- Batch21A `risk_rubric_core`: `20건`
+  - `data/examples/state_judgement_samples_batch21a_risk_rubric_core.jsonl` `12`
+  - `data/examples/failure_response_samples_batch21a_risk_rubric_core.jsonl` `4`
+  - `data/examples/forbidden_action_samples_batch21a_risk_rubric_core.jsonl` `4`
+- Batch21B `required_action_types_and_evidence_gap`: `16건`
+  - `data/examples/action_recommendation_samples_batch21b_required_actions.jsonl` `8`
+  - `data/examples/state_judgement_samples_batch21b_required_actions.jsonl` `4`
+  - `data/examples/failure_response_samples_batch21b_required_actions.jsonl` `4`
+- Batch21C `robot_contract_exactness`: `6건`
+  - `data/examples/robot_task_samples_batch21c_robot_contract_exactness.jsonl` `6`
+- `python3 scripts/build_training_jsonl.py --include-source-file`로 `artifacts/training/combined_training_samples.jsonl`을 `577건`으로 재생성했다.
+
+### 검증
+- `python3 scripts/validate_training_examples.py`: sample files `79`, sample rows `577`, duplicate `0`, errors `0`; eval rows `250`, errors `0`.
+- `python3 scripts/audit_training_data_consistency.py`: rows `577`, duplicate rows `0`, contradictions `0`, eval overlap `0`, errors `0`.
+- `python3 scripts/report_risk_slice_coverage.py --strict`: training/extended_eval/blind_holdout 모두 rule failure `none`.
+- `scripts/report_risk_slice_coverage.py`는 `manual_override`/`worker_present`/`reentry_pending` hard-block failure_response를 stale safe_mode slice로 오분류하지 않도록 보정했다. Batch22 cluster A의 의도는 `enter_safe_mode`가 아니라 `block_action + create_alert` 우선이기 때문이다.
+
+### Shadow mode
+- `validate_shadow_mode_seed_pack.py`와 `run_shadow_mode_seed_pack.py` 재실행 결과 synthetic shadow day0는 여전히 `decision_count 12`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`.
+- `report_shadow_mode_seed_residuals.py` 재실행 결과 residual `4건`: `data_and_model 3` (`alert_missing_before_fertigation_review`), `robot_contract_and_model 1` (`inspect_crop_enum_drift`).
+- Batch21B/C가 각각 `create_alert + request_human_check` 누락과 `inspect_crop exact enum + candidate_id/target` drift를 future training seed로 덮었다. 재학습 전 모델 출력은 변하지 않으므로 submit 후보 결정은 계속 blocked다.
+
+### Real shadow runner + retriever 유지보수
+- `scripts/validate_shadow_runner_gate.py`의 SQLite TestClient 설정을 제거하고 PostgreSQL-only로 정렬했다. PostgreSQL URL이 없으면 `blocked`로 종료한다.
+- `.env` PostgreSQL 설정으로 `validate_shadow_runner_gate.py` 실행: promote window 통과, mismatch injection 후 hold 강등, gate=hold 통과 확인.
+- `bash scripts/run_ops_api_postgres_stack.sh`로 localhost ops-api를 띄운 뒤 `push_shadow_cases_to_ops_api.py --gate hold`로 day0 seed `12건` 적재를 반복했다. `/shadow/window`는 `decision_count 24`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`.
+- `validate_vector_retrievers.py`는 OpenAI live query를 skip하고 통과했다. zero-cost retriever benchmark는 동일하게 `keyword recall@5 0.9444`, `local_hybrid 0.8968`, `tfidf 0.7698`, `local_embed 0.7540`이다.
