@@ -1986,3 +1986,14 @@
 - 검증 범위는 action_type enum, parameter range/schema, confidence 0..1, follow_up 필드, retrieved_context citation, retrieval_coverage enum, robot task schema, natural language leakage다.
 - `scripts/validate_llm_response_contract.py` 신규 smoke로 정상/오류 샘플과 service integration을 함께 검증한다.
 - `scripts/validate_llm_orchestrator_service.py`와 `scripts/run_phase_p_quality_gate.py`가 response contract smoke와 expanded tool registry를 회귀하도록 갱신했다.
+
+---
+
+## 2026-04-26 — Monitoring, alerting, audit contract closure
+
+### todo 13 closure
+- `docs/monitoring_alerting_audit_contract.md` 신규. request, decision, command, robot, policy block, sensor anomaly log format을 runtime 기준으로 고정했다.
+- `GET /monitoring/metrics`와 dashboard payload에 sensor ingest rate, stale sensor count, decision latency, malformed response count, approval pending count, command success rate, robot task success rate, safe mode count를 추가했다.
+- `GET /monitoring/alarms`에 high_temperature, high_humidity, sensor_anomaly, device_unresponsive, policy_block_spike, decision_failure, robot_safety, safe_mode_entry computed alarm 계약을 연결했다.
+- `operator_overrides` PostgreSQL table과 `POST/GET /operator/overrides`를 추가해 manual override, safe mode, emergency stop, operator lock을 별도 audit row와 policy event로 저장한다.
+- `scripts/validate_monitoring_alerting_contract.py` 신규 smoke와 Phase P quality gate 연결로 todo 13 체크리스트가 실제 코드와 문서에 반영됐는지 회귀한다.

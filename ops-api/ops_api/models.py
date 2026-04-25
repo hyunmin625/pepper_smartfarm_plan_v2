@@ -230,6 +230,21 @@ class AlertRecord(Base):
     decision: Mapped[DecisionRecord | None] = relationship(back_populates="alerts")
 
 
+class OperatorOverrideRecord(Base):
+    __tablename__ = "operator_overrides"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    zone_id: Mapped[str | None] = mapped_column(String(128), index=True, nullable=True)
+    target_scope: Mapped[str] = mapped_column(String(32), index=True)
+    target_id: Mapped[str] = mapped_column(String(128), index=True)
+    override_type: Mapped[str] = mapped_column(String(64), index=True)
+    override_state: Mapped[str] = mapped_column(String(32), index=True)
+    actor_id: Mapped[str] = mapped_column(String(128), index=True)
+    reason: Mapped[str] = mapped_column(Text)
+    payload_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+
+
 class RobotCandidateRecord(Base):
     __tablename__ = "robot_candidates"
 

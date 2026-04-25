@@ -28,6 +28,7 @@ from .api_models import (
     EvaluateZoneRequest,
     ErrorResponse,
     ExecuteActionRequest,
+    OperatorOverrideRequest,
     PolicyUpdateRequest,
     RobotTaskCreateRequest,
     ShadowCaptureRequest,
@@ -50,6 +51,7 @@ from .models import (
     DecisionRecord,
     DeviceRecord,
     DeviceCommandRecord,
+    OperatorOverrideRecord,
     OperatorReviewRecord,
     PolicyEventPolicyLinkRecord,
     PolicyEventRecord,
@@ -301,6 +303,352 @@ def _serialize_policy_event(row: PolicyEventRecord) -> dict[str, Any]:
         "reason_codes": _loads_json(row.reason_codes_json, []),
         "payload": _loads_json(row.payload_json, {}),
         "created_at": row.created_at.isoformat(),
+    }
+
+
+MONITORING_SENSOR_ANOMALY_FLAGS = {"bad", "blocked", "stale", "missing", "flatline", "communication_loss"}
+COMMAND_SUCCESS_STATUSES = {"acknowledged", "state_updated"}
+COMMAND_FAILURE_STATUSES = {"rejected", "dispatch_fault", "failed", "timeout"}
+ROBOT_SUCCESS_STATUSES = {"done", "completed", "success"}
+ROBOT_FAILURE_STATUSES = {"blocked", "failed", "rejected"}
+
+
+def _serialize_operator_override(row: OperatorOverrideRecord) -> dict[str, Any]:
+    return {
+        "override_id": row.id,
+        "zone_id": row.zone_id,
+        "target_scope": row.target_scope,
+        "target_id": row.target_id,
+        "override_type": row.override_type,
+        "override_state": row.override_state,
+        "actor_id": row.actor_id,
+        "reason": row.reason,
+        "payload": _loads_json(row.payload_json, {}),
+        "created_at": row.created_at.isoformat(),
+    }
+
+
+def _record_operator_override(
+    *,
+    session: Session,
+    payload: OperatorOverrideRequest,
+    actor_id: str,
+) -> OperatorOverrideRecord:
+    record = OperatorOverrideRecord(
+        zone_id=payload.zone_id,
+        target_scope=payload.target_scope,
+        target_id=payload.target_id,
+        override_type=payload.override_type,
+        override_state=payload.override_state,
+        actor_id=actor_id,
+        reason=payload.reason,
+        payload_json=json.dumps(payload.payload, ensure_ascii=False),
+    )
+    session.add(record)
+    session.flush()
+    _add_policy_event(
+        session,
+        decision_id=None,
+        request_id=f"operator-override-{record.id}",
+        event_type="operator_override",
+        policy_result=payload.override_state,
+        policy_ids=[],
+        reason_codes=[f"operator_{payload.override_type}_{payload.override_state}"],
+        payload={
+            "override": _serialize_operator_override(record),
+        },
+    )
+    return record
+
+
+def _decision_source_timestamp(decision: DecisionRecord) -> datetime | None:
+    zone_state = _loads_json(decision.zone_state_json, {})
+    candidates: list[Any] = []
+    if isinstance(zone_state, dict):
+        candidates.extend([
+            zone_state.get("timestamp"),
+            zone_state.get("measured_at"),
+            zone_state.get("created_at"),
+        ])
+        current_state = zone_state.get("current_state")
+        if isinstance(current_state, dict):
+            candidates.extend([
+                current_state.get("timestamp"),
+                current_state.get("measured_at"),
+                current_state.get("created_at"),
+            ])
+        metadata = zone_state.get("metadata")
+        if isinstance(metadata, dict):
+            candidates.extend([
+                metadata.get("request_received_at"),
+                metadata.get("source_timestamp"),
+            ])
+    for candidate in candidates:
+        parsed = _parse_iso(str(candidate)) if candidate else None
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _decision_has_malformed_response(decision: DecisionRecord) -> bool:
+    raw = _loads_json(decision.raw_output_json, {})
+    if isinstance(raw, dict):
+        parse_result = raw.get("parse_result")
+        if isinstance(parse_result, dict) and parse_result.get("json_object_ok") is False:
+            return True
+        if raw.get("fallback_used") is True:
+            return True
+        contract_errors = raw.get("response_contract_errors")
+        if isinstance(contract_errors, list) and contract_errors:
+            return True
+    parsed = _loads_json(decision.parsed_output_json, {})
+    if isinstance(parsed, dict) and parsed.get("parse_error"):
+        return True
+    validated = _loads_json(decision.validated_output_json, {})
+    if isinstance(validated, dict) and validated.get("parse_error"):
+        return True
+    return False
+
+
+def _latest_metric_values(sensor_rows: list[SensorReadingRecord]) -> dict[str, dict[str, Any]]:
+    latest: dict[str, SensorReadingRecord] = {}
+    for row in sensor_rows:
+        if row.metric_value_double is None:
+            continue
+        current = latest.get(row.metric_name)
+        if current is None or row.measured_at > current.measured_at:
+            latest[row.metric_name] = row
+    return {
+        metric: {
+            "value": row.metric_value_double,
+            "quality_flag": row.quality_flag,
+            "source_id": row.source_id,
+            "measured_at": row.measured_at.isoformat() if row.measured_at else None,
+        }
+        for metric, row in sorted(latest.items())
+    }
+
+
+def _build_monitoring_metrics(session: Session, *, window_minutes: int = 60) -> dict[str, Any]:
+    window_minutes = max(1, min(int(window_minutes), 1440))
+    window_end = utc_now()
+    window_start = window_end - timedelta(minutes=window_minutes)
+    sensor_rows = session.execute(
+        select(SensorReadingRecord)
+        .where(SensorReadingRecord.measured_at >= window_start)
+        .order_by(desc(SensorReadingRecord.measured_at))
+        .limit(5000)
+    ).scalars().all()
+    decision_rows = session.execute(
+        select(DecisionRecord)
+        .where(DecisionRecord.created_at >= window_start)
+        .order_by(desc(DecisionRecord.id))
+        .limit(1000)
+    ).scalars().all()
+    command_rows = session.execute(
+        select(DeviceCommandRecord)
+        .where(DeviceCommandRecord.created_at >= window_start)
+        .order_by(desc(DeviceCommandRecord.id))
+        .limit(1000)
+    ).scalars().all()
+    robot_rows = session.execute(
+        select(RobotTaskRecord)
+        .where(RobotTaskRecord.created_at >= window_start)
+        .order_by(desc(RobotTaskRecord.id))
+        .limit(1000)
+    ).scalars().all()
+    policy_events = session.execute(
+        select(PolicyEventRecord)
+        .where(PolicyEventRecord.created_at >= window_start)
+        .order_by(desc(PolicyEventRecord.id))
+        .limit(1000)
+    ).scalars().all()
+    approval_rows = session.execute(
+        select(ApprovalRecord)
+        .where(ApprovalRecord.created_at >= window_start)
+        .order_by(desc(ApprovalRecord.id))
+        .limit(1000)
+    ).scalars().all()
+    override_rows = session.execute(
+        select(OperatorOverrideRecord)
+        .where(OperatorOverrideRecord.created_at >= window_start)
+        .order_by(desc(OperatorOverrideRecord.id))
+        .limit(1000)
+    ).scalars().all()
+
+    stale_sources = {
+        row.source_id
+        for row in sensor_rows
+        if str(row.quality_flag or "").lower() in MONITORING_SENSOR_ANOMALY_FLAGS
+        or str(row.transport_status or "").lower() not in {"ok", "good", "normal", ""}
+    }
+    decision_latencies: list[float] = []
+    for decision in decision_rows:
+        source_ts = _decision_source_timestamp(decision)
+        if source_ts is None:
+            continue
+        latency_ms = max(0.0, (decision.created_at - source_ts).total_seconds() * 1000.0)
+        decision_latencies.append(latency_ms)
+
+    command_success_count = sum(1 for row in command_rows if row.status in COMMAND_SUCCESS_STATUSES)
+    command_failure_count = sum(1 for row in command_rows if row.status in COMMAND_FAILURE_STATUSES)
+    robot_success_count = sum(1 for row in robot_rows if row.status in ROBOT_SUCCESS_STATUSES)
+    robot_failure_count = sum(1 for row in robot_rows if row.status in ROBOT_FAILURE_STATUSES)
+    policy_blocked_count = sum(1 for row in policy_events if row.event_type == "blocked" or row.policy_result == "blocked")
+    policy_approval_count = sum(1 for row in policy_events if row.event_type == "approval_required" or row.policy_result == "approval_required")
+    robot_safety_event_count = sum(
+        1
+        for row in policy_events
+        if "robot_worker_safety_block" in _loads_json(row.reason_codes_json, [])
+    ) + sum(1 for row in robot_rows if row.status == "blocked")
+    active_overrides = [row for row in override_rows if row.override_state == "active"]
+    safe_mode_count = sum(1 for row in active_overrides if row.override_type in {"safe_mode", "emergency_stop"})
+    safe_mode_count += sum(1 for row in command_rows if row.action_type == "enter_safe_mode")
+    malformed_response_count = sum(1 for row in decision_rows if _decision_has_malformed_response(row))
+    approval_pending_count = sum(1 for row in approval_rows if row.approval_status == "pending")
+    approval_pending_count += sum(1 for row in decision_rows if row.runtime_mode == "approval" and row.status == "evaluated")
+
+    return {
+        "window_minutes": window_minutes,
+        "window_start": window_start.isoformat(),
+        "window_end": window_end.isoformat(),
+        "sensor_metric_row_count": len(sensor_rows),
+        "sensor_ingest_rate_per_min": round(len(sensor_rows) / window_minutes, 4),
+        "stale_sensor_count": len(stale_sources),
+        "stale_sensor_ids": sorted(stale_sources),
+        "decision_count": len(decision_rows),
+        "decision_latency_avg_ms": round(sum(decision_latencies) / len(decision_latencies), 2) if decision_latencies else None,
+        "decision_latency_p95_ms": _percentile(decision_latencies, 0.95),
+        "malformed_response_count": malformed_response_count,
+        "blocked_action_count": policy_blocked_count,
+        "approval_pending_count": approval_pending_count,
+        "command_count": len(command_rows),
+        "command_success_count": command_success_count,
+        "command_failure_count": command_failure_count,
+        "command_success_rate": round(command_success_count / len(command_rows), 4) if command_rows else None,
+        "robot_task_count": len(robot_rows),
+        "robot_task_success_count": robot_success_count,
+        "robot_task_failure_count": robot_failure_count,
+        "robot_task_success_rate": round(robot_success_count / len(robot_rows), 4) if robot_rows else None,
+        "policy_approval_count": policy_approval_count,
+        "robot_safety_event_count": robot_safety_event_count,
+        "safe_mode_count": safe_mode_count,
+        "operator_override_active_count": len(active_overrides),
+        "latest_metric_values": _latest_metric_values(sensor_rows),
+    }
+
+
+def _percentile(values: list[float], percentile: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = min(len(ordered) - 1, max(0, int(round((len(ordered) - 1) * percentile))))
+    return round(ordered[index], 2)
+
+
+def _alarm(
+    *,
+    alarm_type: str,
+    severity: str,
+    summary: str,
+    metric_value: Any,
+    threshold: Any,
+    source: str,
+) -> dict[str, Any]:
+    return {
+        "alarm_type": alarm_type,
+        "severity": severity,
+        "status": "active",
+        "summary": summary,
+        "metric_value": metric_value,
+        "threshold": threshold,
+        "source": source,
+    }
+
+
+def _build_monitoring_alarms(session: Session, *, metrics: dict[str, Any] | None = None, window_minutes: int = 60) -> dict[str, Any]:
+    metrics = metrics or _build_monitoring_metrics(session, window_minutes=window_minutes)
+    latest = metrics.get("latest_metric_values") if isinstance(metrics, dict) else {}
+    latest = latest if isinstance(latest, dict) else {}
+    alarms: list[dict[str, Any]] = []
+    air_temp = latest.get("air_temp_c") if isinstance(latest.get("air_temp_c"), dict) else None
+    if air_temp and isinstance(air_temp.get("value"), (int, float)) and float(air_temp["value"]) >= 32.0:
+        alarms.append(_alarm(
+            alarm_type="high_temperature",
+            severity="critical" if float(air_temp["value"]) >= 35.0 else "warning",
+            summary="greenhouse air temperature is above the monitoring threshold",
+            metric_value=air_temp["value"],
+            threshold=32.0,
+            source=str(air_temp.get("source_id") or "sensor_readings"),
+        ))
+    rh = latest.get("rh_pct") if isinstance(latest.get("rh_pct"), dict) else None
+    if rh and isinstance(rh.get("value"), (int, float)) and float(rh["value"]) >= 90.0:
+        alarms.append(_alarm(
+            alarm_type="high_humidity",
+            severity="warning",
+            summary="greenhouse relative humidity is above the monitoring threshold",
+            metric_value=rh["value"],
+            threshold=90.0,
+            source=str(rh.get("source_id") or "sensor_readings"),
+        ))
+    if int(metrics.get("stale_sensor_count") or 0) > 0:
+        alarms.append(_alarm(
+            alarm_type="sensor_anomaly",
+            severity="warning",
+            summary="one or more sensors are stale, missing, blocked, flatline, or transport-degraded",
+            metric_value=metrics.get("stale_sensor_count"),
+            threshold=0,
+            source="sensor_readings",
+        ))
+    if int(metrics.get("command_failure_count") or 0) > 0:
+        alarms.append(_alarm(
+            alarm_type="device_unresponsive",
+            severity="critical",
+            summary="one or more device commands were rejected or failed dispatch",
+            metric_value=metrics.get("command_failure_count"),
+            threshold=0,
+            source="device_commands",
+        ))
+    if int(metrics.get("blocked_action_count") or 0) >= 3:
+        alarms.append(_alarm(
+            alarm_type="policy_block_spike",
+            severity="warning",
+            summary="policy block events exceeded the monitoring threshold",
+            metric_value=metrics.get("blocked_action_count"),
+            threshold=3,
+            source="policy_events",
+        ))
+    if int(metrics.get("malformed_response_count") or 0) > 0:
+        alarms.append(_alarm(
+            alarm_type="decision_failure",
+            severity="warning",
+            summary="malformed or contract-failing LLM responses were recorded",
+            metric_value=metrics.get("malformed_response_count"),
+            threshold=0,
+            source="decisions",
+        ))
+    if int(metrics.get("robot_safety_event_count") or 0) > 0:
+        alarms.append(_alarm(
+            alarm_type="robot_safety",
+            severity="critical",
+            summary="robot safety policy or blocked robot task event is active",
+            metric_value=metrics.get("robot_safety_event_count"),
+            threshold=0,
+            source="robot_tasks.policy_events",
+        ))
+    if int(metrics.get("safe_mode_count") or 0) > 0:
+        alarms.append(_alarm(
+            alarm_type="safe_mode_entry",
+            severity="critical",
+            summary="safe mode or emergency stop override is active in the monitoring window",
+            metric_value=metrics.get("safe_mode_count"),
+            threshold=0,
+            source="operator_overrides.device_commands",
+        ))
+    return {
+        "window_minutes": metrics.get("window_minutes", window_minutes),
+        "alarm_count": len(alarms),
+        "items": alarms,
     }
 
 
@@ -908,6 +1256,9 @@ def _build_dashboard_payload(
     robot_candidate_rows = session.execute(
         select(RobotCandidateRecord).order_by(desc(RobotCandidateRecord.id)).limit(30)
     ).scalars().all()
+    operator_override_rows = session.execute(
+        select(OperatorOverrideRecord).order_by(desc(OperatorOverrideRecord.id)).limit(30)
+    ).scalars().all()
     policy_rows = session.execute(select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)).scalars().all()
     policy_event_rows = session.execute(select(PolicyEventRecord).order_by(desc(PolicyEventRecord.id)).limit(30)).scalars().all()
     policy_change_rows = session.execute(
@@ -997,6 +1348,8 @@ def _build_dashboard_payload(
     )
 
     residual_summary = _summarize_shadow_residual_backlog()
+    monitoring_metrics = _build_monitoring_metrics(session, window_minutes=60)
+    monitoring_alarms = _build_monitoring_alarms(session, metrics=monitoring_metrics, window_minutes=60)
     summary = {
         "decision_count": len(decision_items),
         "approval_pending_count": approval_pending_count,
@@ -1021,12 +1374,24 @@ def _build_dashboard_payload(
             automation_status_counts.get("dispatch_fault", 0)
             + automation_status_counts.get("blocked_guard", 0)
         ),
+        "sensor_ingest_rate_per_min": monitoring_metrics.get("sensor_ingest_rate_per_min"),
+        "stale_sensor_count": monitoring_metrics.get("stale_sensor_count"),
+        "decision_latency_avg_ms": monitoring_metrics.get("decision_latency_avg_ms"),
+        "malformed_response_count": monitoring_metrics.get("malformed_response_count"),
+        "command_success_rate": monitoring_metrics.get("command_success_rate"),
+        "robot_task_success_rate": monitoring_metrics.get("robot_task_success_rate"),
+        "operator_override_active_count": monitoring_metrics.get("operator_override_active_count"),
+        "monitoring_alarm_count": monitoring_alarms.get("alarm_count"),
     }
 
     return {
         "runtime_mode": mode_state.as_dict(),
         "summary": summary,
         "runtime_gate": _build_runtime_gate_payload(settings, mode_state, summary, shadow_window_summary, residual_summary),
+        "monitoring": {
+            "metrics": monitoring_metrics,
+            "alarms": monitoring_alarms,
+        },
         "shadow_window": shadow_window_summary,
         "shadow_residuals": residual_summary,
         "zones": list(latest_zone_items.values()),
@@ -1036,6 +1401,7 @@ def _build_dashboard_payload(
         "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
         "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
         "robot_candidates": [_serialize_robot_candidate(row) for row in robot_candidate_rows[:12]],
+        "operator_overrides": [_serialize_operator_override(row) for row in operator_override_rows[:12]],
         "decisions": decision_items,
         "commands": [
             {
@@ -1230,7 +1596,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             status="evaluated",
             model_id=result.model_id,
             prompt_version=payload.prompt_version,
-            raw_output_json=json.dumps({"raw_text": result.raw_text}, ensure_ascii=False),
+            raw_output_json=json.dumps(
+                {
+                    "raw_text": result.raw_text,
+                    "parse_result": {
+                        "strict_json_ok": result.parse_result.strict_json_ok,
+                        "recovered_json_ok": result.parse_result.recovered_json_ok,
+                        "json_object_ok": result.parse_result.json_object_ok,
+                        "parse_error": result.parse_result.parse_error,
+                    },
+                    "used_repair_prompt": result.used_repair_prompt,
+                    "fallback_used": result.fallback_used,
+                    "response_contract_errors": result.response_contract_errors,
+                    "response_contract_warnings": result.response_contract_warnings,
+                },
+                ensure_ascii=False,
+            ),
             parsed_output_json=json.dumps(result.parsed_output, ensure_ascii=False),
             validated_output_json=json.dumps(result.validated_output, ensure_ascii=False),
             zone_state_json=json.dumps(zone_state, ensure_ascii=False),
@@ -1251,6 +1632,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     {
                         "validated_output": result.validated_output,
                         "state_estimate": state_estimate.as_dict(),
+                        "response_contract_errors": result.response_contract_errors,
+                        "response_contract_warnings": result.response_contract_warnings,
                     },
                     ensure_ascii=False,
                 ),
@@ -1900,6 +2283,83 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             settings=services.settings,
         )
         return _ok(payload, actor=actor)
+
+    @app.get(
+        "/monitoring/metrics",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def monitoring_metrics(
+        window_minutes: int = Query(default=60, ge=1, le=1440),
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        return _ok(
+            _build_monitoring_metrics(session, window_minutes=window_minutes),
+            actor=actor,
+            meta={"window_minutes": window_minutes},
+        )
+
+    @app.get(
+        "/monitoring/alarms",
+        tags=["dashboard"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def monitoring_alarms(
+        window_minutes: int = Query(default=60, ge=1, le=1440),
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        metrics = _build_monitoring_metrics(session, window_minutes=window_minutes)
+        return _ok(
+            _build_monitoring_alarms(session, metrics=metrics, window_minutes=window_minutes),
+            actor=actor,
+            meta={"window_minutes": window_minutes},
+        )
+
+    @app.post(
+        "/operator/overrides",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def create_operator_override(
+        payload: OperatorOverrideRequest,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("record_operator_override")),
+    ) -> dict[str, Any]:
+        row = _record_operator_override(session=session, payload=payload, actor_id=actor.actor_id)
+        session.commit()
+        session.refresh(row)
+        return _ok({"override": _serialize_operator_override(row)}, actor=actor)
+
+    @app.get(
+        "/operator/overrides",
+        tags=["operations"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_operator_overrides(
+        zone_id: str | None = None,
+        active_only: bool = False,
+        limit: int = Query(default=50, ge=1, le=200),
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        stmt = select(OperatorOverrideRecord)
+        if zone_id:
+            stmt = stmt.where(OperatorOverrideRecord.zone_id == zone_id)
+        if active_only:
+            stmt = stmt.where(OperatorOverrideRecord.override_state == "active")
+        stmt = stmt.order_by(desc(OperatorOverrideRecord.id)).limit(limit)
+        rows = session.execute(stmt).scalars().all()
+        return _ok(
+            {"items": [_serialize_operator_override(row) for row in rows]},
+            actor=actor,
+            meta={"zone_id": zone_id, "active_only": active_only, "limit": limit},
+        )
 
     @app.get(
         "/alerts",

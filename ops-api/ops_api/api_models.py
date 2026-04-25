@@ -85,6 +85,16 @@ class RuntimeModeRequest(BaseModel):
     reason: str = ""
 
 
+class OperatorOverrideRequest(BaseModel):
+    zone_id: str | None = None
+    target_scope: Literal["system", "zone", "device", "robot"] = "zone"
+    target_id: str = Field(default="system", min_length=1, max_length=128)
+    override_type: Literal["manual_override", "safe_mode", "emergency_stop", "operator_lock"] = "manual_override"
+    override_state: Literal["active", "cleared"] = "active"
+    reason: str = Field(default="", max_length=500)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
 class RobotTaskCreateRequest(BaseModel):
     zone_id: str
     actor_id: str

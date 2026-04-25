@@ -2,9 +2,9 @@
 
 FastAPI 기반 운영 백엔드다.
 
-- `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `GET /policies/events`, `POST /policies/{policy_id}`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `POST /shadow/cases/capture`, `GET /shadow/window`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
+- `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `GET /policies/events`, `POST /policies/{policy_id}`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `POST /shadow/cases/capture`, `GET /shadow/window`, `GET /dashboard`, `GET /dashboard/data`, `GET /monitoring/metrics`, `GET /monitoring/alarms`, `POST/GET /operator/overrides`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
 - `ops_api/auth.py`: `viewer/operator/service/admin` 역할과 `disabled/header_token` 인증 모드 정의
-- `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `policy_events`, `policy_event_policy_links`, `alerts`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
+- `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `policy_events`, `policy_event_policy_links`, `alerts`, `operator_overrides`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
 - `ops_api/shadow_mode.py`: shadow audit JSONL 적재/summary 계산 helper
 - `ops_api/planner.py`: 승인된 action을 `execution-gateway` 요청으로 변환
 - `ops_api/seed.py`: sensor/device/policy seed JSON을 reference catalog로 적재
@@ -52,6 +52,7 @@ set +a
 - [infra/postgres/004_automation_trigger_review.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/004_automation_trigger_review.sql:1)
 - [infra/postgres/005_automation_dispatch_status.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/005_automation_dispatch_status.sql:1)
 - [infra/postgres/006_policy_event_policy_links.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/006_policy_event_policy_links.sql:1)
+- [infra/postgres/007_operator_overrides.sql](/home/user/pepper_smartfarm_plan_v2/infra/postgres/007_operator_overrides.sql:1)
 
 ## auth
 
@@ -59,7 +60,7 @@ set +a
 - 운영 전환 시 `OPS_API_AUTH_MODE=header_token`으로 바꾸고 `OPS_API_AUTH_TOKENS_JSON`에 `token -> actor_id/role` 맵을 넣는다.
 - 권한은 다음처럼 고정한다.
   - `viewer`: catalog/runtime read
-  - `operator`: shadow review, approve/execute, robot task write
+  - `operator`: shadow review, approve/execute, robot task write, operator override 기록
   - `service`: evaluate-zone
   - `admin`: operator 권한 + runtime mode/policy 관리
 

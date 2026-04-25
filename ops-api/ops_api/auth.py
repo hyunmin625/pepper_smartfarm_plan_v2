@@ -21,6 +21,7 @@ ROLE_PERMISSIONS = {
         "approve_actions",
         "execute_actions",
         "write_robot_tasks",
+        "record_operator_override",
         "manage_automation",
     },
     "service": {
@@ -36,6 +37,7 @@ ROLE_PERMISSIONS = {
         "execute_actions",
         "write_robot_tasks",
         "manage_runtime_mode",
+        "record_operator_override",
         "manage_policies",
         "manage_automation",
     },

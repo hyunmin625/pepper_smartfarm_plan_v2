@@ -934,40 +934,40 @@
 # 13. 모니터링/알람/감사
 
 ## 13.1 로깅 설계
-- [ ] request log 포맷 정의
-- [ ] decision log 포맷 정의
-- [ ] command log 포맷 정의
-- [ ] robot log 포맷 정의
+- [x] request log 포맷 정의 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] decision log 포맷 정의 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/models.py`)
+- [x] command log 포맷 정의 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/models.py`)
+- [x] robot log 포맷 정의 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/models.py`)
 - [x] policy block log 포맷 정의 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`, `execution-gateway/execution_gateway/dispatch.py`)
-- [ ] sensor anomaly log 포맷 정의
+- [x] sensor anomaly log 포맷 정의 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/models.py`)
 
 ## 13.2 메트릭 설계
-- [ ] sensor ingest rate
-- [ ] stale sensor count
-- [ ] decision latency
-- [ ] malformed response count
+- [x] sensor ingest rate (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] stale sensor count (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] decision latency (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] malformed response count (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
 - [x] blocked action count (`ops-api/ops_api/app.py`, `scripts/validate_ops_api_flow.py`)
-- [ ] approval pending count
-- [ ] command success rate
-- [ ] robot task success rate
-- [ ] safe mode count
+- [x] approval pending count (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] command success rate (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] robot task success rate (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] safe mode count (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
 
 ## 13.3 알람 설계
-- [ ] 고온 알람
-- [ ] 고습 알람
-- [ ] 센서 이상 알람
-- [ ] 장치 무응답 알람
-- [ ] 정책 차단 과다 알람
-- [ ] decision 실패 알람
-- [ ] robot safety 알람
-- [ ] safe mode 진입 알람
+- [x] 고온 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] 고습 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] 센서 이상 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] 장치 무응답 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] 정책 차단 과다 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] decision 실패 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] robot safety 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
+- [x] safe mode 진입 알람 (`docs/monitoring_alerting_audit_contract.md`, `ops-api/ops_api/app.py`)
 
 ## 13.4 감사 체계
 - [x] decision trace 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] source state 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] policy evaluation 결과 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] final execution 결과 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
-- [ ] operator override 저장
+- [x] operator override 저장 (`ops-api/ops_api/models.py`, `infra/postgres/007_operator_overrides.sql`, `ops-api/ops_api/app.py`)
 - [x] approval action 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 - [x] 모델/프롬프트 버전 저장 (`ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`)
 

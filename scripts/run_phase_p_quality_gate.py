@@ -108,6 +108,9 @@ def main() -> int:
                 "-m",
                 "py_compile",
                 "ops-api/ops_api/app.py",
+                "ops-api/ops_api/api_models.py",
+                "ops-api/ops_api/auth.py",
+                "ops-api/ops_api/models.py",
                 "llm-orchestrator/llm_orchestrator/client.py",
                 "llm-orchestrator/llm_orchestrator/response_contract.py",
                 "llm-orchestrator/llm_orchestrator/service.py",
@@ -123,6 +126,7 @@ def main() -> int:
                 "scripts/run_phase_p_quality_gate.py",
                 "scripts/validate_llm_orchestrator_service.py",
                 "scripts/validate_llm_response_contract.py",
+                "scripts/validate_monitoring_alerting_contract.py",
                 "scripts/validate_policy_event_link_table.py",
                 "scripts/validate_policy_engine_runtime_policies.py",
                 "scripts/validate_ops_api_dashboard_v2.py",
@@ -144,6 +148,11 @@ def main() -> int:
         run_step(
             "llm_response_contract_smoke",
             [sys.executable, "scripts/validate_llm_response_contract.py"],
+            env=env,
+        )
+        run_step(
+            "monitoring_alerting_contract_smoke",
+            [sys.executable, "scripts/validate_monitoring_alerting_contract.py"],
             env=env,
         )
         run_step(
