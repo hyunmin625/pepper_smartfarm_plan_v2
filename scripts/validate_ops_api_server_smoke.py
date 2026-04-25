@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -144,6 +145,9 @@ def main() -> int:
         )
         try:
             base_url = f"http://127.0.0.1:{port}"
+            smoke_request_id = f"server-smoke-{uuid.uuid4().hex[:12]}"
+            policy_id: str | None = None
+            original_policy_enabled: bool | None = None
             health = None
             for _ in range(30):
                 try:
@@ -193,6 +197,7 @@ def main() -> int:
                 if not policy_items:
                     errors.append("policies endpoint returned no seeded rows")
                 policy_id = policy_items[0]["policy_id"] if policy_items else None
+                original_policy_enabled = policy_items[0].get("enabled") if policy_items else None
 
                 if isinstance(policy_id, str):
                     _, policy_update = _request_json(
@@ -210,7 +215,7 @@ def main() -> int:
                     f"{base_url}/decisions/evaluate-zone",
                     method="POST",
                     payload={
-                        "request_id": "server-smoke-001",
+                        "request_id": smoke_request_id,
                         "zone_id": "gh-01-zone-a",
                         "task_type": "action_recommendation",
                         "growth_stage": "fruiting",
@@ -260,6 +265,20 @@ def main() -> int:
                     if not isinstance(policy_events.get("data", {}).get("items", []), list):
                         errors.append("policies/events did not return item list envelope")
         finally:
+            if "base_url" in locals() and isinstance(policy_id, str) and isinstance(original_policy_enabled, bool):
+                try:
+                    _, restore_policy = _request_json(
+                        f"{base_url}/policies/{policy_id}",
+                        method="POST",
+                        payload={"enabled": original_policy_enabled},
+                        headers={"X-Actor-Id": "admin-01", "X-Actor-Role": "admin"},
+                    )
+                    observations["policy_restore"] = restore_policy
+                    restored_enabled = restore_policy.get("data", {}).get("policy", {}).get("enabled")
+                    if restored_enabled is not original_policy_enabled:
+                        errors.append("policy restore did not return original enabled state")
+                except Exception as exc:
+                    errors.append(f"policy restore failed: {exc}")
             process.terminate()
             try:
                 process.wait(timeout=5)

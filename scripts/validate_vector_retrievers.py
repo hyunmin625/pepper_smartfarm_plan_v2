@@ -19,15 +19,18 @@ Checks:
   7. OpenAIEmbeddingRetriever loads the 1536-dim index cleanly (skipped
      when `pepper_openai_embed_index.json` is missing — matches the
      skip-embeddings build mode).
-  8. OpenAIEmbeddingRetriever.search() — only if OPENAI_API_KEY is set.
-     One live query against the index; asserts recall shape.
+  8. OpenAIEmbeddingRetriever.search() — only if
+     OPENAI_LIVE_RETRIEVER_SMOKE=1. One live query against the index;
+     asserts recall shape.
 
 Exit code 0 on success, 1 on first failing invariant. Runs in <5 s
-except for the optional live OpenAI call.
+without network/API spend by default. The optional live OpenAI call is
+opt-in because it consumes quota.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -57,6 +60,10 @@ def _assert(condition: bool, message: str) -> None:
         print(f"  FAIL: {message}", flush=True)
         raise SystemExit(1)
     print(f"  ok  : {message}", flush=True)
+
+
+def _env_truthy(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def main() -> int:
@@ -117,39 +124,51 @@ def main() -> int:
         raised = True
     _assert(raised, "unknown type raises ValueError")
 
-    # 7) OpenAI index load (skip if file missing)
-    print("\n[7] OpenAIEmbeddingRetriever boot")
+    # 7) OpenAI index static checks (skip if file missing). This validates
+    # the precomputed local artifact without creating a query embedding.
+    print("\n[7] OpenAI embedding index static checks")
     if not DEFAULT_OPENAI_RAG_INDEX_PATH.exists():
         print("  skip: openai index not built (run build_rag_index.py without --skip-embeddings)")
     else:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            print("  skip: OPENAI_API_KEY not set (constructor needs it)")
-        else:
-            oai = OpenAIEmbeddingRetriever()
-            _assert(len(oai.rows) >= 200, f"docs loaded ≥200 (got {len(oai.rows)})")
-            emb_len = len(oai.rows[0]["embedding"]) if oai.rows else 0
-            _assert(emb_len == 1536, f"embedding dim=1536 (got {emb_len})")
+        with DEFAULT_OPENAI_RAG_INDEX_PATH.open("r", encoding="utf-8") as handle:
+            openai_index = json.load(handle)
+        openai_docs = [
+            row
+            for row in openai_index.get("documents", [])
+            if row.get("embedding")
+        ]
+        _assert(len(openai_docs) >= 200, f"docs loaded ≥200 (got {len(openai_docs)})")
+        emb_len = len(openai_docs[0]["embedding"]) if openai_docs else 0
+        _assert(emb_len == 1536, f"embedding dim=1536 (got {emb_len})")
 
-            # 8) OpenAI live search
-            print("\n[8] OpenAIEmbeddingRetriever.search — live query")
-            oai_hits = oai.search(
-                query="작업자가 있는 곳에서 관수 readback 신호가 사라졌다",
-                task_type="failure_response",
-                zone_id="gh-01-zone-a",
-                growth_stage="fruit_expansion",
-                limit=5,
-            )
-            _assert(len(oai_hits) <= 5, f"limit honored (got {len(oai_hits)})")
-            _assert(
-                all(h.chunk_id in corpus_chunk_ids for h in oai_hits),
-                "all openai hits present in corpus",
-            )
-            oai_scores = [h.score for h in oai_hits]
-            _assert(
-                all(oai_scores[i] >= oai_scores[i + 1] for i in range(len(oai_scores) - 1)),
-                f"openai scores monotone: {oai_scores}",
-            )
+    # 8) OpenAI live search. This is intentionally opt-in even when
+    # OPENAI_API_KEY is present in .env, because the call consumes quota.
+    print("\n[8] OpenAIEmbeddingRetriever.search — live query")
+    if not _env_truthy("OPENAI_LIVE_RETRIEVER_SMOKE"):
+        print("  skip: set OPENAI_LIVE_RETRIEVER_SMOKE=1 to run the quota-consuming live query")
+    elif not DEFAULT_OPENAI_RAG_INDEX_PATH.exists():
+        _assert(False, "OPENAI_LIVE_RETRIEVER_SMOKE=1 requires the OpenAI embedding index")
+    elif not os.getenv("OPENAI_API_KEY"):
+        _assert(False, "OPENAI_LIVE_RETRIEVER_SMOKE=1 requires OPENAI_API_KEY")
+    else:
+        oai = OpenAIEmbeddingRetriever()
+        oai_hits = oai.search(
+            query="작업자가 있는 곳에서 관수 readback 신호가 사라졌다",
+            task_type="failure_response",
+            zone_id="gh-01-zone-a",
+            growth_stage="fruit_expansion",
+            limit=5,
+        )
+        _assert(len(oai_hits) <= 5, f"limit honored (got {len(oai_hits)})")
+        _assert(
+            all(h.chunk_id in corpus_chunk_ids for h in oai_hits),
+            "all openai hits present in corpus",
+        )
+        oai_scores = [h.score for h in oai_hits]
+        _assert(
+            all(oai_scores[i] >= oai_scores[i + 1] for i in range(len(oai_scores) - 1)),
+            f"openai scores monotone: {oai_scores}",
+        )
 
     print("\nall invariants passed.")
     return 0

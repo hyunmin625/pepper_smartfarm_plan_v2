@@ -48,7 +48,7 @@
 
 # 제품 수준 재평가 우선 작업
 
-- [ ] `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit freeze 상태 유지
+- [~] `docs/model_product_readiness_reassessment.md` 기준으로 새 fine-tuning submit freeze 상태 유지. 2026-04-25 현재 production champion은 `ds_v11`로 유지하고, `.env.example`의 stale chat 전용 `ds_v14` 예시는 제거했다.
 - [~] **폐기 (2026-04-17)**: `gemini_flash_frontier` frontier challenger 계획 전체 폐기. Phase A~E 실측에서 `gemini-2.5-flash` (thinking) ext 0.37 / blind 0.50으로 `ds_v11` (0.70/0.70) 대비 열세였고, reasoning/thinking 모델이 이 프로젝트 JSON strict + instruction-heavy 결정 경로에 구조적으로 부적합함이 확정됐다. runtime alias / `sft_v11_rag_frontier` prompt / `.env` GEMINI 설정은 설정/레지스트리에서 제거한다. 과거 평가 artifact는 역사 기록으로 보존한다.
 - [x] `scripts/build_openai_sft_datasets.py`로 `validation_min_per_family=2`, `validation_ratio=0.15`, `validation_selection=spread` split 시뮬레이션과 결과 기록
 - [x] `docs/risk_level_rubric.md` 기준으로 기존 training/eval의 `risk_level` 전수 점검
