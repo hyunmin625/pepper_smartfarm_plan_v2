@@ -1908,4 +1908,6 @@
 - 같은 ops-api audit log(`artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl`)를 `scripts/build_shadow_mode_window_report.py`로 고정해 `artifacts/reports/shadow_mode_ops_api_seed_window_20260425.json`과 `.md`를 생성했다. seed replay가 반복된 window라 승격 근거는 아니며, 다음 단계는 실제 운영 unique case 누적이다.
 - 커밋 `19bf6f8`(`Record ops-api shadow window report`)을 원격 `master`에 push했다.
 - seed window report를 `scripts/build_challenger_submit_preflight.py --real-shadow-report`에 연결해 `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.json`과 `.md`를 생성했다. 결과는 `real_shadow_mode_status=hold`, `ds_v12 blocked`, `ds_v13 blocked`다.
+- `scripts/validate_shadow_cases.py`를 추가해 real shadow case JSONL을 ops-api 적재 전에 검증하도록 했다. 검증 범위는 필수 필드, `request_id` 중복, metadata/context 정렬, operator outcome, seed/offline eval_set 혼입 금지다.
+- `push_shadow_cases_to_ops_api.py`는 기본 사전검증과 `--validate-only`를 지원한다. `scripts/run_shadow_mode_ops_pipeline.py`는 검증, `/shadow/cases/capture`, window report, challenger preflight 재계산을 한 번에 실행한다. `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에 실제 운영 request_id 규칙과 명령을 반영했다.
 - `validate_vector_retrievers.py`는 OpenAI live query를 skip하고 통과했다. zero-cost retriever benchmark는 동일하게 `keyword recall@5 0.9444`, `local_hybrid 0.8968`, `tfidf 0.7698`, `local_embed 0.7540`이다.

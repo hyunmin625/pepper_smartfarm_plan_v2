@@ -23,9 +23,31 @@
 
 바로 시작할 때는 `data/ops/shadow_mode_cases_template.jsonl`을 복사해 일자별 파일로 만든다.
 
+실제 운영 case의 `request_id`는 `prod-shadow-YYYYMMDD-NNN` 형식을 사용한다. seed/offline replay ID는 실제 운영 window에 재사용하지 않는다. 세부 규칙은 `data/ops/README.md`를 따른다.
+
 ## 실행 절차
 
 권장 경로는 ops-api를 통한 적재다. 이 경로가 `POST /shadow/cases/capture`, `/shadow/window`, auth/audit/rotation guard를 모두 통과하므로 실제 운영 흐름에 가장 가깝다.
+
+### -1. 입력 검증
+
+실제 운영 파일은 적재 전에 필수 필드, request_id 중복, operator outcome, seed/offline eval_set 혼입을 먼저 막는다.
+
+```bash
+python3 scripts/validate_shadow_cases.py \
+  --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
+  --existing-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
+  --real-case
+```
+
+ops-api 호출 없이 runner 경로만 확인할 때는 아래처럼 실행한다.
+
+```bash
+python3 scripts/push_shadow_cases_to_ops_api.py \
+  --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
+  --real-case \
+  --validate-only
+```
 
 ### 0. ops-api PostgreSQL stack 실행
 
@@ -61,6 +83,18 @@ ops-api 기본 audit log는 `artifacts/runtime/llm_orchestrator/shadow_mode_audi
 python3 scripts/build_shadow_mode_window_report.py \
   --audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
   --output-prefix artifacts/reports/shadow_mode_ops_api_window_YYYYMMDD
+```
+
+검증, 적재, window report, preflight 재계산을 한 번에 묶을 때는 아래 파이프라인을 사용한다.
+
+```bash
+python3 scripts/run_shadow_mode_ops_pipeline.py \
+  --base-url http://127.0.0.1:8000 \
+  --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
+  --real-case \
+  --gate hold \
+  --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json \
+  --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json
 ```
 
 ### 1. 일자별 capture
@@ -139,4 +173,5 @@ python3 scripts/build_challenger_submit_preflight.py \
 - 결과: `decision_count 24`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`
 - preflight 연결: `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.json`, `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.md`
 - preflight 결과: `real_shadow_mode_status hold`, `ds_v12 blocked`, `ds_v13 blocked`
+- 입력 가드: `scripts/validate_shadow_cases.py`, `push_shadow_cases_to_ops_api.py --validate-only`, `scripts/run_shadow_mode_ops_pipeline.py --validate-only` 모두 template 기준 통과
 - 해석: 적재/집계 경로는 동작하지만, seed residual이 반복되므로 승격 판단은 계속 `hold`다. 실제 운영 case는 request_id를 일자/zone/action 기준으로 유니크하게 만든다.

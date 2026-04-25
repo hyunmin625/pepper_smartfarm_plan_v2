@@ -76,6 +76,9 @@
 - [x] `ds_v11` blind50 기준 offline shadow replay 생성 및 계약/heuristic 정렬 (`decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`)
 - [~] `ds_v11` shadow mode audit sample을 누적하고 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 실제 운영 로그 형식으로 검증. 2026-04-25 ops-api PostgreSQL 경로로 day0 seed window report는 생성했지만(`artifacts/reports/shadow_mode_ops_api_seed_window_20260425.{json,md}`), 실제 현장 unique case 누적은 아직 남아 있다.
 - [x] ops-api seed window report를 `scripts/build_challenger_submit_preflight.py --real-shadow-report`에 연결해 `ds_v12`/`ds_v13` preflight를 재계산 (`artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.{json,md}`). 결과는 `real_shadow_mode_status=hold`, 두 candidate 모두 `blocked`.
+- [x] 실제 운영 shadow case 입력 검증기 추가 (`scripts/validate_shadow_cases.py`). 필수 필드, `request_id` 중복, `observed.operator_*`, metadata/context 정렬, seed/offline eval_set 혼입을 사전에 차단한다.
+- [x] `push_shadow_cases_to_ops_api.py`에 기본 사전검증, `--real-case`, `--existing-audit-log`, `--validate-only`, `--skip-validation` 옵션 추가. `/shadow/cases/capture` 호출 전 dry-run 체크가 가능하다.
+- [x] `validate -> ops-api capture -> window report -> challenger preflight`를 묶는 운영 파이프라인 추가 (`scripts/run_shadow_mode_ops_pipeline.py`, `data/ops/README.md`, `docs/real_shadow_mode_runbook.md`).
 - [ ] 실제 현장 shadow case를 `data/ops/shadow_mode_cases_YYYYMMDD.jsonl`에 request_id 유니크하게 누적하고, ops-api PostgreSQL `/shadow/cases/capture` 경로로 append 적재
 - [ ] 실제 현장 audit log 기준 window report를 `artifacts/reports/shadow_mode_ops_api_real_window_YYYYMMDD.{json,md}`로 생성하고, `promotion_decision=promote` 여부 확인
 - [x] synthetic shadow `day0` seed pack `12건` 추가와 baseline 리포트 생성 (`scripts/generate_shadow_mode_day0_seed_pack.py`, `scripts/run_shadow_mode_seed_pack.py`, `scripts/validate_shadow_mode_seed_pack.py`)

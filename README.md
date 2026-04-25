@@ -330,8 +330,8 @@
 
 ## 다음 우선순위
 
-1. 실제 운영 shadow case를 request_id 유니크하게 누적해 `GET /shadow/window` 기준 real window를 채우기
-2. 누적 audit log로 `scripts/build_shadow_mode_window_report.py`를 실행하고 `promotion_decision`이 `hold`에서 벗어나는지 확인
+1. 실제 운영 shadow case를 `scripts/validate_shadow_cases.py --real-case`로 검증한 뒤 request_id 유니크하게 누적해 `GET /shadow/window` 기준 real window를 채우기
+2. `scripts/run_shadow_mode_ops_pipeline.py`로 검증, ops-api 적재, window report, challenger preflight 재계산을 한 번에 실행
 3. real window report를 `scripts/build_challenger_submit_preflight.py --real-shadow-report`에 연결해 submit blocker를 재계산. 현재 seed window 연결 결과는 [challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.md](artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.md) 기준 `real_shadow_mode_status=hold`, `ds_v12/ds_v13 blocked`다.
 4. synthetic shadow day0 residual `4건`의 모델 출력 개선 여부를 재평가하고, 재학습 없이 해결 가능한 validator/rubric 경계만 분리
 5. `policy-engine` policy source versioning과 blocked/approval event UI를 추가

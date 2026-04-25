@@ -33,19 +33,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    with path.open("r", encoding="utf-8") as handle:
-        for line_number, raw_line in enumerate(handle, start=1):
-            line = raw_line.strip()
-            if not line:
-                continue
-            row = json.loads(line)
-            if not isinstance(row, dict):
-                raise ValueError(f"{path}:{line_number}: expected JSON object")
-            rows.append(row)
-    return rows
+from validate_shadow_cases import load_case_files, load_existing_request_ids, validate_case_rows
 
 
 def _chunks(cases: list[dict[str, Any]], batch_size: int):
@@ -147,18 +135,75 @@ def main() -> int:
         default=None,
         help="Minimum promotion_decision required after ingestion. The runner exits 1 if the shadow window is below this level.",
     )
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Validate input JSONL and exit without calling ops-api.",
+    )
+    parser.add_argument(
+        "--skip-validation",
+        action="store_true",
+        help="Skip local shadow case validation before /shadow/cases/capture.",
+    )
+    parser.add_argument(
+        "--real-case",
+        action="store_true",
+        help="Apply stricter real ops case rules during validation.",
+    )
+    parser.add_argument(
+        "--existing-audit-log",
+        action="append",
+        default=[],
+        help="Existing shadow audit log used to reject duplicate request_id values before append.",
+    )
     args = parser.parse_args()
 
     if args.append and args.reset:
         print(json.dumps({"errors": ["--append and --reset are mutually exclusive"]}))
         return 2
 
-    cases: list[dict[str, Any]] = []
-    for path_str in args.cases_file:
-        cases.extend(load_jsonl(Path(path_str)))
+    case_paths = [Path(path_str) for path_str in args.cases_file]
+    case_rows = load_case_files(case_paths)
+    cases = [row for _, _, row in case_rows]
 
     if not cases:
         print(json.dumps({"status": "blocked", "reason": "no cases to ingest"}))
+        return 0
+
+    if not args.skip_validation:
+        existing_ids = load_existing_request_ids([Path(path) for path in args.existing_audit_log])
+        validation_errors = validate_case_rows(
+            case_rows,
+            real_case=args.real_case,
+            existing_request_ids=existing_ids,
+        )
+        if validation_errors:
+            print(
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "reason": "shadow case validation failed",
+                        "validation_errors": validation_errors,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return 1
+
+    if args.validate_only:
+        print(
+            json.dumps(
+                {
+                    "status": "ok",
+                    "validated_case_count": len(cases),
+                    "real_case": args.real_case,
+                    "case_files": [path.as_posix() for path in case_paths],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
 
     first_batch = True
