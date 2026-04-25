@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections import Counter
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -36,7 +37,7 @@ from .api_models import (
 from .automation import evaluate_rules, serialize_rule, serialize_trigger
 from .automation_runner import AutomationRunner
 from .auth import ROLE_PERMISSIONS, ActorIdentity, get_authenticated_actor, require_permission
-from .bootstrap import configure_repo_paths
+from .bootstrap import REPO_ROOT, configure_repo_paths
 from .config import Settings, load_settings
 from .database import build_session_factory, init_db
 from .errors import register_exception_handlers
@@ -331,6 +332,7 @@ def _build_runtime_gate_payload(
     mode_state: Any,
     summary: dict[str, Any],
     shadow_window: dict[str, Any] | None,
+    residual_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ai_config = _ai_config_payload(settings) if settings is not None else {}
     model_id = str(ai_config.get("llm_model_id") or "")
@@ -342,6 +344,10 @@ def _build_runtime_gate_payload(
     policy_risk_event_count = int(summary.get("policy_blocked_count") or 0) + int(
         summary.get("policy_approval_count") or 0
     )
+    residual_summary = residual_summary or {}
+    open_residual_count = int(residual_summary.get("open_residual_count") or 0)
+    critical_residual_count = int(residual_summary.get("critical_residual_count") or 0)
+    unverified_fix_count = int(residual_summary.get("unverified_fix_count") or 0)
     shadow_decision = (shadow_window or {}).get("promotion_decision") or "no_window"
     blockers: list[str] = []
     if not champion_ok:
@@ -352,6 +358,12 @@ def _build_runtime_gate_payload(
         blockers.append("approval_queue_pending")
     if policy_risk_event_count:
         blockers.append("policy_risk_events_present")
+    if critical_residual_count:
+        blockers.append("critical_shadow_residuals_open")
+    elif open_residual_count:
+        blockers.append("shadow_residuals_open")
+    if unverified_fix_count:
+        blockers.append("shadow_residual_fixes_unverified")
 
     mode = mode_state.mode if hasattr(mode_state, "mode") else str(mode_state or "unknown")
     if mode == "execute":
@@ -379,7 +391,81 @@ def _build_runtime_gate_payload(
         "approval_queue_count": pending_approval_count,
         "policy_risk_event_count": policy_risk_event_count,
         "policy_change_count": int(summary.get("policy_change_count") or 0),
+        "open_residual_count": open_residual_count,
+        "critical_residual_count": critical_residual_count,
+        "unverified_fix_count": unverified_fix_count,
         "blockers": blockers,
+    }
+
+
+def _shadow_residual_backlog_paths(root: Path | None = None) -> list[Path]:
+    base = root or (REPO_ROOT / "data" / "ops")
+    if not base.exists():
+        return []
+    paths = sorted(base.glob("shadow_residual_backlog_*.jsonl"))
+    return [path for path in paths if "template" not in path.name]
+
+
+def _load_shadow_residual_rows(paths: list[Path] | None = None) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in (paths if paths is not None else _shadow_residual_backlog_paths()):
+        if not path.exists():
+            continue
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                for line_number, raw_line in enumerate(handle, start=1):
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    row = json.loads(line)
+                    if isinstance(row, dict):
+                        row["_source_path"] = str(path)
+                        row["_line_number"] = line_number
+                        rows.append(row)
+        except (OSError, json.JSONDecodeError):
+            continue
+    return rows
+
+
+def _summarize_shadow_residual_backlog(paths: list[Path] | None = None) -> dict[str, Any]:
+    rows = _load_shadow_residual_rows(paths)
+    open_statuses = {"new", "triaged", "queued", "fixed"}
+    open_rows = [row for row in rows if row.get("status") in open_statuses]
+    fixed_rows = [row for row in rows if row.get("status") == "fixed"]
+    owner_counts = Counter(str(row.get("owner") or "unknown") for row in rows)
+    status_counts = Counter(str(row.get("status") or "unknown") for row in rows)
+    failure_mode_counts: Counter[str] = Counter()
+    for row in rows:
+        for failure_mode in row.get("failure_modes") or []:
+            failure_mode_counts[str(failure_mode)] += 1
+
+    def _recent_key(row: dict[str, Any]) -> str:
+        return str(row.get("updated_at") or row.get("created_at") or "")
+
+    recent_rows = sorted(rows, key=_recent_key, reverse=True)[:8]
+    return {
+        "source_files": sorted({str(row.get("_source_path")) for row in rows if row.get("_source_path")}),
+        "total_residual_count": len(rows),
+        "open_residual_count": len(open_rows),
+        "critical_residual_count": sum(1 for row in open_rows if row.get("severity") == "critical"),
+        "unverified_fix_count": len(fixed_rows),
+        "counts_by_owner": dict(sorted(owner_counts.items())),
+        "counts_by_status": dict(sorted(status_counts.items())),
+        "counts_by_failure_mode": dict(failure_mode_counts.most_common(10)),
+        "recent_items": [
+            {
+                "residual_id": row.get("residual_id"),
+                "source_case_request_id": row.get("source_case_request_id"),
+                "owner": row.get("owner"),
+                "severity": row.get("severity"),
+                "status": row.get("status"),
+                "failure_modes": row.get("failure_modes") or [],
+                "expected_fix": row.get("expected_fix") or {},
+                "created_at": row.get("created_at"),
+                "updated_at": row.get("updated_at"),
+            }
+            for row in recent_rows
+        ],
     }
 
 
@@ -862,6 +948,7 @@ def _build_dashboard_payload(
         ).all()
     )
 
+    residual_summary = _summarize_shadow_residual_backlog()
     summary = {
         "decision_count": len(decision_items),
         "approval_pending_count": approval_pending_count,
@@ -891,8 +978,9 @@ def _build_dashboard_payload(
     return {
         "runtime_mode": mode_state.as_dict(),
         "summary": summary,
-        "runtime_gate": _build_runtime_gate_payload(settings, mode_state, summary, shadow_window_summary),
+        "runtime_gate": _build_runtime_gate_payload(settings, mode_state, summary, shadow_window_summary, residual_summary),
         "shadow_window": shadow_window_summary,
+        "shadow_residuals": residual_summary,
         "zones": list(latest_zone_items.values()),
         "policies": [_serialize_policy(row) for row in policy_rows],
         "policy_events": [_serialize_policy_event(row) for row in policy_event_rows[:12]],
@@ -3420,8 +3508,18 @@ def _dashboard_html() -> str:
         <h3 class="text-lg font-bold text-ink mb-4">A. Shadow Window Summary</h3>
         <div id="shadowWindowDetail"></div>
       </div>
+      <div class="card mb-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-[11px] tracking-wider uppercase text-primary font-bold">Residual Backlog</p>
+            <h3 class="text-lg font-bold text-ink">B. Real Shadow Residuals</h3>
+          </div>
+          <span id="shadowResidualChip" class="chip chip-dark">0 open</span>
+        </div>
+        <div id="shadowResidualSummary"></div>
+      </div>
       <div class="card">
-        <h3 class="text-lg font-bold text-ink mb-2">B. Shadow Review Guide</h3>
+        <h3 class="text-lg font-bold text-ink mb-2">C. Shadow Review Guide</h3>
         <p class="text-xs text-muted leading-relaxed">shadow 모드에서는 실운영 환경에 영향을 주지 않으면서 신규 모델의 안정성과 정책을 검증하는 단계입니다. 결정/승인 메뉴의 decision 카드에 <b>일치</b>, <b>불일치</b> 버튼이 노출됩니다. capture 파이프라인은 <code class="bg-surface-low px-1 rounded">scripts/push_shadow_cases_to_ops_api.py</code>를 통해 외부에서 주입합니다.</p>
       </div>
     </section>
@@ -3896,6 +3994,9 @@ def _dashboard_html() -> str:
       const shadowCls = promotion === 'promote' ? 'chip-enabled' : (promotion === 'rollback' ? 'chip-critical' : (promotion === 'hold' ? 'chip-warn' : 'chip-dark'));
       const pendingApprovals = gate.approval_queue_count ?? ((summary.approval_pending_count ?? 0) + (summary.automation_pending_count ?? 0));
       const policyRisk = gate.policy_risk_event_count ?? ((summary.policy_blocked_count ?? 0) + (summary.policy_approval_count ?? 0));
+      const openResidual = gate.open_residual_count ?? 0;
+      const criticalResidual = gate.critical_residual_count ?? 0;
+      const unverifiedFix = gate.unverified_fix_count ?? 0;
       const blockers = (gate.blockers || []).join(', ') || 'none';
       const row = (k, v) => `
         <div class="flex items-center justify-between gap-3">
@@ -3910,6 +4011,7 @@ def _dashboard_html() -> str:
         ${row('shadow_window', `<span class="chip ${shadowCls}">${escapeHtml(promotion)}</span>`)}
         ${row('approval_queue', `${pendingApprovals}건`)}
         ${row('policy_risk_events', `${policyRisk}건`)}
+        ${row('shadow_residuals', `${openResidual} open · ${criticalResidual} critical · ${unverifiedFix} fixed`)}
         ${row('blockers', escapeHtml(blockers))}
       `;
     }
@@ -4178,6 +4280,68 @@ def _dashboard_html() -> str:
           <div class="text-[11px] text-muted">policy_mismatch=${summary.policy_mismatch_count} · retrieval_hit_rate=${summary.retrieval_hit_rate}</div>
         ` : '<div class="placeholder">shadow window가 아직 없습니다.</div>';
       }
+    }
+    function renderShadowResiduals(summary) {
+      const host = document.getElementById('shadowResidualSummary');
+      const chip = document.getElementById('shadowResidualChip');
+      if (!host) return;
+      const data = summary || {};
+      const openCount = data.open_residual_count || 0;
+      const criticalCount = data.critical_residual_count || 0;
+      const fixedCount = data.unverified_fix_count || 0;
+      if (chip) {
+        chip.className = `chip ${criticalCount ? 'chip-critical' : (openCount ? 'chip-warn' : 'chip-enabled')}`;
+        chip.textContent = `${openCount} open`;
+      }
+      const ownerRows = Object.entries(data.counts_by_owner || {}).map(([owner, count]) => `
+        <div class="flex items-center justify-between text-[11px] py-1">
+          <span class="text-muted">${escapeHtml(owner)}</span>
+          <span class="font-bold text-ink">${count}</span>
+        </div>`).join('');
+      const recent = (data.recent_items || []).slice(0, 6).map(item => {
+        const fix = item.expected_fix || {};
+        const severityCls = item.severity === 'critical' ? 'chip-critical' : (item.severity === 'high' ? 'chip-warn' : 'chip-dark');
+        const modes = (item.failure_modes || []).join(', ') || 'none';
+        return `
+          <div class="alert-row">
+            <div class="flex items-center justify-between mb-1 gap-2">
+              <span class="text-xs font-bold text-ink truncate">${escapeHtml(item.residual_id || '')}</span>
+              <span class="chip ${severityCls}">${escapeHtml(item.severity || '')}</span>
+            </div>
+            <div class="text-[10px] text-muted">case=${escapeHtml(item.source_case_request_id || 'n/a')} · owner=${escapeHtml(item.owner || 'unknown')} · status=${escapeHtml(item.status || 'unknown')}</div>
+            <div class="text-[10px] text-muted mt-1">failure: ${escapeHtml(modes)}</div>
+            <div class="text-[10px] text-muted mt-1 truncate" title="${escapeHtml(fix.summary || '')}">fix: ${escapeHtml(fix.fix_type || 'n/a')} · ${escapeHtml(fix.summary || '')}</div>
+          </div>`;
+      }).join('');
+      host.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">Total</div>
+            <div class="text-2xl font-bold text-ink mt-1">${data.total_residual_count || 0}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">Open</div>
+            <div class="text-2xl font-bold text-ink mt-1">${openCount}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">Critical</div>
+            <div class="text-2xl font-bold text-ink mt-1">${criticalCount}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">Fixed, Unverified</div>
+            <div class="text-2xl font-bold text-ink mt-1">${fixedCount}</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-muted mb-2">Owner</div>
+            ${ownerRows || '<div class="placeholder text-[11px]">owner별 residual이 없습니다.</div>'}
+          </div>
+          <div class="lg:col-span-2 space-y-2">
+            ${recent || '<div class="placeholder">실제 운영 residual backlog가 아직 없습니다.</div>'}
+          </div>
+        </div>
+      `;
     }
     function renderAuthContext(actor) {
       const main = document.getElementById('authContext');
@@ -5307,6 +5471,7 @@ def _dashboard_html() -> str:
         renderRuntimeGateCard(data);
         renderZones(data.zones);
         renderShadowWindow(data.shadow_window);
+        renderShadowResiduals(data.shadow_residuals);
         renderPolicies(data.policies || []);
         renderPolicyEventQueues(data.policy_events || []);
         renderPolicyChanges(data.policy_changes || []);

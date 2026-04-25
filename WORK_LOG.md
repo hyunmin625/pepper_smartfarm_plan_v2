@@ -1933,3 +1933,10 @@
 - `scripts/validate_ops_api_runtime_review_surfaces.py`를 추가했다. PostgreSQL URL이 있을 때만 임시 policy row를 만들어 `PATCH /policies/{id}` → `policy_changed` → history/event filter → dashboard `runtime_gate`까지 검증하고, URL이 없으면 SQLite 대체 없이 skip한다.
 - `scripts/validate_shadow_residual_backlog.py`를 추가했다. schema enum, required field, ISO timestamp, 중복 `residual_id`, optional source case id 교차검증을 수행한다.
 - `data/ops/shadow_residual_backlog_template.jsonl`을 추가하고, `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에 rehearsal 1회 절차와 backlog 검증 명령을 고정했다.
+
+### Phase P quality gate + residual report
+- `scripts/run_phase_p_quality_gate.py`를 추가했다. py_compile, dashboard hook import check, rehearsal shadow JSONL 생성/검증, `run_shadow_mode_ops_pipeline.py --validate-only`, residual backlog template 검증, residual backlog report 생성, PostgreSQL-only runtime review smoke, `git diff --check`를 한 번에 실행한다.
+- `scripts/report_shadow_residual_backlog.py`를 추가했다. backlog JSONL을 owner/status/severity/failure_mode/fix_type별로 집계하고 JSON/Markdown summary를 출력한다.
+- `/dashboard/data.runtime_gate`에 `open_residual_count`, `critical_residual_count`, `unverified_fix_count`를 추가했다. open 또는 critical residual이 있으면 gate blocker에 `shadow_residuals_open` 또는 `critical_shadow_residuals_open`이 표시된다.
+- Shadow Mode 뷰에 `Real Shadow Residuals` 카드를 추가해 total/open/critical/fixed-unverified, owner별 count, 최근 residual과 expected fix를 표시한다.
+- `docs/real_shadow_daily_intake_checklist.md`와 `docs/policy_event_filter_performance_plan.md`를 추가했다. 전자는 하루 운영 후 case 검증 → ops-api 적재 → window report → backlog → summary → dashboard 확인 순서를 고정하고, 후자는 현행 JSON 후처리 필터의 scan limit과 장기 link table 설계를 기록한다.

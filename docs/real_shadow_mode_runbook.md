@@ -55,6 +55,12 @@ python3 scripts/run_shadow_mode_ops_pipeline.py \
 
 이 세 명령을 운영 전 리허설 1회 절차로 고정한다. 리허설 파일은 ops-api 적재 경로와 JSON 구조만 확인하며, `--real-case`와 `--real-shadow-report` 승격 판단에는 연결하지 않는다.
 
+Phase P 전체 품질 게이트는 아래 명령으로 묶어 실행한다.
+
+```bash
+python3 scripts/run_phase_p_quality_gate.py
+```
+
 ops-api 호출 없이 runner 경로만 확인할 때는 아래처럼 실행한다.
 
 ```bash
@@ -175,6 +181,8 @@ python3 scripts/validate_shadow_residual_backlog.py \
   --backlog-file data/ops/shadow_residual_backlog_20260425.jsonl \
   --source-cases-file data/ops/shadow_mode_cases_20260425.jsonl
 ```
+
+하루 단위 현장 intake 절차는 [docs/real_shadow_daily_intake_checklist.md](real_shadow_daily_intake_checklist.md)를 따른다.
 
 예시:
 

@@ -49,6 +49,8 @@ HTML_HOOKS = [
     "function showPolicyHistory",
     'id="automationReviewSummary"',
     "function renderAutomationReviewSummary",
+    'id="shadowResidualSummary"',
+    "function renderShadowResiduals",
 ]
 
 
@@ -200,13 +202,21 @@ def test_runtime_review_surfaces(database_url: str, suffix: str) -> None:
                 "approval_queue_count",
                 "policy_risk_event_count",
                 "policy_change_count",
+                "open_residual_count",
+                "critical_residual_count",
+                "unverified_fix_count",
                 "blockers",
             ):
                 _assert(key in gate, f"runtime_gate contains {key}")
             _assert(gate["runtime_mode"] == "approval", "runtime_gate reflects approval mode")
             _assert(gate["champion"]["is_ds_v11_frozen"] is True, "runtime_gate detects ds_v11 frozen champion")
             _assert(gate["retriever_type"] == "keyword", "runtime_gate reports keyword retriever")
+            _assert(isinstance(gate["open_residual_count"], int), "open_residual_count is numeric")
+            _assert(isinstance(gate["critical_residual_count"], int), "critical_residual_count is numeric")
+            _assert(isinstance(gate["unverified_fix_count"], int), "unverified_fix_count is numeric")
             _assert(data["summary"]["policy_change_count"] >= 1, "summary includes policy_change_count")
+            residuals = data.get("shadow_residuals") or {}
+            _assert("recent_items" in residuals, "dashboard data includes shadow_residuals.recent_items")
             _assert(
                 any(policy_id in item["policy_ids"] for item in data.get("policy_changes", [])),
                 "dashboard policy_changes includes smoke event",

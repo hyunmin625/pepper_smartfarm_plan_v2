@@ -27,6 +27,15 @@ python3 scripts/validate_shadow_residual_backlog.py \
 
 초기 작성 예시는 `data/ops/shadow_residual_backlog_template.jsonl`을 복사해 사용한다.
 
+집계 리포트는 아래 명령으로 만든다.
+
+```bash
+python3 scripts/report_shadow_residual_backlog.py \
+  --backlog-file data/ops/shadow_residual_backlog_YYYYMMDD.jsonl \
+  --output-json artifacts/reports/shadow_residual_backlog_YYYYMMDD.json \
+  --output-md artifacts/reports/shadow_residual_backlog_YYYYMMDD.md
+```
+
 ## 항목 기준
 
 필수 필드는 다음과 같다.

@@ -14,6 +14,8 @@
 - [MLOps Registry 설계](docs/mlops_registry_design.md)
 - [Shadow Mode Report 포맷](docs/shadow_mode_report_format.md)
 - [Real Shadow Residual Backlog](docs/real_shadow_residual_backlog.md)
+- [Real Shadow Daily Intake Checklist](docs/real_shadow_daily_intake_checklist.md)
+- [Policy Event Filter Performance Plan](docs/policy_event_filter_performance_plan.md)
 - [Device Profile Registry](docs/device_profile_registry.md)
 - [PLC Adapter Interface Contract](docs/plc_adapter_interface_contract.md)
 - [PLC Site Override Map](docs/plc_site_override_map.md)
@@ -147,6 +149,8 @@
 - [x] Phase P-4: real shadow residual backlog + rehearsal generator. `schemas/shadow_residual_backlog_schema.json`, `docs/real_shadow_residual_backlog.md`로 실제 운영 disagreement backlog 구조를 고정하고, `scripts/generate_shadow_ops_rehearsal_day.py`로 비용 없는 리허설용 shadow case JSONL을 생성한다. `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에는 rehearsal 파일이 승격 근거가 아님을 명시했다.
 - [x] Phase P-5: runtime review surface PostgreSQL-only smoke 추가. `scripts/validate_ops_api_runtime_review_surfaces.py`는 PostgreSQL URL이 있을 때만 `policy update -> policy_changed event -> history/event filter -> dashboard runtime_gate`를 검증하고, URL이 없으면 SQLite 대체 없이 skip한다.
 - [x] Phase P-6: shadow residual backlog validator/template 추가. `scripts/validate_shadow_residual_backlog.py`는 schema enum, `residual_id` 중복, source case id 교차검증을 수행하고, `data/ops/shadow_residual_backlog_template.jsonl`을 작성 시작점으로 제공한다.
+- [x] Phase P-7: Phase P quality gate와 residual backlog report 추가. `scripts/run_phase_p_quality_gate.py`가 py_compile, dashboard hook, rehearsal JSONL, validate-only pipeline, backlog validator/report, PostgreSQL-only smoke를 묶고, `scripts/report_shadow_residual_backlog.py`가 owner/status/severity/failure_mode별 Markdown/JSON summary를 만든다.
+- [x] Phase P-8: runtime gate/residual UI와 운영 문서 보강. `/dashboard/data.runtime_gate`에 `open_residual_count`, `critical_residual_count`, `unverified_fix_count`를 추가하고, Shadow Mode 뷰에 `Real Shadow Residuals` 카드를 추가했다. `docs/real_shadow_daily_intake_checklist.md`와 `docs/policy_event_filter_performance_plan.md`를 신규 작성했다.
 
 ## 0.0 온실 공사중 전제 반영
 - [x] 온실 공사 일정과 AI 준비 일정 분리 (`AI_MLOPS_PLAN.md`, `schedule.md`)

@@ -40,6 +40,21 @@ python3 scripts/validate_shadow_residual_backlog.py \
 
 작성 시작용 예시는 `data/ops/shadow_residual_backlog_template.jsonl`에 둔다.
 
+backlog summary report는 아래처럼 만든다.
+
+```bash
+python3 scripts/report_shadow_residual_backlog.py \
+  --backlog-file data/ops/shadow_residual_backlog_YYYYMMDD.jsonl \
+  --output-json artifacts/reports/shadow_residual_backlog_YYYYMMDD.json \
+  --output-md artifacts/reports/shadow_residual_backlog_YYYYMMDD.md
+```
+
+Phase P 기본 품질 게이트는 아래 명령으로 실행한다.
+
+```bash
+python3 scripts/run_phase_p_quality_gate.py
+```
+
 ## 검증
 
 실제 운영 파일은 적재 전에 검증한다.
