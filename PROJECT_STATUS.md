@@ -45,6 +45,8 @@
 - `policy-engine/policy_engine/output_validator.py`와 validator rule seed/schema를 추가해 runtime wiring용 skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/runtime.py`를 추가해 `LLM output -> output validator -> validator audit log` runtime skeleton도 만들었다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, malformed JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
+- `llm-orchestrator/llm_orchestrator/response_contract.py`와 `scripts/validate_llm_response_contract.py`를 추가해 action_type, parameter schema, confidence, follow_up, citations, retrieval_coverage, robot task schema, natural language leakage 검증을 오케스트레이터 결과에 연결했다.
+- `docs/llm_orchestrator_runtime_contract.md`와 `docs/agent_tool_design.md` 갱신으로 todo 9.1, 9.2, 9.3, 9.5를 runtime 기준으로 닫았다.
 - `llm-orchestrator/llm_orchestrator/tool_registry.py`, `llm-orchestrator/llm_orchestrator/model_registry.py`, `scripts/run_llm_orchestrator_smoke.py`를 추가해 `9.4`를 runtime 기준으로 닫았다. 오케스트레이터는 이제 `champion` alias를 실제 FT model id로 풀고, retrieved_context와 tool catalog를 함께 prompt에 주입하며, stub/openai 공통 smoke 진입점도 가진다.
 - 참고용 historical baseline `ds_v9`에서는 validator 적용 후 blind50 gate가 `safety_invariant_pass_rate 1.0`, `field_usability_pass_rate 1.0`까지 올라갔지만 `blind_holdout_pass_rate 0.76 < 0.95`, `shadow_mode_status=not_run`이라 승격은 여전히 `hold`였다.
 - 같은 historical baseline `ds_v9` 기준 blind50 validator 잔여 실패는 `12건`이었고, 이는 `risk_rubric_and_data 7`, `data_and_model 2`, `robot_contract_and_model 3`으로 나뉘었다.
@@ -147,6 +149,7 @@
 - `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 fine-tuning 재개 조건
 - `docs/risk_level_rubric.md`: `risk_level` 정의와 우선순위 기준
 - `docs/policy_output_validator_spec.md`: hard safety/output contract를 모델 밖으로 강제하는 기준
+- `docs/llm_orchestrator_runtime_contract.md`: LLM 호출 흐름, 프롬프트, 도구, 응답 검증 runtime 계약
 - `docs/policy_engine_runtime_policies.md`: policy-engine runtime DSL과 기본 POL-* 정책 기준
 - `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 critical slice 계획
 - `docs/hard_case_oversampling_plan.md`: 후속 challenger에만 적용할 train-only oversampling 기준

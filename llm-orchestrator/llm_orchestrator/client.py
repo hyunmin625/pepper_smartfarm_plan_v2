@@ -75,8 +75,20 @@ class StubCompletionClient:
             "confidence": 0.55,
             "retrieval_coverage": "sufficient" if citations else "not_used",
             "citations": citations,
-            "follow_up": [{"type": "trend_review", "zone_id": zone_id}],
-            "required_follow_up": [{"type": "operator_review", "zone_id": zone_id}],
+            "follow_up": [
+                {
+                    "type": "trend_review",
+                    "zone_id": zone_id,
+                    "description": "Review the recent climate and rootzone trend before any manual override.",
+                }
+            ],
+            "required_follow_up": [
+                {
+                    "type": "operator_review",
+                    "zone_id": zone_id,
+                    "description": "Operator should confirm the suggested action against current greenhouse conditions.",
+                }
+            ],
         }
         if task_type == "chat":
             # Chat mode: the fine-tuned pepper greenhouse expert should
@@ -125,8 +137,10 @@ class StubCompletionClient:
                     {
                         "task_type": "inspect_crop",
                         "candidate_id": f"{zone_id}-candidate-001",
-                        "target": zone_id,
+                        "target": {"target_type": "zone", "target_id": zone_id},
                         "priority": "high",
+                        "approval_required": True,
+                        "reason": "Inspect the crop candidate before any harvest or skip-area decision.",
                     }
                 ],
             }

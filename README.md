@@ -17,21 +17,22 @@
 7. `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 재개 조건
 8. `docs/risk_level_rubric.md`: `risk_level` 정의와 우선순위 기준
 9. `docs/policy_output_validator_spec.md`: hard safety/output contract를 모델 밖으로 빼는 기준
-10. `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 slice와 수량
-11. `docs/hard_case_oversampling_plan.md`: 후속 challenger에서만 적용할 hard-case oversampling 기준
-12. `docs/blind50_residual_batch14_plan.md`: blind50 validator 잔여 `12건`을 batch14 sample로 옮긴 매핑
-13. `docs/offline_shadow_residual_batch17_plan.md`: offline shadow 잔여 `4건`을 batch17 sample로 옮긴 매핑
-14. `docs/synthetic_shadow_day0_batch18_plan.md`: synthetic shadow day0 잔여 `4건`을 batch18 sample로 옮긴 매핑
-15. `docs/runtime_integration_status.md`: orchestrator/state-estimator/API/dashboard 연결 상태
-16. `docs/timeseries_storage_dashboard_plan.md`: TimescaleDB 시계열 저장/대시보드 방향
-17. `docs/timescaledb_schema_design.md`: raw/snapshot/downsampling/compression 스키마 기준
-18. `docs/native_realtime_dashboard_plan.md`: 초단위 실시간 SSE + uPlot 시각화 결정 (Grafana 임베드 supersede)
-19. `ops-api/README.md`: 운영 API, 역할 권한, seed/bootstrap 절차
-20. `docs/ops_api_postgres_runbook.md`: PostgreSQL/TimescaleDB 자동 구축과 `/dashboard` 실행 절차
-21. `schedule.md`: 개정 실행 순서와 8주 일정
-22. `todo.md`: 세부 작업 체크리스트
-23. `WORK_LOG.md`: 진행한 작업과 커밋 이력
-24. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
+10. `docs/llm_orchestrator_runtime_contract.md`: LLM 호출 흐름, 프롬프트, 도구, 응답 검증 계약
+11. `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 slice와 수량
+12. `docs/hard_case_oversampling_plan.md`: 후속 challenger에서만 적용할 hard-case oversampling 기준
+13. `docs/blind50_residual_batch14_plan.md`: blind50 validator 잔여 `12건`을 batch14 sample로 옮긴 매핑
+14. `docs/offline_shadow_residual_batch17_plan.md`: offline shadow 잔여 `4건`을 batch17 sample로 옮긴 매핑
+15. `docs/synthetic_shadow_day0_batch18_plan.md`: synthetic shadow day0 잔여 `4건`을 batch18 sample로 옮긴 매핑
+16. `docs/runtime_integration_status.md`: orchestrator/state-estimator/API/dashboard 연결 상태
+17. `docs/timeseries_storage_dashboard_plan.md`: TimescaleDB 시계열 저장/대시보드 방향
+18. `docs/timescaledb_schema_design.md`: raw/snapshot/downsampling/compression 스키마 기준
+19. `docs/native_realtime_dashboard_plan.md`: 초단위 실시간 SSE + uPlot 시각화 결정 (Grafana 임베드 supersede)
+20. `ops-api/README.md`: 운영 API, 역할 권한, seed/bootstrap 절차
+21. `docs/ops_api_postgres_runbook.md`: PostgreSQL/TimescaleDB 자동 구축과 `/dashboard` 실행 절차
+22. `schedule.md`: 개정 실행 순서와 8주 일정
+23. `todo.md`: 세부 작업 체크리스트
+24. `WORK_LOG.md`: 진행한 작업과 커밋 이력
+25. `AGENTS.md`: 문서 작성, 커밋, 보안, 작업 규칙
 
 ## 핵심 방향
 
@@ -99,6 +100,7 @@
 - `state-estimator/state_estimator/features.py`를 추가해 VPD, DLI, 1분/5분 평균, 10분/30분 변화율, 관수 후 회복률, 배액률, climate/rootzone stress score를 `feature_schema.json` 형태로 계산하고, raw sensor/device row를 zone snapshot으로 올리는 loader도 함께 제공한다.
 - `state-estimator/state_estimator/ingestor_bridge.py`와 `scripts/validate_sensor_to_state_estimator_integration.py`를 추가해 `sensor-ingestor` MQTT outbox에서 zone snapshot/derived feature를 직접 복원하는 통합 경로를 검증했다.
 - `llm-orchestrator/llm_orchestrator/service.py`를 추가해 prompt version 선택, local RAG retrieval, JSON recovery, validator 연결까지 포함한 실제 orchestrator facade를 만들었다.
+- `llm-orchestrator/llm_orchestrator/response_contract.py`와 `docs/llm_orchestrator_runtime_contract.md`를 추가해 JSON only, confidence, citations, action parameter, robot task schema, natural language leakage 검증까지 todo 9 계약을 닫았다.
 - `llm-orchestrator/llm_orchestrator/tool_registry.py`, `model_registry.py`, `scripts/run_llm_orchestrator_smoke.py`를 추가해 runtime capability catalog, `champion` alias 기반 FT model 해석, stub/openai 공통 smoke 경로를 고정했다.
 - `ops-api/ops_api/app.py`를 추가해 `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `GET /policies/events`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks`, `GET/POST /runtime/mode`를 제공하는 FastAPI backend를 만들었다.
 - `ops-api/ops_api/shadow_mode.py`, `POST /shadow/cases/capture`, `GET /shadow/window`를 추가해 real shadow case 적재와 rolling summary 조회를 운영 API에서 직접 수행할 수 있게 했다.

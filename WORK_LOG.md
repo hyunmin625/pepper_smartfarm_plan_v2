@@ -1970,3 +1970,19 @@
 - `scripts/validate_ops_api_dashboard_v2.py`에 `/dashboard/data`, `fetchDashboardV2Data`, action hook marker 검증을 추가했다.
 - `scripts/validate_zero_cost_retriever_regression.py`를 추가했다. 기본값은 `keyword`와 `local_hybrid`만 평가하고, 각각 recall@5 `0.90`, `0.85` 이상을 요구한다. OpenAI-backed retriever는 `OPENAI_LIVE_RETRIEVER_SMOKE=1` 없이는 거부한다.
 - `scripts/run_phase_p_quality_gate.py`에 vector retriever static smoke, zero-cost retriever regression, runtime gate blocker report, policy event link smoke, dashboard v2 smoke를 포함했다.
+
+---
+
+## 2026-04-26 — LLM orchestrator runtime contract and response validation
+
+### todo 9 closure
+- `docs/llm_orchestrator_runtime_contract.md` 신규. evaluate_zone, event-driven, on-demand, robot prioritization, alert summary, RAG retrieval 호출 흐름을 runtime 기준으로 고정했다.
+- 프롬프트 계약을 시스템 프롬프트 소스, 역할 제한, 안전 원칙, RAG 우선, 근거 부족 시 보수 판단, JSON only, confidence, uncertainty, follow_up, citations, device enum, active constraints 삽입 기준으로 정리했다.
+- `docs/agent_tool_design.md`와 `llm-orchestrator/llm_orchestrator/tool_registry.py`를 확장해 get_device_status, get_weather_context, search_site_sop, get_retrieval_citations, get_vision_candidates, request_device_action, request_robot_task 계약을 추가했다.
+- `todo.md`의 9.1, 9.2, 9.3, 9.5 미완료 체크박스를 산출물 경로와 함께 모두 완료 처리했다.
+
+### runtime validation
+- `llm-orchestrator/llm_orchestrator/response_contract.py`를 추가하고 service evaluate/capture_shadow 결과에 `response_contract_errors`, `response_contract_warnings`를 반환하도록 연결했다.
+- 검증 범위는 action_type enum, parameter range/schema, confidence 0..1, follow_up 필드, retrieved_context citation, retrieval_coverage enum, robot task schema, natural language leakage다.
+- `scripts/validate_llm_response_contract.py` 신규 smoke로 정상/오류 샘플과 service integration을 함께 검증한다.
+- `scripts/validate_llm_orchestrator_service.py`와 `scripts/run_phase_p_quality_gate.py`가 response contract smoke와 expanded tool registry를 회귀하도록 갱신했다.

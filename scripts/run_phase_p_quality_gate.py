@@ -108,6 +108,10 @@ def main() -> int:
                 "-m",
                 "py_compile",
                 "ops-api/ops_api/app.py",
+                "llm-orchestrator/llm_orchestrator/client.py",
+                "llm-orchestrator/llm_orchestrator/response_contract.py",
+                "llm-orchestrator/llm_orchestrator/service.py",
+                "llm-orchestrator/llm_orchestrator/tool_registry.py",
                 "policy-engine/policy_engine/evaluator.py",
                 "policy-engine/policy_engine/precheck.py",
                 "scripts/generate_shadow_ops_rehearsal_day.py",
@@ -117,6 +121,8 @@ def main() -> int:
                 "scripts/report_runtime_gate_blockers.py",
                 "scripts/run_real_shadow_daily_intake.py",
                 "scripts/run_phase_p_quality_gate.py",
+                "scripts/validate_llm_orchestrator_service.py",
+                "scripts/validate_llm_response_contract.py",
                 "scripts/validate_policy_event_link_table.py",
                 "scripts/validate_policy_engine_runtime_policies.py",
                 "scripts/validate_ops_api_dashboard_v2.py",
@@ -128,6 +134,16 @@ def main() -> int:
         run_step(
             "policy_engine_runtime_policy_smoke",
             [sys.executable, "scripts/validate_policy_engine_runtime_policies.py"],
+            env=env,
+        )
+        run_step(
+            "llm_orchestrator_service_smoke",
+            [sys.executable, "scripts/validate_llm_orchestrator_service.py"],
+            env=env,
+        )
+        run_step(
+            "llm_response_contract_smoke",
+            [sys.executable, "scripts/validate_llm_response_contract.py"],
             env=env,
         )
         run_step(

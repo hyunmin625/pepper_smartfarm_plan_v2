@@ -5,6 +5,7 @@ from .runtime import (
 )
 from .client import ModelConfig, create_completion_client, get_resolved_model_reference
 from .model_registry import ResolvedModelReference
+from .response_contract import ResponseContractReport, validate_response_contract
 from .retriever import KeywordRagRetriever, RetrievedChunk
 from .retriever_vector import (
     HybridRagRetriever,
@@ -29,6 +30,7 @@ __all__ = [
     "OrchestratorRequest",
     "OrchestratorResult",
     "ResolvedModelReference",
+    "ResponseContractReport",
     "RetrievedChunk",
     "TfidfSvdRagRetriever",
     "ToolDefinition",
@@ -40,4 +42,5 @@ __all__ = [
     "prompt_tool_catalog",
     "run_output_validator",
     "summarize_tool_registry",
+    "validate_response_contract",
 ]

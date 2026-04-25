@@ -744,41 +744,41 @@
 # 9. LLM 오케스트레이터
 
 ## 9.1 역할 정의
-- [ ] evaluate_zone 호출 흐름 정의
-- [ ] event-driven 호출 흐름 정의
-- [ ] on-demand 호출 흐름 정의
-- [ ] robot prioritization 호출 흐름 정의
-- [ ] alert summary 호출 흐름 정의
-- [ ] RAG retrieval 호출 흐름 정의
+- [x] evaluate_zone 호출 흐름 정의 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/service.py`)
+- [x] event-driven 호출 흐름 정의 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] on-demand 호출 흐름 정의 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] robot prioritization 호출 흐름 정의 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] alert summary 호출 흐름 정의 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] RAG retrieval 호출 흐름 정의 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/service.py`)
 
 ## 9.2 프롬프트 설계
-- [ ] 시스템 프롬프트 초안 작성
-- [ ] 역할 제한 문구 작성
-- [ ] 안전 원칙 문구 작성
-- [ ] RAG 검색 근거 우선 사용 문구 작성
-- [ ] 검색 근거 부족 시 보수적 판단 문구 작성
-- [ ] JSON only 출력 규칙 작성
-- [ ] confidence 규칙 작성
-- [ ] 불확실성 처리 규칙 작성
-- [ ] follow_up 규칙 작성
-- [ ] citations 출력 규칙 작성
-- [ ] 장치 enum 삽입 방식 설계
-- [ ] constraints 삽입 방식 설계
+- [x] 시스템 프롬프트 초안 작성 (`docs/llm_orchestrator_runtime_contract.md`, `scripts/build_openai_sft_datasets.py`)
+- [x] 역할 제한 문구 작성 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] 안전 원칙 문구 작성 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] RAG 검색 근거 우선 사용 문구 작성 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] 검색 근거 부족 시 보수적 판단 문구 작성 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] JSON only 출력 규칙 작성 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/response_contract.py`)
+- [x] confidence 규칙 작성 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/response_contract.py`)
+- [x] 불확실성 처리 규칙 작성 (`docs/llm_orchestrator_runtime_contract.md`)
+- [x] follow_up 규칙 작성 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/response_contract.py`)
+- [x] citations 출력 규칙 작성 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/service.py`)
+- [x] 장치 enum 삽입 방식 설계 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] constraints 삽입 방식 설계 (`docs/llm_orchestrator_runtime_contract.md`, `llm-orchestrator/llm_orchestrator/service.py`)
 
 ## 9.3 툴/함수 설계
-- [x] get_zone_state 정의 (`docs/agent_tool_design.md`)
-- [x] get_recent_trend 정의 (`docs/agent_tool_design.md`)
-- [x] get_active_constraints 정의 (`docs/agent_tool_design.md`)
-- [ ] get_device_status 정의
-- [ ] get_weather_context 정의
-- [x] search_cultivation_knowledge 정의 (`docs/agent_tool_design.md`)
-- [ ] search_site_sop 정의
-- [ ] get_retrieval_citations 정의
-- [ ] get_vision_candidates 정의
-- [ ] request_device_action 정의
-- [ ] request_robot_task 정의
-- [x] request_human_approval 정의 (`docs/agent_tool_design.md`)
-- [x] log_decision 정의 (`docs/agent_tool_design.md`)
+- [x] get_zone_state 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] get_recent_trend 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] get_active_constraints 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] get_device_status 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] get_weather_context 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] search_cultivation_knowledge 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] search_site_sop 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] get_retrieval_citations 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] get_vision_candidates 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] request_device_action 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] request_robot_task 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] request_human_approval 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
+- [x] log_decision 정의 (`docs/agent_tool_design.md`, `llm-orchestrator/llm_orchestrator/tool_registry.py`)
 
 ## 9.4 llm-orchestrator 구현
 - [x] API client 구성 (`llm-orchestrator/llm_orchestrator/client.py`)
@@ -796,14 +796,14 @@
 - [x] evaluation endpoint 작성 (`ops-api/ops_api/app.py`)
 
 ## 9.5 응답 검증
-- [ ] action_type enum 검증
-- [ ] parameter schema 검증
-- [ ] confidence 범위 검증
-- [ ] follow_up 필드 검증
-- [ ] citations 필드 검증
-- [ ] retrieval_coverage 필드 검증
-- [ ] robot task schema 검증
-- [ ] natural language leakage 검토
+- [x] action_type enum 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] parameter schema 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] confidence 범위 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] follow_up 필드 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] citations 필드 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] retrieval_coverage 필드 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] robot task schema 검증 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
+- [x] natural language leakage 검토 (`llm-orchestrator/llm_orchestrator/response_contract.py`, `scripts/validate_llm_response_contract.py`)
 - [x] policy precheck 연결 (`policy-engine/policy_engine/precheck.py`, `execution-gateway/execution_gateway/guards.py`, `scripts/validate_execution_gateway_flow.py`, `scripts/validate_execution_dispatcher.py`)
 
 ---

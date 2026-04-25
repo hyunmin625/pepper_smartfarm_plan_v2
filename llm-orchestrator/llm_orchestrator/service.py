@@ -6,6 +6,7 @@ from typing import Any
 
 from .client import CompletionClient, ModelConfig, create_completion_client
 from .prompt_catalog import get_system_prompt
+from .response_contract import validate_response_contract
 from .response_parser import ParsedResponse, build_safe_fallback_output, parse_response
 from .retriever import KeywordRagRetriever, RetrievedChunk
 from .tool_registry import ToolDefinition, available_tool_definitions
@@ -54,6 +55,8 @@ class OrchestratorResult:
     tool_catalog: list[ToolDefinition]
     audit_path: str
     validator_reason_codes: list[str]
+    response_contract_errors: list[str]
+    response_contract_warnings: list[str]
     used_repair_prompt: bool
     fallback_used: bool
 
@@ -77,6 +80,8 @@ class OrchestratorResult:
             "tool_catalog": [tool.as_catalog_dict() for tool in self.tool_catalog],
             "audit_path": self.audit_path,
             "validator_reason_codes": self.validator_reason_codes,
+            "response_contract_errors": self.response_contract_errors,
+            "response_contract_warnings": self.response_contract_warnings,
             "used_repair_prompt": self.used_repair_prompt,
             "fallback_used": self.fallback_used,
         }
@@ -140,6 +145,12 @@ class LLMOrchestratorService:
             output=parsed_output,
         )
         validated_output, audit, audit_path = run_output_validator(envelope)
+        contract_report = validate_response_contract(
+            validated_output,
+            retrieved_chunk_ids={chunk.chunk_id for chunk in retrieval_chunks},
+            raw_text=invocation.raw_text,
+            strict_json_ok=parse_result.strict_json_ok,
+        )
         return OrchestratorResult(
             request=request,
             model_id=invocation.model_id,
@@ -152,6 +163,8 @@ class LLMOrchestratorService:
             tool_catalog=self.tool_catalog,
             audit_path=str(audit_path),
             validator_reason_codes=audit.validator_reason_codes,
+            response_contract_errors=contract_report.errors,
+            response_contract_warnings=contract_report.warnings,
             used_repair_prompt=repaired,
             fallback_used=fallback_used,
         )
@@ -187,9 +200,17 @@ class LLMOrchestratorService:
             metadata=metadata,
             observed=observed,
         )
+        contract_report = validate_response_contract(
+            validated_output,
+            retrieved_chunk_ids={chunk.chunk_id for chunk in retrieval_chunks},
+            raw_text=invocation.raw_text,
+            strict_json_ok=parse_result.strict_json_ok,
+        )
         return {
             "validated_output": validated_output,
             "validator_reason_codes": validator_audit.validator_reason_codes,
+            "response_contract_errors": contract_report.errors,
+            "response_contract_warnings": contract_report.warnings,
             "shadow_audit_path": str(shadow_path),
             "shadow_record": shadow_record.as_dict(),
         }
