@@ -1926,3 +1926,10 @@
 - `schemas/shadow_residual_backlog_schema.json`과 `docs/real_shadow_residual_backlog.md`를 추가해 실제 운영 shadow disagreement를 corrective backlog로 옮기는 JSONL 구조를 고정했다.
 - `scripts/generate_shadow_ops_rehearsal_day.py`를 추가했다. `rehearsal-shadow-YYYYMMDD-NNN` request_id와 `shadow-rehearsal-YYYYMMDD` eval_set_id를 쓰므로 `--real-case` 검증이나 submit 승격 근거로 쓰지 않는다.
 - `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에 rehearsal 파일과 실제 운영 file/backlog의 분리 기준을 반영했다.
+
+### Phase P follow-up 검증
+- `/dashboard/data`에 `runtime_gate` payload를 공식 추가했다. 필드는 `gate_state`, `runtime_mode`, `champion`, `retriever_type`, `shadow_window_status`, `approval_queue_count`, `policy_risk_event_count`, `policy_change_count`, `blockers`다.
+- `/policies/events`에 `policy_id`와 `request_id` 필터를 추가했다. `policy_id`는 JSON text column을 안전하게 후처리 필터링하고, query scan limit은 최대 500개로 제한했다.
+- `scripts/validate_ops_api_runtime_review_surfaces.py`를 추가했다. PostgreSQL URL이 있을 때만 임시 policy row를 만들어 `PATCH /policies/{id}` → `policy_changed` → history/event filter → dashboard `runtime_gate`까지 검증하고, URL이 없으면 SQLite 대체 없이 skip한다.
+- `scripts/validate_shadow_residual_backlog.py`를 추가했다. schema enum, required field, ISO timestamp, 중복 `residual_id`, optional source case id 교차검증을 수행한다.
+- `data/ops/shadow_residual_backlog_template.jsonl`을 추가하고, `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에 rehearsal 1회 절차와 backlog 검증 명령을 고정했다.

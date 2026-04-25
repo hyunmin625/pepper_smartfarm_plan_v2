@@ -48,7 +48,12 @@ python3 scripts/validate_shadow_cases.py \
 python3 scripts/generate_shadow_ops_rehearsal_day.py --date 20260425 --count 12
 python3 scripts/validate_shadow_cases.py \
   --cases-file data/ops/shadow_mode_rehearsal_20260425.jsonl
+python3 scripts/run_shadow_mode_ops_pipeline.py \
+  --cases-file data/ops/shadow_mode_rehearsal_20260425.jsonl \
+  --validate-only
 ```
+
+이 세 명령을 운영 전 리허설 1회 절차로 고정한다. 리허설 파일은 ops-api 적재 경로와 JSON 구조만 확인하며, `--real-case`와 `--real-shadow-report` 승격 판단에는 연결하지 않는다.
 
 ops-api 호출 없이 runner 경로만 확인할 때는 아래처럼 실행한다.
 
@@ -164,6 +169,12 @@ python3 scripts/build_shadow_mode_window_report.py \
 실제 운영 window에서 operator disagreement가 남으면 [docs/real_shadow_residual_backlog.md](real_shadow_residual_backlog.md)에 따라 backlog row로 남긴다. backlog는 `data/ops/shadow_residual_backlog_YYYYMMDD.jsonl`에 저장하고, 각 row는 `schemas/shadow_residual_backlog_schema.json`을 따른다.
 
 seed pack, offline replay, rehearsal 파일은 residual 원인 재현에는 참고할 수 있지만, 실제 window 승격 근거와 backlog source case를 대체하지 않는다.
+
+```bash
+python3 scripts/validate_shadow_residual_backlog.py \
+  --backlog-file data/ops/shadow_residual_backlog_20260425.jsonl \
+  --source-cases-file data/ops/shadow_mode_cases_20260425.jsonl
+```
 
 예시:
 

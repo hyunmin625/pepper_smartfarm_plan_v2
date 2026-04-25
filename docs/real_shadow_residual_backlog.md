@@ -17,6 +17,16 @@
 
 각 row는 [schemas/shadow_residual_backlog_schema.json](../schemas/shadow_residual_backlog_schema.json)을 따른다.
 
+검증 명령은 아래와 같다.
+
+```bash
+python3 scripts/validate_shadow_residual_backlog.py \
+  --backlog-file data/ops/shadow_residual_backlog_YYYYMMDD.jsonl \
+  --source-cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl
+```
+
+초기 작성 예시는 `data/ops/shadow_residual_backlog_template.jsonl`을 복사해 사용한다.
+
 ## 항목 기준
 
 필수 필드는 다음과 같다.

@@ -303,7 +303,84 @@ def _serialize_policy_event(row: PolicyEventRecord) -> dict[str, Any]:
 
 
 def _policy_version_stamp(policy_id: str, timestamp: datetime) -> str:
-    return f"{policy_id}@{timestamp.strftime('%Y%m%dT%H%M%SZ')}"
+    return f"{policy_id[:47]}@{timestamp.strftime('%Y%m%dT%H%M%SZ')}"
+
+
+def _ai_config_payload(settings: Settings) -> dict[str, Any]:
+    model_id = settings.llm_model_id or ""
+    if model_id.startswith("ft:"):
+        model_tail = model_id.rsplit(":", 1)[-1]
+        model_label = f"ft:{model_tail}"
+        model_family = "gpt-4.1-mini (ds_v11 frozen)" if "ds-v11" in model_id else "fine-tuned"
+    else:
+        model_label = model_id
+        model_family = model_id
+    return {
+        "llm_provider": settings.llm_provider,
+        "llm_model_id": model_id,
+        "llm_model_label": model_label,
+        "llm_model_family": model_family,
+        "llm_prompt_version": settings.llm_prompt_version,
+        "retriever_type": settings.retriever_type,
+        "chat_system_prompt_id": "chat_v2",
+    }
+
+
+def _build_runtime_gate_payload(
+    settings: Settings | None,
+    mode_state: Any,
+    summary: dict[str, Any],
+    shadow_window: dict[str, Any] | None,
+) -> dict[str, Any]:
+    ai_config = _ai_config_payload(settings) if settings is not None else {}
+    model_id = str(ai_config.get("llm_model_id") or "")
+    model_family = str(ai_config.get("llm_model_family") or "")
+    champion_ok = "ds-v11" in model_id or "ds_v11" in model_id or "ds_v11" in model_family.lower()
+    pending_approval_count = int(summary.get("approval_pending_count") or 0) + int(
+        summary.get("automation_pending_count") or 0
+    )
+    policy_risk_event_count = int(summary.get("policy_blocked_count") or 0) + int(
+        summary.get("policy_approval_count") or 0
+    )
+    shadow_decision = (shadow_window or {}).get("promotion_decision") or "no_window"
+    blockers: list[str] = []
+    if not champion_ok:
+        blockers.append("champion_not_ds_v11_frozen")
+    if shadow_decision != "promote":
+        blockers.append(f"shadow_window_{shadow_decision}")
+    if pending_approval_count:
+        blockers.append("approval_queue_pending")
+    if policy_risk_event_count:
+        blockers.append("policy_risk_events_present")
+
+    mode = mode_state.mode if hasattr(mode_state, "mode") else str(mode_state or "unknown")
+    if mode == "execute":
+        gate_state = "execute"
+    elif mode == "approval":
+        gate_state = "approval"
+    elif not blockers:
+        gate_state = "ready"
+    else:
+        gate_state = "blocked"
+
+    return {
+        "gate_state": gate_state,
+        "runtime_mode": mode,
+        "runtime_reason": getattr(mode_state, "reason", None),
+        "champion": {
+            "model_id": ai_config.get("llm_model_id"),
+            "model_label": ai_config.get("llm_model_label"),
+            "model_family": ai_config.get("llm_model_family"),
+            "prompt_version": ai_config.get("llm_prompt_version"),
+            "is_ds_v11_frozen": champion_ok,
+        },
+        "retriever_type": ai_config.get("retriever_type") or "keyword",
+        "shadow_window_status": shadow_decision,
+        "approval_queue_count": pending_approval_count,
+        "policy_risk_event_count": policy_risk_event_count,
+        "policy_change_count": int(summary.get("policy_change_count") or 0),
+        "blockers": blockers,
+    }
 
 
 def _serialize_robot_task(row: RobotTaskRecord) -> dict[str, Any]:
@@ -687,6 +764,7 @@ def _build_dashboard_payload(
     mode_state: Any,
     *,
     shadow_audit_path: Path | None = None,
+    settings: Settings | None = None,
 ) -> dict[str, Any]:
     rows = session.execute(select(DecisionRecord).order_by(desc(DecisionRecord.id)).limit(40)).scalars().all()
     command_rows = session.execute(select(DeviceCommandRecord).order_by(desc(DeviceCommandRecord.id)).limit(30)).scalars().all()
@@ -784,33 +862,36 @@ def _build_dashboard_payload(
         ).all()
     )
 
+    summary = {
+        "decision_count": len(decision_items),
+        "approval_pending_count": approval_pending_count,
+        "shadow_review_pending_count": shadow_review_pending_count,
+        "blocked_action_count": blocked_action_count,
+        "safe_mode_count": safe_mode_count,
+        "operator_disagreement_count": disagreement_count,
+        "operator_agreement_rate": operator_agreement_rate,
+        "command_count": len(command_rows),
+        "alert_count": len(alert_rows),
+        "robot_task_count": len(robot_rows),
+        "robot_candidate_count": len(robot_candidate_rows),
+        "policy_count": len(policy_rows),
+        "policy_disabled_count": sum(1 for row in policy_rows if not row.enabled),
+        "policy_event_count": len(policy_event_rows),
+        "policy_blocked_count": sum(1 for row in policy_event_rows if row.event_type == "blocked"),
+        "policy_approval_count": sum(1 for row in policy_event_rows if row.event_type == "approval_required"),
+        "policy_change_count": len(policy_change_rows),
+        "automation_pending_count": automation_status_counts.get("approval_pending", 0),
+        "automation_dispatched_count": automation_status_counts.get("dispatched", 0),
+        "automation_fault_count": (
+            automation_status_counts.get("dispatch_fault", 0)
+            + automation_status_counts.get("blocked_guard", 0)
+        ),
+    }
+
     return {
         "runtime_mode": mode_state.as_dict(),
-        "summary": {
-            "decision_count": len(decision_items),
-            "approval_pending_count": approval_pending_count,
-            "shadow_review_pending_count": shadow_review_pending_count,
-            "blocked_action_count": blocked_action_count,
-            "safe_mode_count": safe_mode_count,
-            "operator_disagreement_count": disagreement_count,
-            "operator_agreement_rate": operator_agreement_rate,
-            "command_count": len(command_rows),
-            "alert_count": len(alert_rows),
-            "robot_task_count": len(robot_rows),
-            "robot_candidate_count": len(robot_candidate_rows),
-            "policy_count": len(policy_rows),
-            "policy_disabled_count": sum(1 for row in policy_rows if not row.enabled),
-            "policy_event_count": len(policy_event_rows),
-            "policy_blocked_count": sum(1 for row in policy_event_rows if row.event_type == "blocked"),
-            "policy_approval_count": sum(1 for row in policy_event_rows if row.event_type == "approval_required"),
-            "policy_change_count": len(policy_change_rows),
-            "automation_pending_count": automation_status_counts.get("approval_pending", 0),
-            "automation_dispatched_count": automation_status_counts.get("dispatched", 0),
-            "automation_fault_count": (
-                automation_status_counts.get("dispatch_fault", 0)
-                + automation_status_counts.get("blocked_guard", 0)
-            ),
-        },
+        "summary": summary,
+        "runtime_gate": _build_runtime_gate_payload(settings, mode_state, summary, shadow_window_summary),
         "shadow_window": shadow_window_summary,
         "zones": list(latest_zone_items.values()),
         "policies": [_serialize_policy(row) for row in policy_rows],
@@ -1348,17 +1429,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def list_policy_events(
         limit: int = 50,
         event_type: str | None = None,
+        policy_id: str | None = None,
+        request_id: str | None = None,
         session: Session = Depends(get_session),
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
-        stmt = select(PolicyEventRecord).order_by(desc(PolicyEventRecord.id)).limit(limit)
+        limit = max(1, min(int(limit), 200))
+        query_limit = min(500, max(limit, 200)) if policy_id else limit
+        stmt = select(PolicyEventRecord)
         if event_type:
             stmt = stmt.where(PolicyEventRecord.event_type == event_type)
+        if request_id:
+            stmt = stmt.where(PolicyEventRecord.request_id == request_id)
+        stmt = stmt.order_by(desc(PolicyEventRecord.id)).limit(query_limit)
         rows = session.execute(stmt).scalars().all()
+        if policy_id:
+            rows = [row for row in rows if policy_id in _loads_json(row.policy_ids_json, [])][:limit]
         return _ok(
             {"items": [_serialize_policy_event(row) for row in rows]},
             actor=actor,
-            meta={"limit": limit, "event_type": event_type},
+            meta={"limit": limit, "event_type": event_type, "policy_id": policy_id, "request_id": request_id},
         )
 
     @app.get(
@@ -1671,6 +1761,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             session,
             load_runtime_mode(services.settings.runtime_mode_path),
             shadow_audit_path=services.settings.shadow_audit_log_path,
+            settings=services.settings,
         )
         return _ok(payload, actor=actor)
 
@@ -1972,28 +2063,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         (/ai/chat). Dashboard UI uses this to render a transparent model
         badge so operators can verify which fine-tune checkpoint is answering.
         """
-        model_id = resolved_settings.llm_model_id or ""
-        # Only expose the opaque checkpoint suffix when it is a fine-tuned id,
-        # otherwise the raw id is short enough to show as-is.
-        if model_id.startswith("ft:"):
-            model_tail = model_id.rsplit(":", 1)[-1]
-            model_label = f"ft:{model_tail}"
-            model_family = "gpt-4.1-mini (ds_v11 frozen)" if "ds-v11" in model_id else "fine-tuned"
-        else:
-            model_label = model_id
-            model_family = model_id
-        return _ok(
-            {
-                "llm_provider": resolved_settings.llm_provider,
-                "llm_model_id": model_id,
-                "llm_model_label": model_label,
-                "llm_model_family": model_family,
-                "llm_prompt_version": resolved_settings.llm_prompt_version,
-                "retriever_type": resolved_settings.retriever_type,
-                "chat_system_prompt_id": "chat_v2",
-            },
-            actor=actor,
-        )
+        return _ok(_ai_config_payload(resolved_settings), actor=actor)
 
     # ---- Automation rules (operator threshold-driven device control) ----
 
@@ -3799,32 +3869,34 @@ def _dashboard_html() -> str:
       if (!chip || !body) return;
       const summary = (data && data.summary) || {};
       const runtime = (data && data.runtime_mode) || dashboardState.runtimeMode || {};
+      const gate = (data && data.runtime_gate) || {};
       const shadow = (data && data.shadow_window) || null;
       const ai = dashboardState.aiConfig || {};
-      const mode = runtime.mode || 'unknown';
-      const promotion = shadow ? (shadow.promotion_decision || 'unknown') : 'no_window';
+      const mode = gate.runtime_mode || runtime.mode || 'unknown';
+      const promotion = gate.shadow_window_status || (shadow ? (shadow.promotion_decision || 'unknown') : 'no_window');
+      const gateState = gate.gate_state || mode;
       let chipCls = 'chip-dark';
-      let chipText = '대기';
-      if (mode === 'execute') {
+      let chipText = gateState || '대기';
+      if (gateState === 'execute' || mode === 'execute') {
         chipCls = 'chip-critical';
-        chipText = 'execute';
-      } else if (mode === 'approval') {
+      } else if (gateState === 'approval' || mode === 'approval') {
         chipCls = 'chip-warn';
-        chipText = 'approval';
-      } else if (mode === 'shadow') {
+      } else if (gateState === 'ready' || mode === 'shadow') {
         chipCls = 'chip-enabled';
-        chipText = 'shadow';
       }
       chip.className = `chip ${chipCls}`;
       chip.textContent = chipText;
 
-      const family = ai.llm_model_family || ai.llm_model_label || 'config pending';
-      const label = ai.llm_model_label || ai.llm_model_id || family;
-      const championText = `${family} · ${ai.llm_prompt_version || 'prompt pending'}`;
-      const championOk = /ds_v11/i.test([family, label].join(' ')) || /frozen/i.test(family);
+      const champion = gate.champion || {};
+      const family = champion.model_family || ai.llm_model_family || ai.llm_model_label || 'config pending';
+      const label = champion.model_label || ai.llm_model_label || ai.llm_model_id || family;
+      const prompt = champion.prompt_version || ai.llm_prompt_version || 'prompt pending';
+      const championText = `${family} · ${prompt}`;
+      const championOk = champion.is_ds_v11_frozen ?? (/ds_v11/i.test([family, label].join(' ')) || /frozen/i.test(family));
       const shadowCls = promotion === 'promote' ? 'chip-enabled' : (promotion === 'rollback' ? 'chip-critical' : (promotion === 'hold' ? 'chip-warn' : 'chip-dark'));
-      const pendingApprovals = (summary.approval_pending_count ?? 0) + (summary.automation_pending_count ?? 0);
-      const policyRisk = (summary.policy_blocked_count ?? 0) + (summary.policy_approval_count ?? 0);
+      const pendingApprovals = gate.approval_queue_count ?? ((summary.approval_pending_count ?? 0) + (summary.automation_pending_count ?? 0));
+      const policyRisk = gate.policy_risk_event_count ?? ((summary.policy_blocked_count ?? 0) + (summary.policy_approval_count ?? 0));
+      const blockers = (gate.blockers || []).join(', ') || 'none';
       const row = (k, v) => `
         <div class="flex items-center justify-between gap-3">
           <span class="text-muted">${k}</span>
@@ -3834,10 +3906,11 @@ def _dashboard_html() -> str:
         ${row('runtime_mode', escapeHtml(operatorLabel(mode, mode)))}
         ${row('champion', escapeHtml(championText))}
         ${row('champion_gate', `<span class="chip ${championOk ? 'chip-enabled' : 'chip-warn'}">${championOk ? 'ds_v11 frozen' : '확인 필요'}</span>`)}
-        ${row('retriever', escapeHtml(ai.retriever_type || 'keyword'))}
+        ${row('retriever', escapeHtml(gate.retriever_type || ai.retriever_type || 'keyword'))}
         ${row('shadow_window', `<span class="chip ${shadowCls}">${escapeHtml(promotion)}</span>`)}
         ${row('approval_queue', `${pendingApprovals}건`)}
         ${row('policy_risk_events', `${policyRisk}건`)}
+        ${row('blockers', escapeHtml(blockers))}
       `;
     }
     function renderZones(zones) {

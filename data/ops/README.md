@@ -23,11 +23,22 @@
 ```bash
 python3 scripts/generate_shadow_ops_rehearsal_day.py --date YYYYMMDD --count 12
 python3 scripts/validate_shadow_cases.py --cases-file data/ops/shadow_mode_rehearsal_YYYYMMDD.jsonl
+python3 scripts/run_shadow_mode_ops_pipeline.py \
+  --cases-file data/ops/shadow_mode_rehearsal_YYYYMMDD.jsonl \
+  --validate-only
 ```
 
 리허설 파일은 `rehearsal-shadow-YYYYMMDD-NNN` request_id와 `shadow-rehearsal-YYYYMMDD` eval_set_id를 사용한다. 이는 비용 없는 경로 검증용이며 `--real-case` 검증이나 승격 근거로 사용하지 않는다.
 
 실제 운영 window에서 발견된 disagreement는 `data/ops/shadow_residual_backlog_YYYYMMDD.jsonl`에 따로 남긴다. row 구조는 `schemas/shadow_residual_backlog_schema.json`, 처리 기준은 `docs/real_shadow_residual_backlog.md`를 따른다.
+
+```bash
+python3 scripts/validate_shadow_residual_backlog.py \
+  --backlog-file data/ops/shadow_residual_backlog_YYYYMMDD.jsonl \
+  --source-cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl
+```
+
+작성 시작용 예시는 `data/ops/shadow_residual_backlog_template.jsonl`에 둔다.
 
 ## 검증
 

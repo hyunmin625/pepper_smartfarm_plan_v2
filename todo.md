@@ -145,6 +145,8 @@
 - [x] Phase P-2: 정책 운영 UI 보강. 대시보드 정책 카드에 `source_version`/`updated_at`/`이력 보기`를 추가하고, 정책 화면에 blocked/approval queue 요약(`#policyEventQueueList`)과 source version 변경 이력(`#policyChangeList`)을 분리 표시한다.
 - [x] Phase P-3: runtime gate + automation review queue. 오버뷰 오른쪽 rail에 `Runtime Gate` 카드(`#runtimeGateCard`)를 추가해 champion/prompt/retriever/shadow_window/approval_queue/policy_risk_events를 한 곳에서 확인한다. 자동화 뷰에는 `#automationReviewSummary`를 추가해 승인 대기, 승인됨, 실행됨, 차단/실패와 가장 오래된 대기 trigger를 표시한다.
 - [x] Phase P-4: real shadow residual backlog + rehearsal generator. `schemas/shadow_residual_backlog_schema.json`, `docs/real_shadow_residual_backlog.md`로 실제 운영 disagreement backlog 구조를 고정하고, `scripts/generate_shadow_ops_rehearsal_day.py`로 비용 없는 리허설용 shadow case JSONL을 생성한다. `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에는 rehearsal 파일이 승격 근거가 아님을 명시했다.
+- [x] Phase P-5: runtime review surface PostgreSQL-only smoke 추가. `scripts/validate_ops_api_runtime_review_surfaces.py`는 PostgreSQL URL이 있을 때만 `policy update -> policy_changed event -> history/event filter -> dashboard runtime_gate`를 검증하고, URL이 없으면 SQLite 대체 없이 skip한다.
+- [x] Phase P-6: shadow residual backlog validator/template 추가. `scripts/validate_shadow_residual_backlog.py`는 schema enum, `residual_id` 중복, source case id 교차검증을 수행하고, `data/ops/shadow_residual_backlog_template.jsonl`을 작성 시작점으로 제공한다.
 
 ## 0.0 온실 공사중 전제 반영
 - [x] 온실 공사 일정과 AI 준비 일정 분리 (`AI_MLOPS_PLAN.md`, `schedule.md`)
