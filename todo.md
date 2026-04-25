@@ -74,7 +74,7 @@
 - [x] `ds_v11/prompt_v5_methodfix_batch14`를 frozen gate(`core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate`)로 재평가
 - [x] `ds_v11` residual failure 재분류: extended200 validator 잔여 `42건`, blind50 validator 잔여 `5건`
 - [x] `ds_v11` blind50 기준 offline shadow replay 생성 및 계약/heuristic 정렬 (`decision_count 50`, `operator_agreement_rate 0.92`, `critical_disagreement_count 0`, `promotion_decision promote`)
-- [ ] `ds_v11` shadow mode audit sample을 누적하고 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 실제 운영 로그 형식으로 검증
+- [~] `ds_v11` shadow mode audit sample을 누적하고 `operator_agreement_rate`, `critical_disagreement_count`, `promotion_decision`을 실제 운영 로그 형식으로 검증. 2026-04-25 ops-api PostgreSQL 경로로 day0 seed window report는 생성했지만(`artifacts/reports/shadow_mode_ops_api_seed_window_20260425.{json,md}`), 실제 현장 unique case 누적은 아직 남아 있다.
 - [x] synthetic shadow `day0` seed pack `12건` 추가와 baseline 리포트 생성 (`scripts/generate_shadow_mode_day0_seed_pack.py`, `scripts/run_shadow_mode_seed_pack.py`, `scripts/validate_shadow_mode_seed_pack.py`)
 - [x] synthetic shadow `day0` residual owner/cause 리포트 생성 (`scripts/report_shadow_mode_seed_residuals.py`, `artifacts/reports/shadow_mode_residuals_ds_v11_day0_seed.md`)
 - [x] offline shadow replay false critical disagreement(`blind-forbidden-007`) 해소 및 runtime `HSV-09` 정렬

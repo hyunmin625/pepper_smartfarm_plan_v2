@@ -81,7 +81,7 @@
 - `batch16 + batch17 + hard-case oversampling`을 묶은 다음 challenger `ds_v12/prompt_v5_methodfix_batch17_hardcase`는 dry-run package까지만 준비했다. train `815`, validation `57`, SFT format error `0`이며 실제 submit은 아직 막아 두었다.
 - batch18까지 반영한 현재 live head 기준 추천 split은 train `284`, validation `60`이고, 같은 hard-case oversampling 규칙을 다시 적용한 next-only dry-run은 train `822`, validation `60`, format error `0`이다.
 - batch18 live head 기준 `ds_v13/prompt_v5_methodfix_batch18_hardcase` dry-run package도 분리했다. [challenger_submit_preflight_ds_v12_ds_v13.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13.md:1) 기준 현재 `ds_v12`, `ds_v13` 둘 다 `blocked`이며 공통 blocker는 `blind50 validator 0.9`, `synthetic shadow day0 hold`, `real shadow mode not_run`이다.
-- 실제 운영 전환용 shadow 경로도 추가했다. [docs/real_shadow_mode_runbook.md](/home/user/pepper-smartfarm-plan-v2/docs/real_shadow_mode_runbook.md:1), `scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py` 기준으로 일자별 capture와 rolling window 승격 판단을 바로 만들 수 있다.
+- 실제 운영 전환용 shadow 경로도 추가했다. [docs/real_shadow_mode_runbook.md](/home/user/pepper-smartfarm-plan-v2/docs/real_shadow_mode_runbook.md:1), `scripts/run_shadow_mode_capture_cases.py`, `scripts/build_shadow_mode_window_report.py` 기준으로 일자별 capture와 rolling window 승격 판단을 바로 만들 수 있다. 2026-04-25에는 ops-api PostgreSQL audit log 기반 seed window report [shadow_mode_ops_api_seed_window_20260425.md](artifacts/reports/shadow_mode_ops_api_seed_window_20260425.md)를 생성했고 결과는 `decision_count 24`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`다.
 - submit preflight도 이 real shadow window를 직접 읽을 수 있다. `scripts/build_challenger_submit_preflight.py --real-shadow-report <window.json>` 경로로 실제 shadow 결과를 `pass / hold / rollback`으로 자동 반영한다.
 - `real shadow rollback`과 blind50 validator 잔여 `5건`을 직접 역투영한 batch19도 추가했다. [docs/batch19_real_shadow_feedback_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/batch19_real_shadow_feedback_plan.md:1) 기준 corrective sample `8건`과 validator-aligned `sft_v10` prompt를 묶어 `ds_v14/prompt_v10_validator_aligned_batch19_hardcase` package를 만들고 실제 submit까지 진행했다.
 - 그 뒤 `policy output validator`의 citation alignment와 `forbidden_action on path loss` contract를 보정해 `runtime_validator_gap`을 `0`으로 줄였다. 같은 기준으로 남은 blind50 `5건`은 [docs/batch20_post_validator_residual_plan.md](/home/user/pepper-smartfarm-plan-v2/docs/batch20_post_validator_residual_plan.md:1)과 batch20 sample `8건`으로 다시 역투영했다.
@@ -142,7 +142,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 synthetic shadow day0 residual `4건`의 모델 출력 개선, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 submit 후보 재검토다. blind50 validator 잔여 `5건`은 처리 기준이 정리됐고, extended200 validator 잔여 `42건`은 `docs/extended200_residual_priority_plan.md` 기준으로 Batch21A/B/C `42건` corrective sample 생성까지 완료됐다.
+- 현재 남은 주요 부족분은 synthetic shadow day0 residual `4건`의 모델 출력 개선, 실제 현장 shadow mode unique case 확보, 그리고 그 이후 submit 후보 재검토다. blind50 validator 잔여 `5건`은 처리 기준이 정리됐고, extended200 validator 잔여 `42건`은 `docs/extended200_residual_priority_plan.md` 기준으로 Batch21A/B/C `42건` corrective sample 생성까지 완료됐다. ops-api seed window report는 경로 검증용이며 실제 현장 pass 근거는 아니다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1), [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1), [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
@@ -330,12 +330,12 @@
 
 ## 다음 우선순위
 
-1. 실제 shadow case를 누적해 `GET /shadow/window` 기준 real window를 채우기
-2. 실 PostgreSQL URL과 driver를 연결한 뒤 `scripts/validate_ops_api_postgres_smoke.py` 실행
-3. `policy-engine` policy source versioning과 blocked/approval event UI를 추가
-4. `ds_v11` 결과를 새 frozen baseline으로 고정하고, 후속 challenger는 `core24 + extended120 + extended160 + extended200 + blind_holdout50 + raw/validator gate` 조건으로만 비교
-5. blind50 validator 적용 후 남는 `5건`을 먼저 줄이기: `data_and_model 3`, `risk_rubric_and_data 2`
-6. extended200 validator 적용 후 남는 `42건`을 owner 기준으로 줄이기: `risk_rubric_and_data 34`, `data_and_model 13`, `robot_contract_and_model 2`
-7. shadow mode 로그를 먼저 쌓고, 그 다음에만 batch16 + batch17 + next-only oversampling challenger 제출 여부를 결정
+1. 실제 운영 shadow case를 request_id 유니크하게 누적해 `GET /shadow/window` 기준 real window를 채우기
+2. 누적 audit log로 `scripts/build_shadow_mode_window_report.py`를 실행하고 `promotion_decision`이 `hold`에서 벗어나는지 확인
+3. real window report를 `scripts/build_challenger_submit_preflight.py --real-shadow-report`에 연결해 submit blocker를 재계산
+4. synthetic shadow day0 residual `4건`의 모델 출력 개선 여부를 재평가하고, 재학습 없이 해결 가능한 validator/rubric 경계만 분리
+5. `policy-engine` policy source versioning과 blocked/approval event UI를 추가
+6. 비용 없는 retriever 후보 `local_embed`/`local_hybrid`는 benchmark만 유지하고, runtime 기본값은 `keyword`로 고정
+7. shadow mode 로그가 안정화된 뒤에만 next challenger 또는 장기 데이터셋 증량 프로젝트를 결정
 
 제어 시스템 구현은 센서 수집 계획과 AI 준비가 더 진행된 뒤 시작합니다.

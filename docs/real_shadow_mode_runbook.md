@@ -25,7 +25,47 @@
 
 ## 실행 절차
 
+권장 경로는 ops-api를 통한 적재다. 이 경로가 `POST /shadow/cases/capture`, `/shadow/window`, auth/audit/rotation guard를 모두 통과하므로 실제 운영 흐름에 가장 가깝다.
+
+### 0. ops-api PostgreSQL stack 실행
+
+```bash
+bash scripts/run_ops_api_postgres_stack.sh
+```
+
+다른 터미널에서 shadow case를 적재한다.
+
+```bash
+.venv/bin/python scripts/push_shadow_cases_to_ops_api.py \
+  --base-url http://127.0.0.1:8000 \
+  --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
+  --append \
+  --batch-size 25 \
+  --gate hold
+```
+
+seed pack으로 경로만 확인할 때는 아래처럼 실행한다.
+
+```bash
+.venv/bin/python scripts/push_shadow_cases_to_ops_api.py \
+  --base-url http://127.0.0.1:8000 \
+  --cases-file data/examples/shadow_mode_runtime_day0_seed_cases.jsonl \
+  --append \
+  --batch-size 12 \
+  --gate hold
+```
+
+ops-api 기본 audit log는 `artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl`이다. window artifact는 아래 명령으로 고정한다.
+
+```bash
+python3 scripts/build_shadow_mode_window_report.py \
+  --audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
+  --output-prefix artifacts/reports/shadow_mode_ops_api_window_YYYYMMDD
+```
+
 ### 1. 일자별 capture
+
+아래 direct capture 경로는 ops-api 없이 audit log 형식만 검증할 때 사용한다. 실제 운영 후보 판단은 위 ops-api 적재 경로를 우선한다.
 
 ```bash
 python3 scripts/run_shadow_mode_capture_cases.py \
@@ -90,3 +130,11 @@ python3 scripts/build_challenger_submit_preflight.py \
 - 현재 저장소 기준 synthetic shadow `day0`는 `hold`다.
 - offline replay는 `promote`지만 실제 운영 shadow 대체가 아니다.
 - 따라서 지금은 `real shadow mode`를 최소 일자 단위로 쌓는 경로를 먼저 열어 두는 단계다.
+
+## 2026-04-25 경로 확인
+
+- ops-api PostgreSQL stack을 실행한 뒤 `push_shadow_cases_to_ops_api.py`로 day0 seed `12건`을 추가 적재했다.
+- 누적 audit log: `artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl`
+- window report: `artifacts/reports/shadow_mode_ops_api_seed_window_20260425.json`, `artifacts/reports/shadow_mode_ops_api_seed_window_20260425.md`
+- 결과: `decision_count 24`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`
+- 해석: 적재/집계 경로는 동작하지만, seed residual이 반복되므로 승격 판단은 계속 `hold`다. 실제 운영 case는 request_id를 일자/zone/action 기준으로 유니크하게 만든다.
