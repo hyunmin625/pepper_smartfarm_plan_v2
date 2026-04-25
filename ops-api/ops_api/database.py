@@ -20,6 +20,7 @@ MIGRATION_PATHS: tuple[Path, ...] = (
     REPO_ROOT / "infra" / "postgres" / "003_automation_rules.sql",
     REPO_ROOT / "infra" / "postgres" / "004_automation_trigger_review.sql",
     REPO_ROOT / "infra" / "postgres" / "005_automation_dispatch_status.sql",
+    REPO_ROOT / "infra" / "postgres" / "006_policy_event_policy_links.sql",
 )
 
 

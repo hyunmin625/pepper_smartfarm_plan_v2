@@ -151,6 +151,10 @@
 - [x] Phase P-6: shadow residual backlog validator/template 추가. `scripts/validate_shadow_residual_backlog.py`는 schema enum, `residual_id` 중복, source case id 교차검증을 수행하고, `data/ops/shadow_residual_backlog_template.jsonl`을 작성 시작점으로 제공한다.
 - [x] Phase P-7: Phase P quality gate와 residual backlog report 추가. `scripts/run_phase_p_quality_gate.py`가 py_compile, dashboard hook, rehearsal JSONL, validate-only pipeline, backlog validator/report, PostgreSQL-only smoke를 묶고, `scripts/report_shadow_residual_backlog.py`가 owner/status/severity/failure_mode별 Markdown/JSON summary를 만든다.
 - [x] Phase P-8: runtime gate/residual UI와 운영 문서 보강. `/dashboard/data.runtime_gate`에 `open_residual_count`, `critical_residual_count`, `unverified_fix_count`를 추가하고, Shadow Mode 뷰에 `Real Shadow Residuals` 카드를 추가했다. `docs/real_shadow_daily_intake_checklist.md`와 `docs/policy_event_filter_performance_plan.md`를 신규 작성했다.
+- [x] Phase P-9: real shadow daily intake runner와 strict date guard 추가. `scripts/run_real_shadow_daily_intake.py`가 strict validation, ops-api capture/window report, residual report, runtime gate blocker report, optional challenger preflight를 하루 단위로 묶고, `validate_shadow_cases.py`는 real-case 파일명/request_id/eval_set_id `YYYYMMDD` 일치를 검증한다.
+- [x] Phase P-10: policy event policy_id filter 정규화. `infra/postgres/006_policy_event_policy_links.sql`와 `PolicyEventPolicyLinkRecord`를 추가해 `policy_ids_json` backfill/link insert를 수행하고, `/policies/events?policy_id=...`와 `/policies/{policy_id}/history`를 indexed join으로 전환했다.
+- [x] Phase P-11: zero-cost retriever regression gate 고정. `scripts/validate_zero_cost_retriever_regression.py`를 추가하고 Phase P quality gate에 `validate_vector_retrievers.py` + zero-cost recall threshold smoke를 포함했다. OpenAI live retriever는 계속 `OPENAI_LIVE_RETRIEVER_SMOKE=1` opt-in이다.
+- [x] Phase T-2a: dashboard v2 Overview/Decision queue 실데이터 배선 착수. 실제 로드되는 `dashboard_v2/src/bundle.jsx`가 `/dashboard/data`에서 summary/approval/zones/timeline을 읽고, decision approve/reject 버튼은 `/actions/approve|reject`로 연결된다. `validate_ops_api_dashboard_v2.py`에 `/dashboard/data`와 action hook 검증을 추가했다.
 
 ## 0.0 온실 공사중 전제 반영
 - [x] 온실 공사 일정과 AI 준비 일정 분리 (`AI_MLOPS_PLAN.md`, `schedule.md`)

@@ -55,6 +55,11 @@ EXPECTED_JSX_FILES = [
     ("bundle.jsx", "function Sidebar"),
     ("bundle.jsx", "function Dashboard"),
     ("bundle.jsx", "function App"),
+    # Phase T-2a: overview and approval queue can read live ops-api payloads.
+    ("bundle.jsx", "fetchDashboardV2Data"),
+    ("bundle.jsx", "/dashboard/data"),
+    ("bundle.jsx", "postDashboardV2Action"),
+    ("bundle.jsx", "/actions/approve"),
     # Phase T-2b: rules view fetches real data from ops-api.
     ("bundle.jsx", "fetchAutomationRules"),
     ("bundle.jsx", "toggleAutomationRuleServer"),

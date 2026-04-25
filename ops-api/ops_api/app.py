@@ -51,6 +51,7 @@ from .models import (
     DeviceRecord,
     DeviceCommandRecord,
     OperatorReviewRecord,
+    PolicyEventPolicyLinkRecord,
     PolicyEventRecord,
     PolicyEvaluationRecord,
     PolicyRecord,
@@ -301,6 +302,57 @@ def _serialize_policy_event(row: PolicyEventRecord) -> dict[str, Any]:
         "payload": _loads_json(row.payload_json, {}),
         "created_at": row.created_at.isoformat(),
     }
+
+
+def _normalize_policy_ids(policy_ids: Any) -> list[str]:
+    if not isinstance(policy_ids, list):
+        return []
+    seen: set[str] = set()
+    normalized: list[str] = []
+    for policy_id in policy_ids:
+        value = str(policy_id or "").strip()
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        normalized.append(value)
+    return normalized
+
+
+def _add_policy_event(
+    session: Session,
+    *,
+    decision_id: int | None,
+    request_id: str,
+    event_type: str,
+    policy_result: str,
+    policy_ids: list[str],
+    reason_codes: list[str],
+    payload: dict[str, Any],
+) -> PolicyEventRecord:
+    normalized_policy_ids = _normalize_policy_ids(policy_ids)
+    normalized_reason_codes = [str(item) for item in reason_codes] if isinstance(reason_codes, list) else []
+    created_at = utc_now()
+    event = PolicyEventRecord(
+        decision_id=decision_id,
+        request_id=request_id,
+        event_type=event_type,
+        policy_result=policy_result,
+        policy_ids_json=json.dumps(normalized_policy_ids, ensure_ascii=False),
+        reason_codes_json=json.dumps(normalized_reason_codes, ensure_ascii=False),
+        payload_json=json.dumps(payload, ensure_ascii=False),
+        created_at=created_at,
+    )
+    session.add(event)
+    session.flush()
+    for policy_id in normalized_policy_ids:
+        session.add(
+            PolicyEventPolicyLinkRecord(
+                policy_event_id=event.id,
+                policy_id=policy_id,
+                created_at=created_at,
+            )
+        )
+    return event
 
 
 def _policy_version_stamp(policy_id: str, timestamp: datetime) -> str:
@@ -647,22 +699,18 @@ def _execute_decision_dispatch(
         )
         policy_event = dispatch_result.get("policy_event")
         if isinstance(policy_event, dict):
-            session.add(
-                PolicyEventRecord(
-                    decision_id=decision.id,
-                    request_id=str(policy_event.get("request_id") or decision.request_id),
-                    event_type=str(policy_event.get("event_type") or "policy_event"),
-                    policy_result=str(policy_event.get("policy_result") or "pass"),
-                    policy_ids_json=json.dumps(policy_event.get("policy_ids", []), ensure_ascii=False),
-                    reason_codes_json=json.dumps(policy_event.get("reason_codes", []), ensure_ascii=False),
-                    payload_json=json.dumps(
-                        {
-                            "dispatch_request": plan.payload,
-                            "dispatch_result": dispatch_result,
-                        },
-                        ensure_ascii=False,
-                    ),
-                )
+            _add_policy_event(
+                session,
+                decision_id=decision.id,
+                request_id=str(policy_event.get("request_id") or decision.request_id),
+                event_type=str(policy_event.get("event_type") or "policy_event"),
+                policy_result=str(policy_event.get("policy_result") or "pass"),
+                policy_ids=policy_event.get("policy_ids", []),
+                reason_codes=policy_event.get("reason_codes", []),
+                payload={
+                    "dispatch_request": plan.payload,
+                    "dispatch_result": dispatch_result,
+                },
             )
     decision.status = "approved_executed"
     return dispatch_results
@@ -1523,16 +1571,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         actor: ActorIdentity = Depends(require_permission("read_runtime")),
     ) -> dict[str, Any]:
         limit = max(1, min(int(limit), 200))
-        query_limit = min(500, max(limit, 200)) if policy_id else limit
         stmt = select(PolicyEventRecord)
+        if policy_id:
+            stmt = stmt.join(
+                PolicyEventPolicyLinkRecord,
+                PolicyEventPolicyLinkRecord.policy_event_id == PolicyEventRecord.id,
+            ).where(PolicyEventPolicyLinkRecord.policy_id == policy_id)
         if event_type:
             stmt = stmt.where(PolicyEventRecord.event_type == event_type)
         if request_id:
             stmt = stmt.where(PolicyEventRecord.request_id == request_id)
-        stmt = stmt.order_by(desc(PolicyEventRecord.id)).limit(query_limit)
+        stmt = stmt.order_by(desc(PolicyEventRecord.id)).limit(limit)
         rows = session.execute(stmt).scalars().all()
-        if policy_id:
-            rows = [row for row in rows if policy_id in _loads_json(row.policy_ids_json, [])][:limit]
         return _ok(
             {"items": [_serialize_policy_event(row) for row in rows]},
             actor=actor,
@@ -1554,15 +1604,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         limit = max(1, min(int(limit), 100))
         stmt = (
             select(PolicyEventRecord)
+            .join(
+                PolicyEventPolicyLinkRecord,
+                PolicyEventPolicyLinkRecord.policy_event_id == PolicyEventRecord.id,
+            )
             .where(PolicyEventRecord.event_type == "policy_changed")
+            .where(PolicyEventPolicyLinkRecord.policy_id == policy_id)
             .order_by(desc(PolicyEventRecord.id))
-            .limit(200)
+            .limit(limit)
         )
-        rows = [
-            row
-            for row in session.execute(stmt).scalars().all()
-            if policy_id in _loads_json(row.policy_ids_json, [])
-        ][:limit]
+        rows = session.execute(stmt).scalars().all()
         return _ok(
             {"items": [_serialize_policy_event(row) for row in rows]},
             actor=actor,
@@ -1609,25 +1660,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         session.refresh(row)
         after = _serialize_policy(row)
         if changed_fields:
-            event = PolicyEventRecord(
+            _add_policy_event(
+                session,
                 decision_id=None,
                 request_id=f"policy-update-{policy_id}-{row.updated_at.strftime('%Y%m%dT%H%M%S')}",
                 event_type="policy_changed",
                 policy_result="updated",
-                policy_ids_json=json.dumps([policy_id], ensure_ascii=False),
-                reason_codes_json=json.dumps(["policy_source_version_update"], ensure_ascii=False),
-                payload_json=json.dumps(
-                    {
-                        "actor_id": actor.actor_id,
-                        "actor_role": actor.role,
-                        "changed_fields": sorted(set(changed_fields)),
-                        "before": before,
-                        "after": after,
-                    },
-                    ensure_ascii=False,
-                ),
+                policy_ids=[policy_id],
+                reason_codes=["policy_source_version_update"],
+                payload={
+                    "actor_id": actor.actor_id,
+                    "actor_role": actor.role,
+                    "changed_fields": sorted(set(changed_fields)),
+                    "before": before,
+                    "after": after,
+                },
             )
-            session.add(event)
             session.commit()
         return _ok({"policy": _serialize_policy(row)}, actor=actor)
 

@@ -15,11 +15,21 @@
 python3 scripts/validate_shadow_cases.py \
   --cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl \
   --existing-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
-  --real-case
+  --real-case \
+  --expected-date YYYYMMDD
 ```
 
 - [ ] errors가 `[]`인지 확인한다.
 - [ ] 기존 audit log와 `request_id` 중복이 없는지 확인한다.
+
+하루 단위 runner를 사용할 때는 2~6단계를 아래 명령 하나로 묶는다. 기본 `--gate rollback`은 hold/rollback 상태에서도 리포트를 끝까지 생성하기 위한 운영 intake 기준이다.
+
+```bash
+python3 scripts/run_real_shadow_daily_intake.py \
+  --date YYYYMMDD \
+  --base-url http://127.0.0.1:8000 \
+  --cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl
+```
 
 ## 3. ops-api 적재와 window report
 
@@ -28,6 +38,7 @@ python3 scripts/run_shadow_mode_ops_pipeline.py \
   --base-url http://127.0.0.1:8000 \
   --cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl \
   --real-case \
+  --expected-date YYYYMMDD \
   --gate hold \
   --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json \
   --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json
@@ -68,6 +79,7 @@ python3 scripts/report_shadow_residual_backlog.py \
 
 - [ ] `/dashboard`의 Runtime Gate 카드에서 `shadow_residuals`가 기대 수치와 맞는지 확인한다.
 - [ ] `Shadow Mode > Real Shadow Residuals` 카드에서 최근 residual이 보이는지 확인한다.
+- [ ] `artifacts/reports/runtime_gate_blockers_YYYYMMDD.{json,md}`에서 blockers와 다음 조치를 확인한다.
 - [ ] residual이 남아 있으면 submit 후보를 열지 않는다.
 
 ## 7. 리허설 전용 명령

@@ -151,6 +151,11 @@ def main() -> int:
         help="Apply stricter real ops case rules during validation.",
     )
     parser.add_argument(
+        "--expected-date",
+        default=None,
+        help="Expected YYYYMMDD for real ops case filename/request_id/eval_set_id consistency.",
+    )
+    parser.add_argument(
         "--existing-audit-log",
         action="append",
         default=[],
@@ -176,6 +181,7 @@ def main() -> int:
             case_rows,
             real_case=args.real_case,
             existing_request_ids=existing_ids,
+            expected_date=args.expected_date,
         )
         if validation_errors:
             print(
@@ -198,6 +204,7 @@ def main() -> int:
                     "status": "ok",
                     "validated_case_count": len(cases),
                     "real_case": args.real_case,
+                    "expected_date": args.expected_date,
                     "case_files": [path.as_posix() for path in case_paths],
                 },
                 ensure_ascii=False,

@@ -178,6 +178,21 @@ class PolicyEventRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     decision: Mapped[DecisionRecord | None] = relationship()
+    policy_links: Mapped[list["PolicyEventPolicyLinkRecord"]] = relationship(
+        back_populates="policy_event",
+        cascade="all, delete-orphan",
+    )
+
+
+class PolicyEventPolicyLinkRecord(Base):
+    __tablename__ = "policy_event_policy_links"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    policy_event_id: Mapped[int] = mapped_column(ForeignKey("policy_events.id", ondelete="CASCADE"), index=True)
+    policy_id: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+    policy_event: Mapped[PolicyEventRecord] = relationship(back_populates="policy_links")
 
 
 class OperatorReviewRecord(Base):

@@ -30,7 +30,9 @@ ALLOWED_FORBIDDEN_DECISIONS = {"block", "approval_required", "allow"}
 REQUIRED_TOP_LEVEL_FIELDS = {"request_id", "task_type", "metadata", "context", "output", "observed"}
 REQUIRED_METADATA_FIELDS = {"model_id", "prompt_id", "dataset_id", "eval_set_id", "retrieval_profile_id"}
 REQUIRED_CONTEXT_FIELDS = {"farm_id", "zone_id", "task_type", "summary"}
-REAL_REQUEST_ID_RE = re.compile(r"^prod-shadow-\d{8}-\d{3,}$")
+REAL_REQUEST_ID_RE = re.compile(r"^prod-shadow-(\d{8})-\d{3,}$")
+REAL_EVAL_SET_RE = re.compile(r"^shadow-prod-(\d{8})$")
+REAL_CASE_FILE_RE = re.compile(r"^shadow_mode_cases_(\d{8})(?:_part\d+)?\.jsonl$")
 SEED_OR_OFFLINE_EVAL_IDS = {
     "shadow_seed_day0",
     "blind_holdout50_offline_shadow_replay",
@@ -96,6 +98,11 @@ def _validate_required_strings(mapping: dict[str, Any], fields: set[str], prefix
     return errors
 
 
+def _date_from_real_case_file(path: Path) -> str | None:
+    match = REAL_CASE_FILE_RE.match(path.name)
+    return match.group(1) if match else None
+
+
 def validate_case_row(
     path: Path,
     line_number: int,
@@ -103,6 +110,7 @@ def validate_case_row(
     *,
     real_case: bool,
     real_eval_set_prefix: str,
+    expected_date: str | None = None,
 ) -> list[str]:
     prefix = f"{path}:{line_number}"
     errors: list[str] = []
@@ -113,10 +121,15 @@ def validate_case_row(
 
     request_id = row.get("request_id")
     task_type = row.get("task_type")
+    request_date: str | None = None
     if not _non_empty_string(request_id):
         errors.append(f"{prefix}: request_id must be a non-empty string")
-    elif real_case and not REAL_REQUEST_ID_RE.match(request_id):
-        errors.append(f"{prefix}: request_id must match prod-shadow-YYYYMMDD-NNN for real ops cases")
+    elif real_case:
+        request_match = REAL_REQUEST_ID_RE.match(request_id)
+        if not request_match:
+            errors.append(f"{prefix}: request_id must match prod-shadow-YYYYMMDD-NNN for real ops cases")
+        else:
+            request_date = request_match.group(1)
 
     if task_type not in ALLOWED_TASK_TYPES:
         errors.append(f"{prefix}: unsupported task_type {task_type!r}")
@@ -146,13 +159,31 @@ def validate_case_row(
 
     eval_set_id = str(metadata.get("eval_set_id") or "")
     if real_case:
+        eval_set_date: str | None = None
+        eval_set_match = REAL_EVAL_SET_RE.match(eval_set_id)
+        if real_eval_set_prefix and not eval_set_match:
+            errors.append(f"{prefix}: real ops eval_set_id must match shadow-prod-YYYYMMDD")
+        elif eval_set_match:
+            eval_set_date = eval_set_match.group(1)
+        file_date = _date_from_real_case_file(path)
+        expected_dates = {
+            label: value
+            for label, value in (
+                ("--expected-date", expected_date),
+                ("case filename", file_date),
+                ("request_id", request_date),
+                ("metadata.eval_set_id", eval_set_date),
+            )
+            if value
+        }
+        if len(set(expected_dates.values())) > 1:
+            detail = ", ".join(f"{label}={value}" for label, value in expected_dates.items())
+            errors.append(f"{prefix}: real ops date values must match ({detail})")
         farm_id = str(context.get("farm_id") or "")
         if "demo" in farm_id.lower():
             errors.append(f"{prefix}: real ops case must not use demo farm_id")
         if eval_set_id in SEED_OR_OFFLINE_EVAL_IDS or "seed" in eval_set_id.lower() or "offline" in eval_set_id.lower():
             errors.append(f"{prefix}: real ops case must not use seed/offline eval_set_id")
-        if real_eval_set_prefix and not eval_set_id.startswith(real_eval_set_prefix):
-            errors.append(f"{prefix}: real ops eval_set_id must start with {real_eval_set_prefix!r}")
         if not isinstance(observed.get("operator_agreement"), bool):
             errors.append(f"{prefix}: real ops observed.operator_agreement must be a boolean")
 
@@ -210,6 +241,7 @@ def validate_case_rows(
     real_case: bool = False,
     existing_request_ids: set[str] | None = None,
     real_eval_set_prefix: str = "shadow-prod-",
+    expected_date: str | None = None,
 ) -> list[str]:
     errors: list[str] = []
     request_ids: Counter[str] = Counter()
@@ -224,6 +256,7 @@ def validate_case_rows(
                 row,
                 real_case=real_case,
                 real_eval_set_prefix=real_eval_set_prefix,
+                expected_date=expected_date,
             )
         )
 
@@ -247,6 +280,11 @@ def main() -> int:
         default="shadow-prod-",
         help="Required eval_set_id prefix when --real-case is enabled. Use empty string to disable.",
     )
+    parser.add_argument(
+        "--expected-date",
+        default=None,
+        help="Required YYYYMMDD value for real-case filename/request_id/eval_set_id consistency.",
+    )
     args = parser.parse_args()
 
     case_paths = [Path(path) for path in args.cases_file]
@@ -257,6 +295,7 @@ def main() -> int:
         real_case=args.real_case,
         existing_request_ids=existing_ids,
         real_eval_set_prefix=args.real_eval_set_prefix,
+        expected_date=args.expected_date,
     )
 
     for error in errors:

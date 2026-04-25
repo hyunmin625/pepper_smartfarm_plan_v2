@@ -9,6 +9,7 @@ runtime review smoke still skips cleanly if no PostgreSQL URL exists.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -66,6 +67,39 @@ def main() -> int:
         rehearsal_file = tmp_root / f"shadow_mode_rehearsal_{args.rehearsal_date}.jsonl"
         report_json = tmp_root / "shadow_residual_backlog_summary.json"
         report_md = tmp_root / "shadow_residual_backlog_summary.md"
+        rehearsal_window_prefix = tmp_root / f"shadow_mode_ops_api_rehearsal_window_{args.rehearsal_date}"
+        runtime_gate_input = tmp_root / "dashboard_data_runtime_gate_sample.json"
+        runtime_gate_report_json = tmp_root / "runtime_gate_blockers.json"
+        runtime_gate_report_md = tmp_root / "runtime_gate_blockers.md"
+        retriever_report_json = tmp_root / "zero_cost_retriever_regression.json"
+        retriever_report_md = tmp_root / "zero_cost_retriever_regression.md"
+        runtime_gate_input.write_text(
+            json.dumps(
+                {
+                    "data": {
+                        "runtime_gate": {
+                            "gate_state": "blocked",
+                            "runtime_mode": "shadow",
+                            "shadow_window_status": "hold",
+                            "retriever_type": "keyword",
+                            "champion": {"is_ds_v11_frozen": True, "model_id": "ds_v11"},
+                            "approval_queue_count": 1,
+                            "policy_risk_event_count": 0,
+                            "policy_change_count": 0,
+                            "open_residual_count": 1,
+                            "critical_residual_count": 0,
+                            "unverified_fix_count": 0,
+                            "blockers": ["shadow_window_hold", "approval_queue_pending", "shadow_residuals_open"],
+                        },
+                        "summary": {"decision_count": 1, "approval_pending_count": 1, "automation_pending_count": 0},
+                        "shadow_window": {"promotion_decision": "hold"},
+                        "shadow_residuals": {"open_residual_count": 1},
+                    }
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
 
         run_step(
             "py_compile",
@@ -78,7 +112,30 @@ def main() -> int:
                 "scripts/validate_shadow_cases.py",
                 "scripts/validate_shadow_residual_backlog.py",
                 "scripts/report_shadow_residual_backlog.py",
+                "scripts/report_runtime_gate_blockers.py",
+                "scripts/run_real_shadow_daily_intake.py",
                 "scripts/run_phase_p_quality_gate.py",
+                "scripts/validate_policy_event_link_table.py",
+                "scripts/validate_ops_api_dashboard_v2.py",
+                "scripts/validate_vector_retrievers.py",
+                "scripts/validate_zero_cost_retriever_regression.py",
+            ],
+            env=env,
+        )
+        run_step(
+            "vector_retriever_static_smoke",
+            [runtime_python, "scripts/validate_vector_retrievers.py"],
+            env=env,
+        )
+        run_step(
+            "zero_cost_retriever_regression",
+            [
+                runtime_python,
+                "scripts/validate_zero_cost_retriever_regression.py",
+                "--output-json",
+                str(retriever_report_json),
+                "--output-md",
+                str(retriever_report_md),
             ],
             env=env,
         )
@@ -128,6 +185,8 @@ def main() -> int:
                 "scripts/run_shadow_mode_ops_pipeline.py",
                 "--cases-file",
                 str(rehearsal_file),
+                "--output-prefix",
+                str(rehearsal_window_prefix),
                 "--validate-only",
             ],
             env=env,
@@ -158,10 +217,34 @@ def main() -> int:
             ],
             env=env,
         )
+        run_step(
+            "runtime_gate_blocker_report",
+            [
+                sys.executable,
+                "scripts/report_runtime_gate_blockers.py",
+                "--input-json",
+                str(runtime_gate_input),
+                "--output-json",
+                str(runtime_gate_report_json),
+                "--output-md",
+                str(runtime_gate_report_md),
+            ],
+            env=env,
+        )
         if not args.skip_postgres_smoke:
             run_step(
                 "postgres_runtime_review_smoke",
                 [runtime_python, "scripts/validate_ops_api_runtime_review_surfaces.py"],
+                env=env,
+            )
+            run_step(
+                "postgres_policy_event_link_smoke",
+                [runtime_python, "scripts/validate_policy_event_link_table.py"],
+                env=env,
+            )
+            run_step(
+                "postgres_dashboard_v2_smoke",
+                [runtime_python, "scripts/validate_ops_api_dashboard_v2.py"],
                 env=env,
             )
         run_step("diff_check", ["git", "diff", "--check"], env=env)

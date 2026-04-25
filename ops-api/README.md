@@ -4,7 +4,7 @@ FastAPI 기반 운영 백엔드다.
 
 - `ops_api/app.py`: `POST /decisions/evaluate-zone`, `GET /zones`, `GET /zones/{zone_id}/history`, `GET /sensors`, `GET /devices`, `GET /policies`, `GET /policies/events`, `POST /policies/{policy_id}`, `POST /actions/approve`, `POST /actions/execute`, `POST /shadow/reviews`, `POST /shadow/cases/capture`, `GET /shadow/window`, `GET /dashboard`, `GET /dashboard/data`, `GET /alerts`, `GET /robot/tasks`, `POST /robot/tasks` 포함
 - `ops_api/auth.py`: `viewer/operator/service/admin` 역할과 `disabled/header_token` 인증 모드 정의
-- `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `policy_events`, `alerts`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
+- `ops_api/models.py`: `zones`, `sensors`, `devices`, `policies`, `decisions`, `approvals`, `device_commands`, `policy_events`, `policy_event_policy_links`, `alerts`, `robot_candidates`, `robot_tasks`, `policy_evaluations`, `operator_reviews` 저장 모델
 - `ops_api/shadow_mode.py`: shadow audit JSONL 적재/summary 계산 helper
 - `ops_api/planner.py`: 승인된 action을 `execution-gateway` 요청으로 변환
 - `ops_api/seed.py`: sensor/device/policy seed JSON을 reference catalog로 적재
@@ -44,11 +44,14 @@ set +a
 
 `OPS_API_DATABASE_URL` 대상 PostgreSQL DB를 만든 뒤 canonical migration과 reference seed를 적용한다.
 
-운영 DDL은 아래 세 파일이 canonical source다.
+운영 DDL은 아래 파일들이 canonical source다.
 
 - [infra/postgres/001_initial_schema.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/001_initial_schema.sql:1)
 - [infra/postgres/002_timescaledb_sensor_readings.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/002_timescaledb_sensor_readings.sql:1)
 - [infra/postgres/003_automation_rules.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/003_automation_rules.sql:1)
+- [infra/postgres/004_automation_trigger_review.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/004_automation_trigger_review.sql:1)
+- [infra/postgres/005_automation_dispatch_status.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/005_automation_dispatch_status.sql:1)
+- [infra/postgres/006_policy_event_policy_links.sql](/home/user/pepper-smartfarm-plan-v2/infra/postgres/006_policy_event_policy_links.sql:1)
 
 ## auth
 

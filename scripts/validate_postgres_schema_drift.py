@@ -34,15 +34,8 @@ sys.path.insert(0, str(REPO_ROOT / "ops-api"))
 
 from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text  # noqa: E402
 
-from ops_api.database import Base  # noqa: E402
+from ops_api.database import Base, MIGRATION_PATHS  # noqa: E402
 from ops_api import models as _models  # noqa: F401,E402  - registers tables
-
-
-MIGRATION_PATHS: tuple[Path, ...] = (
-    REPO_ROOT / "infra" / "postgres" / "001_initial_schema.sql",
-    REPO_ROOT / "infra" / "postgres" / "002_timescaledb_sensor_readings.sql",
-    REPO_ROOT / "infra" / "postgres" / "003_automation_rules.sql",
-)
 
 
 _SQL_TYPE_NORMALIZATION = {
@@ -70,6 +63,10 @@ _ORM_TYPE_NORMALIZATION: dict[type, str] = {
 
 _CREATE_TABLE_RE = re.compile(
     r"CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+(\w+)\s*\((.*?)\)\s*;",
+    re.IGNORECASE | re.DOTALL,
+)
+_ALTER_TABLE_RE = re.compile(
+    r"ALTER\s+TABLE\s+(\w+)\s+(.*?);",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -137,6 +134,34 @@ def parse_sql_schema(path: Path) -> dict[str, dict[str, dict[str, Any]]]:
             column_name, details = parsed
             columns[column_name] = details
         tables[table_name] = columns
+    return tables
+
+
+def parse_alter_add_columns(path: Path) -> dict[str, dict[str, dict[str, Any]]]:
+    text = path.read_text(encoding="utf-8")
+    tables: dict[str, dict[str, dict[str, Any]]] = {}
+    for match in _ALTER_TABLE_RE.finditer(text):
+        table_name = match.group(1).lower()
+        body = match.group(2)
+        if "add column" not in body.lower():
+            continue
+        columns: dict[str, dict[str, Any]] = {}
+        for segment in _split_columns(body):
+            cleaned = re.sub(
+                r"^\s*ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?",
+                "",
+                segment.strip(),
+                flags=re.IGNORECASE,
+            )
+            if cleaned == segment.strip():
+                continue
+            parsed = _parse_column(cleaned)
+            if parsed is None:
+                continue
+            column_name, details = parsed
+            columns[column_name] = details
+        if columns:
+            tables.setdefault(table_name, {}).update(columns)
     return tables
 
 
@@ -215,7 +240,10 @@ def parse_all_migrations(paths: tuple[Path, ...]) -> dict[str, dict[str, dict[st
     for path in paths:
         if not path.exists():
             continue
-        merged.update(parse_sql_schema(path))
+        for table_name, columns in parse_sql_schema(path).items():
+            merged.setdefault(table_name, {}).update(columns)
+        for table_name, columns in parse_alter_add_columns(path).items():
+            merged.setdefault(table_name, {}).update(columns)
     return merged
 
 

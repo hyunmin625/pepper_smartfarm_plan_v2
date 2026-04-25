@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--api-key", default=None)
     parser.add_argument("--cases-file", action="append", required=True)
     parser.add_argument("--real-case", action="store_true", help="Apply real ops shadow-case rules.")
+    parser.add_argument("--expected-date", default=None, help="Expected YYYYMMDD for real ops case date consistency.")
     parser.add_argument("--batch-size", type=int, default=25)
     parser.add_argument("--gate", choices=("rollback", "hold", "promote"), default="hold")
     parser.add_argument("--reset", action="store_true", help="Rotate the audit log before the first batch.")
@@ -52,7 +53,12 @@ def main() -> int:
     existing_ids = set()
     if args.real_case and not args.reset:
         existing_ids = load_existing_request_ids([Path(args.audit_log)])
-    validation_errors = validate_case_rows(case_rows, real_case=args.real_case, existing_request_ids=existing_ids)
+    validation_errors = validate_case_rows(
+        case_rows,
+        real_case=args.real_case,
+        existing_request_ids=existing_ids,
+        expected_date=args.expected_date,
+    )
     if validation_errors:
         print(
             json.dumps(
@@ -84,6 +90,7 @@ def main() -> int:
                     "stage": "validate",
                     "case_rows": len(cases),
                     "real_case": args.real_case,
+                    "expected_date": args.expected_date,
                     "output_prefix": output_prefix.as_posix(),
                 },
                 ensure_ascii=False,

@@ -63,20 +63,33 @@ python3 scripts/run_phase_p_quality_gate.py
 python3 scripts/validate_shadow_cases.py \
   --cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl \
   --existing-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
-  --real-case
+  --real-case \
+  --expected-date YYYYMMDD
 ```
 
-검증 기준은 필수 필드, task/context 정렬, operator outcome, request_id 중복, seed/offline eval_set_id 금지다.
+검증 기준은 필수 필드, task/context 정렬, operator outcome, request_id 중복, seed/offline eval_set_id 금지, 파일명/request_id/eval_set_id의 `YYYYMMDD` 일치다.
 
 ## 적재와 리포트
 
 로컬 ops-api PostgreSQL stack이 실행 중일 때는 전체 파이프라인을 한 번에 실행한다.
+
+하루 단위 운영 intake는 아래 runner를 우선 사용한다.
+
+```bash
+python3 scripts/run_real_shadow_daily_intake.py \
+  --date YYYYMMDD \
+  --base-url http://127.0.0.1:8000 \
+  --cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl
+```
+
+이 runner는 strict case validation, `/shadow/cases/capture`, window report, residual summary, runtime gate blocker report를 묶는다.
 
 ```bash
 python3 scripts/run_shadow_mode_ops_pipeline.py \
   --base-url http://127.0.0.1:8000 \
   --cases-file data/ops/shadow_mode_cases_YYYYMMDD.jsonl \
   --real-case \
+  --expected-date YYYYMMDD \
   --gate hold \
   --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json \
   --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json

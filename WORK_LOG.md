@@ -1940,3 +1940,23 @@
 - `/dashboard/data.runtime_gate`에 `open_residual_count`, `critical_residual_count`, `unverified_fix_count`를 추가했다. open 또는 critical residual이 있으면 gate blocker에 `shadow_residuals_open` 또는 `critical_shadow_residuals_open`이 표시된다.
 - Shadow Mode 뷰에 `Real Shadow Residuals` 카드를 추가해 total/open/critical/fixed-unverified, owner별 count, 최근 residual과 expected fix를 표시한다.
 - `docs/real_shadow_daily_intake_checklist.md`와 `docs/policy_event_filter_performance_plan.md`를 추가했다. 전자는 하루 운영 후 case 검증 → ops-api 적재 → window report → backlog → summary → dashboard 확인 순서를 고정하고, 후자는 현행 JSON 후처리 필터의 scan limit과 장기 link table 설계를 기록한다.
+
+---
+
+## 2026-04-26 — Daily real shadow intake + indexed policy filter + dashboard v2 live data
+
+### Real shadow daily runner
+- `scripts/run_real_shadow_daily_intake.py`를 추가했다. 실제 운영 하루 단위로 `validate_shadow_cases.py --real-case --expected-date` → `run_shadow_mode_ops_pipeline.py` → residual backlog validate/report → runtime gate blocker report를 실행하고, candidate manifest가 주어지면 challenger preflight output prefix까지 고정한다.
+- `scripts/validate_shadow_cases.py`는 real-case에서 파일명 `shadow_mode_cases_YYYYMMDD`, `request_id=prod-shadow-YYYYMMDD-NNN`, `metadata.eval_set_id=shadow-prod-YYYYMMDD`가 같은 날짜인지 검사한다. `push_shadow_cases_to_ops_api.py`와 `run_shadow_mode_ops_pipeline.py`도 `--expected-date`를 전달받는다.
+- `scripts/report_runtime_gate_blockers.py`를 추가했다. `/dashboard/data.runtime_gate` 또는 저장된 JSON payload에서 `submit_allowed`, blocker 목록, approval/policy/residual count, next action을 JSON/Markdown으로 출력한다.
+
+### Policy event filter normalization
+- `infra/postgres/006_policy_event_policy_links.sql`을 추가했다. `policy_events.policy_ids_json`을 backfill해 `policy_event_policy_links(policy_event_id, policy_id)`에 넣고 `(policy_id, policy_event_id DESC)` index를 생성한다.
+- `PolicyEventPolicyLinkRecord` ORM 모델과 `_add_policy_event()` helper를 추가했다. policy event 생성 시 legacy `policy_ids_json`과 link row를 동시에 기록한다.
+- `/policies/events?policy_id=...`와 `/policies/{policy_id}/history`는 JSON 후처리 scan 대신 link table join을 사용한다. `scripts/validate_policy_event_link_table.py`가 PostgreSQL-only smoke로 link row 생성과 필터 결과를 검증한다.
+
+### Dashboard v2 + retriever gate
+- 실제 로드되는 `ops-api/ops_api/static/dashboard_v2/src/bundle.jsx`에 `fetchDashboardV2Data()`와 `postDashboardV2Action()`을 추가했다. Overview의 todo/approval/zones/timeline은 `/dashboard/data`를 우선 사용하고, Decisions 화면의 approve/reject는 `/actions/approve|reject`로 연결된다.
+- `scripts/validate_ops_api_dashboard_v2.py`에 `/dashboard/data`, `fetchDashboardV2Data`, action hook marker 검증을 추가했다.
+- `scripts/validate_zero_cost_retriever_regression.py`를 추가했다. 기본값은 `keyword`와 `local_hybrid`만 평가하고, 각각 recall@5 `0.90`, `0.85` 이상을 요구한다. OpenAI-backed retriever는 `OPENAI_LIVE_RETRIEVER_SMOKE=1` 없이는 거부한다.
+- `scripts/run_phase_p_quality_gate.py`에 vector retriever static smoke, zero-cost retriever regression, runtime gate blocker report, policy event link smoke, dashboard v2 smoke를 포함했다.

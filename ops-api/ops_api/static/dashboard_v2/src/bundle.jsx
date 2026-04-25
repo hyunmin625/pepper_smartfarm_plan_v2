@@ -184,6 +184,139 @@ function Dot({ state }) {
   return <span className={`dot ${cls}`}></span>;
 }
 
+async function fetchDashboardV2Data() {
+  const res = await fetch("/dashboard/data", { credentials: "same-origin" });
+  if (!res.ok) throw new Error(`dashboard data ${res.status}`);
+  const payload = await res.json();
+  return payload.data || payload;
+}
+
+async function postDashboardV2Action(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.json()).detail || ""; } catch(e) {}
+    throw new Error(detail || `${path} ${res.status}`);
+  }
+  const payload = await res.json();
+  return payload.data || payload;
+}
+
+function useDashboardV2Data(refreshToken = 0) {
+  const [state, setState] = React.useState({ loading: true, error: null, data: null });
+  React.useEffect(() => {
+    let alive = true;
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    fetchDashboardV2Data()
+      .then(data => { if (alive) setState({ loading: false, error: null, data }); })
+      .catch(error => { if (alive) setState({ loading: false, error, data: null }); });
+    return () => { alive = false; };
+  }, [refreshToken]);
+  return state;
+}
+
+function formatOpsTime(value) {
+  if (!value) return "방금 전";
+  const ts = new Date(value).getTime();
+  if (!Number.isFinite(ts)) return String(value);
+  const diffMin = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (diffMin < 1) return "방금 전";
+  if (diffMin < 60) return `${diffMin}분 전`;
+  const diffHour = Math.round(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}시간 전`;
+  return `${Math.round(diffHour / 24)}일 전`;
+}
+
+function opsRiskToUi(riskLevel, status) {
+  const raw = String(riskLevel || status || "").toLowerCase();
+  if (raw.includes("critical") || raw.includes("blocked") || raw.includes("fault")) return "crit";
+  if (raw.includes("high") || raw.includes("approval") || raw.includes("pending") || raw.includes("medium")) return "warn";
+  return "ok";
+}
+
+function mapOpsDecisionToApproval(row) {
+  const out = row.validated_output || {};
+  const actions = out.recommended_actions || out.robot_tasks || [];
+  const reasonList = out.diagnosis || out.reason_codes || row.validator_reason_codes || [];
+  const summary = out.situation_summary || out.summary || row.current_state_summary || `${row.task_type} 검토가 필요합니다.`;
+  const plan = actions.length ? actions.map((action, index) => {
+    const target = action.target || {};
+    return {
+      device: target.target_id || action.candidate_id || action.target_id || row.zone_id || `대상 ${index + 1}`,
+      action: action.action_type || action.task_type || action.decision || "operator_review",
+      etc: action.cooldown_minutes != null ? `${action.cooldown_minutes}분 cooldown` : (action.priority || "검토"),
+    };
+  }) : [{
+    device: row.zone_id || "운영 구역",
+    action: out.decision || "operator_review",
+    etc: row.status || "evaluated",
+  }];
+  return {
+    id: `decision-${row.decision_id}`,
+    decisionId: row.decision_id,
+    zone: row.zone_id || "전체",
+    risk: opsRiskToUi(out.risk_level, row.status) === "ok" ? "ok" : "warn",
+    summary,
+    reasons: reasonList.length ? reasonList.slice(0, 5) : [row.task_type || "AI decision", row.status || "evaluated"],
+    plan,
+    impact: actions[0]?.expected_effect || out.expected_effect || "승인 후 정책/게이트 결과가 감사 로그에 기록됩니다.",
+    createdAt: formatOpsTime(row.created_at),
+    confidence: typeof out.confidence === "number" ? out.confidence : 0.72,
+    raw: row,
+  };
+}
+
+function mapOpsDashboardData(data) {
+  if (!data) return null;
+  const summary = data.summary || {};
+  const alerts = data.alerts || [];
+  const pending = (data.decisions || [])
+    .filter(row => row.runtime_mode === "approval" && row.status === "evaluated")
+    .slice(0, 8)
+    .map(mapOpsDecisionToApproval);
+  const zones = (data.zones || []).slice(0, 6).map(zone => {
+    const state = opsRiskToUi(zone.risk_level, zone.status);
+    const deviceStatus = zone.device_status || {};
+    return {
+      name: zone.zone_id || "zone",
+      crop: zone.zone_type || "적고추",
+      state,
+      note: zone.current_state_summary || zone.description || zone.status || "상태 기록 대기",
+      temp: deviceStatus.air_temp_c ?? "--",
+      hum: deviceStatus.rh_pct ?? "--",
+    };
+  });
+  const timeline = [
+    ...alerts.slice(0, 4).map(alert => ({
+      t: formatOpsTime(alert.created_at),
+      icon: alert.severity === "critical" ? "error" : "warning",
+      text: alert.summary || alert.alert_type,
+      state: alert.severity === "critical" ? "crit" : "warn",
+    })),
+    ...(data.policy_events || []).slice(0, 3).map(event => ({
+      t: formatOpsTime(event.created_at),
+      icon: "policy",
+      text: `${event.event_type} · ${(event.policy_ids || []).join(", ") || event.request_id}`,
+      state: event.event_type === "blocked" ? "crit" : "warn",
+    })),
+  ];
+  return {
+    todo: {
+      pendingApprovals: (summary.approval_pending_count || 0) + (summary.automation_pending_count || 0),
+      criticalAlerts: alerts.filter(a => a.severity === "critical" || a.severity === "crit").length,
+      warnings: alerts.filter(a => a.severity !== "critical" && a.severity !== "crit").length + (summary.automation_fault_count || 0),
+    },
+    pending,
+    zones: zones.length ? zones : MOCK.zones,
+    timeline: timeline.length ? timeline : MOCK.timeline,
+  };
+}
+
 // Sparkline SVG from 0..1 array
 function Sparkline({ points, tone = "brand", width = 120, height = 34, showArea = true }) {
   if (!points?.length) return null;
@@ -636,6 +769,12 @@ function GreenhouseMini() {
 }
 
 function Dashboard({ tweaks, setRoute, onOpenApproval }) {
+  const ops = useDashboardV2Data();
+  const live = mapOpsDashboardData(ops.data);
+  const todo = live?.todo || MOCK.todo;
+  const pendingItems = live?.pending || MOCK.pending;
+  const zoneItems = live?.zones || MOCK.zones;
+  const timelineItems = live?.timeline || MOCK.timeline;
   return (
     <div className="p-6 space-y-6">
       {/* Hero */}
@@ -647,7 +786,7 @@ function Dashboard({ tweaks, setRoute, onOpenApproval }) {
           </div>
           <div className="text-[12.5px]" style={{ color: "var(--ink-soft)" }}>2026-04-21 화요일 · 오후 2:34</div>
         </div>
-        <HeroTodo todo={MOCK.todo} onNav={setRoute} layout={tweaks.dashboardLayout} />
+        <HeroTodo todo={todo} onNav={setRoute} layout={tweaks.dashboardLayout} />
       </section>
 
       {/* Metrics */}
@@ -678,7 +817,7 @@ function Dashboard({ tweaks, setRoute, onOpenApproval }) {
             <button className="btn btn-sm" onClick={() => setRoute("decisions")}>전체 보기 <Icon name="arrow_forward" style={{fontSize:16}}/></button>
           } />
           <div className="space-y-3">
-            {MOCK.pending.map(p => (
+            {pendingItems.length ? pendingItems.slice(0, 3).map(p => (
               <div key={p.id} className={`card p-5 rail-${p.risk}`}>
                 <div className="flex items-start gap-3">
                   <div className="rounded-lg flex items-center justify-center shrink-0" style={{ width: 38, height: 38, background: "var(--brand-tint)" }}>
@@ -703,7 +842,13 @@ function Dashboard({ tweaks, setRoute, onOpenApproval }) {
                   <button className="btn btn-ghost btn-sm ml-auto" onClick={() => onOpenApproval(p)}>상세 근거 <Icon name="arrow_forward" style={{fontSize:16}}/></button>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="card p-6 text-center" style={{ borderStyle: "dashed", background: "transparent" }}>
+                <Icon name="task_alt" style={{ fontSize: 26, color: "var(--ok)" }} />
+                <div className="font-display font-semibold mt-2" style={{ fontSize: 15 }}>승인 대기 항목이 없습니다</div>
+                <div className="text-[13px]" style={{ color: "var(--ink-soft)" }}>새 권고가 도착하면 여기에 표시됩니다.</div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -712,7 +857,7 @@ function Dashboard({ tweaks, setRoute, onOpenApproval }) {
           <div>
             <SectionHeader title="구역" sub="클릭하면 해당 구역의 24시간 추이를 확인합니다." />
             <div className="grid-auto resp-2col" style={{ gridTemplateColumns: "1fr 1fr" }}>
-              {MOCK.zones.map(z => <ZoneTile key={z.name} z={z} onClick={() => setRoute("zones")} />)}
+              {zoneItems.map(z => <ZoneTile key={z.name} z={z} onClick={() => setRoute("zones")} />)}
             </div>
           </div>
 
@@ -721,7 +866,7 @@ function Dashboard({ tweaks, setRoute, onOpenApproval }) {
           <div>
             <SectionHeader title="최근 이벤트" sub="지난 1시간 · 자동·수동 이벤트" right={<button className="btn btn-ghost btn-sm">모두 보기</button>} />
             <div className="card px-4">
-              {MOCK.timeline.map((t,i) => <TimelineRow key={i} item={t} />)}
+              {timelineItems.map((t,i) => <TimelineRow key={i} item={t} />)}
             </div>
           </div>
         </section>
@@ -905,11 +1050,36 @@ function DecisionsPage({ devViewUnlocked, tweaks }) {
   const [openItem, setOpenItem] = React.useState(null);
   const [toast, setToast] = React.useState(null);
   const [filter, setFilter] = React.useState("all");
-  const items = MOCK.pending;
+  const [refreshToken, setRefreshToken] = React.useState(0);
+  const ops = useDashboardV2Data(refreshToken);
+  const live = mapOpsDashboardData(ops.data);
+  const allItems = ops.data && !ops.error ? (live?.pending || []) : MOCK.pending;
+  const items = allItems.filter(item => filter === "all" ? true : filter === "mine" ? true : item.risk === filter);
+  const counts = {
+    all: allItems.length,
+    warn: allItems.filter(item => item.risk === "warn").length,
+    ok: allItems.filter(item => item.risk === "ok").length,
+    mine: allItems.length,
+  };
 
   const handle = (action) => (d) => {
-    setToast({ kind: action, zone: d.zone });
-    setTimeout(() => setToast(null), 2800);
+    const run = async () => {
+      try {
+        if (d.decisionId) {
+          await postDashboardV2Action(action === "approved" ? "/actions/approve" : "/actions/reject", {
+            decision_id: d.decisionId,
+            actor_id: "dashboard-v2-operator",
+            reason: `dashboard-v2 ${action}`,
+          });
+          setRefreshToken(token => token + 1);
+        }
+        setToast({ kind: action, zone: d.zone });
+      } catch (error) {
+        setToast({ kind: "failed", zone: error.message || d.zone });
+      }
+      setTimeout(() => setToast(null), 2800);
+    };
+    run();
   };
 
   return (
@@ -919,7 +1089,7 @@ function DecisionsPage({ devViewUnlocked, tweaks }) {
         sub="AI가 권고한 조치. 한 문장으로 요약하고, 근거와 실행 계획을 함께 보여줍니다."
         right={
           <div className="flex items-center gap-2">
-            {[["all","전체",items.length],["warn","주의",1],["ok","안전",1],["mine","내 담당",2]].map(([k,l,n]) => (
+            {[["all","전체",counts.all],["warn","주의",counts.warn],["ok","안전",counts.ok],["mine","내 담당",counts.mine]].map(([k,l,n]) => (
               <button key={k} onClick={()=>setFilter(k)} className={`btn btn-sm ${filter===k ? "" : "btn-ghost"}`}>
                 {l} <span className="tnum" style={{ color: "var(--ink-soft)", marginLeft: 4 }}>{n}</span>
               </button>
@@ -953,9 +1123,9 @@ function DecisionsPage({ devViewUnlocked, tweaks }) {
 
       {toast && (
         <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 60 }}>
-          <div className="sheet" style={{ background: toast.kind === "approved" ? "var(--ok)" : "var(--ink)", color: "#fff", padding: "12px 18px", borderRadius: 10, boxShadow: "var(--shadow-float)", display: "flex", alignItems: "center", gap: 10, fontSize: 14, fontWeight: 600 }}>
+          <div className="sheet" style={{ background: toast.kind === "approved" ? "var(--ok)" : toast.kind === "failed" ? "var(--crit)" : "var(--ink)", color: "#fff", padding: "12px 18px", borderRadius: 10, boxShadow: "var(--shadow-float)", display: "flex", alignItems: "center", gap: 10, fontSize: 14, fontWeight: 600 }}>
             <Icon name={toast.kind === "approved" ? "check_circle" : "cancel"} />
-            {toast.zone} 권고를 {toast.kind === "approved" ? "승인했습니다. 실행 중…" : "거절했습니다."}
+            {toast.kind === "failed" ? toast.zone : `${toast.zone} 권고를 ${toast.kind === "approved" ? "승인했습니다. 실행 중…" : "거절했습니다."}`}
           </div>
         </div>
       )}
@@ -2432,4 +2602,3 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
-

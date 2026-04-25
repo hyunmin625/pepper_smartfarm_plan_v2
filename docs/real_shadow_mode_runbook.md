@@ -39,7 +39,8 @@
 python3 scripts/validate_shadow_cases.py \
   --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
   --existing-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
-  --real-case
+  --real-case \
+  --expected-date 20260425
 ```
 
 경로 리허설만 필요한 경우에는 비용 없는 샘플을 만든 뒤 real-case 옵션 없이 검증한다.
@@ -61,12 +62,22 @@ Phase P 전체 품질 게이트는 아래 명령으로 묶어 실행한다.
 python3 scripts/run_phase_p_quality_gate.py
 ```
 
+실제 운영 하루 intake는 아래 runner를 우선 사용한다.
+
+```bash
+python3 scripts/run_real_shadow_daily_intake.py \
+  --date 20260425 \
+  --base-url http://127.0.0.1:8000 \
+  --cases-file data/ops/shadow_mode_cases_20260425.jsonl
+```
+
 ops-api 호출 없이 runner 경로만 확인할 때는 아래처럼 실행한다.
 
 ```bash
 python3 scripts/push_shadow_cases_to_ops_api.py \
   --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
   --real-case \
+  --expected-date 20260425 \
   --validate-only
 ```
 
@@ -82,6 +93,8 @@ bash scripts/run_ops_api_postgres_stack.sh
 .venv/bin/python scripts/push_shadow_cases_to_ops_api.py \
   --base-url http://127.0.0.1:8000 \
   --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
+  --real-case \
+  --expected-date 20260425 \
   --append \
   --batch-size 25 \
   --gate hold
@@ -113,6 +126,7 @@ python3 scripts/run_shadow_mode_ops_pipeline.py \
   --base-url http://127.0.0.1:8000 \
   --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
   --real-case \
+  --expected-date 20260425 \
   --gate hold \
   --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151.json \
   --candidate-manifest artifacts/fine_tuning/runs/ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846.json
