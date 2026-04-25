@@ -1906,4 +1906,6 @@
 - `.env` PostgreSQL 설정으로 `validate_shadow_runner_gate.py` 실행: promote window 통과, mismatch injection 후 hold 강등, gate=hold 통과 확인.
 - `bash scripts/run_ops_api_postgres_stack.sh`로 localhost ops-api를 띄운 뒤 `push_shadow_cases_to_ops_api.py --gate hold`로 day0 seed `12건` 적재를 반복했다. `/shadow/window`는 `decision_count 24`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`.
 - 같은 ops-api audit log(`artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl`)를 `scripts/build_shadow_mode_window_report.py`로 고정해 `artifacts/reports/shadow_mode_ops_api_seed_window_20260425.json`과 `.md`를 생성했다. seed replay가 반복된 window라 승격 근거는 아니며, 다음 단계는 실제 운영 unique case 누적이다.
+- 커밋 `19bf6f8`(`Record ops-api shadow window report`)을 원격 `master`에 push했다.
+- seed window report를 `scripts/build_challenger_submit_preflight.py --real-shadow-report`에 연결해 `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.json`과 `.md`를 생성했다. 결과는 `real_shadow_mode_status=hold`, `ds_v12 blocked`, `ds_v13 blocked`다.
 - `validate_vector_retrievers.py`는 OpenAI live query를 skip하고 통과했다. zero-cost retriever benchmark는 동일하게 `keyword recall@5 0.9444`, `local_hybrid 0.8968`, `tfidf 0.7698`, `local_embed 0.7540`이다.

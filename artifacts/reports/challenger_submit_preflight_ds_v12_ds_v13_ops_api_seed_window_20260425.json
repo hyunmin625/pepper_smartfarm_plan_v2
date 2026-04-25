@@ -1,0 +1,65 @@
+{
+  "baseline_model": "ds_v11/prompt_v5_methodfix_batch14",
+  "blind_holdout50_validator_pass_rate": 0.9,
+  "blind_holdout50_validator_promotion": "hold",
+  "synthetic_shadow_day0_agreement_rate": 0.6667,
+  "synthetic_shadow_day0_promotion": "hold",
+  "offline_shadow_agreement_rate": 0.92,
+  "offline_shadow_promotion": "promote",
+  "real_shadow_mode_status": "hold",
+  "real_shadow_report_id": "shadow-window-ft:gpt-4.1-mini-2025-04-14:hyunmin:ft-sft-gpt41mini-ds-v11-prompt-v5-methodfix-batch14-eval-v2-2026:DTryNJg3",
+  "candidates": [
+    {
+      "candidate_name": "ft-sft-gpt41mini-ds_v12-prompt_v5_methodfix_batch17_hardcase-eval_v3-20260413-035151",
+      "dataset_version": "ds_v12",
+      "prompt_version": "prompt_v5_methodfix_batch17_hardcase",
+      "eval_version": "eval_v3",
+      "model_version": "pepper-ops-sft-v1.9.0",
+      "manifest_status": "prepared",
+      "mode": "dry_run",
+      "training_rows": 815,
+      "validation_rows": 57,
+      "notes": "batch16+batch17+hard-case oversampling dry-run only; blocked until synthetic shadow day0 improves",
+      "blind_holdout50_validator_pass_rate": 0.9,
+      "blind_holdout50_validator_promotion": "hold",
+      "synthetic_shadow_day0_agreement_rate": 0.6667,
+      "synthetic_shadow_day0_promotion": "hold",
+      "offline_shadow_agreement_rate": 0.92,
+      "offline_shadow_promotion": "promote",
+      "real_shadow_mode_status": "hold",
+      "preferred_if_unblocked": false,
+      "submit_recommendation": "blocked",
+      "blocking_reasons": [
+        "blind_holdout50_validator 0.9000 < 0.9500",
+        "synthetic_shadow_day0 is hold (agreement=0.6667)",
+        "real_shadow_mode_status is hold"
+      ]
+    },
+    {
+      "candidate_name": "ft-sft-gpt41mini-ds_v13-prompt_v5_methodfix_batch18_hardcase-eval_v4-20260413-075846",
+      "dataset_version": "ds_v13",
+      "prompt_version": "prompt_v5_methodfix_batch18_hardcase",
+      "eval_version": "eval_v4",
+      "model_version": "pepper-ops-sft-v1.10.0",
+      "manifest_status": "prepared",
+      "mode": "dry_run",
+      "training_rows": 822,
+      "validation_rows": 60,
+      "notes": "batch18 synthetic shadow day0 residual plus hard-case oversampling dry-run only; blocked until runtime shadow improves",
+      "blind_holdout50_validator_pass_rate": 0.9,
+      "blind_holdout50_validator_promotion": "hold",
+      "synthetic_shadow_day0_agreement_rate": 0.6667,
+      "synthetic_shadow_day0_promotion": "hold",
+      "offline_shadow_agreement_rate": 0.92,
+      "offline_shadow_promotion": "promote",
+      "real_shadow_mode_status": "hold",
+      "preferred_if_unblocked": true,
+      "submit_recommendation": "blocked",
+      "blocking_reasons": [
+        "blind_holdout50_validator 0.9000 < 0.9500",
+        "synthetic_shadow_day0 is hold (agreement=0.6667)",
+        "real_shadow_mode_status is hold"
+      ]
+    }
+  ]
+}

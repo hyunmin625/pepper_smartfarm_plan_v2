@@ -137,4 +137,6 @@ python3 scripts/build_challenger_submit_preflight.py \
 - 누적 audit log: `artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl`
 - window report: `artifacts/reports/shadow_mode_ops_api_seed_window_20260425.json`, `artifacts/reports/shadow_mode_ops_api_seed_window_20260425.md`
 - 결과: `decision_count 24`, `operator_agreement_rate 0.6667`, `critical_disagreement_count 0`, `promotion_decision hold`
+- preflight 연결: `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.json`, `artifacts/reports/challenger_submit_preflight_ds_v12_ds_v13_ops_api_seed_window_20260425.md`
+- preflight 결과: `real_shadow_mode_status hold`, `ds_v12 blocked`, `ds_v13 blocked`
 - 해석: 적재/집계 경로는 동작하지만, seed residual이 반복되므로 승격 판단은 계속 `hold`다. 실제 운영 case는 request_id를 일자/zone/action 기준으로 유니크하게 만든다.
