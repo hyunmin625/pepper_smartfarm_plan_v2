@@ -1747,7 +1747,7 @@
 
 ### Phase K: Fine-tune iteration 공식 종결 + retriever 방향 전환
 - `artifacts/reports/fine_tune_iteration_final_postmortem.md` 신규. **3번 fine-tune 시도(ds_v12, ds_v12.1, ds_v11.B1) 모두 ds_v11 baseline을 이기지 못함**을 공식 문서화. 근본 한계는 346 rows / 14 카테고리 데이터셋의 구조적 상한이며 AND-grading 해상도가 target 해결과 regression을 상쇄한다는 점. 3개 실패 모델은 debug 자료로만 보존, production 배선 금지. batch22 36건은 미래 데이터셋 증량 프로젝트에 재사용 가능하도록 유지.
-- **Production retriever 승격**: `.env`에 `OPS_API_RETRIEVER_TYPE=openai` 추가 (기존 default `keyword`에서 명시적 전환). `ops-api/ops_api/config.py`의 `load_settings()`가 이 값을 읽고 `ops-api/ops_api/app.py::create_app()`이 `create_retriever("openai", ...)`로 `OpenAIEmbeddingRetriever`를 주입한다. Boot smoke 통과: `OpenAIEmbeddingRetriever rows=226`, routes 36. **recall@5 0.164→0.352 (2.1배), `safety_policy` 카테고리 0.000→0.542**.
+- **Production retriever 승격(당시 결정, 2026-04-25 비용 통제로 기본값 `keyword`로 supersede)**: `.env`에 `OPS_API_RETRIEVER_TYPE=openai` 추가 (기존 default `keyword`에서 명시적 전환). `ops-api/ops_api/config.py`의 `load_settings()`가 이 값을 읽고 `ops-api/ops_api/app.py::create_app()`이 `create_retriever("openai", ...)`로 `OpenAIEmbeddingRetriever`를 주입한다. Boot smoke 통과: `OpenAIEmbeddingRetriever rows=226`, routes 36. **recall@5 0.164→0.352 (2.1배), `safety_policy` 카테고리 0.000→0.542**.
 - **다음 개선 축**: (1) retriever recall hybrid RRF 개선, (2) shadow mode 실트래픽 수집, (3) validator rule 재검토 (B gpt-4.1 충돌 사례 참조), (4) 장기 데이터셋 3~5배 증량 프로젝트. Fine-tune 반복 iteration은 현 데이터셋 규모에서 종료.
 - 교훈:
   - Fine-tune persona는 얇은 층. 공격적 lr 한 번으로 base 쪽으로 overwrite 가능.
@@ -1832,7 +1832,7 @@
 - `scripts/benchmark_hybrid_retriever.py` 신규. `evals/rag_retrieval_eval_set.jsonl` (110) + `evals/rag_stage_retrieval_eval_set.jsonl` (16) 총 **126 case**에 대해 recall@5, any_hit@5, MRR을 keyword / tfidf / openai / hybrid 4경로로 측정하는 벤치마크 툴.
 - **OpenAI quota 고갈**: `text-embedding-3-small` 호출이 429 `insufficient_quota`로 전량 실패. openai/hybrid retriever 본 라운드 측정 불가. 단일 `embeddings.create` 호출도 재현 실패.
 - Local-only 재실행 결과: **keyword 0.9444 / tfidf 0.7698**. 단 이 eval set은 token-rich 쿼리로 구성되어 keyword에 유리하다 — Phase F의 decision eval 250 case(keyword 0.164 / openai 0.352)와는 축이 다르다.
-- **운영 영향**: `.env`의 `OPS_API_RETRIEVER_TYPE=openai` 설정은 quota 복구 전까지 ops-api live 검색을 실패시킨다. 한시적으로 `OPS_API_RETRIEVER_TYPE=keyword`로 롤백 검토가 권장된다.
+- **운영 영향**: `.env`의 `OPS_API_RETRIEVER_TYPE=openai` 설정은 quota 복구 전까지 ops-api live 검색을 실패시킨다. 2026-04-25 비용 통제 작업에서 `.env.example` 기본값은 `OPS_API_RETRIEVER_TYPE=keyword`로 롤백했고, OpenAI live query는 env opt-in으로 막았다.
 - 결정 이관: hybrid 승격 여부 판정은 quota 복구 이후 Phase F 방식(decision eval 250 case)으로 재실행한다.
 - 산출물: `artifacts/reports/hybrid_retriever_benchmark.md` (포스트모템), `hybrid_retriever_benchmark.json` (quota-failed run raw), `hybrid_retriever_benchmark_local_only.md` + `.json` (keyword + tfidf).
 
@@ -1847,3 +1847,27 @@
 - **효과 범위**: rubric 변경은 ds_v11 출력을 바꾸지 않는다(fine-tune 종결). 본 작업은 (a) 향후 라벨 기준 통일, (b) shadow mode operator agreement 기준 명문화, (c) validator scope 경계 명문화로 다른 에이전트의 실수 HSV 규칙 추가 방지를 목표로 한다.
 - 계획 doc: `docs/blind50_residual_post_ds_v11_closure_plan.md` 신규. 5건별 처리 결정, 후속 트리거(shadow 50건 누적 또는 dataset scale-up 승인), validator 사용 금지 이유 명시.
 - `todo.md`의 L93 (blind50 잔여 5건 targeted fix 여부 확정)을 `[x]`로 닫았다.
+
+---
+
+## 2026-04-25 — Retriever 비용 통제 + 로컬 후보 + extended200 우선순위 정리
+
+### 비용/쿼터 통제
+- `.env.example`의 runtime retriever 기본값을 `OPS_API_RETRIEVER_TYPE=keyword`로 고정했다. OpenAI embedding retriever는 품질 실측 artifact와 code path는 유지하되, 운영 기본값이 아니라 명시 opt-in으로만 사용한다.
+- `OPENAI_LIVE_RETRIEVER_SMOKE=0`을 추가했다. `scripts/validate_vector_retrievers.py`는 기본 실행에서 OpenAI index JSON의 차원/문서 수만 확인하고, 실제 embedding query는 `OPENAI_LIVE_RETRIEVER_SMOKE=1`일 때만 수행한다.
+- `scripts/benchmark_hybrid_retriever.py`도 기본 retriever set을 zero-cost(`keyword`, `tfidf`, `local_embed`, `local_hybrid`)로 바꾸고, `openai`/`hybrid` benchmark는 `OPENAI_LIVE_RETRIEVER_SMOKE=1` 없이는 거부하도록 막았다.
+- 이전 stabilization commit `29f9fca`에서 stale `ds_v14` chat env 예시 제거, server smoke request_id unique 처리, policy enabled 상태 복원을 함께 반영했다.
+
+### 로컬 retriever 후보
+- `llm-orchestrator/llm_orchestrator/retriever_vector.py`에 dependency-free `LocalSemanticRagRetriever`와 keyword+local RRF `LocalHybridRagRetriever`를 추가했다.
+- factory alias: `local_embed`, `local_semantic`, `semantic`, `hashing`, `local_hybrid`, `keyword_local`, `keyword_semantic`.
+- `scripts/validate_vector_retrievers.py`가 `local_embed`/`local_hybrid` factory dispatch와 corpus chunk id invariant를 회귀한다.
+
+### Benchmark
+- 실행: `.venv/bin/python scripts/benchmark_hybrid_retriever.py --retrievers keyword tfidf local_embed local_hybrid --rag-index-path artifacts/rag_index/pepper_expert_with_farm_case_index.json --output-json artifacts/reports/local_retriever_benchmark.json --output-md artifacts/reports/local_retriever_benchmark.md`
+- 결과: `keyword recall@5 0.9444 / MRR 0.9114`, `local_hybrid 0.8968 / 0.7753`, `tfidf 0.7698 / 0.6060`, `local_embed 0.7540 / 0.7073`.
+- 결론: 이 126-case RAG eval은 token-rich corpus regression이라 keyword가 강하다. 비용 없는 후보는 구현됐지만 기본값 승격 기준은 아직 충족하지 못했으므로 runtime default는 `keyword`로 유지한다.
+
+### extended200 residual
+- `docs/extended200_residual_priority_plan.md`를 2026-04-25 기준 상태로 갱신했다.
+- `todo.md`의 extended200 validator 잔여 `42건` batch 설계 항목을 `[x]`로 닫았다. 다음 실행 단위는 `Batch21A risk_rubric_core` sample 설계/생성이다.

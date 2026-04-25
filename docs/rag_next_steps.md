@@ -38,20 +38,24 @@
 
 ## 2. Vector Search
 
-현재 검색은 keyword-only baseline, local vector hybrid, local-backed Chroma hybrid, OpenAI-backed Chroma hybrid가 모두 동작한다. 현재 기본 score는 OpenAI-backed Chroma에 local blend 4.0을 적용해 4모드 상위 성능을 맞춰 둔 상태다.
+현재 검색은 keyword-only baseline, local TF-IDF/SVD, dependency-free `local_embed`, `local_hybrid`, OpenAI embedding backend가 모두 동작한다. ops-api runtime 기본값은 비용/쿼터가 발생하지 않는 `keyword`이며, OpenAI embedding query는 명시 opt-in 경로로만 사용한다.
 
 구현 완료:
 
 - local TF-IDF + SVD vector 모델 유지 및 가중치 조정
+- dependency-free `LocalSemanticRagRetriever`와 `LocalHybridRagRetriever` 추가
 - ChromaDB persistent vector store 연동
 - `artifacts/chroma_db/pepper_expert_manifest_local.json`, `artifacts/chroma_db/pepper_expert_manifest_openai.json`에 embedding backend와 generated_at 기록
 - query embedding과 metadata filter를 결합한 hybrid retrieval 구현
 - keyword-only, local vector, local-backed Chroma 결과 비교
+- `scripts/validate_vector_retrievers.py`와 `scripts/benchmark_hybrid_retriever.py`는 기본 실행에서 OpenAI live query를 호출하지 않고, `OPENAI_LIVE_RETRIEVER_SMOKE=1`일 때만 quota-consuming query를 허용
+- 2026-04-25 local benchmark: `keyword recall@5 0.9444`, `local_hybrid 0.8968`, `tfidf 0.7698`, `local_embed 0.7540` (`artifacts/reports/local_retriever_benchmark.md`). 이 126-case suite는 token-rich corpus regression이므로 Phase F decision-eval benchmark와 별도로 해석한다.
 
 남은 구현:
 
 - 110개 eval을 140개 이상으로 확대해 현 기본 score가 유지되는지 재검증
-- keyword-only, local vector, local-backed Chroma, OpenAI-backed Chroma 4모드 결과를 고정 리포트로 관리
+- keyword-only, local vector, local-backed Chroma, OpenAI-backed Chroma, `local_hybrid` 결과를 고정 리포트로 관리
+- `local_hybrid`가 keyword 기본값을 넘기 전까지 runtime default는 `keyword` 유지
 - Semantic + Keyword 가중치 최적화
 
 운영 전 기준:

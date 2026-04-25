@@ -142,7 +142,7 @@
 - `docs/risk_level_rubric.md`와 `scripts/report_risk_slice_coverage.py`를 추가해 `risk_level` 정의와 critical slice 라벨 위반을 로컬에서 바로 감사할 수 있게 했다.
 - 사용자 지시 보강 완료: `safety_policy 34`, `sensor_fault 26`, `robot_task_prioritization 44`로 모두 `20+`를 넘겼다.
 - training critical slice 보강은 완료됐다: `evidence incomplete unknown 10`, `failure safe_mode 16`
-- 현재 남은 주요 부족분은 blind50 validator 잔여 실패 `5건`, extended200 validator 잔여 실패 `42건`, synthetic shadow day0 residual `4건` 축소, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 `ds_v12` frozen dry-run과 `ds_v13` next-only candidate 중 무엇을 실제 submit으로 승격할지 결정하는 일이다.
+- 현재 남은 주요 부족분은 synthetic shadow day0 residual `4건` 축소, 실제 현장 shadow mode 로그 확보, 그리고 그 이후 submit 후보 재검토다. blind50 validator 잔여 `5건`은 처리 기준이 정리됐고, extended200 validator 잔여 `42건`은 `docs/extended200_residual_priority_plan.md` 기준으로 Batch21A/B/C 우선순위 설계가 완료됐다.
 - 실제 제출 package와 현재 run 상태: [challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v11_prompt_v5_methodfix_batch14.md:1), [challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v12_prompt_v5_methodfix_batch17_hardcase.md:1), [challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md](/home/user/pepper-smartfarm-plan-v2/artifacts/fine_tuning/challenger_candidate_ds_v13_prompt_v5_methodfix_batch18_hardcase.md:1)
 - 센서 수집 계획 상세화: `zone/device/sample_rate` 기준 정리 완료
 - 센서 현장형 인벤토리 초안: 설치 수량, protocol, calibration, model_profile 반영 완료
@@ -174,6 +174,7 @@
   - local TF-IDF + SVD: hit rate `1.0`, MRR `1.0`
   - Chroma local: hit rate `1.0`, MRR `0.9955`
   - Chroma OpenAI embedding: hit rate `1.0`, MRR `0.9803`
+- ops-api runtime retriever 기본값은 비용 없는 `keyword`다. OpenAI embedding query는 `OPENAI_LIVE_RETRIEVER_SMOKE=1` 또는 retriever type 명시 opt-in일 때만 사용하고, `local_embed`/`local_hybrid`는 비용 없는 후보로 벤치마크 중이다.
 - multi-turn contextual retrieval 전략 문서화 완료
 - `region / season / cultivar / greenhouse_type` metadata filter가 JSON index와 search path에 실제 반영되도록 수정 완료
 - `farm_case` 운영 로그 환류 초안 작성 완료:

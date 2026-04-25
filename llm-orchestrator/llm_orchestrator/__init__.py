@@ -8,6 +8,8 @@ from .model_registry import ResolvedModelReference
 from .retriever import KeywordRagRetriever, RetrievedChunk
 from .retriever_vector import (
     HybridRagRetriever,
+    LocalHybridRagRetriever,
+    LocalSemanticRagRetriever,
     OpenAIEmbeddingRetriever,
     TfidfSvdRagRetriever,
     create_retriever,
@@ -17,6 +19,8 @@ from .tool_registry import ToolDefinition, available_tool_definitions, prompt_to
 
 __all__ = [
     "HybridRagRetriever",
+    "LocalHybridRagRetriever",
+    "LocalSemanticRagRetriever",
     "LLMDecisionEnvelope",
     "KeywordRagRetriever",
     "LLMOrchestratorService",

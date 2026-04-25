@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Validate llm_orchestrator.retriever_vector backends.
 
-Runs a handful of invariants against the two dense retriever classes
-(`TfidfSvdRagRetriever`, `OpenAIEmbeddingRetriever`) plus the keyword
-baseline, so we catch regressions before the orchestrator is wired to
-them in ops-api.
+Runs a handful of invariants against the local, OpenAI-backed, and keyword
+retriever classes, so we catch regressions before the orchestrator is wired
+to them in ops-api.
 
 Checks:
 
@@ -15,11 +14,13 @@ Checks:
   3. TfidfSvdRagRetriever.search() ranks results by descending score.
   4. `create_retriever("keyword")` dispatches to KeywordRagRetriever.
   5. `create_retriever("vector")` dispatches to TfidfSvdRagRetriever.
-  6. `create_retriever("unknown")` raises ValueError.
-  7. OpenAIEmbeddingRetriever loads the 1536-dim index cleanly (skipped
+  6. `create_retriever("local_embed")` dispatches to LocalSemanticRagRetriever.
+  7. `create_retriever("local_hybrid")` dispatches to LocalHybridRagRetriever.
+  8. `create_retriever("unknown")` raises ValueError.
+  9. OpenAIEmbeddingRetriever loads the 1536-dim index cleanly (skipped
      when `pepper_openai_embed_index.json` is missing — matches the
      skip-embeddings build mode).
-  8. OpenAIEmbeddingRetriever.search() — only if
+  10. OpenAIEmbeddingRetriever.search() — only if
      OPENAI_LIVE_RETRIEVER_SMOKE=1. One live query against the index;
      asserts recall shape.
 
@@ -50,6 +51,8 @@ from llm_orchestrator.retriever_vector import (  # noqa: E402
     DEFAULT_LOCAL_RAG_INDEX_PATH,
     DEFAULT_OPENAI_RAG_INDEX_PATH,
     OpenAIEmbeddingRetriever,
+    LocalHybridRagRetriever,
+    LocalSemanticRagRetriever,
     TfidfSvdRagRetriever,
     create_retriever,
 )
@@ -115,8 +118,50 @@ def main() -> int:
     vec = create_retriever("vector")
     _assert(isinstance(vec, TfidfSvdRagRetriever), "vector factory returns TfidfSvdRagRetriever")
 
-    # 6) unknown type raises
-    print("\n[6] create_retriever('unknown') raises")
+    # 6) factory → local semantic
+    print("\n[6] create_retriever('local_embed') dispatches to LocalSemanticRagRetriever")
+    local_embed = create_retriever("local_embed")
+    _assert(
+        isinstance(local_embed, LocalSemanticRagRetriever),
+        "local_embed factory returns LocalSemanticRagRetriever",
+    )
+    local_hits = local_embed.search(
+        query="작업자가 있는 곳에서 관수 readback 신호가 사라졌다",
+        task_type="failure_response",
+        zone_id="gh-01-zone-a",
+        growth_stage="fruit_expansion",
+        limit=5,
+    )
+    _assert(len(local_hits) <= 5, f"local_embed limit honored (got {len(local_hits)})")
+    _assert(
+        all(h.chunk_id in corpus_chunk_ids for h in local_hits),
+        "local_embed hits present in corpus",
+    )
+
+    # 7) factory → local hybrid
+    print("\n[7] create_retriever('local_hybrid') dispatches to LocalHybridRagRetriever")
+    local_hybrid = create_retriever("local_hybrid")
+    _assert(
+        isinstance(local_hybrid, LocalHybridRagRetriever),
+        "local_hybrid factory returns LocalHybridRagRetriever",
+    )
+    hybrid_hits = local_hybrid.search(
+        query="작업자가 있는 곳에서 관수 readback 신호가 사라졌다",
+        task_type="failure_response",
+        zone_id="gh-01-zone-a",
+        growth_stage="fruit_expansion",
+        limit=5,
+    )
+    keyword_chunk_ids = {str(row.get("chunk_id")) for row in kw.rows}
+    allowed_hybrid_ids = corpus_chunk_ids | keyword_chunk_ids
+    _assert(len(hybrid_hits) <= 5, f"local_hybrid limit honored (got {len(hybrid_hits)})")
+    _assert(
+        all(h.chunk_id in allowed_hybrid_ids for h in hybrid_hits),
+        "local_hybrid hits present in local or keyword corpus",
+    )
+
+    # 8) unknown type raises
+    print("\n[8] create_retriever('unknown') raises")
     raised = False
     try:
         create_retriever("flux_capacitor")
@@ -124,9 +169,9 @@ def main() -> int:
         raised = True
     _assert(raised, "unknown type raises ValueError")
 
-    # 7) OpenAI index static checks (skip if file missing). This validates
+    # 9) OpenAI index static checks (skip if file missing). This validates
     # the precomputed local artifact without creating a query embedding.
-    print("\n[7] OpenAI embedding index static checks")
+    print("\n[9] OpenAI embedding index static checks")
     if not DEFAULT_OPENAI_RAG_INDEX_PATH.exists():
         print("  skip: openai index not built (run build_rag_index.py without --skip-embeddings)")
     else:
@@ -141,9 +186,9 @@ def main() -> int:
         emb_len = len(openai_docs[0]["embedding"]) if openai_docs else 0
         _assert(emb_len == 1536, f"embedding dim=1536 (got {emb_len})")
 
-    # 8) OpenAI live search. This is intentionally opt-in even when
+    # 10) OpenAI live search. This is intentionally opt-in even when
     # OPENAI_API_KEY is present in .env, because the call consumes quota.
-    print("\n[8] OpenAIEmbeddingRetriever.search — live query")
+    print("\n[10] OpenAIEmbeddingRetriever.search — live query")
     if not _env_truthy("OPENAI_LIVE_RETRIEVER_SMOKE"):
         print("  skip: set OPENAI_LIVE_RETRIEVER_SMOKE=1 to run the quota-consuming live query")
     elif not DEFAULT_OPENAI_RAG_INDEX_PATH.exists():

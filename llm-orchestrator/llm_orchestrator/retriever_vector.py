@@ -11,6 +11,9 @@ service can swap backends at runtime via a single env var flag
 - `OpenAIEmbeddingRetriever`: reads the `embedding` field (1536-dim,
   text-embedding-3-small) and vectorizes each query via the OpenAI API
   at call time. Query latency ~200-500 ms, cost ~$0.000002 per call.
+- `LocalSemanticRagRetriever`: dependency-free local semantic candidate
+  using domain synonym expansion plus word/character n-gram feature hashing.
+  Pure offline, zero external calls.
 
 Phase F recall benchmark (250 eval cases):
 
@@ -30,6 +33,7 @@ import json
 import math
 import os
 import re
+from hashlib import blake2b
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +47,127 @@ DEFAULT_LOCAL_RAG_INDEX_PATH = (
 DEFAULT_OPENAI_RAG_INDEX_PATH = (
     REPO_ROOT / "artifacts" / "rag_index" / "pepper_openai_embed_index.json"
 )
+
+_SEMANTIC_GROUPS = [
+    {
+        "worker",
+        "worker_present",
+        "human",
+        "operator",
+        "person",
+        "작업자",
+        "사람",
+        "출입",
+        "인원",
+    },
+    {"manual", "manual_override", "override", "수동", "수동모드", "수동전환", "개입"},
+    {"safe_mode", "safemode", "estop", "emergency", "비상", "비상정지", "안전모드", "safe"},
+    {
+        "readback",
+        "ack",
+        "feedback",
+        "communication",
+        "comm",
+        "통신",
+        "응답",
+        "피드백",
+        "확인신호",
+    },
+    {"sensor", "stale", "missing", "bad", "flatline", "센서", "결측", "불량", "이상", "오류"},
+    {"irrigation", "watering", "valve", "drain", "관수", "급액", "배액", "밸브"},
+    {"fertigation", "nutrient", "ec", "ph", "양액", "비료", "영양", "농도"},
+    {
+        "rootzone",
+        "substrate",
+        "dryback",
+        "moisture",
+        "wilt",
+        "wilting",
+        "근권",
+        "배지",
+        "함수율",
+        "건조",
+        "시듦",
+        "위조",
+    },
+    {"alert", "alarm", "notify", "create_alert", "알림", "경보", "알람", "보고"},
+    {"approval", "audit", "policy", "block", "block_action", "승인", "감사", "정책", "차단"},
+    {
+        "robot",
+        "inspect_crop",
+        "manual_review",
+        "skip_area",
+        "로봇",
+        "점검",
+        "작물점검",
+        "수동검토",
+        "구역제외",
+    },
+]
+
+_SEMANTIC_EXPANSIONS: dict[str, set[str]] = {}
+for _group in _SEMANTIC_GROUPS:
+    _normalized_group = {item.lower() for item in _group}
+    for _term in _normalized_group:
+        _SEMANTIC_EXPANSIONS[_term] = _normalized_group
+
+
+def _stable_bucket(feature: str, dimension: int) -> int:
+    digest = blake2b(feature.encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, "big") % dimension
+
+
+def _add_sparse_feature(vector: dict[int, float], feature: str, weight: float, dimension: int) -> None:
+    if not feature:
+        return
+    idx = _stable_bucket(feature, dimension)
+    vector[idx] = vector.get(idx, 0.0) + weight
+
+
+def _normalize_sparse(vector: dict[int, float]) -> dict[int, float]:
+    norm = math.sqrt(sum(value * value for value in vector.values()))
+    if norm <= 0:
+        return {}
+    return {idx: value / norm for idx, value in vector.items()}
+
+
+def _sparse_dot(left: dict[int, float], right: dict[int, float]) -> float:
+    if len(left) > len(right):
+        left, right = right, left
+    return sum(value * right.get(idx, 0.0) for idx, value in left.items())
+
+
+def _flatten_metadata(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (int, float, bool)):
+        return [str(value)]
+    if isinstance(value, list):
+        flattened: list[str] = []
+        for item in value:
+            flattened.extend(_flatten_metadata(item))
+        return flattened
+    if isinstance(value, dict):
+        flattened = []
+        for key, item in value.items():
+            flattened.append(str(key))
+            flattened.extend(_flatten_metadata(item))
+        return flattened
+    return [str(value)]
+
+
+def _text_ngrams(text: str, *, min_n: int = 2, max_n: int = 3) -> list[str]:
+    compact = "".join(re.findall(r"[0-9a-z가-힣]+", text.lower()))
+    if len(compact) < min_n:
+        return []
+    ngrams: list[str] = []
+    for n in range(min_n, max_n + 1):
+        if len(compact) < n:
+            continue
+        ngrams.extend(compact[i : i + n] for i in range(len(compact) - n + 1))
+    return ngrams
 
 
 class TfidfSvdRagRetriever:
@@ -172,6 +297,208 @@ class TfidfSvdRagRetriever:
             )
             for sim, doc in top
         ]
+
+
+class LocalSemanticRagRetriever:
+    """Dependency-free local semantic retriever.
+
+    This is not a neural embedding model. It is a zero-cost candidate that
+    tries to capture domain-adjacent wording through:
+
+    - domain synonym expansion (`worker_present` ~= 작업자 ~= 사람 출입)
+    - word tokens from text + metadata
+    - character n-grams for Korean/English mixed queries
+    - deterministic feature hashing into a sparse normalized vector
+
+    The goal is to provide a stronger no-network candidate than plain
+    keyword overlap while keeping ops-api startup free of ML dependencies.
+    """
+
+    def __init__(
+        self,
+        *,
+        rag_index_path: Path | str | None = None,
+        dimension: int = 4096,
+    ) -> None:
+        self.dimension = dimension
+        path = Path(rag_index_path or DEFAULT_LOCAL_RAG_INDEX_PATH)
+        with path.open("r", encoding="utf-8") as handle:
+            index = json.load(handle)
+
+        self._token_pattern = re.compile(r"[0-9a-zA-Z가-힣_]+")
+        self._docs: list[dict[str, Any]] = []
+        for doc in index.get("documents") or []:
+            metadata = doc.get("metadata") or {}
+            chunk_id = doc.get("id")
+            if not chunk_id:
+                continue
+            text_parts = [
+                str(doc.get("text") or ""),
+                str(doc.get("chunk_summary") or ""),
+                *(_flatten_metadata(metadata)),
+            ]
+            searchable_text = " ".join(part for part in text_parts if part)
+            vector = self._vectorize(searchable_text, is_document=True)
+            if not vector:
+                continue
+            self._docs.append({
+                "chunk_id": chunk_id,
+                "document_id": metadata.get("document_id") or chunk_id,
+                "source_type": metadata.get("source_type", "unknown"),
+                "source_section": metadata.get("source_section"),
+                "trust_level": metadata.get("trust_level", "unknown"),
+                "growth_stage": metadata.get("growth_stage") or [],
+                "citation_required": bool(metadata.get("citation_required")),
+                "embedding": vector,
+                "text": doc.get("text") or "",
+                "chunk_summary": doc.get("chunk_summary") or "",
+            })
+
+    @property
+    def rows(self) -> list[dict[str, Any]]:
+        return self._docs
+
+    def _vectorize(self, text: str, *, is_document: bool = False) -> dict[int, float]:
+        vector: dict[int, float] = {}
+        tokens = [tok.lower() for tok in self._token_pattern.findall(text) if len(tok) >= 2]
+        for token in tokens:
+            _add_sparse_feature(vector, f"tok:{token}", 1.0, self.dimension)
+            for expanded in _SEMANTIC_EXPANSIONS.get(token, ()):
+                _add_sparse_feature(vector, f"sem:{expanded}", 1.35, self.dimension)
+
+        # Char n-grams are noisy but useful for Korean inflection and
+        # English/Korean mixed operational terms. Keep their weight lower
+        # than explicit tokens/synonyms so exact domain tags still dominate.
+        ngram_weight = 0.18 if is_document else 0.24
+        for ngram in _text_ngrams(text):
+            _add_sparse_feature(vector, f"ng:{ngram}", ngram_weight, self.dimension)
+        return _normalize_sparse(vector)
+
+    def search(
+        self,
+        *,
+        query: str,
+        task_type: str,
+        zone_id: str | None = None,
+        growth_stage: str | None = None,
+        limit: int = 5,
+    ) -> list[RetrievedChunk]:
+        full_query = " ".join(
+            part for part in [query, task_type, zone_id or "", growth_stage or ""] if part
+        )
+        q = self._vectorize(full_query)
+        if not q:
+            return []
+
+        scored: list[tuple[float, dict[str, Any]]] = []
+        for doc in self._docs:
+            sim = _sparse_dot(q, doc["embedding"])
+            if growth_stage and isinstance(doc.get("growth_stage"), list):
+                if growth_stage in doc["growth_stage"]:
+                    sim += 0.04
+            trust = str(doc.get("trust_level") or "").lower()
+            if trust == "high":
+                sim += 0.02
+            elif trust == "review_required":
+                sim -= 0.01
+            if sim > 0:
+                scored.append((sim, doc))
+
+        scored.sort(key=lambda item: (-item[0], str(item[1].get("chunk_id"))))
+        return [
+            RetrievedChunk(
+                chunk_id=doc["chunk_id"],
+                document_id=doc["document_id"],
+                chunk_summary=doc.get("chunk_summary", ""),
+                source_type=doc.get("source_type", "unknown"),
+                trust_level=doc.get("trust_level", "unknown"),
+                score=round(sim, 4),
+                source_url=None,
+                source_section=doc.get("source_section"),
+                citation_required=bool(doc.get("citation_required")),
+            )
+            for sim, doc in scored[:limit]
+        ]
+
+
+class LocalHybridRagRetriever:
+    """Reciprocal Rank Fusion of keyword + LocalSemanticRagRetriever."""
+
+    def __init__(
+        self,
+        *,
+        corpus_paths: list[Path] | None = None,
+        rag_index_path: Path | str | None = None,
+        rrf_k: int = 60,
+    ) -> None:
+        from .retriever import KeywordRagRetriever
+
+        self._keyword = KeywordRagRetriever(corpus_paths=corpus_paths)
+        self._local_semantic = LocalSemanticRagRetriever(rag_index_path=rag_index_path)
+        self._rrf_k = rrf_k
+        self._rows = self._local_semantic.rows
+
+    @property
+    def rows(self) -> list[dict[str, Any]]:
+        return self._rows
+
+    def search(
+        self,
+        *,
+        query: str,
+        task_type: str,
+        zone_id: str | None = None,
+        growth_stage: str | None = None,
+        limit: int = 5,
+    ) -> list[RetrievedChunk]:
+        backend_limit = max(limit * 3, 10)
+        keyword_hits = self._keyword.search(
+            query=query,
+            task_type=task_type,
+            zone_id=zone_id,
+            growth_stage=growth_stage,
+            limit=backend_limit,
+        )
+        semantic_hits = self._local_semantic.search(
+            query=query,
+            task_type=task_type,
+            zone_id=zone_id,
+            growth_stage=growth_stage,
+            limit=backend_limit,
+        )
+
+        fused: dict[str, dict[str, Any]] = {}
+        for backend_label, hits in (("keyword", keyword_hits), ("local_embed", semantic_hits)):
+            for rank, chunk in enumerate(hits):
+                cid = chunk.chunk_id
+                entry = fused.get(cid)
+                if entry is None:
+                    entry = {"chunk": chunk, "fused_score": 0.0, "backends": []}
+                    fused[cid] = entry
+                if backend_label == "local_embed":
+                    entry["chunk"] = chunk
+                entry["fused_score"] += 1.0 / (self._rrf_k + rank + 1)
+                entry["backends"].append(f"{backend_label}#{rank + 1}")
+
+        ordered = sorted(
+            fused.values(),
+            key=lambda item: (-item["fused_score"], item["chunk"].chunk_id),
+        )
+        result: list[RetrievedChunk] = []
+        for entry in ordered[:limit]:
+            base = entry["chunk"]
+            result.append(RetrievedChunk(
+                chunk_id=base.chunk_id,
+                document_id=base.document_id,
+                chunk_summary=base.chunk_summary,
+                source_type=base.source_type,
+                trust_level=base.trust_level,
+                score=round(float(entry["fused_score"]), 4),
+                source_url=base.source_url,
+                source_section=base.source_section,
+                citation_required=base.citation_required,
+            ))
+        return result
 
 
 class OpenAIEmbeddingRetriever:
@@ -426,8 +753,9 @@ def create_retriever(
     """Factory that instantiates the retriever selected by env/config.
 
     Keeps the import-time cost of TfidfSvdRagRetriever,
-    OpenAIEmbeddingRetriever, and HybridRagRetriever lazy: callers that stay
-    on keyword retrieval never load the dense indices.
+    LocalSemanticRagRetriever, OpenAIEmbeddingRetriever, and
+    HybridRagRetriever lazy: callers that stay on keyword retrieval never
+    load the dense indices.
     """
     rtype = (retriever_type or "keyword").lower()
     if rtype == "keyword":
@@ -435,6 +763,13 @@ def create_retriever(
         return KeywordRagRetriever(corpus_paths=corpus_paths)
     if rtype in ("vector", "tfidf", "tfidf_svd", "local"):
         return TfidfSvdRagRetriever(rag_index_path=rag_index_path)
+    if rtype in ("local_embed", "local_semantic", "semantic", "hashing"):
+        return LocalSemanticRagRetriever(rag_index_path=rag_index_path)
+    if rtype in ("local_hybrid", "keyword_local", "keyword_semantic"):
+        return LocalHybridRagRetriever(
+            corpus_paths=corpus_paths,
+            rag_index_path=rag_index_path,
+        )
     if rtype in ("openai", "openai_embedding", "text-embedding-3-small"):
         return OpenAIEmbeddingRetriever(rag_index_path=rag_index_path)
     if rtype in ("hybrid", "rrf", "keyword_openai"):

@@ -2,9 +2,11 @@
 
 이 문서는 `ds_v11/prompt_v5_methodfix_batch14` frozen baseline 기준 `extended200` validator 잔여 `42건`을 다음 corrective batch로 어떻게 나눌지 정리한다.
 
+상태: 2026-04-25 기준 우선순위 설계 완료. 다음 실행 단위는 `Batch21A. risk_rubric_core` sample 설계/생성이다.
+
 ## 1. 기준선
 
-- source report: [validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_extended200.md](/home/user/pepper-smartfarm-plan-v2/artifacts/reports/validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_extended200.md:1)
+- source report: [validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_extended200.md](/home/user/pepper_smartfarm_plan_v2/artifacts/reports/validator_residual_failures_ds_v11_prompt_v5_methodfix_batch14_extended200.md:1)
 - baseline model: `ds_v11/prompt_v5_methodfix_batch14`
 - remaining_failed_cases: `42`
 - owner split:

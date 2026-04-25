@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Benchmark HybridRagRetriever (RRF) against keyword and openai backends.
+"""Benchmark retriever backends against the production retriever factory.
 
 Runs the same recall@k / MRR / any_hit@k metrics that Phase F measured, but
 uses the production retriever factory in
@@ -19,6 +19,10 @@ expected set as a hit and compute:
 - any_hit@k:  1 if any expected id appears in top-k else 0
 - MRR:        1 / rank of first expected hit (0 if none)
 
+The default retriever set is zero-cost and does not issue OpenAI embedding
+queries. Include ``openai`` or ``hybrid`` explicitly and set
+``OPENAI_LIVE_RETRIEVER_SMOKE=1`` when a live API-backed benchmark is intended.
+
 Writes a markdown + JSON report to ``artifacts/reports/``.
 """
 
@@ -26,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from collections import defaultdict
@@ -37,6 +42,13 @@ sys.path.insert(0, str(REPO_ROOT / "llm-orchestrator"))
 sys.path.insert(0, str(REPO_ROOT / "policy-engine"))
 
 from llm_orchestrator.retriever_vector import create_retriever  # noqa: E402
+
+
+LIVE_OPENAI_RETRIEVER_TYPES = {"openai", "hybrid"}
+
+
+def _env_truthy(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_cases(paths: list[Path]) -> list[dict[str, Any]]:
@@ -159,7 +171,7 @@ def evaluate_retriever(
 
 def render_markdown(results: list[dict[str, Any]], *, k: int, case_count: int) -> str:
     lines: list[str] = []
-    lines.append("# Hybrid RRF retriever benchmark")
+    lines.append("# Retriever benchmark")
     lines.append("")
     lines.append(f"- eval case count: **{case_count}**")
     lines.append(f"- top-k: **{k}**")
@@ -177,6 +189,50 @@ def render_markdown(results: list[dict[str, Any]], *, k: int, case_count: int) -
             f"{r['MRR']:.4f} | {r['elapsed_sec']:.2f} |"
         )
     lines.append("")
+
+    if results:
+        names = {str(r["name"]) for r in results}
+        best = max(
+            results,
+            key=lambda r: (
+                float(r["avg_recall@k"]),
+                float(r["MRR"]),
+                float(r["avg_any_hit@k"]),
+            ),
+        )
+        lines.append("## Interpretation")
+        lines.append("")
+        lines.append(
+            f"- Best aggregate recall@{k}: **{best['name']}** "
+            f"({best['avg_recall@k']:.4f}, MRR {best['MRR']:.4f})."
+        )
+        if "openai" not in names and "hybrid" not in names:
+            lines.append(
+                "- This run did not instantiate OpenAI-backed retrievers, "
+                "so it makes no live embedding query and spends no API quota."
+            )
+        lines.append(
+            "- This 126-case RAG eval is token-rich and corpus-oriented; "
+            "use it as a runtime retriever regression check, not as the sole "
+            "replacement for the Phase F decision-eval retrieval benchmark."
+        )
+        if str(best["name"]) == "keyword":
+            lines.append(
+                "- Cost-free runtime default should remain `keyword` until a "
+                "local semantic or hybrid candidate beats it on both this "
+                "suite and the safety-oriented decision-eval slices."
+            )
+        elif str(best["name"]) in {"local_embed", "local_hybrid", "tfidf"}:
+            lines.append(
+                "- The best backend in this run has zero API cost, so it is a "
+                "candidate for runtime default after ops-api smoke validation."
+            )
+        else:
+            lines.append(
+                "- The best backend in this run may use a live external query; "
+                "keep it explicit opt-in when API cost or quota is a concern."
+            )
+        lines.append("")
 
     categories = sorted(
         {cat for r in results for cat in r["categories"].keys()}
@@ -246,12 +302,19 @@ def main() -> int:
     parser.add_argument(
         "--retrievers",
         nargs="+",
-        default=["keyword", "openai", "hybrid"],
-        choices=["keyword", "tfidf", "openai", "hybrid"],
+        default=["keyword", "tfidf", "local_embed", "local_hybrid"],
+        choices=[
+            "keyword",
+            "tfidf",
+            "local_embed",
+            "local_hybrid",
+            "openai",
+            "hybrid",
+        ],
     )
     parser.add_argument(
         "--rag-index-path",
-        default="artifacts/rag_index/pepper_openai_embed_index.json",
+        default="artifacts/rag_index/pepper_expert_with_farm_case_index.json",
     )
     parser.add_argument(
         "--output-json",
@@ -272,6 +335,17 @@ def main() -> int:
     cases = load_cases(eval_paths)
     case_count = len(cases)
     print(f"[benchmark] loaded {case_count} cases from {len(eval_paths)} file(s)")
+
+    live_openai_requested = any(
+        rtype in LIVE_OPENAI_RETRIEVER_TYPES for rtype in args.retrievers
+    )
+    if live_openai_requested and not _env_truthy("OPENAI_LIVE_RETRIEVER_SMOKE"):
+        print(
+            "[benchmark] refusing OpenAI-backed live query; set "
+            "OPENAI_LIVE_RETRIEVER_SMOKE=1 to run openai/hybrid retrievers",
+            file=sys.stderr,
+        )
+        return 2
 
     retriever_objs: list[tuple[str, Any]] = []
     for rtype in args.retrievers:
