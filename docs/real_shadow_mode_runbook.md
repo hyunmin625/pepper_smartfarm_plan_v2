@@ -25,6 +25,8 @@
 
 실제 운영 case의 `request_id`는 `prod-shadow-YYYYMMDD-NNN` 형식을 사용한다. seed/offline replay ID는 실제 운영 window에 재사용하지 않는다. 세부 규칙은 `data/ops/README.md`를 따른다.
 
+운영 전 rehearsal은 `scripts/generate_shadow_ops_rehearsal_day.py`로 만든다. 이 파일은 `rehearsal-shadow-YYYYMMDD-NNN` request_id를 사용하므로 `--real-case` 검증과 승격 판단에 쓰지 않는다.
+
 ## 실행 절차
 
 권장 경로는 ops-api를 통한 적재다. 이 경로가 `POST /shadow/cases/capture`, `/shadow/window`, auth/audit/rotation guard를 모두 통과하므로 실제 운영 흐름에 가장 가깝다.
@@ -38,6 +40,14 @@ python3 scripts/validate_shadow_cases.py \
   --cases-file data/ops/shadow_mode_cases_20260425.jsonl \
   --existing-audit-log artifacts/runtime/llm_orchestrator/shadow_mode_audit.jsonl \
   --real-case
+```
+
+경로 리허설만 필요한 경우에는 비용 없는 샘플을 만든 뒤 real-case 옵션 없이 검증한다.
+
+```bash
+python3 scripts/generate_shadow_ops_rehearsal_day.py --date 20260425 --count 12
+python3 scripts/validate_shadow_cases.py \
+  --cases-file data/ops/shadow_mode_rehearsal_20260425.jsonl
 ```
 
 ops-api 호출 없이 runner 경로만 확인할 때는 아래처럼 실행한다.
@@ -148,6 +158,12 @@ python3 scripts/build_shadow_mode_window_report.py \
 - `hold`: 실제 shadow window 리포트가 `hold`
 - `pass`: 실제 shadow window 리포트가 `promote`
 - `rollback`: 실제 shadow window 리포트가 `rollback`
+
+## residual backlog 연결
+
+실제 운영 window에서 operator disagreement가 남으면 [docs/real_shadow_residual_backlog.md](real_shadow_residual_backlog.md)에 따라 backlog row로 남긴다. backlog는 `data/ops/shadow_residual_backlog_YYYYMMDD.jsonl`에 저장하고, 각 row는 `schemas/shadow_residual_backlog_schema.json`을 따른다.
+
+seed pack, offline replay, rehearsal 파일은 residual 원인 재현에는 참고할 수 있지만, 실제 window 승격 근거와 backlog source case를 대체하지 않는다.
 
 예시:
 

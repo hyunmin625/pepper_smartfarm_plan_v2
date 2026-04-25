@@ -302,6 +302,10 @@ def _serialize_policy_event(row: PolicyEventRecord) -> dict[str, Any]:
     }
 
 
+def _policy_version_stamp(policy_id: str, timestamp: datetime) -> str:
+    return f"{policy_id}@{timestamp.strftime('%Y%m%dT%H%M%SZ')}"
+
+
 def _serialize_robot_task(row: RobotTaskRecord) -> dict[str, Any]:
     return {
         "task_id": row.id,
@@ -694,6 +698,12 @@ def _build_dashboard_payload(
     ).scalars().all()
     policy_rows = session.execute(select(PolicyRecord).order_by(PolicyRecord.policy_stage, PolicyRecord.policy_id)).scalars().all()
     policy_event_rows = session.execute(select(PolicyEventRecord).order_by(desc(PolicyEventRecord.id)).limit(30)).scalars().all()
+    policy_change_rows = session.execute(
+        select(PolicyEventRecord)
+        .where(PolicyEventRecord.event_type == "policy_changed")
+        .order_by(desc(PolicyEventRecord.id))
+        .limit(12)
+    ).scalars().all()
     decision_items = [_build_decision_item(row) for row in rows]
     latest_zone_items: dict[str, dict[str, Any]] = {
         zone.zone_id: {
@@ -793,6 +803,7 @@ def _build_dashboard_payload(
             "policy_event_count": len(policy_event_rows),
             "policy_blocked_count": sum(1 for row in policy_event_rows if row.event_type == "blocked"),
             "policy_approval_count": sum(1 for row in policy_event_rows if row.event_type == "approval_required"),
+            "policy_change_count": len(policy_change_rows),
             "automation_pending_count": automation_status_counts.get("approval_pending", 0),
             "automation_dispatched_count": automation_status_counts.get("dispatched", 0),
             "automation_fault_count": (
@@ -804,6 +815,7 @@ def _build_dashboard_payload(
         "zones": list(latest_zone_items.values()),
         "policies": [_serialize_policy(row) for row in policy_rows],
         "policy_events": [_serialize_policy_event(row) for row in policy_event_rows[:12]],
+        "policy_changes": [_serialize_policy_event(row) for row in policy_change_rows],
         "alerts": [_serialize_alert(row) for row in alert_rows[:12]],
         "robot_tasks": [_serialize_robot_task(row) for row in robot_rows[:12]],
         "robot_candidates": [_serialize_robot_candidate(row) for row in robot_candidate_rows[:12]],
@@ -1349,6 +1361,36 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             meta={"limit": limit, "event_type": event_type},
         )
 
+    @app.get(
+        "/policies/{policy_id}/history",
+        tags=["catalog"],
+        response_model=ApiResponse,
+        responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
+    )
+    def list_policy_history(
+        policy_id: str,
+        limit: int = 25,
+        session: Session = Depends(get_session),
+        actor: ActorIdentity = Depends(require_permission("read_runtime")),
+    ) -> dict[str, Any]:
+        limit = max(1, min(int(limit), 100))
+        stmt = (
+            select(PolicyEventRecord)
+            .where(PolicyEventRecord.event_type == "policy_changed")
+            .order_by(desc(PolicyEventRecord.id))
+            .limit(200)
+        )
+        rows = [
+            row
+            for row in session.execute(stmt).scalars().all()
+            if policy_id in _loads_json(row.policy_ids_json, [])
+        ][:limit]
+        return _ok(
+            {"items": [_serialize_policy_event(row) for row in rows]},
+            actor=actor,
+            meta={"limit": limit, "policy_id": policy_id},
+        )
+
     @app.post(
         "/policies/{policy_id}",
         tags=["catalog"],
@@ -1364,18 +1406,51 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         row = session.execute(select(PolicyRecord).where(PolicyRecord.policy_id == policy_id)).scalar_one_or_none()
         if row is None:
             raise HTTPException(status_code=404, detail="policy not found")
+        before = _serialize_policy(row)
+        changed_fields: list[str] = []
         if payload.enabled is not None:
             row.enabled = payload.enabled
+            changed_fields.append("enabled")
         if payload.severity is not None:
             row.severity = payload.severity
+            changed_fields.append("severity")
         if payload.description is not None:
             row.description = payload.description
+            changed_fields.append("description")
         if payload.trigger_flags is not None:
             row.trigger_flags_json = json.dumps(payload.trigger_flags, ensure_ascii=False)
+            changed_fields.append("trigger_flags")
         if payload.enforcement is not None:
             row.enforcement_json = json.dumps(payload.enforcement, ensure_ascii=False)
+            changed_fields.append("enforcement")
+        if changed_fields:
+            updated_at = utc_now()
+            row.updated_at = updated_at
+            row.source_version = _policy_version_stamp(row.policy_id, updated_at)
         session.commit()
         session.refresh(row)
+        after = _serialize_policy(row)
+        if changed_fields:
+            event = PolicyEventRecord(
+                decision_id=None,
+                request_id=f"policy-update-{policy_id}-{row.updated_at.strftime('%Y%m%dT%H%M%S')}",
+                event_type="policy_changed",
+                policy_result="updated",
+                policy_ids_json=json.dumps([policy_id], ensure_ascii=False),
+                reason_codes_json=json.dumps(["policy_source_version_update"], ensure_ascii=False),
+                payload_json=json.dumps(
+                    {
+                        "actor_id": actor.actor_id,
+                        "actor_role": actor.role,
+                        "changed_fields": sorted(set(changed_fields)),
+                        "before": before,
+                        "after": after,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+            session.add(event)
+            session.commit()
         return _ok({"policy": _serialize_policy(row)}, actor=actor)
 
     @app.post(
@@ -2802,6 +2877,17 @@ def _dashboard_html() -> str:
             <div id="shadowWindow" class="text-white/90 text-[12px] leading-relaxed"></div>
           </div>
 
+          <div class="card" id="runtimeGateCard">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="section-kicker">Runtime Gate</span>
+                <h3 class="text-base font-extrabold font-headline text-ink mt-1">모델·승격 상태</h3>
+              </div>
+              <span id="runtimeGateChip" class="chip chip-warn">blocked</span>
+            </div>
+            <div id="runtimeGateBody" class="space-y-2 text-[11px] text-muted"></div>
+          </div>
+
           <!-- Schedule rail (uses commandListOverview as audit timeline) -->
           <div class="card">
             <div class="flex items-center justify-between mb-4">
@@ -3043,6 +3129,14 @@ def _dashboard_html() -> str:
             <h3 class="text-sm font-bold text-ink">Recent Policy Events</h3>
             <span class="text-[11px] text-muted">blocked / approval escalation</span>
           </div>
+          <div class="mb-5">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-muted mb-2">Event Queue</div>
+            <div id="policyEventQueueList" class="space-y-3"></div>
+          </div>
+          <div class="mb-5">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-muted mb-2">Policy Change History</div>
+            <div id="policyChangeList" class="space-y-3"></div>
+          </div>
           <div id="policyEventList" class="space-y-3"></div>
         </div>
       </div>
@@ -3073,6 +3167,7 @@ def _dashboard_html() -> str:
           <h3 class="text-sm font-bold text-ink">최근 trigger</h3>
           <span class="text-[11px] text-muted">policy_engine + guards 경유 상태</span>
         </div>
+        <div id="automationReviewSummary" class="mb-4"></div>
         <div id="automationTriggerList" class="space-y-3"></div>
       </div>
     </section>
@@ -3682,6 +3777,7 @@ def _dashboard_html() -> str:
         ['일치율', summary.operator_agreement_rate ?? 'n/a', '', ''],
         ['실행 명령', summary.command_count ?? 0, '', ''],
         ['Policy Event', summary.policy_event_count ?? 0, '', ''],
+        ['Policy Change', summary.policy_change_count ?? 0, '', '정책 source_version 갱신 이력'],
         ['Policy Block', summary.policy_blocked_count ?? 0, '', ''],
         ['Alerts', summary.alert_count ?? 0, '', ''],
         ['Automation 대기', summary.automation_pending_count ?? 0, '', '지난 24h approval_pending 트리거'],
@@ -3696,6 +3792,53 @@ def _dashboard_html() -> str:
           <strong class="value">${value}</strong>
         </div>
       `).join('');
+    }
+    function renderRuntimeGateCard(data) {
+      const chip = document.getElementById('runtimeGateChip');
+      const body = document.getElementById('runtimeGateBody');
+      if (!chip || !body) return;
+      const summary = (data && data.summary) || {};
+      const runtime = (data && data.runtime_mode) || dashboardState.runtimeMode || {};
+      const shadow = (data && data.shadow_window) || null;
+      const ai = dashboardState.aiConfig || {};
+      const mode = runtime.mode || 'unknown';
+      const promotion = shadow ? (shadow.promotion_decision || 'unknown') : 'no_window';
+      let chipCls = 'chip-dark';
+      let chipText = '대기';
+      if (mode === 'execute') {
+        chipCls = 'chip-critical';
+        chipText = 'execute';
+      } else if (mode === 'approval') {
+        chipCls = 'chip-warn';
+        chipText = 'approval';
+      } else if (mode === 'shadow') {
+        chipCls = 'chip-enabled';
+        chipText = 'shadow';
+      }
+      chip.className = `chip ${chipCls}`;
+      chip.textContent = chipText;
+
+      const family = ai.llm_model_family || ai.llm_model_label || 'config pending';
+      const label = ai.llm_model_label || ai.llm_model_id || family;
+      const championText = `${family} · ${ai.llm_prompt_version || 'prompt pending'}`;
+      const championOk = /ds_v11/i.test([family, label].join(' ')) || /frozen/i.test(family);
+      const shadowCls = promotion === 'promote' ? 'chip-enabled' : (promotion === 'rollback' ? 'chip-critical' : (promotion === 'hold' ? 'chip-warn' : 'chip-dark'));
+      const pendingApprovals = (summary.approval_pending_count ?? 0) + (summary.automation_pending_count ?? 0);
+      const policyRisk = (summary.policy_blocked_count ?? 0) + (summary.policy_approval_count ?? 0);
+      const row = (k, v) => `
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-muted">${k}</span>
+          <span class="font-bold text-ink text-right break-all">${v}</span>
+        </div>`;
+      body.innerHTML = `
+        ${row('runtime_mode', escapeHtml(operatorLabel(mode, mode)))}
+        ${row('champion', escapeHtml(championText))}
+        ${row('champion_gate', `<span class="chip ${championOk ? 'chip-enabled' : 'chip-warn'}">${championOk ? 'ds_v11 frozen' : '확인 필요'}</span>`)}
+        ${row('retriever', escapeHtml(ai.retriever_type || 'keyword'))}
+        ${row('shadow_window', `<span class="chip ${shadowCls}">${escapeHtml(promotion)}</span>`)}
+        ${row('approval_queue', `${pendingApprovals}건`)}
+        ${row('policy_risk_events', `${policyRisk}건`)}
+      `;
     }
     function renderZones(zones) {
       const html = (zones || []).map(zone => `
@@ -3753,7 +3896,7 @@ def _dashboard_html() -> str:
     function reasonLabel(code) {
       if (!code) return '';
       if (REASON_CODE_LABEL[code]) return REASON_CODE_LABEL[code];
-      if (/^HSV-\d+/i.test(code)) return `안전 규칙 ${code}`;
+      if (/^HSV-\\d+/i.test(code)) return `안전 규칙 ${code}`;
       return String(code).split('_').filter(Boolean).join(' ');
     }
     const alertsFilterState = { category: 'all', severity: 'all' };
@@ -4006,34 +4149,115 @@ def _dashboard_html() -> str:
       }
     }
     function renderPolicies(items) {
-      document.getElementById('policyList').innerHTML = (items || []).map(item => `
+      const rows = (items || []).map(item => {
+        const policyId = String(item.policy_id || '');
+        const actionId = policyId.replace(/'/g, "\\'");
+        const version = item.source_version || 'unversioned';
+        const updated = item.updated_at ? item.updated_at.replace('T', ' ').slice(0, 19) : 'n/a';
+        const flags = (item.trigger_flags || []).map(v => String(v)).join(', ') || 'none';
+        return `
+          <div class="alert-row">
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <div class="text-sm font-bold text-ink">${escapeHtml(policyId)}</div>
+                <div class="text-[10px] text-muted uppercase tracking-wider">${escapeHtml(item.policy_stage || '')}</div>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="chip ${item.enabled ? 'chip-enabled' : 'chip-warn'}">${item.enabled ? 'ENABLED' : 'DISABLED'}</span>
+                <span class="chip chip-dark">${escapeHtml(item.severity || '')}</span>
+              </div>
+            </div>
+            <div class="text-xs text-ink mb-2 leading-relaxed">${escapeHtml(item.description || 'description 없음')}</div>
+            <div class="text-[10px] text-muted mb-1">trigger_flags: ${escapeHtml(flags)}</div>
+            <div class="text-[10px] text-muted mb-1">source_version: <span class="font-mono text-ink">${escapeHtml(version)}</span></div>
+            <div class="text-[10px] text-muted mb-2">updated_at: ${escapeHtml(updated)}</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="togglePolicy('${actionId}', ${item.enabled ? 'false' : 'true'})" class="text-[11px] font-semibold ${item.enabled ? 'text-warn' : 'text-primary'} hover:underline">${item.enabled ? '비활성화' : '활성화'}</button>
+              <button onclick="showPolicyHistory('${actionId}')" class="text-[11px] font-semibold text-primary hover:underline">이력 보기</button>
+            </div>
+          </div>`;
+      }).join('');
+      document.getElementById('policyList').innerHTML = rows || '<div class="placeholder">policy가 없습니다.</div>';
+    }
+    function policyEventChipClass(eventType) {
+      if (eventType === 'blocked') return 'chip-critical';
+      if (eventType === 'approval_required') return 'chip-warn';
+      if (eventType === 'policy_changed') return 'chip-enabled';
+      return 'chip-dark';
+    }
+    function renderPolicyEventQueues(items) {
+      const host = document.getElementById('policyEventQueueList');
+      if (!host) return;
+      const all = items || [];
+      const queue = all.filter(item => item.event_type === 'blocked' || item.event_type === 'approval_required');
+      const blocked = queue.filter(item => item.event_type === 'blocked').length;
+      const approval = queue.filter(item => item.event_type === 'approval_required').length;
+      const rows = queue.slice(0, 5).map(item => `
         <div class="alert-row">
-          <div class="flex items-start justify-between mb-1">
-            <div>
-              <div class="text-sm font-bold text-ink">${item.policy_id}</div>
-              <div class="text-[10px] text-muted uppercase tracking-wider">${item.policy_stage}</div>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="chip ${item.enabled ? 'chip-enabled' : 'chip-warn'}">${item.enabled ? 'ENABLED' : 'DISABLED'}</span>
-              <span class="chip chip-dark">${item.severity}</span>
-            </div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] text-muted">decision=#${item.decision_id || 'none'}</span>
+            <span class="chip ${policyEventChipClass(item.event_type)}">${escapeHtml(operatorLabel(item.event_type, item.event_type))}</span>
           </div>
-          <div class="text-xs text-ink mb-2 leading-relaxed">${item.description || 'description 없음'}</div>
-          <div class="text-[10px] text-muted mb-2">trigger_flags: ${(item.trigger_flags || []).join(', ') || 'none'}</div>
-          <button onclick="togglePolicy('${item.policy_id}', ${item.enabled ? 'false' : 'true'})" class="text-[11px] font-semibold ${item.enabled ? 'text-warn' : 'text-primary'} hover:underline">${item.enabled ? '비활성화' : '활성화'}</button>
+          <div class="text-xs text-ink truncate">${escapeHtml(item.request_id || '')}</div>
+          <div class="text-[10px] text-muted">policy_ids: ${escapeHtml((item.policy_ids || []).join(', ') || 'none')}</div>
+          <div class="text-[10px] text-muted">reasons: ${escapeHtml((item.reason_codes || []).join(', ') || 'none')}</div>
+        </div>`).join('');
+      host.innerHTML = `
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">blocked</div>
+            <div class="text-2xl font-bold text-ink mt-1">${blocked}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">approval</div>
+            <div class="text-2xl font-bold text-ink mt-1">${approval}</div>
+          </div>
         </div>
-      `).join('') || '<div class="placeholder">policy가 없습니다.</div>';
+        ${rows || '<div class="placeholder mb-3">차단/승인 대기 policy event가 없습니다.</div>'}
+      `;
+    }
+    async function showPolicyHistory(policyId) {
+      try {
+        const res = await apiFetch(`/policies/${encodeURIComponent(policyId)}/history?limit=10`);
+        renderPolicyChanges(res?.data?.items || []);
+        const host = document.getElementById('policyChangeList');
+        if (host) host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (err) {
+        alert('정책 이력 조회 실패: ' + (err.message || err));
+      }
+    }
+    function renderPolicyChanges(items) {
+      const host = document.getElementById('policyChangeList');
+      if (!host) return;
+      const rows = (items || []).map(item => {
+        const payload = item.payload || {};
+        const after = payload.after || {};
+        const fields = (payload.changed_fields || []).join(', ') || 'none';
+        const actor = payload.actor_id || 'unknown';
+        const version = after.source_version || 'unversioned';
+        return `
+          <div class="alert-row">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] text-muted">${escapeHtml(item.created_at || '')}</span>
+              <span class="chip chip-enabled">source_version</span>
+            </div>
+            <div class="text-xs text-ink">${escapeHtml((item.policy_ids || []).join(', ') || 'none')}</div>
+            <div class="text-[10px] text-muted">changed: ${escapeHtml(fields)} · actor=${escapeHtml(actor)}</div>
+            <div class="text-[10px] text-muted font-mono truncate" title="${escapeHtml(version)}">${escapeHtml(version)}</div>
+          </div>`;
+      }).join('');
+      host.innerHTML = rows || '<div class="placeholder">정책 변경 이력이 없습니다.</div>';
     }
     function renderPolicyEvents(items) {
       document.getElementById('policyEventList').innerHTML = (items || []).map(item => `
         <div class="alert-row">
           <div class="flex items-center justify-between mb-1">
             <span class="text-[11px] text-muted">decision=#${item.decision_id || 'none'}</span>
-            <span class="chip ${item.event_type === 'blocked' ? 'chip-critical' : 'chip-warn'}">${item.event_type}</span>
+            <span class="chip ${policyEventChipClass(item.event_type)}">${escapeHtml(item.event_type || '')}</span>
           </div>
-          <div class="text-xs text-ink">${item.request_id}</div>
-          <div class="text-[10px] text-muted">policy_ids: ${(item.policy_ids || []).join(', ') || 'none'}</div>
-          <div class="text-[10px] text-muted">reasons: ${(item.reason_codes || []).join(', ') || 'none'}</div>
+          <div class="text-xs text-ink">${escapeHtml(item.request_id || '')}</div>
+          <div class="text-[10px] text-muted">policy_ids: ${escapeHtml((item.policy_ids || []).join(', ') || 'none')}</div>
+          <div class="text-[10px] text-muted">reasons: ${escapeHtml((item.reason_codes || []).join(', ') || 'none')}</div>
         </div>
       `).join('') || '<div class="placeholder">policy event가 없습니다.</div>';
     }
@@ -4281,7 +4505,7 @@ def _dashboard_html() -> str:
 
     // ===== AI Chat =====
     const chatState = { messages: [], sending: false, lastGrounding: null };
-    const dashboardState = { runtimeMode: null, aiConfig: null, alerts: [] };
+    const dashboardState = { runtimeMode: null, aiConfig: null, alerts: [], lastDashboard: null };
     function chatBubbleUser(content, ts) {
       return `<div class="flex justify-end">
         <div>
@@ -4344,6 +4568,9 @@ def _dashboard_html() -> str:
       automation_dispatch_fault: '자동화 실행 실패',
       automation_blocked_guard: '자동화 안전 차단',
       automation_blocked_validator: '자동화 검증 차단',
+      blocked: '차단됨',
+      approval_required: '승인 필요',
+      policy_changed: '정책 변경',
       policy_violation: '정책 위반',
       policy_event: '정책 이벤트',
       risk_elevated: '위험 상승',
@@ -4434,9 +4661,11 @@ def _dashboard_html() -> str:
             <div class="flex justify-between"><span class="text-muted">chat_system_prompt</span><span class="font-bold">${systemPrompt}</span></div>
           `;
         }
+        renderRuntimeGateCard(dashboardState.lastDashboard);
       } catch (err) {
         if (meta) meta.textContent = '파인튜닝 모델 구성 조회 실패 — /ai/chat은 그래도 동작합니다.';
         if (runtimeBody) runtimeBody.innerHTML = '<div class="placeholder">/ai/config 조회 실패</div>';
+        renderRuntimeGateCard(dashboardState.lastDashboard);
       }
     }
     function renderGroundingInspector() {
@@ -4483,6 +4712,7 @@ def _dashboard_html() -> str:
         automationState.rules = rulesRes?.data?.rules || [];
         automationState.triggers = triggersRes?.data?.triggers || [];
         renderAutomationRules();
+        renderAutomationReviewSummary();
         renderAutomationTriggers();
         const chip = document.getElementById('automationRuntimeChip');
         if (chip) {
@@ -4509,6 +4739,36 @@ def _dashboard_html() -> str:
       if (gate === 'execute') return 'chip-critical';
       if (gate === 'approval') return 'chip-warn';
       return 'chip-enabled';
+    }
+    function renderAutomationReviewSummary() {
+      const host = document.getElementById('automationReviewSummary');
+      if (!host) return;
+      const triggers = automationState.triggers || [];
+      const count = (status) => triggers.filter(t => t.status === status).length;
+      const pending = triggers.filter(t => t.status === 'approval_pending');
+      const fault = triggers.filter(t => t.status === 'dispatch_fault' || t.status === 'blocked_guard' || t.status === 'blocked_validator').length;
+      const oldest = pending.length ? pending[pending.length - 1] : null;
+      host.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">승인 대기</div>
+            <div class="text-2xl font-bold text-ink mt-1">${pending.length}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">승인됨</div>
+            <div class="text-2xl font-bold text-ink mt-1">${count('approved')}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">실행됨</div>
+            <div class="text-2xl font-bold text-ink mt-1">${count('dispatched')}</div>
+          </div>
+          <div class="bg-surface-low rounded-xl p-3">
+            <div class="text-[10px] uppercase text-muted">차단/실패</div>
+            <div class="text-2xl font-bold text-ink mt-1">${fault}</div>
+          </div>
+        </div>
+        ${oldest ? `<div class="text-[11px] text-muted mt-2">가장 오래된 대기: #${oldest.id} · ${escapeHtml(oldest.triggered_at || '')} · ${escapeHtml(oldest.rule_id || '')}</div>` : '<div class="text-[11px] text-muted mt-2">승인 대기 trigger가 없습니다.</div>'}
+      `;
     }
     function renderAutomationRules() {
       const host = document.getElementById('automationRuleList');
@@ -4966,13 +5226,17 @@ def _dashboard_html() -> str:
       try {
         const response = await apiFetch('/dashboard/data');
         const data = response.data;
+        dashboardState.lastDashboard = data;
         dashboardState.runtimeMode = data.runtime_mode;
         document.getElementById('modeBadge').textContent = data.runtime_mode.mode;
         renderAuthContext(response.actor);
         renderMetrics(data.summary);
+        renderRuntimeGateCard(data);
         renderZones(data.zones);
         renderShadowWindow(data.shadow_window);
         renderPolicies(data.policies || []);
+        renderPolicyEventQueues(data.policy_events || []);
+        renderPolicyChanges(data.policy_changes || []);
         renderPolicyEvents(data.policy_events || []);
         dashboardState.alerts = data.alerts || [];
         renderAlerts(dashboardState.alerts);
@@ -5019,7 +5283,13 @@ def _dashboard_html() -> str:
     setupNav();
     showView('overview');
     renderChat();
-    loadAiConfig().then(() => { renderGroundingInspector(); });
+    loadAiConfig().then(() => {
+      renderGroundingInspector();
+      if (dashboardState.lastDashboard) {
+        renderMetrics(dashboardState.lastDashboard.summary || {});
+        renderRuntimeGateCard(dashboardState.lastDashboard);
+      }
+    });
     const automationForm = document.getElementById('automationRuleForm');
     if (automationForm) automationForm.addEventListener('submit', submitAutomationRuleForm);
     const operatorSelect = document.getElementById('ruleField_operator');

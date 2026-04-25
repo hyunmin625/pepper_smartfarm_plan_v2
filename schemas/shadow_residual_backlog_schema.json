@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pepper-ops.local/schemas/shadow_residual_backlog_schema.json",
+  "title": "ShadowResidualBacklogItem",
+  "type": "object",
+  "required": [
+    "residual_id",
+    "source_window_id",
+    "source_case_request_id",
+    "owner",
+    "severity",
+    "status",
+    "failure_modes",
+    "expected_fix",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "residual_id": {
+      "type": "string",
+      "pattern": "^shadow-residual-[0-9]{8}-[0-9]{3}$"
+    },
+    "source_window_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_case_request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_report_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "zone_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "task_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "enum": [
+        "data_and_model",
+        "risk_rubric_and_data",
+        "robot_contract_and_model",
+        "runtime_validator_gap",
+        "ops_process",
+        "unknown"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "triaged",
+        "queued",
+        "fixed",
+        "verified",
+        "wont_fix"
+      ]
+    },
+    "failure_modes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "expected_fix": {
+      "type": "object",
+      "required": [
+        "fix_type",
+        "summary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fix_type": {
+          "type": "string",
+          "enum": [
+            "training_sample",
+            "rubric_update",
+            "validator_rule",
+            "prompt_update",
+            "retriever_source",
+            "ops_runbook",
+            "code_fix"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model_output_summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operator_expected_summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validator_reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

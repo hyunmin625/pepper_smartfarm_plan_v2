@@ -1911,3 +1911,18 @@
 - `scripts/validate_shadow_cases.py`를 추가해 real shadow case JSONL을 ops-api 적재 전에 검증하도록 했다. 검증 범위는 필수 필드, `request_id` 중복, metadata/context 정렬, operator outcome, seed/offline eval_set 혼입 금지다.
 - `push_shadow_cases_to_ops_api.py`는 기본 사전검증과 `--validate-only`를 지원한다. `scripts/run_shadow_mode_ops_pipeline.py`는 검증, `/shadow/cases/capture`, window report, challenger preflight 재계산을 한 번에 실행한다. `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에 실제 운영 request_id 규칙과 명령을 반영했다.
 - `validate_vector_retrievers.py`는 OpenAI live query를 skip하고 통과했다. zero-cost retriever benchmark는 동일하게 `keyword recall@5 0.9444`, `local_hybrid 0.8968`, `tfidf 0.7698`, `local_embed 0.7540`이다.
+
+---
+
+## 2026-04-25 — Policy source history + runtime gate + shadow residual backlog
+
+### ops-api policy/runtime UI
+- `PATCH /policies/{policy_id}`가 실제 변경이 있을 때 `source_version=policy_id@YYYYMMDDTHHMMSSZ`를 갱신하고, `policy_events`에 `policy_changed` 이벤트를 남기도록 보강했다. 이벤트 payload에는 `actor_id`, `actor_role`, `changed_fields`, `before`, `after`가 들어간다.
+- `GET /policies/{policy_id}/history`를 추가했다. 대시보드 정책 카드에는 `source_version`, `updated_at`, `이력 보기` 버튼을 추가했고, 정책 화면에는 차단/승인 이벤트 queue와 source version 변경 이력 리스트를 분리했다.
+- 오버뷰 오른쪽 rail에 `Runtime Gate` 카드를 추가해 runtime mode, ds_v11 frozen champion gate, retriever, shadow window 결과, approval queue, policy risk events를 한 번에 확인할 수 있게 했다.
+- 자동화 뷰에 review summary를 추가해 최근 trigger의 승인 대기/승인됨/실행됨/차단·실패 수와 가장 오래된 승인 대기 trigger를 표시한다.
+
+### real shadow backlog/rehearsal
+- `schemas/shadow_residual_backlog_schema.json`과 `docs/real_shadow_residual_backlog.md`를 추가해 실제 운영 shadow disagreement를 corrective backlog로 옮기는 JSONL 구조를 고정했다.
+- `scripts/generate_shadow_ops_rehearsal_day.py`를 추가했다. `rehearsal-shadow-YYYYMMDD-NNN` request_id와 `shadow-rehearsal-YYYYMMDD` eval_set_id를 쓰므로 `--real-case` 검증이나 submit 승격 근거로 쓰지 않는다.
+- `data/ops/README.md`와 `docs/real_shadow_mode_runbook.md`에 rehearsal 파일과 실제 운영 file/backlog의 분리 기준을 반영했다.
