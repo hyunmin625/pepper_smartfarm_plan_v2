@@ -147,6 +147,7 @@
 - `docs/model_product_readiness_reassessment.md`: 모델/학습/데이터/eval 재평가와 fine-tuning 재개 조건
 - `docs/risk_level_rubric.md`: `risk_level` 정의와 우선순위 기준
 - `docs/policy_output_validator_spec.md`: hard safety/output contract를 모델 밖으로 강제하는 기준
+- `docs/policy_engine_runtime_policies.md`: policy-engine runtime DSL과 기본 POL-* 정책 기준
 - `docs/critical_slice_augmentation_plan.md`: 다음 fine-tuning 전 보강해야 할 critical slice 계획
 - `docs/hard_case_oversampling_plan.md`: 후속 challenger에만 적용할 train-only oversampling 기준
 - `schedule.md`: 8주 실행 일정과 단계별 완료 기준

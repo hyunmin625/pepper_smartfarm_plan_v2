@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .evaluator import PolicyEvaluationReport, evaluate_policy_rules
 from .loader import load_enabled_policy_rules
 
 
@@ -12,6 +13,7 @@ class PolicyPrecheckResult:
     policy_ids: list[str] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
     matched_flags: list[str] = field(default_factory=list)
+    runtime_evaluation: dict[str, Any] = field(default_factory=dict)
 
 
 def _merge_policy_result(*results: str) -> str:
@@ -20,6 +22,12 @@ def _merge_policy_result(*results: str) -> str:
     if any(result == "approval_required" for result in results):
         return "approval_required"
     return "pass"
+
+
+def _append_unique(items: list[str], values: list[str]) -> None:
+    for value in values:
+        if value not in items:
+            items.append(value)
 
 
 def _collect_flags(raw: dict[str, Any]) -> set[str]:
@@ -91,6 +99,18 @@ def _device_rule_outcome(action_type: str, rule_id: str, mode: str, rule: dict[s
     return "pass"
 
 
+def _merge_runtime_report(
+    *,
+    runtime_report: PolicyEvaluationReport,
+    matched_ids: list[str],
+    reasons: list[str],
+    computed_result: str,
+) -> str:
+    _append_unique(matched_ids, runtime_report.policy_ids)
+    _append_unique(reasons, runtime_report.reasons)
+    return _merge_policy_result(computed_result, runtime_report.policy_result)
+
+
 def evaluate_device_policy_precheck(raw_request: dict[str, Any]) -> PolicyPrecheckResult:
     flags = _collect_flags(raw_request)
     action_type = str(raw_request.get("action_type") or "")
@@ -123,11 +143,20 @@ def evaluate_device_policy_precheck(raw_request: dict[str, Any]) -> PolicyPreche
         reasons.append(f"policy_precheck:{rule_id}")
         computed_result = _merge_policy_result(computed_result, outcome)
 
+    runtime_report = evaluate_policy_rules(raw_request)
+    computed_result = _merge_runtime_report(
+        runtime_report=runtime_report,
+        matched_ids=matched_ids,
+        reasons=reasons,
+        computed_result=computed_result,
+    )
+
     return PolicyPrecheckResult(
         policy_result=_merge_policy_result(snapshot_result, computed_result),
         policy_ids=matched_ids,
         reasons=reasons,
         matched_flags=matched_flags,
+        runtime_evaluation=runtime_report.as_dict(),
     )
 
 
@@ -138,9 +167,20 @@ def evaluate_override_policy_precheck(raw_request: dict[str, Any]) -> PolicyPrec
     if isinstance(snapshot, dict):
         snapshot_ids = [str(item) for item in snapshot.get("policy_ids", []) if str(item).strip()]
         snapshot_result = str(snapshot.get("policy_result") or "pass")
+
+    runtime_report = evaluate_policy_rules(raw_request)
+    matched_ids = list(snapshot_ids)
+    reasons: list[str] = []
+    computed_result = _merge_runtime_report(
+        runtime_report=runtime_report,
+        matched_ids=matched_ids,
+        reasons=reasons,
+        computed_result="pass",
+    )
     return PolicyPrecheckResult(
-        policy_result=snapshot_result,
-        policy_ids=snapshot_ids,
-        reasons=[],
+        policy_result=_merge_policy_result(snapshot_result, computed_result),
+        policy_ids=matched_ids,
+        reasons=reasons,
         matched_flags=[],
+        runtime_evaluation=runtime_report.as_dict(),
     )

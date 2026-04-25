@@ -7,12 +7,26 @@
       "severity": "critical",
       "enabled": true,
       "description": "작업자 접근이 active면 device control과 robot task를 막고 block_action + create_alert로 rewrite한다.",
-      "trigger_flags": ["worker_present"],
+      "trigger_flags": [
+        "worker_present"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "critical",
-        "force_action_types": ["block_action", "create_alert"],
-        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "short_irrigation", "adjust_fertigation", "adjust_heating", "adjust_co2", "create_robot_task"],
+        "force_action_types": [
+          "block_action",
+          "create_alert"
+        ],
+        "strip_action_types": [
+          "adjust_fan",
+          "adjust_shade",
+          "adjust_vent",
+          "short_irrigation",
+          "adjust_fertigation",
+          "adjust_heating",
+          "adjust_co2",
+          "create_robot_task"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -24,12 +38,26 @@
       "severity": "critical",
       "enabled": true,
       "description": "manual override active면 AI device control을 제거하고 block_action + create_alert로 rewrite한다.",
-      "trigger_flags": ["manual_override_active"],
+      "trigger_flags": [
+        "manual_override_active"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "critical",
-        "force_action_types": ["block_action", "create_alert"],
-        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "short_irrigation", "adjust_fertigation", "adjust_heating", "adjust_co2", "create_robot_task"],
+        "force_action_types": [
+          "block_action",
+          "create_alert"
+        ],
+        "strip_action_types": [
+          "adjust_fan",
+          "adjust_shade",
+          "adjust_vent",
+          "short_irrigation",
+          "adjust_fertigation",
+          "adjust_heating",
+          "adjust_co2",
+          "create_robot_task"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -41,12 +69,27 @@
       "severity": "critical",
       "enabled": true,
       "description": "safe_mode latch 상태에서는 추가 제어를 제거하고 block_action + create_alert만 남긴다.",
-      "trigger_flags": ["safe_mode_active"],
+      "trigger_flags": [
+        "safe_mode_active"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "critical",
-        "force_action_types": ["block_action", "create_alert"],
-        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "short_irrigation", "adjust_fertigation", "adjust_heating", "adjust_co2", "create_robot_task", "enter_safe_mode"],
+        "force_action_types": [
+          "block_action",
+          "create_alert"
+        ],
+        "strip_action_types": [
+          "adjust_fan",
+          "adjust_shade",
+          "adjust_vent",
+          "short_irrigation",
+          "adjust_fertigation",
+          "adjust_heating",
+          "adjust_co2",
+          "create_robot_task",
+          "enter_safe_mode"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -58,12 +101,20 @@
       "severity": "critical",
       "enabled": true,
       "description": "관수 경로 통신/readback 손실이면 enter_safe_mode + request_human_check를 강제한다.",
-      "trigger_flags": ["irrigation_path_degraded"],
+      "trigger_flags": [
+        "irrigation_path_degraded"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "critical",
-        "force_action_types": ["enter_safe_mode", "request_human_check"],
-        "strip_action_types": ["short_irrigation", "adjust_fertigation"],
+        "force_action_types": [
+          "enter_safe_mode",
+          "request_human_check"
+        ],
+        "strip_action_types": [
+          "short_irrigation",
+          "adjust_fertigation"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -75,12 +126,20 @@
       "severity": "critical",
       "enabled": true,
       "description": "원수 메인 밸브 경로 손실이면 enter_safe_mode + request_human_check를 강제한다.",
-      "trigger_flags": ["source_water_path_degraded"],
+      "trigger_flags": [
+        "source_water_path_degraded"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "critical",
-        "force_action_types": ["enter_safe_mode", "request_human_check"],
-        "strip_action_types": ["short_irrigation", "adjust_fertigation"],
+        "force_action_types": [
+          "enter_safe_mode",
+          "request_human_check"
+        ],
+        "strip_action_types": [
+          "short_irrigation",
+          "adjust_fertigation"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -92,12 +151,20 @@
       "severity": "critical",
       "enabled": true,
       "description": "건조실 fan/dehumidifier 경로 손실이면 enter_safe_mode + request_human_check를 강제한다.",
-      "trigger_flags": ["dry_room_path_degraded"],
+      "trigger_flags": [
+        "dry_room_path_degraded"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "critical",
-        "force_action_types": ["enter_safe_mode", "request_human_check"],
-        "strip_action_types": ["adjust_fan", "adjust_heating"],
+        "force_action_types": [
+          "enter_safe_mode",
+          "request_human_check"
+        ],
+        "strip_action_types": [
+          "adjust_fan",
+          "adjust_heating"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -109,12 +176,24 @@
       "severity": "high",
       "enabled": true,
       "description": "기후 센서 해석 불가면 pause_automation + request_human_check를 강제한다. 단, degraded 제어가 이미 진행됐으면 risk_level은 high를 유지한다.",
-      "trigger_flags": ["core_climate_interpretable", "climate_control_degraded"],
+      "trigger_flags": [
+        "core_climate_interpretable",
+        "climate_control_degraded"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "high",
-        "force_action_types": ["pause_automation", "request_human_check"],
-        "strip_action_types": ["adjust_fan", "adjust_shade", "adjust_vent", "adjust_heating", "adjust_co2"],
+        "force_action_types": [
+          "pause_automation",
+          "request_human_check"
+        ],
+        "strip_action_types": [
+          "adjust_fan",
+          "adjust_shade",
+          "adjust_vent",
+          "adjust_heating",
+          "adjust_co2"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -126,12 +205,21 @@
       "severity": "high",
       "enabled": true,
       "description": "근권 센서 충돌이나 해석 불가면 unknown + pause_automation + request_human_check를 강제한다.",
-      "trigger_flags": ["rootzone_sensor_conflict", "rootzone_control_interpretable"],
+      "trigger_flags": [
+        "rootzone_sensor_conflict",
+        "rootzone_control_interpretable"
+      ],
       "enforcement": {
         "mode": "rewrite_to_safe_pair",
         "set_risk_level": "unknown",
-        "force_action_types": ["pause_automation", "request_human_check"],
-        "strip_action_types": ["short_irrigation", "adjust_fertigation"],
+        "force_action_types": [
+          "pause_automation",
+          "request_human_check"
+        ],
+        "strip_action_types": [
+          "short_irrigation",
+          "adjust_fertigation"
+        ],
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": true
@@ -143,7 +231,9 @@
       "severity": "high",
       "enabled": true,
       "description": "EC/pH/drain fault 상태에서 fertigation 변경은 approval_required로 승격한다.",
-      "trigger_flags": ["rootzone_sensor_conflict"],
+      "trigger_flags": [
+        "rootzone_sensor_conflict"
+      ],
       "enforcement": {
         "mode": "approval_escalation",
         "set_risk_level": "high",
@@ -160,7 +250,10 @@
       "severity": "high",
       "enabled": true,
       "description": "worker clearance가 불확실하거나 통로가 unsafe면 robot task를 skip_area/manual_review로 정규화한다.",
-      "trigger_flags": ["zone_clearance_uncertain", "aisle_slip_hazard"],
+      "trigger_flags": [
+        "zone_clearance_uncertain",
+        "aisle_slip_hazard"
+      ],
       "enforcement": {
         "mode": "strip_or_reject",
         "set_risk_level": null,
@@ -177,7 +270,9 @@
       "severity": "medium",
       "enabled": true,
       "description": "recommended_actions.action_type은 허용 enum만 사용한다.",
-      "trigger_flags": ["recommended_actions"],
+      "trigger_flags": [
+        "recommended_actions"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -194,7 +289,9 @@
       "severity": "medium",
       "enabled": true,
       "description": "robot_task.task_type은 허용 enum만 사용한다.",
-      "trigger_flags": ["robot_tasks"],
+      "trigger_flags": [
+        "robot_tasks"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -211,7 +308,9 @@
       "severity": "medium",
       "enabled": true,
       "description": "recommended_actions는 target/reason/risk_level/approval_required/cooldown_minutes/expected_effect를 채운다.",
-      "trigger_flags": ["recommended_actions"],
+      "trigger_flags": [
+        "recommended_actions"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -228,7 +327,9 @@
       "severity": "medium",
       "enabled": true,
       "description": "robot_tasks는 candidate_id 또는 target을 반드시 가진다.",
-      "trigger_flags": ["robot_tasks"],
+      "trigger_flags": [
+        "robot_tasks"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -245,7 +346,10 @@
       "severity": "medium",
       "enabled": true,
       "description": "actionable output은 follow_up을 반드시 포함한다.",
-      "trigger_flags": ["recommended_actions", "follow_up"],
+      "trigger_flags": [
+        "recommended_actions",
+        "follow_up"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -262,7 +366,10 @@
       "severity": "medium",
       "enabled": true,
       "description": "citation required 케이스는 citations를 반드시 포함한다.",
-      "trigger_flags": ["requires_citations", "citations"],
+      "trigger_flags": [
+        "requires_citations",
+        "citations"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -279,7 +386,9 @@
       "severity": "medium",
       "enabled": true,
       "description": "forbidden_action 계약은 별도 policy-engine에서 다시 검증한다.",
-      "trigger_flags": ["task_type"],
+      "trigger_flags": [
+        "task_type"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -296,7 +405,9 @@
       "severity": "high",
       "enabled": true,
       "description": "고위험 액션은 approval_required=true로 승격한다.",
-      "trigger_flags": ["recommended_actions"],
+      "trigger_flags": [
+        "recommended_actions"
+      ],
       "enforcement": {
         "mode": "approval_escalation",
         "set_risk_level": null,
@@ -313,7 +424,9 @@
       "severity": "high",
       "enabled": true,
       "description": "top-level risk_level은 강제된 safety rule보다 낮아지면 안 된다.",
-      "trigger_flags": ["risk_level"],
+      "trigger_flags": [
+        "risk_level"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -330,7 +443,10 @@
       "severity": "medium",
       "enabled": true,
       "description": "validator mutation은 reason code와 decision을 audit-ready 형태로 남긴다.",
-      "trigger_flags": ["validator_reason_codes", "validator_decision"],
+      "trigger_flags": [
+        "validator_reason_codes",
+        "validator_decision"
+      ],
       "enforcement": {
         "mode": "normalize_contract",
         "set_risk_level": null,
@@ -339,6 +455,299 @@
         "robot_fallback_task_type": null,
         "require_citations": false,
         "require_follow_up": false
+      }
+    },
+    {
+      "rule_id": "POL-HARD-SENSOR-QUALITY",
+      "stage": "sensor_quality",
+      "severity": "critical",
+      "enabled": true,
+      "description": "sensor_quality automation_gate=blocked이면 장치 제어를 차단한다.",
+      "trigger_flags": [
+        "sensor_quality_blocked"
+      ],
+      "enforcement": {
+        "mode": "block",
+        "outcome": "blocked",
+        "category": "sensor_quality",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "adjust_fan",
+          "adjust_shade",
+          "adjust_vent",
+          "short_irrigation",
+          "adjust_fertigation",
+          "adjust_heating",
+          "adjust_co2"
+        ],
+        "condition": {},
+        "reason_code": "sensor_quality_blocked",
+        "message": "sensor quality gate is blocked; device control must wait for manual confirmation."
+      }
+    },
+    {
+      "rule_id": "POL-HARD-OVERWET-IRRIGATION",
+      "stage": "hard_block",
+      "severity": "high",
+      "enabled": true,
+      "description": "과습 또는 배지 함수율 과상승 상태에서는 관수/양액 변경을 금지한다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "block",
+        "outcome": "blocked",
+        "category": "hard_block",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "short_irrigation",
+          "adjust_fertigation"
+        ],
+        "condition": {
+          "any": [
+            {
+              "field": "rootzone_status",
+              "operator": "in",
+              "value": [
+                "over_wet",
+                "waterlogged"
+              ]
+            },
+            {
+              "field": "substrate_moisture_pct",
+              "operator": "gt",
+              "value": 85
+            }
+          ]
+        },
+        "reason_code": "overwet_irrigation_block",
+        "message": "rootzone is over-wet; irrigation or fertigation adjustment is blocked."
+      }
+    },
+    {
+      "rule_id": "POL-HARD-WIND-VENT",
+      "stage": "hard_block",
+      "severity": "high",
+      "enabled": true,
+      "description": "강풍 또는 wind_lock 상태에서는 환기창 개방 명령을 차단한다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "block",
+        "outcome": "blocked",
+        "category": "hard_block",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "adjust_vent"
+        ],
+        "condition": {
+          "any": [
+            {
+              "field": "wind_lock",
+              "operator": "truthy"
+            },
+            {
+              "field": "external_wind_m_s",
+              "operator": "gte",
+              "value": 12
+            }
+          ]
+        },
+        "reason_code": "wind_vent_block",
+        "message": "wind lock or high wind is active; vent movement is blocked."
+      }
+    },
+    {
+      "rule_id": "POL-ROBOT-WORKER-SAFETY",
+      "stage": "robot_safety",
+      "severity": "critical",
+      "enabled": true,
+      "description": "작업자 존재 또는 clearance 불확실 상태에서는 로봇 작업 생성을 금지한다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "block",
+        "outcome": "blocked",
+        "category": "robot_safety",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "create_robot_task"
+        ],
+        "condition": {
+          "any": [
+            {
+              "field": "flags",
+              "operator": "contains",
+              "value": "worker_present"
+            },
+            {
+              "field": "flags",
+              "operator": "contains",
+              "value": "zone_clearance_uncertain"
+            },
+            {
+              "field": "flags",
+              "operator": "contains",
+              "value": "aisle_slip_hazard"
+            }
+          ]
+        },
+        "reason_code": "robot_worker_safety_block",
+        "message": "robot task is blocked until worker clearance is confirmed."
+      }
+    },
+    {
+      "rule_id": "POL-HARD-DEVICE-READBACK",
+      "stage": "hard_block",
+      "severity": "high",
+      "enabled": true,
+      "description": "장치 readback 불량 또는 stuck 상태에서는 같은 장치 재명령을 금지한다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "block",
+        "outcome": "blocked",
+        "category": "hard_block",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "*"
+        ],
+        "condition": {
+          "any": [
+            {
+              "field": "device_readback_degraded",
+              "operator": "truthy"
+            },
+            {
+              "field": "device_stuck",
+              "operator": "truthy"
+            }
+          ]
+        },
+        "reason_code": "device_readback_degraded",
+        "message": "device readback is degraded; repeat commands are blocked until readback is restored."
+      }
+    },
+    {
+      "rule_id": "POL-APPROVAL-HIGH-RISK",
+      "stage": "approval",
+      "severity": "high",
+      "enabled": true,
+      "description": "고위험 액션은 기본적으로 운영자 승인을 요구한다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "approval_escalation",
+        "outcome": "approval_required",
+        "category": "approval",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "adjust_fertigation",
+          "adjust_heating",
+          "adjust_co2",
+          "create_robot_task"
+        ],
+        "condition": {},
+        "reason_code": "high_risk_action_approval_required",
+        "message": "high-risk action requires operator approval before dispatch."
+      }
+    },
+    {
+      "rule_id": "POL-SCHED-NIGHT-IRRIGATION",
+      "stage": "scheduling",
+      "severity": "medium",
+      "enabled": true,
+      "description": "야간 관수는 자동 실행하지 않고 승인 경로로 보낸다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "approval_escalation",
+        "outcome": "approval_required",
+        "category": "scheduling",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "short_irrigation"
+        ],
+        "condition": {
+          "field": "local_hour",
+          "operator": "between",
+          "min_value": 20,
+          "max_value": 5,
+          "wrap": true
+        },
+        "reason_code": "night_irrigation_approval_required",
+        "message": "night irrigation requires approval because visual and drain confirmation are limited."
+      }
+    },
+    {
+      "rule_id": "POL-RANGE-IRRIGATION-PULSE",
+      "stage": "range_limit",
+      "severity": "high",
+      "enabled": true,
+      "description": "관수 펄스 duration_seconds는 30~900초 범위를 벗어나면 차단한다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "block",
+        "outcome": "blocked",
+        "category": "range_limit",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "short_irrigation"
+        ],
+        "condition": {
+          "any": [
+            {
+              "field": "parameters.duration_seconds",
+              "operator": "lt",
+              "value": 30
+            },
+            {
+              "field": "parameters.duration_seconds",
+              "operator": "gt",
+              "value": 900
+            }
+          ]
+        },
+        "reason_code": "irrigation_pulse_out_of_range",
+        "message": "irrigation duration is outside the allowed 30-900 second range."
+      }
+    },
+    {
+      "rule_id": "POL-RANGE-SETPOINT-DELTA",
+      "stage": "range_limit",
+      "severity": "medium",
+      "enabled": true,
+      "description": "큰 setpoint 변화는 자동 실행하지 않고 승인 경로로 보낸다.",
+      "trigger_flags": [],
+      "enforcement": {
+        "mode": "approval_escalation",
+        "outcome": "approval_required",
+        "category": "range_limit",
+        "scope": {
+          "type": "global"
+        },
+        "target_action_types": [
+          "adjust_fan",
+          "adjust_shade",
+          "adjust_vent",
+          "adjust_co2"
+        ],
+        "condition": {
+          "field": "setpoint_delta_pct",
+          "operator": "gt",
+          "value": 25
+        },
+        "reason_code": "setpoint_delta_approval_required",
+        "message": "large setpoint changes require approval before dispatch."
       }
     }
   ]

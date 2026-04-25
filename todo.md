@@ -16,6 +16,7 @@
 - [Real Shadow Residual Backlog](docs/real_shadow_residual_backlog.md)
 - [Real Shadow Daily Intake Checklist](docs/real_shadow_daily_intake_checklist.md)
 - [Policy Event Filter Performance Plan](docs/policy_event_filter_performance_plan.md)
+- [Policy Engine Runtime Policies](docs/policy_engine_runtime_policies.md)
 - [Device Profile Registry](docs/device_profile_registry.md)
 - [PLC Adapter Interface Contract](docs/plc_adapter_interface_contract.md)
 - [PLC Site Override Map](docs/plc_site_override_map.md)
@@ -700,43 +701,43 @@
 
 ## 8.1 정책 카테고리 정리
 - [x] output validator hard safety/output contract 분리 문서화 (`docs/policy_output_validator_spec.md`)
-- [ ] hard block 정책 정의
-- [ ] approval 정책 정의
-- [ ] range limit 정책 정의
-- [ ] scheduling 정책 정의
-- [ ] sensor quality 정책 정의
-- [ ] robot safety 정책 정의
+- [x] hard block 정책 정의 (POL-HARD-* seed + runtime evaluator)
+- [x] approval 정책 정의 (POL-APPROVAL-HIGH-RISK, POL-SCHED-NIGHT-IRRIGATION)
+- [x] range limit 정책 정의 (POL-RANGE-IRRIGATION-PULSE, POL-RANGE-SETPOINT-DELTA)
+- [x] scheduling 정책 정의 (POL-SCHED-NIGHT-IRRIGATION)
+- [x] sensor quality 정책 정의 (POL-HARD-SENSOR-QUALITY)
+- [x] robot safety 정책 정의 (POL-ROBOT-WORKER-SAFETY)
 
 ## 8.2 정책 DSL/JSON 포맷 정의
 - [x] output validator rule catalog schema/seed 추가 (`schemas/policy_output_validator_rules_schema.json`, `data/examples/policy_output_validator_rules_seed.json`)
-- [ ] field/operator/value 포맷 정의
-- [ ] AND/OR 표현 방식 정의
-- [ ] action_type 대상 지정 방식 정의
-- [ ] 조건 템플릿 정의
-- [ ] rule version 필드 정의
-- [ ] enabled/disabled 정책 정의
-- [ ] scope(zone/global) 정의
+- [x] field/operator/value 포맷 정의 (docs/policy_engine_runtime_policies.md, evaluator condition DSL)
+- [x] AND/OR 표현 방식 정의 (all/any/not condition)
+- [x] action_type 대상 지정 방식 정의 (target_action_types)
+- [x] 조건 템플릿 정의 (condition field/operator/value + composite forms)
+- [x] rule version 필드 정의 (schema_version + PolicyRecord source_version)
+- [x] enabled/disabled 정책 정의 (load_enabled_policy_rules + DB source enabled filter)
+- [x] scope(zone/global) 정의 (scope.type global/zone, zone_ids)
 
 ## 8.3 정책 엔진 구현
 - [x] output validator runtime skeleton 작성 (`policy-engine/policy_engine/output_validator.py`, `scripts/validate_policy_output_validator.py`)
 - [x] llm output -> validator -> audit log runtime skeleton 작성 (`llm-orchestrator/llm_orchestrator/runtime.py`, `scripts/validate_llm_output_validator_runtime.py`)
 - [x] policy loader 작성 (`policy-engine/policy_engine/loader.py`, `scripts/validate_policy_engine_precheck.py`)
-- [ ] evaluator 작성
-- [ ] action constraint evaluator 작성
-- [ ] state constraint evaluator 작성
-- [ ] robot constraint evaluator 작성
-- [ ] explanation builder 작성
+- [x] evaluator 작성 (policy_engine/evaluator.py)
+- [x] action constraint evaluator 작성 (target_action_types + parameter condition)
+- [x] state constraint evaluator 작성 (raw state fields + dotted path condition)
+- [x] robot constraint evaluator 작성 (create_robot_task worker/clearance block)
+- [x] explanation builder 작성 (reason_code/message -> PolicyRuleMatch)
 - [x] blocked action event 발행 (`execution-gateway/execution_gateway/dispatch.py`, `ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`, `scripts/validate_ops_api_flow.py`)
 - [x] requires approval event 발행 (`execution-gateway/execution_gateway/dispatch.py`, `ops-api/ops_api/models.py`, `ops-api/ops_api/app.py`, `scripts/validate_ops_api_flow.py`)
 
 ## 8.4 기본 정책 등록
-- [ ] 야간 관수 제한 정책 등록
-- [ ] 센서 품질 불량 제한 정책 등록
-- [ ] 과습 시 관수 금지 정책 등록
-- [ ] 강풍 시 환기 제한 정책 등록
-- [ ] 작업자 존재 시 로봇 금지 정책 등록
-- [ ] 장치 응답 불량 시 재명령 금지 정책 등록
-- [ ] setpoint 급변 제한 정책 등록
+- [x] 야간 관수 제한 정책 등록 (POL-SCHED-NIGHT-IRRIGATION)
+- [x] 센서 품질 불량 제한 정책 등록 (POL-HARD-SENSOR-QUALITY)
+- [x] 과습 시 관수 금지 정책 등록 (POL-HARD-OVERWET-IRRIGATION)
+- [x] 강풍 시 환기 제한 정책 등록 (POL-HARD-WIND-VENT)
+- [x] 작업자 존재 시 로봇 금지 정책 등록 (POL-ROBOT-WORKER-SAFETY)
+- [x] 장치 응답 불량 시 재명령 금지 정책 등록 (POL-HARD-DEVICE-READBACK)
+- [x] setpoint 급변 제한 정책 등록 (POL-RANGE-SETPOINT-DELTA)
 
 ---
 

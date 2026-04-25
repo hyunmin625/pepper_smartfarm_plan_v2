@@ -4,7 +4,10 @@
   "title": "Policy Output Validator Rules",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "rules"],
+  "required": [
+    "schema_version",
+    "rules"
+  ],
   "properties": {
     "schema_version": {
       "type": "string",
@@ -21,19 +24,40 @@
     "rule": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["rule_id", "stage", "severity", "enabled", "description", "trigger_flags", "enforcement"],
+      "required": [
+        "rule_id",
+        "stage",
+        "severity",
+        "enabled",
+        "description",
+        "trigger_flags",
+        "enforcement"
+      ],
       "properties": {
         "rule_id": {
           "type": "string",
-          "pattern": "^(HSV|OV)-[0-9]{2}$"
+          "pattern": "^(HSV|OV)-[0-9]{2}$|^POL-[A-Z0-9-]+$"
         },
         "stage": {
           "type": "string",
-          "enum": ["hard_safety", "output_contract"]
+          "enum": [
+            "hard_safety",
+            "output_contract",
+            "hard_block",
+            "approval",
+            "range_limit",
+            "scheduling",
+            "sensor_quality",
+            "robot_safety"
+          ]
         },
         "severity": {
           "type": "string",
-          "enum": ["medium", "high", "critical"]
+          "enum": [
+            "medium",
+            "high",
+            "critical"
+          ]
         },
         "enabled": {
           "type": "boolean"
@@ -50,15 +74,33 @@
         "enforcement": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["mode"],
+          "required": [
+            "mode"
+          ],
           "properties": {
             "mode": {
               "type": "string",
-              "enum": ["rewrite_to_safe_pair", "strip_or_reject", "normalize_contract", "approval_escalation"]
+              "enum": [
+                "rewrite_to_safe_pair",
+                "strip_or_reject",
+                "normalize_contract",
+                "approval_escalation",
+                "block"
+              ]
             },
             "set_risk_level": {
-              "type": ["string", "null"],
-              "enum": ["low", "medium", "high", "critical", "unknown", null]
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical",
+                "unknown",
+                null
+              ]
             },
             "force_action_types": {
               "type": "array",
@@ -73,14 +115,78 @@
               }
             },
             "robot_fallback_task_type": {
-              "type": ["string", "null"],
-              "enum": ["skip_area", "manual_review", "inspect_crop", "harvest_candidate_review", null]
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "skip_area",
+                "manual_review",
+                "inspect_crop",
+                "harvest_candidate_review",
+                null
+              ]
             },
             "require_citations": {
               "type": "boolean"
             },
             "require_follow_up": {
               "type": "boolean"
+            },
+            "outcome": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "pass",
+                "approval_required",
+                "blocked",
+                null
+              ]
+            },
+            "category": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "hard_block",
+                "approval",
+                "range_limit",
+                "scheduling",
+                "sensor_quality",
+                "robot_safety",
+                "hard_safety",
+                "output_contract",
+                null
+              ]
+            },
+            "scope": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "target_action_types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "condition": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "reason_code": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "message": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         }

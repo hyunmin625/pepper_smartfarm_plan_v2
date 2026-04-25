@@ -2,6 +2,16 @@
 
 이 문서는 저장소에서 진행한 주요 변경 작업과 의사결정 이력을 기록한다.
 
+## 2026-04-26
+
+### todo 8 정책 엔진 runtime DSL + 기본 정책 완료
+- todo.md #8 정책 엔진의 잔여 항목을 완료 처리했다. hard block, approval, range limit, scheduling, sensor quality, robot safety 카테고리를 POL-* 기본 정책으로 등록했다.
+- policy-engine/policy_engine/evaluator.py를 추가해 field/operator/value, all/any/not, scope, target_action_types 기반 runtime policy DSL을 평가한다.
+- policy-engine/policy_engine/precheck.py가 기존 HSV precheck 결과와 runtime evaluator 결과를 병합하도록 연결했다. dispatch 직전 policy_result, policy_ids, reason_codes를 같은 경로로 보존한다.
+- data/examples/policy_output_validator_rules_seed.json에 POL-* 기본 정책 9개를 추가했고, schemas/policy_output_validator_rules_schema.json도 runtime stage와 enforcement 필드를 허용하도록 확장했다.
+- docs/policy_engine_runtime_policies.md와 policy-engine/README.md에 DSL, 기본 정책, 검증 경로를 문서화했다.
+- scripts/validate_policy_engine_runtime_policies.py를 추가하고 Phase P quality gate에 policy_engine_runtime_policy_smoke를 연결했다.
+
 ## 2026-04-17
 
 ### ops-api PostgreSQL only 전환 + 통합제어 Web UI 실행 매뉴얼 정리
